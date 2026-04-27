@@ -10,8 +10,9 @@ Object.assign(Jogo.prototype, {
         });
         // ── HUD ──────────────────────────────────────────────────────
         // barra_frame e lvl_badge removidos (substituídos por retângulos no código)
-        ['score_frame','burger_frame','map_btn',
-         'frame_combustivel','frame_graviton'].forEach(k => {
+        ['score_frame','map_btn',
+         'frame_combustivel','frame_graviton',
+         'cows_box','burgers_box'].forEach(k => {
             this.load.image(`hud_${k}`, `assets/ui/hud_${k}.png`);
         });
 

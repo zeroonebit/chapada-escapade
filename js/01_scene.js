@@ -99,16 +99,14 @@ class Jogo extends Phaser.Scene {
         this._atualizarPaciencia(delta);
         this._atualizarIAVacas();
 
-        // Contadores separados por tipo na HUD
-        let vacasInBeam = 0, boisInBeam = 0;
+        // COWS = vacas + bois live no feixe; BURGERS = total entregue
+        let cowsInBeam = 0;
         for (const v of this.vacas_abduzidas) {
             if (v.isBurger || v.isEnemy) continue;
-            if (v.tipo === 'boi') boisInBeam++;
-            else vacasInBeam++;
+            cowsInBeam++;
         }
-        this.hud.vacaText.setText(vacasInBeam);
-        this.hud.boiText.setText(boisInBeam);
-        this.textoContador.setText(this.burgerCount);
+        this.hud.cowsText.setText(cowsInBeam);
+        this.hud.burgersText.setText(this.burgerCount);
 
         const cam = this.cameras.main;
         let cursor;

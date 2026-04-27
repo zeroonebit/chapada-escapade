@@ -10,17 +10,14 @@ Object.assign(Jogo.prototype, {
         this.hud.scoreText = this.add.text(0,12,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.textoScore    = this.hud.scoreText;
 
-        // ── Burger ────────────────────────────────────────────────────
-        // frame limpo; contador no lado direito (ícone preservado à esq)
-        this.hud.burgerBg   = this.add.image(0,0,'hud_burger_frame').setDisplaySize(150,68).setScrollFactor(0).setDepth(D);
-        this.hud.burgerText = this.add.text(0,0,'0',{fontSize:'24px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.textoContador  = this.hud.burgerText;
+        // ── COWS box (vacas + bois abduzidos no feixe) ─────────────────
+        this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 80).setScrollFactor(0).setDepth(D);
+        this.hud.cowsText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
-        // ── Mini-contadores de vaca/boi abduzidos (anexados à direita do burger) ─
-        this.hud.vacaIcon = this.add.image(0, 0, 'vaca_frente').setDisplaySize(30, 30).setScrollFactor(0).setDepth(D2);
-        this.hud.vacaText = this.add.text(0, 0, '0', {fontSize:'18px', fill:'#ffffff', fontStyle:'bold', stroke:'#001a08', strokeThickness:3}).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D2);
-        this.hud.boiIcon  = this.add.image(0, 0, 'boi_frente').setDisplaySize(34, 34).setScrollFactor(0).setDepth(D2);
-        this.hud.boiText  = this.add.text(0, 0, '0', {fontSize:'18px', fill:'#ffffff', fontStyle:'bold', stroke:'#001a08', strokeThickness:3}).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D2);
+        // ── BURGERS box (total entregue) ───────────────────────────────
+        this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(176, 80).setScrollFactor(0).setDepth(D);
+        this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.textoContador   = this.hud.burgersText;  // alias mantido pra _virarBurger
 
         // ── Barra Combustível ─────────────────────────────────────────
         // Frame com label "COMBUSTÍVEL" + Graphics dentro pra desenhar gradiente amarelo→vermelho
@@ -54,16 +51,11 @@ Object.assign(Jogo.prototype, {
         this.hud.scoreBg.setPosition(w/2, 28);
         this.hud.scoreText.setPosition(w/2, 32);
 
-        // Burger — canto superior esquerdo
-        this.hud.burgerBg.setPosition(75, 50);
-        this.hud.burgerText.setPosition(118, 52);
-
-        // Mini-contadores anexados à borda direita do burger box
-        // Vaca em cima, Boi embaixo
-        this.hud.vacaIcon.setPosition(160, 36);
-        this.hud.vacaText.setPosition(180, 36);
-        this.hud.boiIcon.setPosition(160, 66);
-        this.hud.boiText.setPosition(182, 66);
+        // COWS + BURGERS boxes lado a lado no canto superior esquerdo
+        this.hud.cowsBox.setPosition(90, 55);
+        this.hud.cowsText.setPosition(122, 62);   // ao lado direito do ícone vaca
+        this.hud.burgersBox.setPosition(265, 55);
+        this.hud.burgersText.setPosition(300, 62);
 
         // Barras empilhadas no centro-rodapé com gap visível
         // Combustível em cima (mais largo), Graviton embaixo
