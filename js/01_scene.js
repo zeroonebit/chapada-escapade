@@ -10,10 +10,9 @@ class Jogo extends Phaser.Scene {
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
 
-        // ── EXPERIMENT MODE: cena minimalista com patch de grama interativo ──
-        // Desabilita vacas/bois/fazendeiros/atiradores/obstáculos/currais.
-        // Volta pra false pra restaurar o jogo completo.
-        this.EXPERIMENT_MODE = true;
+        // ── EXPERIMENT MODE: tecla T alterna (recarrega a página)
+        // ON = cena minimalista com grass patch verlet, sem HUD/inimigos/vacas
+        this.EXPERIMENT_MODE = localStorage.getItem('experimentMode') === '1';
 
         this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
 
@@ -98,12 +97,37 @@ class Jogo extends Phaser.Scene {
         this._setupPausa();                 // 11_gameflow.js
         this._setupColisoes();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
+
+        // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
+        this.teclaT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+
+        // ── Em debug mode: esconde HUD e mostra badge "DEBUG"
+        if (this.EXPERIMENT_MODE) {
+            const hudKeys = ['scoreBg','scoreText','cowsBox','cowsText','burgersBox','burgersText',
+                             'pacImg','pacFill','eneImg','eneFill','hint','hintBg'];
+            for (const k of hudKeys) if (this.hud[k]) this.hud[k].setVisible(false);
+            // Badge debug
+            const w = this.scale.width;
+            this.add.text(w - 90, 20, '🧪 DEBUG  [T off]', {
+                fontSize: '11px', fill: '#ffaa44', fontStyle: 'bold',
+                backgroundColor: '#000000', padding: { x: 6, y: 3 }
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+        }
+
         this._setupSplash();               // 11_gameflow.js — por último (sobrepõe tudo)
     }
 
     update(time, delta) {
         if (!this.gameStarted) return;      // aguarda dismiss do splash
         if (this.gameOver) return;
+
+        // T — toggle EXPERIMENT_MODE (recarrega)
+        if (this.teclaT && Phaser.Input.Keyboard.JustDown(this.teclaT)) {
+            const cur = localStorage.getItem('experimentMode') === '1';
+            localStorage.setItem('experimentMode', cur ? '0' : '1');
+            window.location.reload();
+            return;
+        }
 
         // ESC — toggle pausa
         if (Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {

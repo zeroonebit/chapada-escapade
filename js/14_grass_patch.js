@@ -1,79 +1,167 @@
-// 14_grass_patch.js — Patch orgânico de grama interativo via fragment shader.
-// Versão atual: SIMPLIFICADA pra debug — confirma que shader pipeline renderiza
-// antes de adicionar interatividade complexa.
+// 14_grass_patch.js — Patch de grama interativo via Verlet integration (cloth sim).
+// Cada blade é uma string vertical de pontos conectados por constraints rígidas.
+// Mouse aplica força com falloff por distância. Vento global oscila no tempo.
+// Roda em JS puro (CPU) — performance ok até ~400 blades em 60fps.
+
+class GrassBlade {
+    constructor(rootX, rootY, height, segments) {
+        this.points = [];
+        this.prev = [];
+        this.segLen = height / segments;
+        for (let i = 0; i <= segments; i++) {
+            const x = rootX;
+            const y = rootY - i * this.segLen;
+            this.points.push({ x, y, pinned: i === 0 });
+            this.prev.push({ x, y });
+        }
+        // Variação por blade pra não ficar uniforme
+        this.stiffness = 0.85 + Math.random() * 0.10;
+        this.colorTint = Math.random() * 0.25;  // 0..0.25 lerp pra cor mais clara
+        this.thickness = 1.5 + Math.random() * 0.5;
+    }
+
+    update(dt, gravity, windX, mouse) {
+        const damping = 0.92;
+        // ── Verlet step
+        for (let i = 0; i < this.points.length; i++) {
+            const p = this.points[i];
+            if (p.pinned) continue;
+            const pr = this.prev[i];
+            const vx = (p.x - pr.x) * damping;
+            const vy = (p.y - pr.y) * damping;
+            this.prev[i] = { x: p.x, y: p.y };
+            // Wind cresce com a altura do ponto (top sente mais)
+            const heightFactor = i / (this.points.length - 1);
+            p.x += vx + windX * dt * heightFactor;
+            p.y += vy + gravity * dt * heightFactor;
+            // Mouse force
+            if (mouse.active) {
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist2 = dx * dx + dy * dy;
+                const r2 = mouse.radius * mouse.radius;
+                if (dist2 < r2 && dist2 > 0.01) {
+                    const dist = Math.sqrt(dist2);
+                    const falloff = 1 - dist / mouse.radius;
+                    const force = falloff * falloff * mouse.strength * heightFactor;
+                    p.x += (dx / dist) * force;
+                    p.y += (dy / dist) * force;
+                }
+            }
+        }
+        // ── Constraint relaxation (segment lengths fixos)
+        const ITER = 6;
+        for (let iter = 0; iter < ITER; iter++) {
+            for (let i = 1; i < this.points.length; i++) {
+                const a = this.points[i - 1];
+                const b = this.points[i];
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+                const diff = (this.segLen - dist) / dist;
+                const off = diff * 0.5 * this.stiffness;
+                if (!a.pinned) { a.x -= dx * off; a.y -= dy * off; }
+                if (!b.pinned) { b.x += dx * off; b.y += dy * off; }
+            }
+        }
+    }
+}
+
 Object.assign(Jogo.prototype, {
 
     _setupGrassPatch(W, H) {
-        const PATCH_W = 900;
-        const PATCH_H = 700;
+        const cx = W / 2, cy = H / 2;
+        const PATCH_R = 380;
+        const N_BLADES = 320;
 
-        const fragSrc = `
-precision mediump float;
+        this.grassBlades = [];
+        // Spawn blades em distribuição mais densa no centro, esparsa nas bordas,
+        // com mask noise pra forma orgânica
+        const noise2 = (x, y) =>
+              Math.sin(x * 1.7 + y * 2.3) * 0.5
+            + Math.sin(x * 3.1 - y * 1.3) * 0.3
+            + Math.sin(x * 5.5 + y * 4.7) * 0.2;
 
-uniform float iTime;
-uniform vec2  iResolution;
+        let attempts = 0;
+        while (this.grassBlades.length < N_BLADES && attempts < N_BLADES * 6) {
+            attempts++;
+            const a = Math.random() * Math.PI * 2;
+            // Sqrt pra distribuir uniforme em área (não no raio)
+            const rNorm = Math.sqrt(Math.random());
+            const x = cx + Math.cos(a) * rNorm * PATCH_R;
+            const y = cy + Math.sin(a) * rNorm * PATCH_R;
+            // Mask orgânica: distância normalizada do centro + noise
+            const dx = (x - cx) / PATCH_R, dy = (y - cy) / PATCH_R;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const n = noise2(dx, dy) * 0.18;
+            if (dist + n > 0.92) continue;
+            // Edge thinning: borda tem menos densidade
+            if (dist > 0.7 && Math.random() < (dist - 0.7) * 2) continue;
+            const height = 38 + Math.random() * 28;
+            this.grassBlades.push(new GrassBlade(x, y, height, 7));
+        }
 
-varying vec2 fragCoord;
-
-float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-float noise(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
-}
-float fbm(vec2 p) {
-    float v = 0.0; float a = 0.5;
-    for (int i = 0; i < 5; i++) { v += a * noise(p); p *= 2.0; a *= 0.5; }
-    return v;
-}
-
-void main() {
-    vec2 uv = fragCoord;
-
-    // Mask orgânica: distância do centro + noise → forma irregular
-    vec2 toCenter = uv - vec2(0.5);
-    float distFromCenter = length(toCenter);
-    float patchNoise = fbm(uv * 4.5 + 17.3);
-    float threshold = 0.30 + patchNoise * 0.18;
-    float edgeSoft = smoothstep(threshold + 0.12, threshold - 0.05, distFromCenter);
-
-    // Vento (sutil, contínuo)
-    float windPhase = iTime * 1.4 + uv.y * 4.0;
-    float windX = sin(windPhase) * 0.005;
-
-    // Blades verticais com vento aplicado
-    vec2 bUV = uv + vec2(windX, 0.0);
-    float bladeColumn = floor(bUV.x * 160.0);
-    float bladeRand = hash(vec2(bladeColumn, 0.0));
-    float bladeMask = sin((bUV.x + bladeRand * 0.01) * 160.0) * 0.5 + 0.5;
-    bladeMask = smoothstep(0.55, 0.95, bladeMask);
-
-    // Variação tonal por blade
-    float bladeShade = mix(0.55, 1.0, uv.y + bladeRand * 0.04);
-    float detail = fbm(uv * 30.0) * 0.15;
-
-    // Cores
-    vec3 darkGreen  = vec3(0.20, 0.32, 0.12);
-    vec3 baseGreen  = vec3(0.42, 0.62, 0.24);
-    vec3 lightGreen = vec3(0.62, 0.82, 0.38);
-    vec3 color = mix(darkGreen, baseGreen, bladeShade + detail);
-    color = mix(color, lightGreen, bladeMask);
-
-    gl_FragColor = vec4(color, edgeSoft);
-}
-`;
-
-        const baseShader = new Phaser.Display.BaseShader('grass_patch_shader', fragSrc);
-        this.grassShader = this.add.shader(baseShader, W / 2, H / 2, PATCH_W, PATCH_H);
-        this.grassShader.setDepth(5);  // bem acima de qualquer fundo
+        // Graphics layers: dark base + light overlay
+        this.grassGfxDark  = this.add.graphics().setDepth(5);
+        this.grassGfxLight = this.add.graphics().setDepth(5.1);
+        this._grassWindTime = 0;
     },
 
     _updateGrassMouse() {
-        // No-op por enquanto. Mouse interaction volta depois que confirmar
-        // que o shader base tá renderizando.
+        if (!this.grassBlades) return;
+        const delta = this.game.loop.delta;
+        const dt = Math.min(delta / 1000, 0.033);
+        this._grassWindTime += dt;
+
+        // Mouse em world coords
+        const cam = this.cameras.main;
+        const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
+        const mouse = {
+            active: true,
+            x: wp.x,
+            y: wp.y,
+            radius: 90,
+            strength: 6
+        };
+
+        // Vento global (mistura 2 frequências)
+        const t = this._grassWindTime;
+        const windX = Math.sin(t * 1.4) * 22 + Math.sin(t * 0.6 + 1.7) * 14;
+        const gravity = 8;  // suave — blades não caem, só pesam
+
+        // Atualiza física
+        for (let i = 0; i < this.grassBlades.length; i++) {
+            this.grassBlades[i].update(dt, gravity, windX, mouse);
+        }
+
+        // ── Render: pass 1 (dark, mais grosso) + pass 2 (light, mais fino)
+        this.grassGfxDark.clear();
+        this.grassGfxDark.lineStyle(3, 0x2e4a18, 0.85);
+        this.grassGfxDark.beginPath();
+        for (const blade of this.grassBlades) {
+            const pts = blade.points;
+            this.grassGfxDark.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                this.grassGfxDark.lineTo(pts[i].x, pts[i].y);
+            }
+        }
+        this.grassGfxDark.strokePath();
+
+        this.grassGfxLight.clear();
+        // Tinta variável por blade requer múltiplos draw calls (mais caro mas vale)
+        for (const blade of this.grassBlades) {
+            const pts = blade.points;
+            // Cor = lerp entre verde médio e claro pelo tint do blade
+            const r = Math.round(0x82 * (1 - blade.colorTint) + 0xb5 * blade.colorTint);
+            const g = Math.round(0xb0 * (1 - blade.colorTint) + 0xd4 * blade.colorTint);
+            const b = Math.round(0x48 * (1 - blade.colorTint) + 0x72 * blade.colorTint);
+            const color = (r << 16) | (g << 8) | b;
+            this.grassGfxLight.lineStyle(blade.thickness, color, 1);
+            this.grassGfxLight.beginPath();
+            this.grassGfxLight.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                this.grassGfxLight.lineTo(pts[i].x, pts[i].y);
+            }
+            this.grassGfxLight.strokePath();
+        }
     }
 
 });
