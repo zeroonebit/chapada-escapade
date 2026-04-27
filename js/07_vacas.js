@@ -4,7 +4,8 @@ Object.assign(Jogo.prototype, {
     _criarVaca(x, y, tipo = 'branca') {
         const label = tipo === 'boi' ? 'boi' : 'vaca';
         const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
-        let v = this.matter.add.image(x, y, tex);
+        // matter.add.SPRITE (não image) — sprite suporta .anims, image não
+        let v = this.matter.add.sprite(x, y, tex);
         // setDisplaySize força tamanho visual fixo (anim frames 68px e static 180px viram mesma escala)
         const tamanho = tipo === 'boi' ? 78 : 68;
         v.setDisplaySize(tamanho, tamanho);
@@ -243,9 +244,16 @@ Object.assign(Jogo.prototype, {
             v._lastDir = dir;
         }
 
-        // Boi: sprite estático direcional (sem anim)
+        // Boi: 8-dir picker (chubby boi PixelLab tem 8 rotations)
         if (v.tipo === 'boi') {
-            const key = `boi_${dir}`;
+            let dir8 = v._lastDir8 || 'S';
+            if (angRad !== null) {
+                const deg = (angRad * 180 / Math.PI + 360) % 360;
+                const i = Math.round(deg / 45) % 8;
+                dir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
+                v._lastDir8 = dir8;
+            }
+            const key = `boi_${dir8}`;
             if (v.texture.key !== key) v.setTexture(key);
             return;
         }

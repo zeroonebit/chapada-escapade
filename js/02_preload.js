@@ -6,19 +6,19 @@ Object.assign(Jogo.prototype, {
         this.load.image('nave',      'assets/pixel_labs/nave.png');
         this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
 
-        // ── DIRECTIONAL SPRITES PIXELLAB (128px) ─────────────────────
-        // Vaca/boi: 4 direções (cat/bear template não suporta 8d, bug PixelLab)
+        // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
+        // Vaca: 4 direções (cat template — 8d com bug bone_scaling)
         ['south','east','north','west'].forEach(d => {
             const k = ({south:'S', east:'E', north:'N', west:'W'})[d];
             this.load.image(`vaca_${k}`, `assets/pixel_labs/chars/vaca/${d}.png`);
-            this.load.image(`boi_${k}`,  `assets/pixel_labs/chars/boi/${d}.png`);
         });
-        // Fazendeiro/UFO: 8 direções
+        // Boi (chubby), Fazendeiro, UFO: 8 direções
         const dirs8 = {
             'south':'S','east':'E','north':'N','west':'W',
             'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
         };
         Object.entries(dirs8).forEach(([d, k]) => {
+            this.load.image(`boi_${k}`, `assets/pixel_labs/chars/boi/${d}.png`);
             this.load.image(`faz_${k}`, `assets/pixel_labs/chars/fazendeiro/${d}.png`);
             this.load.image(`ufo_${k}`, `assets/pixel_labs/chars/ufo/${d}.png`);
         });

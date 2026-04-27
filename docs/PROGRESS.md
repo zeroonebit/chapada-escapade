@@ -4,6 +4,18 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-27 — Wang playground standalone + convenção cr31
+
+- **Pesquisa:** docs PixelLab MCP `/v2/tilesets` (Wang assíncrono, 16 tiles, 32px max, chaining via `*_base_tile_id`) + cr31 2-corner (NE=1, SE=2, SW=4, NW=8 — adotado como padrão do projeto, deprecando o naming `wang_TLTRBLBR` do `slice_tilesets.py`)
+- **`tools/wang_test_palette.py`:** gera 16 PNGs 32×32 com cores HSV-spread + quadrantes shaded por corner bit + índice no centro; saída em `assets/terrain/test/wang_00.png` … `wang_15.png` + `_montage.png`
+- **`tools/wang_playground/index.html`:** playground standalone (sem deps, sem build) — single-file vanilla JS com Mulberry32 PRNG, geração de corner grid (W+1)×(H+1) com fill + smoothing CA majority, lookup `wangIndex(nw,ne,sw,se)` cr31, render em canvas com `image-rendering: pixelated`
+- Pack switcher: `test` (canvas-only, file:// friendly) / `nanobanana` / `gpt` (carrega `assets/terrain/<pack>/wang_NN.png` quando existir, fallback automático)
+- Controles: seed (texto/núm), grid cols/rows, tile px, zoom 1-4×, fill 0-1, smoothing 0-10, debug grid, índices, export PNG
+- ⚠️ Servidor HTTP local 8080 já estava ocupado por outra coisa nesta sessão — playground não foi aberto via HTTP; testar abrindo `tools/wang_playground/index.html` direto via `file://` (test pack funciona) ou subir um servidor em outra porta apontando pra raiz `H:\Projects\ChapadaEscapade`
+- **Decisão arquitetural:** trilha B escolhida (playground isolado primeiro, port pro Phaser depois) — ciclo de iteração rápido, fundação reutilizável, alinhado com "step after step"
+
+---
+
 ## Sessão 2026-04-26 (cont. 3) — Deploy Pages, mobile controls, terreno CA, HUD novo
 
 - **Vacas/bois** mudaram pra sprite `cima_sobe` (top-down puro) + removido `setRotation` manual + spin random ao entrar no feixe → glissagem natural pela física

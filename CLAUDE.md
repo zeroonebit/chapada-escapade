@@ -62,6 +62,9 @@
 - **Refactor modular** — 13 arquivos `js/*.js` via `Object.assign(Jogo.prototype, {...})`
 - **Cenário procedural via Cellular Automata** — grid 40×30 cells de 80px, 4 níveis altitude (água/areia/grama/terra), 5 passes smoothing, render layered overlap (0 Wang tiles), sombras em deep cells, tufos de grama, obstáculos/currais checam `isLand`. `_isOverGrass`/`_grassDepth` consultam `terrainGrid`. Linha marrom horizontal removida.
 - **Deploy GitHub Pages** — `git push` em `main` faz deploy automático em ~30s na URL https://zeroonebit.github.io/chapada-escapade/
+- **Wang convention adotada:** cr31 2-corner (NE=1, SE=2, SW=4, NW=8), naming `wang_NN.png` (decimal 0–15). Deprecando o naming `wang_TLTRBLBR` antigo do `slice_tilesets.py`.
+- **Test pack** em `assets/terrain/test/` — 16 cores HSV-spread como placeholder Wang
+- **Wang playground standalone** em `tools/wang_playground/` — gerador procedural + lookup cr31 + canvas render, sem dep do Phaser
 
 ### 🚧 Em andamento
 - Geração dos sprites Nano Banana restantes
@@ -71,15 +74,17 @@
   - 🕒 Fazendeiro — prompt pronto, geração pendente
   - 🕒 UFO/nave — pendente
   - 🕒 Burgers, effects — pendentes
-- Substituir layered overlap CA por Wang tiles "de verdade" quando os tiles SVG/PNG estiverem prontos (a função de seleção 16-pattern por boundary é o próximo passo)
+- Validar gerador procedural + lookup Wang no `wang_playground/` antes de portar pro Chapada
+- Substituir layered overlap CA por Wang tiles "de verdade" (próximo passo: portar `wangIndex` + corner grid pro `04_cenario.js`)
 
 ### 🔜 Próximos passos
-1. Gerar fazendeiro (pose única top-down 3/4) e implementar
-2. Gerar UFO + beam halo + burgers (Sheet 1 revisada)
-3. Slicear tileset de terreno (Sheets A/B já aprovadas) e popular `assets/terrain/`
-4. Substituir `drawWobblyCell` por `add.image(cx, cy, tileKey)` selecionado por vizinhos do `terrainGrid` (usar skill `procedural-tilemap`)
-5. Anéis animados (capture FX)
-6. Minimapa no canto inferior esquerdo
+1. Abrir `wang_playground` em HTTP server (porta livre, não 8080) e validar lookup com test pack
+2. Gerar pack Wang real via PixelLab API (`POST /v2/tilesets`, chaining água→areia→grama→terra) ou slicear tilesets Nano Banana/GPT já aprovados pra `assets/terrain/{pack}/wang_NN.png`
+3. Portar `wangIndex` + corner grid pro `04_cenario.js`, substituir `drawWobblyCell` por `add.image`
+4. Gerar fazendeiro (pose única top-down 3/4) e implementar
+5. Gerar UFO + beam halo + burgers (Sheet 1 revisada)
+6. Anéis animados (capture FX)
+7. Minimapa no canto inferior esquerdo
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
@@ -87,6 +92,9 @@
 - `tools/clean_hud.py` — remove dígitos baked-in dos frames HUD
 - `tools/slice_hud_frames.py` — extrai frames GRAVITON/COMBUSTÍVEL de `refs/hud-vazia.png`
 - `tools/slice_cow_burger.py` — extrai boxes COWS/BURGERS de `refs/cow-burgers.png`
+- `tools/slice_tilesets.py` — augmenta tileset base via mirror/rotação (naming `TLTRBLBR` antigo, refatorar pra cr31)
+- `tools/wang_test_palette.py` — gera 16 PNGs cor sólida em `assets/terrain/test/`
+- `tools/wang_playground/index.html` — playground standalone single-file (PRNG + corner grid + lookup cr31 + canvas)
 - `tools/migrate_to_projects.py` — migrou de N: pra H: (one-shot, mantido por referência)
 
 ## Convenções de código
