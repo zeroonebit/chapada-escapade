@@ -27,6 +27,23 @@ class Jogo extends Phaser.Scene {
 
         this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
 
+        // ── REGISTRA ANIMS DA VACA (4 estados × 4 dir) ──────────────
+        const VACA_ANIMS = { walk: 4, run: 8, eat: 7, angry: 7 };
+        const FRAME_RATES = { walk: 6, run: 12, eat: 4, angry: 8 };
+        ['S','E','N','W'].forEach(d => {
+            Object.entries(VACA_ANIMS).forEach(([name, count]) => {
+                const key = `vaca_${name}_${d}`;
+                if (this.anims.exists(key)) return;
+                const frames = [];
+                for (let i = 0; i < count; i++) frames.push({ key: `vaca_${name}_${d}_${i}` });
+                this.anims.create({
+                    key, frames,
+                    frameRate: FRAME_RATES[name],
+                    repeat: -1
+                });
+            });
+        });
+
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
             this.add.rectangle(W/2, H/2, W, H, 0x1a1a1a).setDepth(0);

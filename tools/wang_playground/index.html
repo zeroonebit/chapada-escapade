@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Wang Playground — 2-corner topdown</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 13px/1.4 system-ui, sans-serif;
+    background: #1b1b1f; color: #e6e6ea;
+    display: grid; grid-template-columns: 280px 1fr; min-height: 100vh;
+  }
+  aside {
+    padding: 14px; border-right: 1px solid #2c2c33;
+    display: flex; flex-direction: column; gap: 12px;
+    background: #181820;
+  }
+  aside h1 { margin: 0 0 4px 0; font-size: 15px; letter-spacing: .3px; }
+  aside h1 small { color: #888; font-weight: normal; font-size: 11px; }
+  fieldset { border: 1px solid #2c2c33; border-radius: 6px; padding: 8px 10px; }
+  legend { padding: 0 6px; color: #9aa; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  label { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0; }
+  label span.k { color: #aaa; }
+  input[type=number], input[type=text], select {
+    width: 110px; background: #0f0f14; color: #e6e6ea;
+    border: 1px solid #2c2c33; border-radius: 4px; padding: 3px 6px; font: inherit;
+  }
+  input[type=range] { width: 130px; }
+  button {
+    background: #2a2a35; color: #e6e6ea; border: 1px solid #3a3a46;
+    border-radius: 4px; padding: 6px 10px; cursor: pointer; font: inherit;
+  }
+  button:hover { background: #353544; }
+  button.primary { background: #3b6e3b; border-color: #4d8a4d; }
+  button.primary:hover { background: #4a874a; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  main { padding: 16px; overflow: auto; }
+  .stage {
+    background: #0c0c10;
+    border: 1px solid #2c2c33; border-radius: 6px;
+    padding: 12px; display: inline-block;
+  }
+  canvas {
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    display: block; background: #000;
+  }
+  .stats { color: #8d8d97; font-size: 11px; margin-top: 8px; }
+  .legend-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+    margin-top: 6px;
+  }
+  .legend-grid .cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff; text-shadow: 0 0 2px #000;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<aside>
+  <h1>Wang Playground <br><small>cr31 2-corner · NE=1 SE=2 SW=4 NW=8</small></h1>
+
+  <fieldset>
+    <legend>seed</legend>
+    <label><span class="k">seed</span><input type="text" id="seed" value="42"></label>
+    <div class="row">
+      <button id="btnRandom">aleatório</button>
+      <button id="btnRegen" class="primary">regenerar</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>grid</legend>
+    <label><span class="k">cols</span><input type="number" id="gw" value="32" min="4" max="128"></label>
+    <label><span class="k">rows</span><input type="number" id="gh" value="24" min="4" max="128"></label>
+    <label><span class="k">tile px</span><input type="number" id="ts" value="32" min="8" max="64"></label>
+    <label><span class="k">zoom</span><input type="range" id="zoom" min="1" max="4" step="1" value="2"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>geração (corners)</legend>
+    <label><span class="k">fill 0–1</span><input type="range" id="fill" min="0" max="1" step="0.02" value="0.50"></label>
+    <label><span class="k">smooth</span><input type="range" id="smooth" min="0" max="10" step="1" value="4"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>pack</legend>
+    <label><span class="k">tiles</span>
+      <select id="pack">
+        <option value="test">test (16 cores)</option>
+        <option value="nanobanana">nanobanana</option>
+        <option value="gpt">gpt</option>
+      </select>
+    </label>
+    <label><span class="k">debug grid</span><input type="checkbox" id="showGrid"></label>
+    <label><span class="k">índices</span><input type="checkbox" id="showIdx"></label>
+  </fieldset>
+
+  <div class="row">
+    <button id="btnExport">exportar PNG</button>
+  </div>
+
+  <fieldset>
+    <legend>legenda</legend>
+    <div class="legend-grid" id="legendGrid"></div>
+  </fieldset>
+</aside>
+
+<main>
+  <div class="stage">
+    <canvas id="cv" width="1024" height="768"></canvas>
+    <div class="stats" id="stats"></div>
+  </div>
+</main>
+
+<script>
+// ---------- PRNG (Mulberry32) ----------
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashSeed(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+// ---------- Corner grid + smoothing ----------
+function genCorners(cw, ch, fill, smoothPasses, rng) {
+  let g = new Uint8Array(cw * ch);
+  for (let i = 0; i < g.length; i++) g[i] = rng() < fill ? 1 : 0;
+  const idx = (x, y) => x + y * cw;
+  for (let pass = 0; pass < smoothPasses; pass++) {
+    const next = new Uint8Array(g.length);
+    for (let y = 0; y < ch; y++) {
+      for (let x = 0; x < cw; x++) {
+        let n = 0, c = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= cw || ny >= ch) continue;
+            n++; if (g[idx(nx, ny)]) c++;
+          }
+        }
+        next[idx(x, y)] = (c * 2 > n) ? 1 : (c * 2 < n ? 0 : g[idx(x, y)]);
+      }
+    }
+    g = next;
+  }
+  return g;
+}
+
+// ---------- Wang lookup (cr31: NE=1, SE=2, SW=4, NW=8) ----------
+function wangIndex(nw, ne, sw, se) {
+  return (ne ? 1 : 0) | (se ? 2 : 0) | (sw ? 4 : 0) | (nw ? 8 : 0);
+}
+
+// ---------- Test pack: 16 colored tiles in offscreen canvases ----------
+function hsv2rgb(h, s, v) {
+  const i = Math.floor(h * 6), f = h * 6 - i;
+  const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+  let r, g, b;
+  switch (i % 6) {
+    case 0: r=v; g=t; b=p; break;
+    case 1: r=q; g=v; b=p; break;
+    case 2: r=p; g=v; b=t; break;
+    case 3: r=p; g=q; b=v; break;
+    case 4: r=t; g=p; b=v; break;
+    case 5: r=v; g=p; b=q; break;
+  }
+  return [r * 255 | 0, g * 255 | 0, b * 255 | 0];
+}
+function shade(rgb, f) { return rgb.map(c => Math.max(0, Math.min(255, c * f | 0))); }
+function rgbStr(rgb) { return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`; }
+
+function buildTestPack(tileSize) {
+  const tiles = [];
+  for (let i = 0; i < 16; i++) {
+    const c = document.createElement('canvas');
+    c.width = c.height = tileSize;
+    const ctx = c.getContext('2d');
+    const base = hsv2rgb(i / 16, 0.78, 0.95);
+    ctx.fillStyle = rgbStr(base);
+    ctx.fillRect(0, 0, tileSize, tileSize);
+    const half = tileSize / 2;
+    const quads = [
+      { name: 'NW', bit: 8, x: 0,    y: 0 },
+      { name: 'NE', bit: 1, x: half, y: 0 },
+      { name: 'SW', bit: 4, x: 0,    y: half },
+      { name: 'SE', bit: 2, x: half, y: half },
+    ];
+    for (const q of quads) {
+      const upper = (i & q.bit) !== 0;
+      ctx.fillStyle = rgbStr(shade(base, upper ? 1.18 : 0.50));
+      ctx.fillRect(q.x, q.y, half, half);
+    }
+    ctx.fillStyle = '#000';
+    ctx.font = `${Math.max(8, tileSize/3 | 0)}px monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const txt = String(i).padStart(2, '0');
+    for (const [ox, oy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      ctx.fillText(txt, half + ox, half + oy);
+    }
+    ctx.fillStyle = '#fff';
+    ctx.fillText(txt, half, half);
+    tiles.push(c);
+  }
+  return Promise.resolve({ tiles, palette: tiles.map((_, i) => hsv2rgb(i/16, 0.78, 0.95)) });
+}
+
+function buildPngPack(packName, tileSize) {
+  const promises = [];
+  for (let i = 0; i < 16; i++) {
+    const idx = String(i).padStart(2, '0');
+    const url = `../../assets/terrain/${packName}/wang_${idx}.png`;
+    promises.push(new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`falhou: ${url}`));
+      img.src = url;
+    }));
+  }
+  return Promise.all(promises).then(imgs => {
+    const tiles = imgs.map(img => {
+      const c = document.createElement('canvas');
+      c.width = c.height = tileSize;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, tileSize, tileSize);
+      return c;
+    });
+    return { tiles, palette: null };
+  });
+}
+
+// ---------- Render ----------
+async function render() {
+  const seedRaw = $('seed').value || '0';
+  const gw = +$('gw').value, gh = +$('gh').value, ts = +$('ts').value;
+  const fill = +$('fill').value, smoothN = +$('smooth').value;
+  const packName = $('pack').value;
+  const showGrid = $('showGrid').checked;
+  const showIdx = $('showIdx').checked;
+  const zoom = +$('zoom').value;
+
+  const seed = /^\d+$/.test(seedRaw) ? +seedRaw : hashSeed(seedRaw);
+  const rng = mulberry32(seed);
+  const cw = gw + 1, ch = gh + 1;
+  const corners = genCorners(cw, ch, fill, smoothN, rng);
+
+  let pack;
+  try {
+    pack = packName === 'test'
+      ? await buildTestPack(ts)
+      : await buildPngPack(packName, ts);
+  } catch (e) {
+    console.warn(e);
+    document.getElementById('stats').textContent =
+      `pack '${packName}' não carregou (${e.message}) — caindo no test pack.`;
+    pack = await buildTestPack(ts);
+  }
+
+  const cv = $('cv');
+  cv.width = gw * ts;
+  cv.height = gh * ts;
+  cv.style.width = (cv.width * zoom) + 'px';
+  cv.style.height = (cv.height * zoom) + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  let upperCount = 0;
+  for (let i = 0; i < corners.length; i++) if (corners[i]) upperCount++;
+
+  for (let y = 0; y < gh; y++) {
+    for (let x = 0; x < gw; x++) {
+      const nw = corners[x   + (y  ) * cw];
+      const ne = corners[x+1 + (y  ) * cw];
+      const sw = corners[x   + (y+1) * cw];
+      const se = corners[x+1 + (y+1) * cw];
+      const idx = wangIndex(nw, ne, sw, se);
+      ctx.drawImage(pack.tiles[idx], x * ts, y * ts);
+    }
+  }
+
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1;
+    for (let x = 0; x <= gw; x++) {
+      ctx.beginPath(); ctx.moveTo(x * ts + 0.5, 0); ctx.lineTo(x * ts + 0.5, gh * ts); ctx.stroke();
+    }
+    for (let y = 0; y <= gh; y++) {
+      ctx.beginPath(); ctx.moveTo(0, y * ts + 0.5); ctx.lineTo(gw * ts, y * ts + 0.5); ctx.stroke();
+    }
+  }
+  if (showIdx) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = `${Math.max(8, ts/3.5 | 0)}px monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let y = 0; y < gh; y++) {
+      for (let x = 0; x < gw; x++) {
+        const nw = corners[x   + (y  ) * cw];
+        const ne = corners[x+1 + (y  ) * cw];
+        const sw = corners[x   + (y+1) * cw];
+        const se = corners[x+1 + (y+1) * cw];
+        const idx = wangIndex(nw, ne, sw, se);
+        ctx.fillText(String(idx), x * ts + ts/2, y * ts + ts/2);
+      }
+    }
+  }
+
+  $('stats').textContent =
+    `seed=${seed} · grid=${gw}×${gh} · tile=${ts}px · zoom=${zoom}× · ` +
+    `corners upper=${upperCount}/${corners.length} (${(upperCount/corners.length*100).toFixed(1)}%) · pack=${packName}`;
+
+  drawLegend(pack);
+}
+
+function drawLegend(pack) {
+  const root = $('legendGrid');
+  root.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.textContent = String(i).padStart(2, '0');
+    if (pack.palette) {
+      cell.style.background = rgbStr(pack.palette[i]);
+    } else {
+      cell.style.background = '#222';
+      cell.style.backgroundImage = `url(${pack.tiles[i].toDataURL()})`;
+      cell.style.backgroundSize = 'cover';
+    }
+    root.appendChild(cell);
+  }
+}
+
+// ---------- UI wiring ----------
+const $ = id => document.getElementById(id);
+['seed','gw','gh','ts','fill','smooth','pack','showGrid','showIdx','zoom']
+  .forEach(id => $(id).addEventListener('input', render));
+$('btnRegen').addEventListener('click', render);
+$('btnRandom').addEventListener('click', () => {
+  $('seed').value = Math.floor(Math.random() * 1e9);
+  render();
+});
+$('btnExport').addEventListener('click', () => {
+  const url = $('cv').toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url; a.download = `wang_${$('seed').value}_${$('gw').value}x${$('gh').value}.png`;
+  a.click();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -5,9 +5,9 @@ Object.assign(Jogo.prototype, {
         const label = tipo === 'boi' ? 'boi' : 'vaca';
         const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
         let v = this.matter.add.image(x, y, tex);
-        // PixelLab dir sprites são 180×180; 0.40/0.45 dá ~72-81px in-world
-        const escala = tipo === 'boi' ? 0.45 : 0.40;
-        v.setScale(escala);
+        // setDisplaySize força tamanho visual fixo (anim frames 68px e static 180px viram mesma escala)
+        const tamanho = tipo === 'boi' ? 78 : 68;
+        v.setDisplaySize(tamanho, tamanho);
         const massa = tipo === 'boi' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);
         v.body.label = label;
@@ -220,48 +220,90 @@ Object.assign(Jogo.prototype, {
     },
 
     _texturaDirecional(v) {
-        // 4-dir picker baseado na velocidade do corpo (S/E/N/W)
+        // State machine + animação: vacas têm walk/run/eat/angry × 4 dir.
+        // Bois ainda não têm anim — usam sprite estático direcional.
         if (v.isBurger || v._inCurral) return;
-        const base = v.tipo === 'boi' ? 'boi' : 'vaca';
+
         const body = v.body;
         const vx = body?.velocity?.x || 0;
         const vy = body?.velocity?.y || 0;
         const speed = Math.sqrt(vx*vx + vy*vy);
+
+        // Direção: usa velocidade se em movimento, senão wanderAngle, senão último
         let dir = v._lastDir || 'S';
-        if (speed > 0.05) {
-            const deg = (Math.atan2(vy, vx) * 180 / Math.PI + 360) % 360;
+        let angRad = null;
+        if (speed > 0.08) angRad = Math.atan2(vy, vx);
+        else if (typeof v.wanderAngle === 'number') angRad = v.wanderAngle;
+        if (angRad !== null) {
+            const deg = (angRad * 180 / Math.PI + 360) % 360;
             if (deg < 45 || deg >= 315) dir = 'E';
             else if (deg < 135) dir = 'S';
             else if (deg < 225) dir = 'W';
             else dir = 'N';
             v._lastDir = dir;
         }
-        const key = `${base}_${dir}`;
-        if (v.texture.key !== key) v.setTexture(key);
+
+        // Boi: sprite estático direcional (sem anim)
+        if (v.tipo === 'boi') {
+            const key = `boi_${dir}`;
+            if (v.texture.key !== key) v.setTexture(key);
+            return;
+        }
+
+        // Vaca: state machine
+        let state;
+        if (this.vacas_abduzidas.includes(v))     state = 'angry';
+        else if (v._fleeing)                       state = 'run';
+        else if (v._eating)                        state = 'eat';
+        else                                       state = 'walk';
+
+        const animKey = `vaca_${state}_${dir}`;
+        const cur = v.anims.currentAnim?.key;
+        if (cur !== animKey && this.anims.exists(animKey)) {
+            v.play(animKey, true);
+        }
     },
 
     _atualizarIAVacas() {
-        const FLEE_DIST = 160;
+        const FLEE_DIST = 240;            // raio onde vaca começa a correr (era 160)
         const FLEE_DIST_SQ = FLEE_DIST * FLEE_DIST;
         for (let i = 0; i < this.vacas.length; i++) {
             const v = this.vacas[i];
             if (!v.scene || !v.body || v._dying) continue;
             if (v.isBurger || v.presaNaMoita || v.presaNaGrama || v._inCurral) continue;
-            if (this.vacas_abduzidas.includes(v)) continue;
-            this._texturaDirecional(v);
+            // Abduzidas tocam anim "angry" mas não rodam IA de movimento (beam controla)
+            if (this.vacas_abduzidas.includes(v)) {
+                this._texturaDirecional(v);
+                continue;
+            }
 
             const dx = v.x - this.nave.x, dy = v.y - this.nave.y;
             const distSq = dx*dx + dy*dy;
             const baseF = v.tipo === 'boi' ? 0.0010 : 0.0016;
 
             if (distSq >= FLEE_DIST_SQ) {
-                // Idle — caminha no rumo do walkTimer com força reduzida (sem rotação manual)
-                if (v._wandering) {
+                // Far do player: alterna entre comer e andar com timer
+                v._fleeing = false;
+                if (v._eatTimer === undefined) v._eatTimer = 0;
+                v._eatTimer -= 16; // ~16ms por frame approx
+                if (v._eatTimer <= 0) {
+                    // 60% chance de comer, 40% de andar
+                    v._eating = Math.random() < 0.60;
+                    v._eatTimer = v._eating
+                        ? Phaser.Math.Between(2500, 5000)   // come 2.5-5s
+                        : Phaser.Math.Between(1500, 3500);  // anda 1.5-3.5s
+                }
+                if (!v._eating && v._wandering) {
                     const idleF = baseF * 0.5;
                     v.applyForce({ x: Math.cos(v.wanderAngle) * idleF, y: Math.sin(v.wanderAngle) * idleF });
                 }
+                this._texturaDirecional(v);
                 continue;
             }
+            // Dentro do raio de fuga: corre
+            v._fleeing = true;
+            v._eating = false;
+            this._texturaDirecional(v);
 
             // Fuga — quanto mais perto a nave, mais forte (fade-in suave)
             const intensidade = 1 - Math.sqrt(distSq) / FLEE_DIST;

@@ -33,6 +33,20 @@ Object.assign(Jogo.prototype, {
         this.load.image('fazendeiro',      'assets/pixel_labs/chars/fazendeiro/south.png');
         // hambúrguer agora vem do PixelLab (substitui geometria antiga)
         this.load.image('hamburguer',      'assets/pixel_labs/items/burger_classic.png');
+
+        // ── ANIMAÇÕES VACA (4 estados × 4 direções × N frames) ───────
+        // walk=4, run=8, eat=7, angry=7 — total 104 frames
+        const VACA_ANIMS = { walk: 4, run: 8, eat: 7, angry: 7 };
+        ['S','E','N','W'].forEach(d => {
+            const longDir = ({S:'south', E:'east', N:'north', W:'west'})[d];
+            Object.entries(VACA_ANIMS).forEach(([name, count]) => {
+                for (let i = 0; i < count; i++) {
+                    const f = String(i).padStart(3, '0');
+                    this.load.image(`vaca_${name}_${d}_${i}`,
+                        `assets/pixel_labs/chars/vaca/anims/${name}/${d}/frame_${f}.png`);
+                }
+            });
+        });
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');
