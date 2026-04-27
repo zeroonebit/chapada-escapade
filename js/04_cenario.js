@@ -46,69 +46,16 @@ Object.assign(Jogo.prototype, {
         this.terrainGrid = grid;
         this.terrainCell = CELL;
 
-        // ── 3. RENDER em camadas (layered overlap)
-        // Base água ocupa o mapa inteiro — outros terrenos pintam por cima onde altitude >= layer
-        this.add.rectangle(W/2, H/2, W, H, 0x3a7aa0).setDepth(0);
-        // Reflexo de água — pequenas ondulações
-        const waterFx = this.add.graphics().setDepth(0.01);
-        waterFx.fillStyle(0x5a9bc4, 0.25);
-        for (let i = 0; i < 80; i++) {
-            const wx = Math.random()*W, wy = Math.random()*H;
-            waterFx.fillEllipse(wx, wy, 18 + Math.random()*22, 4);
-        }
+        // ── 3. RENDER via fragment shader cell-shaded (13_terrain_shader.js)
+        // Substitui o Wang tile rendering antigo — terreno gerado por GLSL com
+        // ink lines nas bordas, posterize cell-shade, água ondulando.
+        this._setupTerrainShader(W, H);
 
-        // Função pra desenhar polígono wobbly (orgânico) numa célula
+        // Mantém função de noise pra compat (algumas funções consultam this._noiseR)
         const noise = (a, seed) =>
               Math.sin(a*3 + seed)        * 0.10
             + Math.sin(a*5 + seed*1.7)    * 0.06
             + Math.sin(a*7 + seed*2.3)    * 0.04;
-
-        const drawWobblyCell = (gfx, cx, cy, baseR, seed) => {
-            const SEG = 12;
-            gfx.beginPath();
-            for (let i = 0; i <= SEG; i++) {
-                const a = (i / SEG) * Math.PI * 2;
-                const r = baseR * (1 + noise(a, seed));
-                const px = cx + Math.cos(a) * r;
-                const py = cy + Math.sin(a) * r;
-                if (i === 0) gfx.moveTo(px, py); else gfx.lineTo(px, py);
-            }
-            gfx.closePath();
-            gfx.fillPath();
-        };
-
-        // ── WANG TILE RENDERING (substitui o layered overlap antigo) ──
-        // Para cada cell, calcula bitmask Wang (TL TR BL BR) baseado em
-        // self + 3 vizinhos (right, below, down-right). Bit=1 quando altitude>=2 (grama).
-        const grassBit = (gx, gy) => {
-            if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return 0;
-            return grid[gy][gx] >= 2 ? 1 : 0;
-        };
-
-        // Fallback pra patterns não geradas (diagonais 0110/1001)
-        const PATTERN_FALLBACK = { '0110': '0011', '1001': '1100' };
-        const tileExists = (key) => this.textures.exists(key);
-
-        for (let y = 0; y < ROWS; y++) {
-            for (let x = 0; x < COLS; x++) {
-                const tl = grassBit(x,   y);
-                const tr = grassBit(x+1, y);
-                const bl = grassBit(x,   y+1);
-                const br = grassBit(x+1, y+1);
-                let pattern = `${tl}${tr}${bl}${br}`;
-                let tileKey = `wang_${pattern}`;
-                if (!tileExists(tileKey) && PATTERN_FALLBACK[pattern]) {
-                    tileKey = `wang_${PATTERN_FALLBACK[pattern]}`;
-                }
-                if (!tileExists(tileKey)) tileKey = `wang_0000`; // fallback final
-                const cx = x * CELL + CELL/2;
-                const cy = y * CELL + CELL/2;
-                // +2 px de overlap pra evitar gap de antialiasing
-                this.add.image(cx, cy, tileKey).setDisplaySize(CELL+2, CELL+2).setDepth(0.2);
-            }
-        }
-
-        // (Tufos decorativos removidos — agora vêm baked dentro dos Wang tiles)
 
         // ── 4. GRASS PATCHES — gera pontos de grama pra IA de fuga das vacas
         // (substitui o sistema antigo de blobs explícitos)

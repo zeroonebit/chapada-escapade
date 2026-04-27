@@ -2,7 +2,7 @@
 // Carregado por último: depende de Jogo (definido em 01_scene.js + módulos)
 
 const config = {
-    type: Phaser.CANVAS,  // Canvas evita bloqueio CORS no protocolo file://
+    type: Phaser.WEBGL,  // WEBGL necessário pro shader procedural de terreno (13_terrain_shader.js)
     parent: 'game-host',
     scale: {
         mode: Phaser.Scale.RESIZE,
