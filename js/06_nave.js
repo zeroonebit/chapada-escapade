@@ -124,17 +124,15 @@ Object.assign(Jogo.prototype, {
     _atualizarPaciencia(delta) {
         this.pacienciaAtual -= 2.2 * this.dificuldade * (delta/1000);
         if (this.pacienciaAtual <= 0) { this.pacienciaAtual = 0; this._gameOver(); }
-        let pct = this.pacienciaAtual / this.pacienciaMax;
+        const pct = this.pacienciaAtual / this.pacienciaMax;
 
-        // Cover approach: cobre a parte DIREITA (vazia) da imagem de barra
-        const W = this._pacW || 300;
-        this.barraPaciencia.width = Math.max(0, W * (1 - pct));
-        this.barraPaciencia.x    = (this._pacLeft || 0) + W * pct;
-
-        // Tint vermelho na imagem quando crítico
-        if (this.hud && this.hud.pacImg) {
-            if (pct < 0.25) this.hud.pacImg.setTint(0xff5555);
-            else            this.hud.pacImg.clearTint();
+        // Redesenha gradiente amarelo→vermelho na largura proporcional
+        const b = this._pacBar || { x: 0, y: 0, w: 0, h: 0 };
+        const filledW = Math.max(0, b.w * pct);
+        this.hud.pacFill.clear();
+        if (filledW > 0) {
+            this.hud.pacFill.fillGradientStyle(0xffdd44, 0xff3322, 0xffaa22, 0xcc1100, 1);
+            this.hud.pacFill.fillRect(b.x, b.y, filledW, b.h);
         }
     }
 

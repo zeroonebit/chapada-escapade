@@ -99,9 +99,16 @@ class Jogo extends Phaser.Scene {
         this._atualizarPaciencia(delta);
         this._atualizarIAVacas();
 
-        let cowsInBeam = 0;
-        for (const v of this.vacas_abduzidas) if (!v.isBurger && !v.isEnemy) cowsInBeam++;
-        this.textoContador.setText(cowsInBeam);
+        // Contadores separados por tipo na HUD
+        let vacasInBeam = 0, boisInBeam = 0;
+        for (const v of this.vacas_abduzidas) {
+            if (v.isBurger || v.isEnemy) continue;
+            if (v.tipo === 'boi') boisInBeam++;
+            else vacasInBeam++;
+        }
+        this.hud.vacaText.setText(vacasInBeam);
+        this.hud.boiText.setText(boisInBeam);
+        this.textoContador.setText(this.burgerCount);
 
         const cam = this.cameras.main;
         let cursor;
@@ -138,14 +145,13 @@ class Jogo extends Phaser.Scene {
         }
 
         const enePct = this.energiaLed / this.energiaMax;
-        // Cover approach: cobre parte direita (vazia) da imagem de barra graviton
-        const EW = this._eneW || 258;
-        this.barraEnergia.width = Math.max(0, EW * (1 - enePct));
-        this.barraEnergia.x    = (this._eneLeft || 0) + EW * enePct;
-        // Tint na imagem quando energia baixa
-        if (this.hud && this.hud.eneImg) {
-            if (enePct < 0.3) this.hud.eneImg.setTint(0xff3366);
-            else              this.hud.eneImg.clearTint();
+        // Redesenha gradiente azul→roxo proporcional
+        const eb = this._eneBar || { x: 0, y: 0, w: 0, h: 0 };
+        const eFill = Math.max(0, eb.w * enePct);
+        this.hud.eneFill.clear();
+        if (eFill > 0) {
+            this.hud.eneFill.fillGradientStyle(0x3399ff, 0xaa44ff, 0x1166cc, 0x7722cc, 1);
+            this.hud.eneFill.fillRect(eb.x, eb.y, eFill, eb.h);
         }
 
         if (beamAtivo) {
