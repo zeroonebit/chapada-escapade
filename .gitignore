@@ -1,0 +1,21 @@
+# Sistema
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python (do tools/)
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude / sessão
+.claude/settings.local.json
+
+# Backup local (mantém .html versionado, mas não duplica refs muito grandes)
+# refs/  # descomente se quiser excluir os JPGs originais de prompts (~MBs)

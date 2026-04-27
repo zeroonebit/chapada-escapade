@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Alien Delivery</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+    <style>
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: monospace;
+        }
+        #wrap {
+            width: 100vw; height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #game-host {
+            width: 50vw; height: 50vh;
+            box-shadow: 0 0 30px rgba(0, 200, 80, 0.15);
+            border: 2px solid #1a3322;
+        }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<div id="wrap"><div id="game-host"></div></div>
+<script>
+class Jogo extends Phaser.Scene {
+    constructor() { super('Jogo'); }
+
+    create() {
+        const W = 3200, H = 2400;
+        this.matter.world.setBounds(0, 0, W, H);
+        this.cameras.main.setBounds(0, 0, W, H);
+
+        // ── SPRITES GEOMÉTRICOS ──────────────────────────────────────
+        let g = this.add.graphics();
+
+        // NAVE — disco redondo
+        g.fillStyle(0x00dd44, 1); g.fillCircle(20, 20, 19);
+        g.fillStyle(0x009933, 1); g.fillCircle(20, 20, 14);
+        g.lineStyle(2, 0x003311, 1); g.strokeCircle(20, 20, 19);
+        g.fillStyle(0x001a08, 1); g.fillCircle(20, 20, 9);
+        g.fillStyle(0x44ffaa, 0.9); g.fillCircle(17, 18, 2); g.fillCircle(23, 18, 2);
+        g.generateTexture('nave', 40, 40);
+
+        // VACA — branca com manchas marrom
+        g.clear();
+        g.fillStyle(0xffffff, 1); g.fillRect(3,7,14,13);
+        g.fillStyle(0xf5f5f5, 1); g.fillRect(5,2,10,8);
+        g.fillStyle(0xeeddcc, 1); g.fillRect(4,18,4,8); g.fillRect(12,18,4,8);
+        g.fillStyle(0x8b5a2b, 1); g.fillRect(7,9,6,4);
+        g.fillStyle(0x8b5a2b, 1); g.fillRect(13,14,3,4);
+        g.fillStyle(0x8b5a2b, 1); g.fillRect(4,15,2,3);
+        g.fillStyle(0x111111, 1); g.fillRect(8,4,2,2);
+        g.fillStyle(0xffbbbb, 1); g.fillRect(5,2,3,3);
+        g.generateTexture('vaca', 20, 28);
+
+        // VACA MARROM — gordinha, com manchas brancas, rende mais burgers
+        g.clear();
+        g.fillStyle(0x7a4a1e, 1); g.fillRect(1,7,20,15);
+        g.fillStyle(0x5e3815, 1); g.fillRect(4,2,14,9);
+        g.fillStyle(0x3e2510, 1); g.fillRect(2,19,5,9); g.fillRect(15,19,5,9);
+        g.fillStyle(0xffffff, 1); g.fillRect(7,10,6,5);
+        g.fillStyle(0xffffff, 1); g.fillRect(14,15,4,4);
+        g.fillStyle(0xffffff, 1); g.fillRect(2,14,3,3);
+        g.fillStyle(0x111111, 1); g.fillRect(8,4,2,2);
+        g.fillStyle(0xffbbbb, 1); g.fillRect(4,2,3,3);
+        g.generateTexture('vaca_marrom', 22, 30);
+
+        // HAMBÚRGUER — moedinha vista de cima (pão com gergelim)
+        g.clear();
+        g.fillStyle(0xa0671e, 1); g.fillCircle(10, 10, 9);
+        g.fillStyle(0xc88e44, 1); g.fillCircle(10, 10, 7);
+        g.lineStyle(1.5, 0x5c2e0d, 1); g.strokeCircle(10, 10, 9);
+        // gergelim
+        g.fillStyle(0xfff0c0, 1);
+        g.fillCircle(10, 6, 1); g.fillCircle(7, 8, 1); g.fillCircle(13, 8, 1);
+        g.fillCircle(8, 12, 1); g.fillCircle(12, 12, 1); g.fillCircle(10, 14, 1);
+        // brilho
+        g.fillStyle(0xffe9b0, 0.4); g.fillCircle(7, 7, 2);
+        g.generateTexture('hamburguer', 20, 20);
+
+        // CURRAL — chão de terra com cerca de madeira
+        g.clear();
+        g.fillStyle(0x8b6839, 1); g.fillCircle(50, 50, 46);
+        g.fillStyle(0xa07840, 0.55); g.fillCircle(50, 50, 32);
+        // Cerca: postes ao redor
+        g.fillStyle(0x5c3a18, 1);
+        g.lineStyle(3, 0x5c3a18, 1);
+        g.strokeCircle(50, 50, 46);
+        for (let i = 0; i < 14; i++) {
+            const a = (i / 14) * Math.PI * 2;
+            const px = 50 + Math.cos(a) * 46, py = 50 + Math.sin(a) * 46;
+            g.fillRect(px - 3, py - 3, 6, 6);
+        }
+        // entrada — gap norte
+        g.fillStyle(0x8b6839, 1); g.fillRect(44, 0, 12, 8);
+        g.generateTexture('curral', 100, 100);
+
+        // GAIOLA
+        g.clear(); g.lineStyle(3, 0xff2222, 1); g.strokeRect(0,0,24,34); g.lineBetween(6,0,6,34); g.lineBetween(18,0,18,34); g.lineBetween(0,11,24,11); g.lineBetween(0,23,24,23);
+        g.generateTexture('gaiola_recusa', 24, 34);
+
+        // ROCHA
+        g.clear(); g.fillStyle(0x666677, 1);
+        g.beginPath(); g.moveTo(10,0); g.lineTo(38,4); g.lineTo(44,22); g.lineTo(32,42); g.lineTo(8,38); g.lineTo(0,18); g.closePath(); g.fillPath();
+        g.lineStyle(2, 0x333344, 1);
+        g.beginPath(); g.moveTo(10,0); g.lineTo(38,4); g.lineTo(44,22); g.lineTo(32,42); g.lineTo(8,38); g.lineTo(0,18); g.closePath(); g.strokePath();
+        g.generateTexture('rocha_organica', 44, 42);
+
+        // MOITA
+        g.clear(); g.fillStyle(0x1a5c1a, 1); g.lineStyle(2, 0x0d3d0d, 1);
+        g.beginPath(); g.moveTo(15,0); g.lineTo(0,28); g.lineTo(30,28); g.closePath(); g.fillPath(); g.strokePath();
+        g.beginPath(); g.moveTo(15,10); g.lineTo(2,36); g.lineTo(28,36); g.closePath(); g.fillPath(); g.strokePath();
+        g.generateTexture('moita', 30, 40);
+
+        g.destroy();
+
+        // ── CENÁRIO ──────────────────────────────────────────────────
+        this.add.rectangle(W/2, H/2, W, H, 0xb8a870).setDepth(0);
+        let grid = this.add.graphics().setDepth(0);
+        grid.lineStyle(1, 0xa89860, 0.3);
+        for(let x=0; x<=W; x+=120) grid.lineBetween(x,0,x,H);
+        for(let y=0; y<=H; y+=120) grid.lineBetween(0,y,W,y);
+        this.add.rectangle(W/2, 600, W, 8, 0x5c3520).setDepth(1);
+
+        // ── CAMPOS DE GRAMA (noise blobs, boolean union visual) ───────
+        this.grassPatches = [];
+        const SEGMENTS = 56;
+        const noiseR = (a, seed) =>
+              Math.sin(a*3 + seed)        * 0.14
+            + Math.sin(a*5 + seed*1.7)    * 0.08
+            + Math.sin(a*7 + seed*2.3)    * 0.05
+            + Math.sin(a*11 + seed*3.1)   * 0.03;
+
+        for (let i = 0; i < 4; i++) {
+            this.grassPatches.push({
+                x: Phaser.Math.Between(500, W-500),
+                y: Phaser.Math.Between(500, H-500),
+                r: Phaser.Math.Between(160, 240),
+                seed: Math.random() * 1000
+            });
+        }
+
+        const grassGfx = this.add.graphics().setDepth(0.3);
+        // Fill base (alpha=1, mesma cor → união boolean visual nos overlaps)
+        grassGfx.fillStyle(0x82b048, 1);
+        for (const p of this.grassPatches) {
+            grassGfx.beginPath();
+            for (let i = 0; i <= SEGMENTS; i++) {
+                const a = (i / SEGMENTS) * Math.PI * 2;
+                const rr = p.r * (1 + noiseR(a, p.seed));
+                const x = p.x + Math.cos(a)*rr, y = p.y + Math.sin(a)*rr;
+                if (i === 0) grassGfx.moveTo(x, y); else grassGfx.lineTo(x, y);
+            }
+            grassGfx.closePath(); grassGfx.fillPath();
+        }
+        // Camada interna mais escura, ligeiramente menor (dá profundidade)
+        grassGfx.fillStyle(0x6e9b3a, 0.55);
+        for (const p of this.grassPatches) {
+            grassGfx.beginPath();
+            for (let i = 0; i <= SEGMENTS; i++) {
+                const a = (i / SEGMENTS) * Math.PI * 2;
+                const rr = p.r * 0.78 * (1 + noiseR(a, p.seed + 10));
+                const x = p.x + Math.cos(a)*rr, y = p.y + Math.sin(a)*rr;
+                if (i === 0) grassGfx.moveTo(x, y); else grassGfx.lineTo(x, y);
+            }
+            grassGfx.closePath(); grassGfx.fillPath();
+        }
+        // Tufos
+        for (const p of this.grassPatches) {
+            const tufts = Math.floor(p.r / 7);
+            grassGfx.fillStyle(0x4f7a22, 0.85);
+            for (let j = 0; j < tufts; j++) {
+                const a = Math.random()*Math.PI*2, rr = Math.random()*p.r*0.85;
+                const px = p.x + Math.cos(a)*rr, py = p.y + Math.sin(a)*rr;
+                grassGfx.fillTriangle(px-2, py+3, px+2, py+3, px, py-4);
+            }
+            grassGfx.fillStyle(0xb5d472, 0.6);
+            for (let j = 0; j < tufts/2; j++) {
+                const a = Math.random()*Math.PI*2, rr = Math.random()*p.r*0.8;
+                const px = p.x + Math.cos(a)*rr, py = p.y + Math.sin(a)*rr;
+                grassGfx.fillTriangle(px-1.5, py+2, px+1.5, py+2, px, py-3);
+            }
+        }
+        this._noiseR = noiseR;
+
+        for(let i=0; i<16; i++) {
+            let cx = Phaser.Math.Between(300, W-300), cy = Phaser.Math.Between(300, H-300);
+            if(Math.random()>0.5) {
+                for(let j=0; j<5; j++) {
+                    let r=Math.random()*80, a=Math.random()*Math.PI*2;
+                    let o = this.matter.add.image(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 'moita', null, {isStatic:true, shape:'circle'});
+                    o.setDepth(1).setScale(Phaser.Math.FloatBetween(0.8,1.5)).body.label='moita';
+                }
+            } else {
+                for(let j=0; j<3; j++) {
+                    let r=Math.random()*60, a=Math.random()*Math.PI*2, s=Phaser.Math.FloatBetween(1.0,2.5);
+                    let o = this.matter.add.image(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 'rocha_organica', null, {isStatic:true, shape:'circle'});
+                    o.setDepth(1).setScale(s).body.label='rocha';
+                }
+            }
+        }
+
+        // ── CURRAIS ──────────────────────────────────────────────────
+        this.currais = [];
+        this.driveThrus = this.currais; // alias temporário
+        for(let i=0; i<5; i++) {
+            let img = this.add.image(Phaser.Math.Between(400,W-400), Phaser.Math.Between(400,H-400), 'curral').setDepth(1);
+            this.add.text(img.x, img.y, 'CRL', {fontSize:'14px', fill:'#1a0800', fontStyle:'bold'}).setOrigin(0.5).setDepth(2);
+            this.currais.push({ x: img.x, y: img.y, sprite: img, processing: [], ready: [] });
+        }
+
+        // ── NAVE ─────────────────────────────────────────────────────
+        this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1);
+        const CONE_R = 40*5.55/2;
+        this.raioCone = CONE_R;
+        this.coneLuz = this.add.graphics().setDepth(2).setVisible(false);
+        this._desenharCone(CONE_R);
+        this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
+        this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
+
+        // ── LEDS GIRANDO (12, gradiente cometa, alterna azul/vermelho) ──
+        this.leds = [];
+        this.ledHalos = [];
+        const N_LEDS = 12;
+        const LED_R = 22;
+        for (let i = 0; i < N_LEDS; i++) {
+            const ang = (i / N_LEDS) * Math.PI * 2 - Math.PI/2;
+            const halo = this.add.circle(0, 0, 6, 0x000000, 0).setDepth(9);
+            const led  = this.add.circle(0, 0, 2.2, 0x222222).setDepth(11);
+            led._ang = ang; halo._ang = ang;
+            this.leds.push(led); this.ledHalos.push(halo);
+        }
+        this._ledHead = 0;          // posição contínua da "cabeça" do cometa
+        this._ledRotMs = 900;       // ms por volta completa
+
+        // ── VACAS ────────────────────────────────────────────────────
+        this.vacas = [];
+        this.vacas_abduzidas = [];
+        this._spawnVacas(40);
+
+        // ── ESTADO ───────────────────────────────────────────────────
+        this.burgerCount = 0;
+        this.scoreAtual = 0;
+        this.pacienciaMax = 100;
+        this.pacienciaAtual = 100;
+        this.dificuldade = 1;
+        this.gameOver = false;
+        this.energiaMax = 100;
+        this.energiaLed = 100;
+        this.energiaDrain = 5;    // % por segundo enquanto beam ativo (20s contínuos)
+        this.energiaRegen = 30;   // % por segundo enquanto desligado (~3.3s pra encher)
+
+        // ── HUD ──────────────────────────────────────────────────────
+        this.hud = {};
+        this._criarHUD();
+        this._posicionarHUD();
+        this.scale.on('resize', () => this._posicionarHUD());
+
+        // ── CURSOR VIRTUAL & POINTER LOCK ────────────────────────────
+        this.virtualX = this.scale.width / 2;
+        this.virtualY = this.scale.height / 2;
+
+        this.input.on('pointermove', (p) => {
+            this.virtualX = p.x;
+            this.virtualY = p.y;
+        });
+
+        this.input.on('pointerdown', () => {
+            if(this.gameOver) return;
+            if(this.hud.hint) { this.hud.hint.destroy(); this.hud.hint = null; }
+            if(this.hud.hintBg) { this.hud.hintBg.destroy(); this.hud.hintBg = null; }
+        });
+
+        this.cameras.main.startFollow(this.nave, true, 0.05, 0.05);
+
+        // Repovoamento periódico
+        this.time.addEvent({delay:6000, loop:true, callback:()=>{ if(!this.gameOver) this._repovoar(); }});
+
+        // ── COLISÕES ─────────────────────────────────────────────────
+        this.matter.world.on('collisionstart', (event) => {
+            event.pairs.forEach(pair => {
+                let a=pair.bodyA.gameObject, b=pair.bodyB.gameObject;
+                if(!a||!b) return;
+                let vacaKeys = ['vaca','vaca_marrom','hamburguer'];
+                if(a.scene && a.texture && vacaKeys.includes(a.texture.key)) this._colisaoAmbiente(a, b.body.label);
+                if(b.scene && b.texture && vacaKeys.includes(b.texture.key)) this._colisaoAmbiente(b, a.body.label);
+            });
+        });
+    }
+
+    _criarHUD() {
+        this.hud.scoreBg = this.add.rectangle(0,0,200,36,0x111111).setStrokeStyle(2,0x00dd44).setScrollFactor(0).setDepth(100);
+        this.hud.scoreText = this.add.text(0,0,'SCORE  0',{fontSize:'15px',fill:'#00dd44',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        this.textoScore = this.hud.scoreText;
+
+        this.hud.burgerBg = this.add.rectangle(0,0,80,38,0x111111).setStrokeStyle(2,0xff6600).setScrollFactor(0).setDepth(100);
+        this.hud.burgerIcon = this.add.text(0,0,'🐄',{fontSize:'16px'}).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        this.hud.burgerText = this.add.text(0,0,'0',{fontSize:'22px',fill:'#ff8800',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        this.textoContador = this.hud.burgerText;
+
+        this.hud.pacBg = this.add.rectangle(0,0,340,18,0x111111).setStrokeStyle(2,0x444444).setScrollFactor(0).setDepth(100);
+        this.hud.pacBar = this.add.rectangle(0,0,340,18,0x00ff44).setOrigin(0,0.5).setScrollFactor(0).setDepth(100);
+        this.barraPaciencia = this.hud.pacBar;
+        this.hud.pacLabel = this.add.text(0,0,'COMBUSTÍVEL',{fontSize:'10px',fill:'#888888',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+        // Barra roxa — Energia Gravitacional
+        this.hud.eneBg  = this.add.rectangle(0,0,300,12,0x111111).setStrokeStyle(2,0x553388).setScrollFactor(0).setDepth(100);
+        this.hud.eneBar = this.add.rectangle(0,0,300,12,0xaa44ff).setOrigin(0,0.5).setScrollFactor(0).setDepth(100);
+        this.hud.eneLabel = this.add.text(0,0,'GRAVITON',{fontSize:'8px',fill:'#aa66dd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+        this.barraEnergia = this.hud.eneBar;
+
+        this.hud.difText = this.add.text(0,0,'LVL 1',{fontSize:'13px',fill:'#666666',fontStyle:'bold'}).setOrigin(1,0).setScrollFactor(0).setDepth(100);
+        this.textoDif = this.hud.difText;
+
+        this.hud.hintBg = this.add.rectangle(0,0,460,46,0x000000,0.7).setScrollFactor(0).setDepth(105);
+        this.hud.hint = this.add.text(0,0,'CLIQUE E SEGURE para abduzir',{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(106);
+
+        this.setaIndicadora = this.add.graphics().setScrollFactor(0).setDepth(101);
+        this.rastroMouse = [];
+        this.graficoRastro = this.add.graphics().setDepth(9);
+    }
+
+    _posicionarHUD() {
+        const w = this.scale.width, h = this.scale.height;
+        this.hud.scoreBg.setPosition(w/2, 22);
+        this.hud.scoreText.setPosition(w/2, 22);
+
+        this.hud.burgerBg.setPosition(52, 52);
+        this.hud.burgerIcon.setPosition(30, 52);
+        this.hud.burgerText.setPosition(60, 52);
+
+        this.hud.pacBg.setPosition(w/2, h-44);
+        this.hud.pacBar.setPosition(w/2 - 170, h-44);
+        this.hud.pacLabel.setPosition(w/2, h-60);
+
+        this.hud.eneBg.setPosition(w/2, h-22);
+        this.hud.eneBar.setPosition(w/2 - 150, h-22);
+        this.hud.eneLabel.setPosition(w/2, h-22);
+
+        this.hud.difText.setPosition(w-15, 12);
+
+        if(this.hud.hint) {
+            this.hud.hintBg.setPosition(w/2, h/2 + 60);
+            this.hud.hint.setPosition(w/2, h/2 + 60);
+        }
+    }
+
+    _desenharCone(r) {
+        this.coneLuz.clear();
+        this.coneLuz.fillStyle(0x66ff99, 0.06); this.coneLuz.fillCircle(0, 0, r);
+        this.coneLuz.fillStyle(0x66ff99, 0.10); this.coneLuz.fillCircle(0, 0, r * 0.78);
+        this.coneLuz.fillStyle(0x88ffaa, 0.14); this.coneLuz.fillCircle(0, 0, r * 0.45);
+    }
+
+    _atualizarLEDs(delta) {
+        const N = this.leds.length;
+        const LED_R = 22;
+        // avança a cabeça do cometa (em "índices de LED" por ms)
+        this._ledHead += (N / this._ledRotMs) * delta;
+        const fullRevs = Math.floor(this._ledHead / N);
+        const corBase = (fullRevs % 2 === 0)
+            ? { r: 0x33, g: 0x66, b: 0xff }   // azul
+            : { r: 0xff, g: 0x33, b: 0x33 };  // vermelho
+        const head = this._ledHead % N;
+        const TRAIL = 5;
+
+        for (let i = 0; i < N; i++) {
+            const led = this.leds[i];
+            const halo = this.ledHalos[i];
+            const x = this.nave.x + Math.cos(led._ang) * LED_R;
+            const y = this.nave.y + Math.sin(led._ang) * LED_R;
+            led.setPosition(x, y);
+            halo.setPosition(x, y);
+
+            // distância "atrás" da cabeça em sentido horário
+            let d = (head - i + N) % N;
+            if (d < TRAIL) {
+                const t = 1 - d / TRAIL;
+                const r = Math.round(corBase.r * t + 18 * (1 - t));
+                const gC = Math.round(corBase.g * t + 18 * (1 - t));
+                const b = Math.round(corBase.b * t + 18 * (1 - t));
+                led.fillColor = (r << 16) | (gC << 8) | b;
+                led.setScale(0.8 + t * 0.7);
+                halo.fillColor = led.fillColor;
+                halo.fillAlpha = 0.5 * t;
+                halo.setScale(0.6 + t * 1.2);
+            } else {
+                led.fillColor = 0x141414;
+                led.setScale(0.8);
+                halo.fillAlpha = 0;
+            }
+        }
+    }
+
+    _criarVaca(x, y, tipo = 'branca') {
+        const tex = tipo === 'marrom' ? 'vaca_marrom' : 'vaca';
+        let v = this.matter.add.image(x, y, tex);
+        const massa = tipo === 'marrom' ? 3.2 : 2;
+        v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);
+        v.isBurger = false;
+        v.presaNaMoita = false;
+        v.presaNaGrama = false;
+        v.gaiolaSprite = null;
+        v._dying = false;
+        v.tipo = tipo;
+        v.valorBurger = 100;
+        v.tempoAbducao = tipo === 'marrom' ? 4500 : 3000;
+        v.burgerYield = tipo === 'marrom' ? (Math.random() < 0.5 ? 2 : 3) : 1;
+        v.wanderAngle = Math.random() * Math.PI * 2;
+        v._wandering = true;
+
+        v.walkTimer = this.time.addEvent({
+            delay: Phaser.Math.Between(1200, 2800),
+            loop: true,
+            callback: () => {
+                if (!v.scene || !v.body || v._dying) return;
+                if (this.vacas_abduzidas.includes(v) || v.isBurger || v.presaNaMoita || v.presaNaGrama || v._inCurral) return;
+                // 20% de chance de parar pra "pastar", senão escolhe novo rumo
+                if (Math.random() < 0.2) { v._wandering = false; return; }
+                v.wanderAngle = Math.random() * Math.PI * 2;
+                v._wandering = true;
+            }
+        });
+
+        this.vacas.push(v);
+        return v;
+    }
+
+    _criarBurgerEntity(x, y) {
+        const b = this.matter.add.image(x, y, 'hamburguer', null, { shape: { type: 'circle', radius: 10 } });
+        b.setFrictionAir(0.015).setMass(0.5).setDepth(3).setCollisionCategory(2);
+        b.isBurger = true;
+        b.valorBurger = 100;
+        b.presaNaMoita = false;
+        b.presaNaGrama = false;
+        b.gaiolaSprite = null;
+        b._dying = false;
+        b._destroyed = false;
+        b.tipo = 'burger';
+        b.tempoAbducao = 0;
+        b.burgerYield = 1;
+        return b;
+    }
+
+    _isOverGrass(x, y) { return this._grassDepth(x, y) > 0; }
+
+    // Retorna 0 fora da grama, cresce até 1 no centro
+    _grassDepth(x, y) {
+        let maxD = 0;
+        for (let i = 0; i < this.grassPatches.length; i++) {
+            const g = this.grassPatches[i];
+            const dx = x - g.x, dy = y - g.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const ang = Math.atan2(dy, dx);
+            const rr = g.r * (1 + this._noiseR(ang, g.seed));
+            if (dist < rr) {
+                const d = 1 - dist / rr;
+                if (d > maxD) maxD = d;
+            }
+        }
+        return maxD;
+    }
+
+    _prenderNaGrama(v) {
+        if (!v || !v.scene || v._dying || v.presaNaGrama) return;
+        v.presaNaGrama = true;
+        this._soltarVaca(v);
+        if (v.scene && v.body) {
+            v.setStatic(true);
+            v.setDepth(4);
+            v.setTint(0xddffaa);
+        }
+    }
+
+    _spawnVacas(n) {
+        const W=3200, H=2400;
+        for(let i=0; i<n; i++) {
+            const tipo = Math.random() < 0.20 ? 'marrom' : 'branca';
+            this._criarVaca(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
+        }
+    }
+
+    // Idempotent destroy: safe to call multiple times.
+    _destruirVaca(v) {
+        if (!v || v._destroyed) return;
+        v._destroyed = true;
+        if (v.walkTimer) { v.walkTimer.remove(); v.walkTimer = null; }
+        if (v.timer)     { v.timer.remove();     v.timer = null; }
+        if (v.gaiolaSprite) {
+            this.tweens.killTweensOf(v.gaiolaSprite);
+            v.gaiolaSprite.destroy();
+            v.gaiolaSprite = null;
+        }
+        this.tweens.killTweensOf(v);
+        if (v.scene) v.destroy();
+    }
+
+    _colisaoAmbiente(vaca, label) {
+        if (vaca._dying || vaca._destroyed) return;
+
+        if (label === 'rocha') {
+            vaca._dying = true;
+            if (this.vacas_abduzidas.includes(vaca)) this._soltarVaca(vaca);
+            this.vacas = this.vacas.filter(v => v !== vaca);
+            vaca.setStatic(true);
+            vaca.setTint(0xff2222);
+            this.cameras.main.shake(120, 0.007);
+            this.tweens.add({
+                targets: vaca,
+                scale: 2.2,
+                alpha: 0,
+                duration: 220,
+                onComplete: () => this._destruirVaca(vaca)
+            });
+        }
+    }
+
+    _soltarVaca(vaca) {
+        this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v !== vaca);
+        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
+        if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
+    }
+
+    _repovoar() {
+        const W=3200, H=2400;
+        if (this.vacas.length >= 20) return;
+        let n = Math.min(4, 40 - this.vacas.length);
+        for (let i=0; i<n; i++) {
+            let e = Math.floor(Math.random()*4);
+            let x, y;
+            if (e===0) { x=Phaser.Math.Between(200, W-200); y=200; }
+            else if (e===1) { x=Phaser.Math.Between(200, W-200); y=H-200; }
+            else if (e===2) { x=200; y=Phaser.Math.Between(200, H-200); }
+            else { x=W-200; y=Phaser.Math.Between(200, H-200); }
+            const tipo = Math.random() < 0.20 ? 'marrom' : 'branca';
+            this._criarVaca(x, y, tipo);
+        }
+    }
+
+    update(time, delta) {
+        if (this.gameOver) return;
+
+        this.dificuldade += 0.000018 * delta;
+        this.textoDif.setText('LVL ' + Math.floor(this.dificuldade));
+
+        this._atualizarPaciencia(delta);
+        this._atualizarIAVacas();
+        // Contador HUD = vacas vivas no feixe (ignora burgers)
+        let cowsInBeam = 0;
+        for (const v of this.vacas_abduzidas) if (!v.isBurger) cowsInBeam++;
+        this.textoContador.setText(cowsInBeam);
+
+        const cam = this.cameras.main;
+        const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
+        const cursor = { x: wp.x, y: wp.y };
+
+        this._atualizarRastro(cursor);
+        this._moverNave(cursor);
+        this._atualizarSeta();
+
+        this.sombraNave.setPosition(this.nave.x+12, this.nave.y+22);
+        this.coneLuz.setPosition(this.nave.x, this.nave.y);
+        this._atualizarLEDs(delta);
+
+        const querBeam = this.input.activePointer.isDown;
+        const beamAtivo = querBeam && this.energiaLed > 0;
+
+        if (querBeam && this.energiaLed > 0) {
+            this.energiaLed -= this.energiaDrain * (delta/1000);
+            if (this.energiaLed < 0) this.energiaLed = 0;
+        } else if (!querBeam) {
+            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * (delta/1000));
+        }
+
+        // Atualiza barra
+        const enePct = this.energiaLed / this.energiaMax;
+        this.barraEnergia.width = 300 * enePct;
+        this.barraEnergia.fillColor = enePct > 0.3 ? 0xaa44ff : 0xff3366;
+
+        if (beamAtivo) {
+            this.coneLuz.setVisible(true);
+            this.coneLuz.setAlpha(1);
+            if (this.vacas_abduzidas.length < 5) this._tentarAbduzir();
+            this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
+        } else if (querBeam) {
+            // Energia esgotou: vacas caem, burgers ficam (são leves)
+            this._dropNonBurgers();
+            this.coneLuz.setVisible(true);
+            this.coneLuz.setAlpha(0.35);
+            this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
+        } else {
+            this._soltarTodas();
+            this.coneLuz.setVisible(false);
+        }
+
+        this._verificarEntrega();
+    }
+
+    _atualizarPaciencia(delta) {
+        this.pacienciaAtual -= 2.2 * this.dificuldade * (delta/1000);
+        if (this.pacienciaAtual <= 0) { this.pacienciaAtual = 0; this._gameOver(); }
+        let pct = this.pacienciaAtual / this.pacienciaMax;
+        this.barraPaciencia.width = 340 * pct;
+        this.barraPaciencia.fillColor = pct>0.5 ? 0x00ff44 : pct>0.25 ? 0xffcc00 : 0xff2222;
+    }
+
+    _gameOver() {
+        this.gameOver = true;
+        this._soltarTodas();
+
+        const w = this.scale.width, h = this.scale.height;
+        this.add.rectangle(w/2, h/2, w, h, 0x000000, 0.82).setScrollFactor(0).setDepth(200);
+        this.add.text(w/2, h/2-130, 'GAME  OVER', {fontSize:'48px', fill:'#ff2222', fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        this.add.text(w/2, h/2-50, 'SCORE', {fontSize:'14px', fill:'#888888', fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        this.add.text(w/2, h/2-12, this.scoreAtual, {fontSize:'40px', fill:'#00dd44', fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+        let btn = this.add.rectangle(w/2, h/2+70, 220, 44, 0x00dd44).setScrollFactor(0).setDepth(201).setInteractive({useHandCursor:true});
+        this.add.text(w/2, h/2+70, 'JOGAR NOVAMENTE', {fontSize:'14px', fill:'#001a08', fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
+        btn.on('pointerout',  () => btn.setFillStyle(0x00dd44));
+        btn.on('pointerdown', () => this.scene.restart());
+    }
+
+    _atualizarRastro(c) {
+        this.rastroMouse.unshift({x:c.x, y:c.y});
+        if (this.rastroMouse.length>18) this.rastroMouse.pop();
+        this.graficoRastro.clear();
+        for (let i=0; i<this.rastroMouse.length; i+=2) {
+            let f = 1-(i/18);
+            this.graficoRastro.fillStyle(0x001a00, f*0.6);
+            this.graficoRastro.fillRect(this.rastroMouse[i].x-3, this.rastroMouse[i].y-3, 6, 6);
+        }
+        this.graficoRastro.lineStyle(1.5, 0x001a00, 0.8);
+        this.graficoRastro.strokeRect(c.x-5, c.y-5, 10, 10);
+    }
+
+    _moverNave(c) {
+        let dist = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+        if (dist > 50) {
+            let ang = Phaser.Math.Angle.Between(this.nave.x, this.nave.y, c.x, c.y);
+            this.nave.applyForce({
+                x: Math.cos(ang) * Math.min(dist*0.0001, 0.0035),
+                y: Math.sin(ang) * Math.min(dist*0.0001, 0.0035)
+            });
+        }
+    }
+
+    _atualizarSeta() {
+        this.setaIndicadora.clear();
+        // Carregando vacas → mira curral mais próximo (qualquer)
+        // Currais com burgers prontos → mira o mais próximo entre eles (cor diferente)
+        let cowsInBeam = 0;
+        for (const v of this.vacas_abduzidas) if (!v.isBurger) cowsInBeam++;
+
+        let alvo = null, dMin = Infinity, cor = 0xffcc00;
+        if (cowsInBeam > 0) {
+            for (const c of this.currais) {
+                const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+                if (d < dMin) { dMin = d; alvo = c; }
+            }
+        } else if (this._anyCurralReady()) {
+            cor = 0xff8800; // laranja: tem burger esperando
+            for (const c of this.currais) {
+                if (c.ready.length === 0) continue;
+                const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+                if (d < dMin) { dMin = d; alvo = c; }
+            }
+        }
+        if (!alvo) return;
+
+        const cam = this.cameras.main;
+        if (cam.worldView.contains(alvo.x, alvo.y)) return;
+        const cx = this.scale.width/2, cy = this.scale.height/2;
+        const ang = Phaser.Math.Angle.Between(cam.midPoint.x, cam.midPoint.y, alvo.x, alvo.y);
+        const radius = Math.min(cx, cy) - 30;
+        const sx = cx + Math.cos(ang)*radius, sy = cy + Math.sin(ang)*radius;
+        this.setaIndicadora.fillStyle(cor, 1);
+        this.setaIndicadora.fillTriangle(
+            sx + Math.cos(ang)*16, sy + Math.sin(ang)*16,
+            sx + Math.cos(ang+2.5)*10, sy + Math.sin(ang+2.5)*10,
+            sx + Math.cos(ang-2.5)*10, sy + Math.sin(ang-2.5)*10
+        );
+    }
+
+    _tentarAbduzir() {
+        this.vacas.forEach(v => {
+            if (this.vacas_abduzidas.length >= 5) return;
+            if (v._dying || v._destroyed || v.presaNaMoita || v.presaNaGrama || v._inCurral || this.vacas_abduzidas.includes(v)) return;
+            let d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, v.x, v.y);
+            if (d <= this.raioCone) {
+                this.vacas_abduzidas.push(v);
+                v.setFrictionAir(0.015).setDepth(3);
+                if (v.walkTimer) v.walkTimer.paused = true;
+                // Vacas NÃO viram burger no feixe — só no curral
+            }
+        });
+    }
+
+    _fisicaBacia(v) {
+        if (!v.scene || !v.body || v._dying) return;
+        if (!v.isBurger) {
+            const depth = this._grassDepth(v.x, v.y);
+            if (depth > 0.7) { this._prenderNaGrama(v); return; }
+            // Atrito progressivo: 0.015 fora, sobe quadraticamente até quase travar
+            v.setFrictionAir(0.015 + depth * depth * 2.8);
+        }
+        let dx = this.nave.x-v.x, dy = this.nave.y-v.y;
+        let dist = Math.sqrt(dx*dx+dy*dy), ang = Math.atan2(dy, dx);
+        v.applyForce({x: Math.cos(ang)*0.0008, y: Math.sin(ang)*0.0008});
+        if (dist > this.raioCone*0.7) v.applyForce({x: Math.cos(ang)*0.003, y: Math.sin(ang)*0.003});
+        if (dist > 10) v.applyForce({x: (Math.random()-0.5)*0.001, y: (Math.random()-0.5)*0.001});
+        else v.setAngularVelocity(0);
+    }
+
+    _virarBurger(v) {
+        if (!v.scene || v._destroyed || v.isBurger) return;
+
+        if (v.tipo === 'marrom') {
+            // Vaca gorda vira 2-3 burgers (spawna entidades extras)
+            const yld = v.burgerYield || 2;
+            const px = v.x, py = v.y;
+            this.vacas_abduzidas = this.vacas_abduzidas.filter(x => x !== v);
+            this.vacas = this.vacas.filter(x => x !== v);
+            this._destruirVaca(v);
+            for (let i = 0; i < yld; i++) {
+                const ang = (i / yld) * Math.PI * 2;
+                const ox = Math.cos(ang) * 14, oy = Math.sin(ang) * 14;
+                const b = this._criarBurgerEntity(px + ox, py + oy);
+                this.vacas.push(b);
+                this.vacas_abduzidas.push(b);
+            }
+            this.burgerCount += yld;
+            this.textoContador.setText(this.burgerCount);
+            return;
+        }
+
+        v.setBody({type:'circle', radius:10});
+        v.setTexture('hamburguer');
+        v.isBurger = true;
+        v.setMass(0.5).setDepth(3);
+        this.burgerCount++;
+        this.textoContador.setText(this.burgerCount);
+    }
+
+    _atualizarIAVacas() {
+        const FLEE_DIST = 160;
+        const FLEE_DIST_SQ = FLEE_DIST * FLEE_DIST;
+        for (let i = 0; i < this.vacas.length; i++) {
+            const v = this.vacas[i];
+            if (!v.scene || !v.body || v._dying) continue;
+            if (v.isBurger || v.presaNaMoita || v.presaNaGrama || v._inCurral) continue;
+            if (this.vacas_abduzidas.includes(v)) continue;
+
+            const dx = v.x - this.nave.x, dy = v.y - this.nave.y;
+            const distSq = dx*dx + dy*dy;
+            const baseF = v.tipo === 'marrom' ? 0.0010 : 0.0016;
+
+            if (distSq >= FLEE_DIST_SQ) {
+                // Idle: caminha no rumo guardado pelo walkTimer, mesma força que a fuga
+                if (v._wandering) {
+                    v.applyForce({ x: Math.cos(v.wanderAngle) * baseF, y: Math.sin(v.wanderAngle) * baseF });
+                    v.setRotation(v.rotation + Phaser.Math.Angle.Wrap((v.wanderAngle + Math.PI/2) - v.rotation) * 0.1);
+                }
+                continue;
+            }
+
+            // Fuga: quanto mais perto a nave, mais forte (fade-in suave)
+            const intensidade = 1 - Math.sqrt(distSq) / FLEE_DIST;
+            // Mira grama; sem grama, vai pro lado oposto da nave
+            let alvoX = null, alvoY = null, melhor = Infinity;
+            for (let j = 0; j < this.grassPatches.length; j++) {
+                const g = this.grassPatches[j];
+                const gx = g.x - v.x, gy = g.y - v.y;
+                const d = gx*gx + gy*gy;
+                if (d < melhor) { melhor = d; alvoX = g.x; alvoY = g.y; }
+            }
+            let ang;
+            if (alvoX !== null) ang = Math.atan2(alvoY - v.y, alvoX - v.x);
+            else ang = Math.atan2(dy, dx);
+            const f = baseF * intensidade;
+            v.applyForce({ x: Math.cos(ang)*f, y: Math.sin(ang)*f });
+            v.setRotation(v.rotation + Phaser.Math.Angle.Wrap((ang + Math.PI/2) - v.rotation) * 0.1);
+        }
+    }
+
+    _soltarTodas() {
+        this.vacas_abduzidas.forEach(v => {
+            this._soltarVaca(v);
+            if (v.walkTimer) v.walkTimer.paused = false;
+        });
+        this.vacas_abduzidas = [];
+    }
+
+    _dropNonBurgers() {
+        const dropped = this.vacas_abduzidas.filter(v => !v.isBurger);
+        this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v.isBurger);
+        for (const v of dropped) {
+            if (v.scene && v.body && !v._dying) v.setFrictionAir(0.08).setDepth(5);
+            if (v.timer) { v.timer.remove(); v.timer = null; }
+            if (v.walkTimer) v.walkTimer.paused = false;
+        }
+    }
+
+    _verificarEntrega() {
+        for (const c of this.currais) {
+            const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+            if (d < 90) {
+                this._dropCowsAtCurral(c);
+                this._coletarDoCurral(c);
+            }
+        }
+    }
+
+    _dropCowsAtCurral(curral) {
+        const drop = this.vacas_abduzidas.filter(v => !v.isBurger);
+        if (drop.length === 0) return;
+        this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v.isBurger);
+        for (const v of drop) {
+            if (!v.scene || !v.body) continue;
+            v._inCurral = true;
+            v.setStatic(true).setDepth(2).clearTint();
+            if (v.walkTimer) v.walkTimer.paused = true;
+            const ang = Math.random() * Math.PI * 2;
+            const r = 8 + Math.random() * 22;
+            v.x = curral.x + Math.cos(ang) * r;
+            v.y = curral.y + Math.sin(ang) * r;
+            this.tweens.add({ targets: v, alpha: 0.55, duration: 500, yoyo: true, repeat: -1 });
+            curral.processing.push(v);
+            this.time.delayedCall(5000, () => this._processarVacaNoCurral(v, curral));
+        }
+        this.cameras.main.flash(150, 100, 200, 100);
+    }
+
+    _processarVacaNoCurral(v, curral) {
+        if (!v || !v.scene || v._destroyed) return;
+        const yld = v.burgerYield || 1;
+        const px = v.x, py = v.y;
+        curral.processing = curral.processing.filter(p => p !== v);
+        this.vacas = this.vacas.filter(x => x !== v);
+        this._destruirVaca(v);
+        for (let i = 0; i < yld; i++) {
+            const ang = (i / yld) * Math.PI * 2 + Math.random()*0.5;
+            const ox = Math.cos(ang) * (8 + Math.random()*14);
+            const oy = Math.sin(ang) * (8 + Math.random()*14);
+            const b = this.add.image(curral.x + ox, curral.y + oy, 'hamburguer').setDepth(3).setScale(1.1);
+            b.valorBurger = 100;
+            b._readyBouncer = this.tweens.add({
+                targets: b, y: b.y - 3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+            });
+            curral.ready.push(b);
+        }
+    }
+
+    _coletarDoCurral(curral) {
+        if (curral.ready.length === 0) return;
+        let pontosBrutos = 0, qtd = 0;
+        const colhidos = curral.ready.slice();
+        curral.ready = [];
+        for (const b of colhidos) {
+            pontosBrutos += b.valorBurger || 100;
+            qtd++;
+            if (b._readyBouncer) b._readyBouncer.stop();
+            this.tweens.killTweensOf(b);
+            this.tweens.add({
+                targets: b,
+                x: this.nave.x, y: this.nave.y,
+                alpha: 0, scale: 0.4,
+                duration: 320, ease: 'Cubic.easeIn',
+                onComplete: () => b.destroy()
+            });
+        }
+        const multi = qtd>=4 ? 3 : qtd>=2 ? 2 : 1;
+        const pontos = pontosBrutos * multi;
+        this.scoreAtual += pontos;
+        this.textoScore.setText('SCORE  ' + this.scoreAtual);
+        this.pacienciaAtual = Math.min(this.pacienciaMax, this.pacienciaAtual + 28*qtd);
+        this.cameras.main.flash(300, 255, 220, 0);
+        const lbl = '+' + pontos + (multi>1 ? ' ×'+multi : '');
+        const popup = this.add.text(this.nave.x, this.nave.y-60, lbl, {fontSize:'20px',fill:'#ffcc00',fontStyle:'bold'}).setDepth(50).setOrigin(0.5);
+        this.tweens.add({targets:popup, y:popup.y-70, alpha:0, duration:900, onComplete:()=>popup.destroy()});
+    }
+
+    _anyCurralReady() {
+        for (const c of this.currais) if (c.ready.length > 0) return true;
+        return false;
+    }
+}
+
+const config = {
+    type: Phaser.AUTO,
+    parent: 'game-host',
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        width: '100%',
+        height: '100%'
+    },
+    physics: { default: 'matter', matter: { gravity:{x:0,y:0}, debug:false } },
+    scene: [Jogo]
+};
+new Phaser.Game(config);
+</script>
+</body>
+</html>

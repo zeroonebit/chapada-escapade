@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- sombra do disco -->
+  <ellipse cx="16" cy="24" rx="12" ry="2.5" fill="#000" opacity="0.25"/>
+  <!-- corpo da nave -->
+  <ellipse cx="16" cy="20" rx="14" ry="5" fill="#00dd44" stroke="#003311" stroke-width="1.2"/>
+  <ellipse cx="16" cy="19" rx="10" ry="3" fill="#009933"/>
+  <!-- LEDs ao redor -->
+  <circle cx="4" cy="20" r="1.2" fill="#88ffff"/>
+  <circle cx="28" cy="20" r="1.2" fill="#88ffff"/>
+  <circle cx="10" cy="22.5" r="1" fill="#88ffff"/>
+  <circle cx="22" cy="22.5" r="1" fill="#88ffff"/>
+  <!-- cúpula -->
+  <ellipse cx="16" cy="13" rx="7" ry="6" fill="#88ffaa" opacity="0.55" stroke="#003311" stroke-width="1"/>
+  <!-- alien -->
+  <ellipse cx="16" cy="14" rx="3.5" ry="4" fill="#33aa55"/>
+  <circle cx="14.5" cy="13" r="1" fill="#001a08"/>
+  <circle cx="17.5" cy="13" r="1" fill="#001a08"/>
+</svg>

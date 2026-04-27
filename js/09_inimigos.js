@@ -1,0 +1,148 @@
+// 09_inimigos.js — Atiradores fixos (torres) e fazendeiros móveis
+Object.assign(Jogo.prototype, {
+
+    _setupAtiradores() {
+        // 6 torres fixas em posições estratégicas
+        this.balas = [];
+        this.atiradores = [];
+        const POSTS = [[480,480],[2720,480],[480,1920],[2720,1920],[1600,280],[1600,2120]];
+        for (const [ax,ay] of POSTS) {
+            const spr = this.add.image(ax, ay, 'atirador').setDepth(2).setScale(1.4);
+            this.atiradores.push({ x:ax, y:ay, sprite:spr, cooldown: Phaser.Math.Between(800,3000) });
+        }
+    },
+
+    _destruirAtirador(at, hitter) {
+        if (this.cameras.main.worldView.contains(at.x, at.y)) {
+            this.cameras.main.shake(180, 0.012);
+        }
+        const flash = this.add.circle(at.x, at.y, 30, 0xff8800, 0.9).setDepth(50);
+        this.tweens.add({ targets: flash, scale: 2.6, alpha: 0, duration: 420, onComplete: () => flash.destroy() });
+        this.tweens.add({
+            targets: at.sprite,
+            scale: 2.0, alpha: 0, angle: 90,
+            duration: 360,
+            onComplete: () => at.sprite.destroy()
+        });
+        // Sacrifica o projétil (vaca/boi/fazendeiro arremessado)
+        if (hitter) this._explodir(hitter, 0xff8800);
+        this._checkVitoria();
+    },
+
+    _atualizarAtiradores(delta) {
+        const RANGE = 420;
+        const RANGE_SQ = RANGE * RANGE;
+        const VEL = 4.5;
+        const DANO = 13;
+        const MAX_DIST = 580;
+
+        for (const at of this.atiradores) {
+            const dx = this.nave.x - at.x, dy = this.nave.y - at.y;
+            const emRange = (dx*dx + dy*dy) <= RANGE_SQ;
+
+            at.sprite.setTint(emRange ? 0xff4400 : 0xffffff);
+            at.cooldown -= delta;
+            if (!emRange || at.cooldown > 0) continue;
+
+            at.cooldown = Phaser.Math.Between(2000, 3500);
+            const ang = Math.atan2(dy, dx);
+            const bSprite = this.add.circle(at.x, at.y, 5, 0xff4400).setDepth(8);
+            this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
+
+            const flash = this.add.circle(at.x, at.y, 14, 0xffcc00, 0.9).setDepth(9);
+            this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
+        }
+
+        this.balas = this.balas.filter(b => {
+            if (!b.sprite || !b.sprite.active) return false;
+            b.sprite.x += b.vx;
+            b.sprite.y += b.vy;
+            b.dist += VEL;
+
+            const dx = b.sprite.x - this.nave.x, dy = b.sprite.y - this.nave.y;
+            // Bala "armada" só após 25px — evita hit instantâneo se atirador estiver colado
+            if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
+                this.pacienciaAtual = Math.max(0, this.pacienciaAtual - DANO);
+                this.cameras.main.shake(200, 0.013);
+                this.cameras.main.flash(160, 255, 80, 0);
+                b.sprite.destroy();
+                return false;
+            }
+            if (b.dist > MAX_DIST) { b.sprite.destroy(); return false; }
+            return true;
+        });
+
+        // Slam: entidade arremessada bate na torre → ambos destruídos
+        this.atiradores = this.atiradores.filter(at => {
+            for (const v of this.vacas_abduzidas) {
+                if (!v.scene || !v.body || v.isBurger) continue;
+                const ddx = v.x - at.x, ddy = v.y - at.y;
+                if (ddx*ddx + ddy*ddy < 35*35) {
+                    this._destruirAtirador(at, v);
+                    return false;
+                }
+            }
+            return true;
+        });
+    },
+
+    _spawnFazendeiros(n) {
+        const W = 3200, H = 2400;
+        for (let i = 0; i < n; i++) {
+            const x = Phaser.Math.Between(400, W-400);
+            const y = Phaser.Math.Between(400, H-400);
+            const f = this.matter.add.image(x, y, 'fazendeiro', null, {shape:{type:'circle',radius:16}});
+            f.setFrictionAir(0.1).setMass(2).setDepth(6)
+             .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
+            f.body.label = 'fazendeiro';
+            f.isEnemy = true;
+            f.wanderAngle = Math.random() * Math.PI * 2;
+            f._wandering = true;
+            f._cooldown = Phaser.Math.Between(1000, 3500);
+            f._timer = this.time.addEvent({
+                delay: Phaser.Math.Between(1400, 3000),
+                loop: true,
+                callback: () => {
+                    if (!f.scene || !f.body) return;
+                    if (Math.random() < 0.2) { f._wandering = false; return; }
+                    f.wanderAngle = Math.random() * Math.PI * 2;
+                    f._wandering = true;
+                }
+            });
+            this.fazendeiros.push(f);
+        }
+    },
+
+    _atualizarFazendeiros(delta) {
+        const IDLE_F   = 0.0008; // mesmo ritmo do idle das vacas brancas
+        const SHOOT_SQ = 420 * 420;
+        const VEL      = 4.5;
+
+        for (const f of this.fazendeiros) {
+            if (!f.scene || !f.body) continue;
+
+            const isAbducted = this.vacas_abduzidas.includes(f);
+
+            // Caminhada idle (não anda nem atira sendo arremessado)
+            if (f._wandering && !isAbducted) {
+                f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
+                f.setRotation(f.rotation + Phaser.Math.Angle.Wrap((f.wanderAngle - Math.PI/2) - f.rotation) * 0.1);
+            }
+            if (isAbducted) continue;
+
+            // Disparo quando nave está perto (mas com distância mínima de engajamento)
+            const dx = this.nave.x - f.x, dy = this.nave.y - f.y;
+            const distSq = dx*dx + dy*dy;
+            f._cooldown -= delta;
+            if (distSq <= SHOOT_SQ && distSq > 80*80 && f._cooldown <= 0) {
+                f._cooldown = Phaser.Math.Between(2200, 3800);
+                const ang = Math.atan2(dy, dx);
+                const bSprite = this.add.circle(f.x, f.y, 4, 0xff4400).setDepth(8);
+                this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
+                const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);
+                this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
+            }
+        }
+    }
+
+});
