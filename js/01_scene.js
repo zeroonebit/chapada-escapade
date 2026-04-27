@@ -99,7 +99,20 @@ class Jogo extends Phaser.Scene {
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
 
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
+        // Phaser key listener + fallback nativo no window (caso Phaser perca foco)
         this.teclaT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+        const toggleExperimentMode = () => {
+            const cur = localStorage.getItem('experimentMode') === '1';
+            localStorage.setItem('experimentMode', cur ? '0' : '1');
+            window.location.reload();
+        };
+        if (!this._tBound) {
+            this._tBound = true;
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 't' || e.key === 'T') toggleExperimentMode();
+            });
+        }
+        this._toggleExperimentMode = toggleExperimentMode;
 
         // ── Em debug mode: esconde HUD e mostra badge "DEBUG"
         if (this.EXPERIMENT_MODE) {
@@ -121,11 +134,9 @@ class Jogo extends Phaser.Scene {
         if (!this.gameStarted) return;      // aguarda dismiss do splash
         if (this.gameOver) return;
 
-        // T — toggle EXPERIMENT_MODE (recarrega)
+        // T — toggle EXPERIMENT_MODE (recarrega) — fallback Phaser path
         if (this.teclaT && Phaser.Input.Keyboard.JustDown(this.teclaT)) {
-            const cur = localStorage.getItem('experimentMode') === '1';
-            localStorage.setItem('experimentMode', cur ? '0' : '1');
-            window.location.reload();
+            this._toggleExperimentMode();
             return;
         }
 

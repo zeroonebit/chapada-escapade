@@ -69,33 +69,29 @@ Object.assign(Jogo.prototype, {
 
     _setupGrassPatch(W, H) {
         const cx = W / 2, cy = H / 2;
-        const PATCH_R = 380;
-        const N_BLADES = 320;
+        const PATCH_R = 280;
+        const N_BLADES = 900;
 
         this.grassBlades = [];
-        // Spawn blades em distribuição mais densa no centro, esparsa nas bordas,
-        // com mask noise pra forma orgânica
         const noise2 = (x, y) =>
               Math.sin(x * 1.7 + y * 2.3) * 0.5
             + Math.sin(x * 3.1 - y * 1.3) * 0.3
             + Math.sin(x * 5.5 + y * 4.7) * 0.2;
 
         let attempts = 0;
-        while (this.grassBlades.length < N_BLADES && attempts < N_BLADES * 6) {
+        while (this.grassBlades.length < N_BLADES && attempts < N_BLADES * 8) {
             attempts++;
             const a = Math.random() * Math.PI * 2;
-            // Sqrt pra distribuir uniforme em área (não no raio)
             const rNorm = Math.sqrt(Math.random());
             const x = cx + Math.cos(a) * rNorm * PATCH_R;
             const y = cy + Math.sin(a) * rNorm * PATCH_R;
-            // Mask orgânica: distância normalizada do centro + noise
             const dx = (x - cx) / PATCH_R, dy = (y - cy) / PATCH_R;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const n = noise2(dx, dy) * 0.18;
-            if (dist + n > 0.92) continue;
-            // Edge thinning: borda tem menos densidade
-            if (dist > 0.7 && Math.random() < (dist - 0.7) * 2) continue;
-            const height = 38 + Math.random() * 28;
+            const n = noise2(dx, dy) * 0.20;
+            if (dist + n > 1.0) continue;
+            // Edge thinning suave
+            if (dist > 0.78 && Math.random() < (dist - 0.78) * 2.8) continue;
+            const height = 55 + Math.random() * 30;
             this.grassBlades.push(new GrassBlade(x, y, height, 7));
         }
 
@@ -132,9 +128,9 @@ Object.assign(Jogo.prototype, {
             this.grassBlades[i].update(dt, gravity, windX, mouse);
         }
 
-        // ── Render: pass 1 (dark, mais grosso) + pass 2 (light, mais fino)
+        // ── Render: pass 1 (dark thick base "shadow") + pass 2 (light thinner overlay)
         this.grassGfxDark.clear();
-        this.grassGfxDark.lineStyle(3, 0x2e4a18, 0.85);
+        this.grassGfxDark.lineStyle(5, 0x1a3308, 0.95);
         this.grassGfxDark.beginPath();
         for (const blade of this.grassBlades) {
             const pts = blade.points;
@@ -146,15 +142,14 @@ Object.assign(Jogo.prototype, {
         this.grassGfxDark.strokePath();
 
         this.grassGfxLight.clear();
-        // Tinta variável por blade requer múltiplos draw calls (mais caro mas vale)
         for (const blade of this.grassBlades) {
             const pts = blade.points;
-            // Cor = lerp entre verde médio e claro pelo tint do blade
+            // Cor lerp entre verde médio e claro
             const r = Math.round(0x82 * (1 - blade.colorTint) + 0xb5 * blade.colorTint);
             const g = Math.round(0xb0 * (1 - blade.colorTint) + 0xd4 * blade.colorTint);
             const b = Math.round(0x48 * (1 - blade.colorTint) + 0x72 * blade.colorTint);
             const color = (r << 16) | (g << 8) | b;
-            this.grassGfxLight.lineStyle(blade.thickness, color, 1);
+            this.grassGfxLight.lineStyle(blade.thickness + 1.5, color, 1);
             this.grassGfxLight.beginPath();
             this.grassGfxLight.moveTo(pts[0].x, pts[0].y);
             for (let i = 1; i < pts.length; i++) {
