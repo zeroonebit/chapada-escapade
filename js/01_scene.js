@@ -135,6 +135,21 @@ class Jogo extends Phaser.Scene {
     update(time, delta) {
         if (!this.gameStarted) return;      // aguarda dismiss do splash
         if (this.gameOver) return;
+        // Diagnostic: wrap update body so erros aparecem em tela em vez de travar silencioso
+        try { this._updateBody(time, delta); }
+        catch (e) {
+            if (!this._errShown) {
+                this._errShown = true;
+                const msg = (e?.stack || e?.message || String(e)).substring(0, 600);
+                this.add.text(20, 100, 'UPDATE ERR:\n' + msg, {
+                    fontSize: '12px', fill: '#ff6666', backgroundColor:'#000', padding:{x:6,y:6}, wordWrap:{width:600}
+                }).setScrollFactor(0).setDepth(9999);
+                console.error('[UPDATE ERR]', e);
+            }
+        }
+    }
+
+    _updateBody(time, delta) {
 
         // T — toggle EXPERIMENT_MODE (recarrega) — fallback Phaser path
         if (this.teclaT && Phaser.Input.Keyboard.JustDown(this.teclaT)) {
