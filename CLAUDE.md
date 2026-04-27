@@ -37,6 +37,11 @@
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
 2. Não esperar o usuário pedir — fazer automático na primeira mensagem
 
+### 🚦 Workflow de teste e commits
+- **Testar via GitHub Pages** — `git push` e ~30s o Pages atualiza em https://zeroonebit.github.io/chapada-escapade/
+- Preview local da sessão atual quebrou (canvas vazio, scripts não rodam) — não usar
+- **Commit só** quando o usuário disser `/checkpoint` no fim da sessão OU pedir explicitamente (incluindo "vamos voltar pro github" / "push")
+
 ## Estado atual (atualizar a cada sessão)
 
 ### ✅ Pronto
