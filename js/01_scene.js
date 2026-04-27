@@ -10,11 +10,29 @@ class Jogo extends Phaser.Scene {
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
 
-        this._setupTexturasGeometricas();   // 03_textures.js
-        this._setupCenario(W, H);           // 04_cenario.js
-        this._setupAtiradores();            // 09_inimigos.js
-        this.fazendeiros = [];
-        this._spawnFazendeiros(8);
+        // ── EXPERIMENT MODE: cena minimalista com patch de grama interativo ──
+        // Desabilita vacas/bois/fazendeiros/atiradores/obstáculos/currais.
+        // Volta pra false pra restaurar o jogo completo.
+        this.EXPERIMENT_MODE = true;
+
+        this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
+
+        if (this.EXPERIMENT_MODE) {
+            // Fundo neutro escuro + nada de obstáculos/NPCs
+            this.add.rectangle(W/2, H/2, W, H, 0x1a1a1a).setDepth(0);
+            this.fazendeiros = [];
+            this.vacas = [];
+            this.vacas_abduzidas = [];
+            this.currais = [];
+            this.grassPatches = [];
+            this.terrainGrid = null;
+            this._setupGrassPatch(W, H);    // 14_grass_patch.js
+        } else {
+            this._setupCenario(W, H);
+            this._setupAtiradores();
+            this.fazendeiros = [];
+            this._spawnFazendeiros(8);
+        }
 
         // ── NAVE ─────────────────────────────────────────────────────
         this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1);
@@ -28,9 +46,11 @@ class Jogo extends Phaser.Scene {
         this._setupLEDs();                  // 06_nave.js
 
         // ── VACAS ────────────────────────────────────────────────────
-        this.vacas = [];
-        this.vacas_abduzidas = [];
-        this._spawnVacas(40);
+        if (!this.EXPERIMENT_MODE) {
+            this.vacas = [];
+            this.vacas_abduzidas = [];
+            this._spawnVacas(40);
+        }
 
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
@@ -70,8 +90,10 @@ class Jogo extends Phaser.Scene {
 
         this.cameras.main.startFollow(this.nave, true, 0.05, 0.05);
 
-        // Repovoamento periódico
-        this.time.addEvent({delay:6000, loop:true, callback:()=>{ if(!this.gameOver) this._repovoar(); }});
+        // Repovoamento periódico (desabilitado em experiment mode)
+        if (!this.EXPERIMENT_MODE) {
+            this.time.addEvent({delay:6000, loop:true, callback:()=>{ if(!this.gameOver) this._repovoar(); }});
+        }
 
         this._setupPausa();                 // 11_gameflow.js
         this._setupColisoes();              // 10_colisao.js
@@ -97,7 +119,7 @@ class Jogo extends Phaser.Scene {
         this.dificuldade += 0.000018 * delta;
 
         this._atualizarPaciencia(delta);
-        this._atualizarIAVacas();
+        if (!this.EXPERIMENT_MODE) this._atualizarIAVacas();
 
         // COWS = vacas + bois live no feixe; BURGERS = total entregue
         let cowsInBeam = 0;
@@ -167,8 +189,12 @@ class Jogo extends Phaser.Scene {
             this.coneLuz.setVisible(false);
         }
 
-        this._verificarEntrega();
-        this._atualizarAtiradores(delta);
-        this._atualizarFazendeiros(delta);
+        if (!this.EXPERIMENT_MODE) {
+            this._verificarEntrega();
+            this._atualizarAtiradores(delta);
+            this._atualizarFazendeiros(delta);
+        } else {
+            this._updateGrassMouse();
+        }
     }
 }
