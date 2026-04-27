@@ -4,6 +4,25 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-26 (cont. 3) — Deploy Pages, mobile controls, terreno CA, HUD novo
+
+- **Vacas/bois** mudaram pra sprite `cima_sobe` (top-down puro) + removido `setRotation` manual + spin random ao entrar no feixe → glissagem natural pela física
+- **Mobile controls** em novo `js/12_mobile.js`: joystick virtual à esquerda (vetor → alvo virtual 220px à frente da nave) + botão FEIXE à direita; substitui o "2° dedo" antigo
+- HUD layout iterado: foi pra horizontal, voltou pro empilhado clássico (score topo-centro, burger topo-esq, barras combustível/graviton no rodapé com gap visível)
+- **LVL badge removido** (sem badge, sem `textoDif`)
+- **Novos frames de barra** com label baked-in: `tools/slice_hud_frames.py` extrai GRAVITON e COMBUSTÍVEL de `refs/hud-vazia.png`; fill desenhado por `Graphics.fillGradientStyle` (combustível amarelo→vermelho, graviton azul→roxo)
+- **COWS + BURGERS boxes**: `tools/slice_cow_burger.py` extrai 2 boxes de `refs/cow-burgers.png` (detecção por interior escuro + expansão da bbox + remove bg verde); substituem o burger frame antigo + mini-icons vaca/boi
+- **Cenário procedural via Cellular Automata** (`04_cenario.js` reescrito): grid 40×30 cells de 80px, 4 níveis de altitude (água/areia/grama/terra), 5 passes de smoothing 3×3, render em layered overlap (polígonos wobbly oversize fundindo entre cells iguais) → 0 Wang tiles necessários
+- Sombras internas em deep cells (4 cardinais do mesmo nível); tufos decorativos só em grama
+- Obstáculos e currais checam `isLand` antes de spawnar (evitam água)
+- `_isOverGrass`/`_grassDepth` em `07_vacas.js` refatorados pra consultar `terrainGrid` em vez de blobs explícitos
+- **Linha marrom horizontal removida** do meio do mapa
+- **Deploy GitHub Pages**: repo público em `https://github.com/zeroonebit/chapada-escapade`, live em `https://zeroonebit.github.io/chapada-escapade/`; `git init` + `.gitignore` + commits com co-author Claude; `ChapadaEscapade.html` renomeado pra `index.html` pra URL limpa
+- Bug: HTTP server da sessão caiu, causando placeholder verde do Phaser nas imagens — diagnosticado e reiniciado; também workaround pra preview servir N: vs H:
+- ⚠️ Preview do Claude Code não respeita `--directory` ou `cwd` em launch.json — sempre serve do workspace root
+
+---
+
 ## Sessão 2026-04-26 (cont. 2) — Splash com imagem, HUD barras reais, migração H:
 
 - `_setupSplash()` reescrito: usa `splash.png` centralizado (~70% da tela), hint piscando abaixo, física pausada até primeiro clique (`matter.world.enabled = false`)

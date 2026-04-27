@@ -17,11 +17,12 @@
 - **Phaser 3.60** (CDN) — engine
 - **Matter.js** (built-in do Phaser) — física
 - **HTML único** — sem build, sem npm, abre direto no navegador
-- **Hospedagem:** drive local — `H:\Projects\ChapadaEscapade` (servido via Python HTTP server porta 8080)
+- **Hospedagem local:** `H:\Projects\ChapadaEscapade` (Python HTTP server porta 8080)
+- **Hospedagem online:** GitHub Pages — https://zeroonebit.github.io/chapada-escapade/
 
 ### Arquivos principais
-- `ChapadaEscapade.html` — só CSS + carregamento dos módulos `js/*.js` (51 linhas)
-- `js/01_scene.js` … `99_main.js` — código modular (classe + `Object.assign(Jogo.prototype, {...})`)
+- `index.html` — só CSS + carregamento dos módulos `js/*.js` (renomeado de `ChapadaEscapade.html`)
+- `js/01_scene.js` … `12_mobile.js` … `99_main.js` — código modular (classe + `Object.assign(Jogo.prototype, {...})`)
 - `ChapadaEscapade_v1.html` — backup pré-fazendeiros/atiradores
 - `assets/` — PNGs do Nano Banana (em construção)
 - `docs/PROGRESS.md` — log cronológico de mudanças
@@ -29,54 +30,55 @@
 
 ### Localização
 - **Projeto:** `H:\Projects\ChapadaEscapade`
-- **Preview:** `http://localhost:8080` (launch config em `.claude/launch.json`)
+- **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
+- **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
 ## Estado atual (atualizar a cada sessão)
 
 ### ✅ Pronto
 - Loop principal: nave → abdução → curral → burger → score
 - Feixe graviton com barra de energia (drain/regen)
-- Vacas brancas + bois marrons (drop 2-3 burgers)
-- Atiradores fixos (6 torres) que disparam dano à barra COMBUSTÍVEL
-- Fazendeiros móveis com chapéu de cangaceiro (8 wandering)
-- Mobile: 2° toque ativa beam (`addPointer(1)` + `touch-action: none`), scale 75vw/75vh
+- Vacas brancas + bois marrons — sprite `cima_sobe` (top-down) com **rotação livre pela física** (glissagem visual ao entrar no feixe via `setAngularVelocity` random)
+- Atiradores fixos (6 torres) com dano à barra COMBUSTÍVEL
+- Fazendeiros móveis com chapéu cangaceiro (8 wandering)
+- **Mobile controls (joystick + botão)** — `js/12_mobile.js`: joystick virtual à esquerda (vetor → alvo virtual 220px à frente da nave) + botão FEIXE à direita; substitui o "2° dedo" antigo
 - Fix do freeze (cleanup de walkTimer em destruição)
 - Idle das vacas a 50% da velocidade de fuga
 - **PNGs implementados no Phaser** — preload + texturas vaca/boi/HUD funcionando
-- HUD com sprite frames + texto sobreposto (score, burger, lvl, barras combustível/graviton)
-- Vacas/bois usam sprite `frente` no movimento, troca pra `cima_sobe`/`cima_desce` dentro do curral
-- **Pausa no ESC** com símbolo ⏸ (Graphics `fillRoundedRect`×2) + label "PAUSE" (matter.world.enabled = false)
+- **HUD novo:** COWS + BURGERS boxes (sliced de `refs/cow-burgers.png`) lado a lado no topo-esq; barras COMBUSTÍVEL e GRAVITON empilhadas no rodapé com frames-com-label baked-in (sliced de `refs/hud-vazia.png`) e fill desenhado por `Graphics.fillGradientStyle` (amarelo→vermelho / azul→roxo); score topo-centro
+- **Pausa no ESC** com símbolo ⏸ + label "PAUSE"
 - **Splash screen** com `splash.png` centralizado, hint piscando, física pausada até primeiro clique
-- **HUD barras reais** — `hud_barra_combustivel.png` + `hud_barra_graviton.png` com cover approach (retângulo escuro cobre parte vazia)
-- **HUD frames limpos** — dígitos baked-in removidos por script Python; `hud_barra_frame.png` e `hud_lvl_badge.png` deletados
-- **Renderer CANVAS** — `Phaser.CANVAS` evita bloqueio CORS ao abrir via `file://`
-- **Game over / vitória** com layout limpo: linhas decorativas + score destacado + botão restart
-- **Refactor modular** — código quebrado em 12 arquivos `js/*.js` via `Object.assign(Jogo.prototype, {...})`
+- **Renderer CANVAS** — evita bloqueio CORS ao abrir via `file://`
+- **Game over / vitória** com layout limpo
+- **Refactor modular** — 13 arquivos `js/*.js` via `Object.assign(Jogo.prototype, {...})`
+- **Cenário procedural via Cellular Automata** — grid 40×30 cells de 80px, 4 níveis altitude (água/areia/grama/terra), 5 passes smoothing, render layered overlap (0 Wang tiles), sombras em deep cells, tufos de grama, obstáculos/currais checam `isLand`. `_isOverGrass`/`_grassDepth` consultam `terrainGrid`. Linha marrom horizontal removida.
+- **Deploy GitHub Pages** — `git push` em `main` faz deploy automático em ~30s na URL https://zeroonebit.github.io/chapada-escapade/
 
 ### 🚧 Em andamento
 - Geração dos sprites Nano Banana restantes
-  - ✅ `assets/ui/` — 7 HUD PNGs (score, burger, lvl, barras, mapa)
-  - ✅ `assets/characters/vaca/` — 6 sprites
-  - ✅ `assets/characters/boi/` — 6 sprites
+  - ✅ `assets/ui/` — score, burger, COWS box, BURGERS box, frames combustível/graviton, mapa
+  - ✅ `assets/characters/vaca/` e `boi/` — 6 sprites cada
   - ✅ Tileset terreno base + transições — aprovados, falta slicear
   - 🕒 Fazendeiro — prompt pronto, geração pendente
   - 🕒 UFO/nave — pendente
   - 🕒 Burgers, effects — pendentes
+- Substituir layered overlap CA por Wang tiles "de verdade" quando os tiles SVG/PNG estiverem prontos (a função de seleção 16-pattern por boundary é o próximo passo)
 
 ### 🔜 Próximos passos
-1. **Abrir nova sessão de `H:\Projects\ChapadaEscapade`** — para o preview servir H: diretamente
-2. Testar splash screen visualmente (deve aparecer antes do primeiro clique)
-3. Testar pause ⏸ e game over/vitória visualmente
-4. Gerar fazendeiro (pose única top-down 3/4) e implementar
-5. Gerar UFO + beam halo + burgers (Sheet 1 revisada)
-6. Slicear tileset de terreno e popular `assets/terrain/`
-7. Implementar tilemap procedural (CA → blob tile lookup)
-8. Anéis animados (capture FX)
-9. Minimapa no canto inferior esquerdo
+1. Gerar fazendeiro (pose única top-down 3/4) e implementar
+2. Gerar UFO + beam halo + burgers (Sheet 1 revisada)
+3. Slicear tileset de terreno (Sheets A/B já aprovadas) e popular `assets/terrain/`
+4. Substituir `drawWobblyCell` por `add.image(cx, cy, tileKey)` selecionado por vizinhos do `terrainGrid` (usar skill `procedural-tilemap`)
+5. Anéis animados (capture FX)
+6. Minimapa no canto inferior esquerdo
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
 - `tools/process_chars.py` — processador de personagens (flood fill + numeração)
+- `tools/clean_hud.py` — remove dígitos baked-in dos frames HUD
+- `tools/slice_hud_frames.py` — extrai frames GRAVITON/COMBUSTÍVEL de `refs/hud-vazia.png`
+- `tools/slice_cow_burger.py` — extrai boxes COWS/BURGERS de `refs/cow-burgers.png`
+- `tools/migrate_to_projects.py` — migrou de N: pra H: (one-shot, mantido por referência)
 
 ## Convenções de código
 
@@ -88,6 +90,7 @@
 
 ## Skills úteis pra este projeto
 
+- `procedural-tilemap` — Wang tiles, WFC e Cellular Automata pra terrain procedural (criada nesta sessão)
 - `engineering:debug` — quando rolar bug de física/matter.js
 - `design:design-critique` — pra avaliar feedback visual da arte gerada
 - `anthropic-skills:canvas-design` — se precisar gerar diagramas/mockups
