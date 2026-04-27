@@ -6,13 +6,8 @@ Object.assign(Jogo.prototype, {
     _setupTexturasGeometricas() {
         let g = this.add.graphics();
 
-        // NAVE — disco redondo
-        g.fillStyle(0x00dd44, 1); g.fillCircle(20, 20, 19);
-        g.fillStyle(0x009933, 1); g.fillCircle(20, 20, 14);
-        g.lineStyle(2, 0x003311, 1); g.strokeCircle(20, 20, 19);
-        g.fillStyle(0x001a08, 1); g.fillCircle(20, 20, 9);
-        g.fillStyle(0x44ffaa, 0.9); g.fillCircle(17, 18, 2); g.fillCircle(23, 18, 2);
-        g.generateTexture('nave', 40, 40);
+        // NAVE — agora vem de assets/pixel_labs/nave.png (carregado no preload)
+        // Geometria antiga removida pra não sobrescrever o PNG.
 
         // HAMBÚRGUER — moedinha vista de cima (pão com gergelim)
         g.clear();

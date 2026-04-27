@@ -34,15 +34,17 @@ class Jogo extends Phaser.Scene {
         }
 
         // ── NAVE ─────────────────────────────────────────────────────
-        this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1);
+        this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1).setDisplaySize(72, 72);
         const CONE_R = 40*5.55/2;
         this.raioCone = CONE_R;
-        this.coneLuz = this.add.graphics().setDepth(2).setVisible(false);
-        this._desenharCone(CONE_R);
+        // Beam: PNG do PixelLab + blend ADD pra glow + alpha tween de pulse
+        this.coneLuz = this.add.image(W/2, H/2, 'beam_halo')
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setDisplaySize(CONE_R * 2.4, CONE_R * 2.4)
+            .setDepth(2).setVisible(false);
         this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
-
-        this._setupLEDs();                  // 06_nave.js
+        this.nave.setDisplaySize(80, 80);
 
         // ── VACAS ────────────────────────────────────────────────────
         if (!this.EXPERIMENT_MODE) {

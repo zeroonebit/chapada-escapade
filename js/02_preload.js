@@ -2,12 +2,16 @@
 Object.assign(Jogo.prototype, {
 
     preload() {
-        // ── PERSONAGENS ──────────────────────────────────────────────
-        // frente = movimento normal/abdução; cima_sobe/desce = dentro do curral
-        ['frente','cima_sobe','cima_desce'].forEach(d => {
-            this.load.image(`vaca_${d}`, `assets/characters/vaca/vaca_${d}.png`);
-            this.load.image(`boi_${d}`,  `assets/characters/boi/boi_${d}.png`);
-        });
+        // ── PERSONAGENS PIXELLAB (200×200, top-down único) ───────────
+        // Sobrescreve as keys vaca_/boi_ pra usar o asset PixelLab
+        this.load.image('vaca_frente',     'assets/pixel_labs/vaca.png');
+        this.load.image('vaca_cima_sobe',  'assets/pixel_labs/vaca.png');
+        this.load.image('vaca_cima_desce', 'assets/pixel_labs/vaca.png');
+        this.load.image('boi_frente',      'assets/pixel_labs/boi.png');
+        this.load.image('boi_cima_sobe',   'assets/pixel_labs/boi.png');
+        this.load.image('boi_cima_desce',  'assets/pixel_labs/boi.png');
+        this.load.image('nave',            'assets/pixel_labs/nave.png');
+        this.load.image('beam_halo',       'assets/pixel_labs/beam.png');
         // ── HUD ──────────────────────────────────────────────────────
         // barra_frame e lvl_badge removidos (substituídos por retângulos no código)
         ['score_frame','map_btn',

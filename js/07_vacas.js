@@ -5,7 +5,8 @@ Object.assign(Jogo.prototype, {
         const label = tipo === 'boi' ? 'boi' : 'vaca';
         const tex   = tipo === 'boi' ? 'boi_cima_sobe' : 'vaca_cima_sobe';
         let v = this.matter.add.image(x, y, tex);
-        const escala = tipo === 'boi' ? 0.22 : 0.18;
+        // PixelLab assets são 200×200; 0.30/0.35 dá ~60-70px in-world
+        const escala = tipo === 'boi' ? 0.35 : 0.30;
         v.setScale(escala);
         const massa = tipo === 'boi' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);

@@ -23,8 +23,12 @@ Object.assign(Jogo.prototype, {
         const colorRock       = 0xff2222;
 
         if (otherLabel === 'rocha') {
-            // Vacas/bois sempre morrem na rocha; fazendeiros só se forem arremessados
-            if (!entityIsEnemy || entityAbducted) {
+            // Só explode se foi arremessado pelo beam (alta velocidade) OU está abduzido
+            // Andar autônomo contra pedra apenas colide (Matter empurra naturalmente)
+            const vel = entity.body.velocity;
+            const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+            const HIGH_SPEED = 4.0;
+            if (entityAbducted || speed > HIGH_SPEED) {
                 this._explodir(entity, entityIsEnemy ? colorEnemy : colorRock);
             }
         }
