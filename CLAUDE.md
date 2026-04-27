@@ -33,6 +33,10 @@
 - **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
 - **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
+### ⚡ No INÍCIO de toda sessão, rodar:
+1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
+2. Não esperar o usuário pedir — fazer automático na primeira mensagem
+
 ## Estado atual (atualizar a cada sessão)
 
 ### ✅ Pronto

@@ -149,9 +149,18 @@ Object.assign(Jogo.prototype, {
     _tentarAbduzir() {
         const tryAbduct = (v) => {
             if (this.vacas_abduzidas.length >= 5) return;
-            if (v._dying || v._destroyed || v.presaNaMoita || v.presaNaGrama || v._inCurral || this.vacas_abduzidas.includes(v)) return;
+            // Beam IGNORA presaNaGrama (resgata da grama) — só bloqueia se já abduzida/morta/no curral
+            if (v._dying || v._destroyed || v.presaNaMoita || v._inCurral || this.vacas_abduzidas.includes(v)) return;
             let d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, v.x, v.y);
             if (d <= this.raioCone) {
+                // Resgata da grama se estiver presa
+                if (v.presaNaGrama) {
+                    v.presaNaGrama = false;
+                    if (v.scene && v.body) {
+                        v.setStatic(false);
+                        v.clearTint();
+                    }
+                }
                 this.vacas_abduzidas.push(v);
                 v.setFrictionAir(0.015).setDepth(3);
                 v.setAngularVelocity((Math.random() - 0.5) * 0.4); // spin inicial pra glissagem
