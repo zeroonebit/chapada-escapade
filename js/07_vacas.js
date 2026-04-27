@@ -108,23 +108,30 @@ Object.assign(Jogo.prototype, {
     },
 
     // ── GRAMA ────────────────────────────────────────────────────────
-    _isOverGrass(x, y) { return this._grassDepth(x, y) > 0; },
+    _isOverGrass(x, y) {
+        if (!this.terrainGrid) return false;
+        const CELL = this.terrainCell;
+        const cx = Math.floor(x / CELL);
+        const cy = Math.floor(y / CELL);
+        if (cy < 0 || cy >= this.terrainGrid.length) return false;
+        const row = this.terrainGrid[cy];
+        if (cx < 0 || cx >= row.length) return false;
+        return row[cx] === 2; // 2 = grama
+    },
 
-    // 0 fora da grama, cresce até 1 no centro
+    // 1 = cell de grama com 4 cardinais também grama (deep grass)
+    // 0.5 = grama de borda (1+ cardinal não-grama)
+    // 0 = não é grama
     _grassDepth(x, y) {
-        let maxD = 0;
-        for (let i = 0; i < this.grassPatches.length; i++) {
-            const g = this.grassPatches[i];
-            const dx = x - g.x, dy = y - g.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            const ang = Math.atan2(dy, dx);
-            const rr = g.r * (1 + this._noiseR(ang, g.seed));
-            if (dist < rr) {
-                const d = 1 - dist / rr;
-                if (d > maxD) maxD = d;
-            }
-        }
-        return maxD;
+        if (!this._isOverGrass(x, y)) return 0;
+        const CELL = this.terrainCell;
+        const cx = Math.floor(x / CELL);
+        const cy = Math.floor(y / CELL);
+        const g = this.terrainGrid;
+        const ROWS = g.length, COLS = g[0].length;
+        const isGrass = (xx, yy) => yy >= 0 && yy < ROWS && xx >= 0 && xx < COLS && g[yy][xx] === 2;
+        const allCardinals = isGrass(cx-1,cy) && isGrass(cx+1,cy) && isGrass(cx,cy-1) && isGrass(cx,cy+1);
+        return allCardinals ? 1 : 0.5;
     },
 
     _prenderNaGrama(v) {

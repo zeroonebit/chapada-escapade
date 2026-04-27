@@ -1,101 +1,205 @@
-// 04_cenario.js — Cenário: chão, grama (noise blobs), obstáculos e currais
+// 04_cenario.js — Cenário: terreno procedural via Cellular Automata + obstáculos + currais
+// Layered overlap: 4 camadas de altitude (água/areia/grama/terra) renderizadas como
+// polígonos orgânicos oversize. Cells adjacentes do mesmo nível fundem visualmente.
 Object.assign(Jogo.prototype, {
 
     _setupCenario(W, H) {
-        // Chão base + grid
-        this.add.rectangle(W/2, H/2, W, H, 0xb8a870).setDepth(0);
-        let grid = this.add.graphics().setDepth(0);
-        grid.lineStyle(1, 0xa89860, 0.3);
-        for(let x=0; x<=W; x+=120) grid.lineBetween(x,0,x,H);
-        for(let y=0; y<=H; y+=120) grid.lineBetween(0,y,W,y);
-        this.add.rectangle(W/2, 600, W, 8, 0x5c3520).setDepth(1);
+        const CELL = 80;
+        const COLS = Math.ceil(W / CELL);
+        const ROWS = Math.ceil(H / CELL);
 
-        // ── CAMPOS DE GRAMA (noise blobs, união boolean visual) ──────
+        // ── 1. SEED RANDOM com pesos: 6% água, 14% areia, 50% grama, 30% terra
+        let grid = [];
+        for (let y = 0; y < ROWS; y++) {
+            grid[y] = [];
+            for (let x = 0; x < COLS; x++) {
+                const r = Math.random();
+                if (r < 0.06)      grid[y][x] = 0;  // água
+                else if (r < 0.20) grid[y][x] = 1;  // areia
+                else if (r < 0.70) grid[y][x] = 2;  // grama
+                else               grid[y][x] = 3;  // terra
+            }
+        }
+
+        // ── 2. SMOOTHING: 5 passes de média 3×3 arredondada (cellular automata)
+        for (let pass = 0; pass < 5; pass++) {
+            const next = [];
+            for (let y = 0; y < ROWS; y++) {
+                next[y] = [];
+                for (let x = 0; x < COLS; x++) {
+                    let sum = 0, count = 0;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            const ny = y + dy, nx = x + dx;
+                            if (ny < 0 || ny >= ROWS || nx < 0 || nx >= COLS) continue;
+                            sum += grid[ny][nx];
+                            count++;
+                        }
+                    }
+                    next[y][x] = Math.round(sum / count);
+                }
+            }
+            grid = next;
+        }
+
+        // Salva grid pra detecção de grama nas vacas
+        this.terrainGrid = grid;
+        this.terrainCell = CELL;
+
+        // ── 3. RENDER em camadas (layered overlap)
+        // Base água ocupa o mapa inteiro — outros terrenos pintam por cima onde altitude >= layer
+        this.add.rectangle(W/2, H/2, W, H, 0x3a7aa0).setDepth(0);
+        // Reflexo de água — pequenas ondulações
+        const waterFx = this.add.graphics().setDepth(0.01);
+        waterFx.fillStyle(0x5a9bc4, 0.25);
+        for (let i = 0; i < 80; i++) {
+            const wx = Math.random()*W, wy = Math.random()*H;
+            waterFx.fillEllipse(wx, wy, 18 + Math.random()*22, 4);
+        }
+
+        // Função pra desenhar polígono wobbly (orgânico) numa célula
+        const noise = (a, seed) =>
+              Math.sin(a*3 + seed)        * 0.10
+            + Math.sin(a*5 + seed*1.7)    * 0.06
+            + Math.sin(a*7 + seed*2.3)    * 0.04;
+
+        const drawWobblyCell = (gfx, cx, cy, baseR, seed) => {
+            const SEG = 12;
+            gfx.beginPath();
+            for (let i = 0; i <= SEG; i++) {
+                const a = (i / SEG) * Math.PI * 2;
+                const r = baseR * (1 + noise(a, seed));
+                const px = cx + Math.cos(a) * r;
+                const py = cy + Math.sin(a) * r;
+                if (i === 0) gfx.moveTo(px, py); else gfx.lineTo(px, py);
+            }
+            gfx.closePath();
+            gfx.fillPath();
+        };
+
+        // Cada layer: cor base + cor sombra interna pra dar profundidade
+        const LAYERS = [
+            { id: 1, color: 0xd9c98f, shade: 0xb8a060, alpha: 1.0 },  // areia
+            { id: 2, color: 0x82b048, shade: 0x6e9b3a, alpha: 1.0 },  // grama
+            { id: 3, color: 0xb8a870, shade: 0x9a8a55, alpha: 1.0 }   // terra
+        ];
+
+        for (const layer of LAYERS) {
+            const gfx = this.add.graphics().setDepth(0.1 + layer.id * 0.05);
+            gfx.fillStyle(layer.color, layer.alpha);
+            const seedBase = layer.id * 1234;
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (grid[y][x] < layer.id) continue;
+                    const cx = x * CELL + CELL/2;
+                    const cy = y * CELL + CELL/2;
+                    // Raio levemente maior que metade da célula → overlap suave
+                    drawWobblyCell(gfx, cx, cy, CELL * 0.65, seedBase + x*7 + y*13);
+                }
+            }
+            // Sombra interna (raio menor, cor mais escura) — só nas células "deep" (4 vizinhos do mesmo nível)
+            const shadeGfx = this.add.graphics().setDepth(0.1 + layer.id * 0.05 + 0.01);
+            shadeGfx.fillStyle(layer.shade, 0.5);
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (grid[y][x] < layer.id) continue;
+                    // Só pinta sombra se 4 cardinais também tiverem altitude >= layer
+                    const n = (y > 0)         && grid[y-1][x] >= layer.id;
+                    const s = (y < ROWS-1)    && grid[y+1][x] >= layer.id;
+                    const w_ = (x > 0)        && grid[y][x-1] >= layer.id;
+                    const e = (x < COLS-1)    && grid[y][x+1] >= layer.id;
+                    if (!(n && s && w_ && e)) continue;
+                    const cx = x * CELL + CELL/2;
+                    const cy = y * CELL + CELL/2;
+                    drawWobblyCell(shadeGfx, cx, cy, CELL * 0.45, seedBase + x*11 + y*17);
+                }
+            }
+        }
+
+        // Tufos de grama (decoração) sobre as células de grama
+        const tuftGfx = this.add.graphics().setDepth(0.4);
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (grid[y][x] !== 2) continue;
+                const cx = x * CELL, cy = y * CELL;
+                tuftGfx.fillStyle(0x4f7a22, 0.85);
+                for (let j = 0; j < 4; j++) {
+                    const px = cx + Math.random()*CELL;
+                    const py = cy + Math.random()*CELL;
+                    tuftGfx.fillTriangle(px-2, py+3, px+2, py+3, px, py-4);
+                }
+                tuftGfx.fillStyle(0xb5d472, 0.6);
+                for (let j = 0; j < 2; j++) {
+                    const px = cx + Math.random()*CELL;
+                    const py = cy + Math.random()*CELL;
+                    tuftGfx.fillTriangle(px-1.5, py+2, px+1.5, py+2, px, py-3);
+                }
+            }
+        }
+
+        // ── 4. GRASS PATCHES — gera pontos de grama pra IA de fuga das vacas
+        // (substitui o sistema antigo de blobs explícitos)
         this.grassPatches = [];
-        const SEGMENTS = 56;
-        const noiseR = (a, seed) =>
-              Math.sin(a*3 + seed)        * 0.14
-            + Math.sin(a*5 + seed*1.7)    * 0.08
-            + Math.sin(a*7 + seed*2.3)    * 0.05
-            + Math.sin(a*11 + seed*3.1)   * 0.03;
+        for (let attempts = 0; attempts < 100 && this.grassPatches.length < 12; attempts++) {
+            const cx = Phaser.Math.Between(2, COLS-3);
+            const cy = Phaser.Math.Between(2, ROWS-3);
+            if (grid[cy][cx] === 2) {
+                this.grassPatches.push({
+                    x: cx * CELL + CELL/2,
+                    y: cy * CELL + CELL/2,
+                    r: 100,
+                    seed: Math.random() * 1000
+                });
+            }
+        }
+        this._noiseR = noise; // mantém compat (algumas funções consultam)
 
-        for (let i = 0; i < 4; i++) {
-            this.grassPatches.push({
-                x: Phaser.Math.Between(500, W-500),
-                y: Phaser.Math.Between(500, H-500),
-                r: Phaser.Math.Between(160, 240),
-                seed: Math.random() * 1000
-            });
-        }
-
-        const grassGfx = this.add.graphics().setDepth(0.3);
-        // Fill base
-        grassGfx.fillStyle(0x82b048, 1);
-        for (const p of this.grassPatches) {
-            grassGfx.beginPath();
-            for (let i = 0; i <= SEGMENTS; i++) {
-                const a = (i / SEGMENTS) * Math.PI * 2;
-                const rr = p.r * (1 + noiseR(a, p.seed));
-                const x = p.x + Math.cos(a)*rr, y = p.y + Math.sin(a)*rr;
-                if (i === 0) grassGfx.moveTo(x, y); else grassGfx.lineTo(x, y);
-            }
-            grassGfx.closePath(); grassGfx.fillPath();
-        }
-        // Camada interna mais escura
-        grassGfx.fillStyle(0x6e9b3a, 0.55);
-        for (const p of this.grassPatches) {
-            grassGfx.beginPath();
-            for (let i = 0; i <= SEGMENTS; i++) {
-                const a = (i / SEGMENTS) * Math.PI * 2;
-                const rr = p.r * 0.78 * (1 + noiseR(a, p.seed + 10));
-                const x = p.x + Math.cos(a)*rr, y = p.y + Math.sin(a)*rr;
-                if (i === 0) grassGfx.moveTo(x, y); else grassGfx.lineTo(x, y);
-            }
-            grassGfx.closePath(); grassGfx.fillPath();
-        }
-        // Tufos
-        for (const p of this.grassPatches) {
-            const tufts = Math.floor(p.r / 7);
-            grassGfx.fillStyle(0x4f7a22, 0.85);
-            for (let j = 0; j < tufts; j++) {
-                const a = Math.random()*Math.PI*2, rr = Math.random()*p.r*0.85;
-                const px = p.x + Math.cos(a)*rr, py = p.y + Math.sin(a)*rr;
-                grassGfx.fillTriangle(px-2, py+3, px+2, py+3, px, py-4);
-            }
-            grassGfx.fillStyle(0xb5d472, 0.6);
-            for (let j = 0; j < tufts/2; j++) {
-                const a = Math.random()*Math.PI*2, rr = Math.random()*p.r*0.8;
-                const px = p.x + Math.cos(a)*rr, py = p.y + Math.sin(a)*rr;
-                grassGfx.fillTriangle(px-1.5, py+2, px+1.5, py+2, px, py-3);
-            }
-        }
-        this._noiseR = noiseR;
-
-        // ── OBSTÁCULOS (clusters de moitas e rochas) ─────────────────
-        for(let i=0; i<16; i++) {
-            let cx = Phaser.Math.Between(300, W-300), cy = Phaser.Math.Between(300, H-300);
-            if(Math.random()>0.5) {
-                for(let j=0; j<5; j++) {
-                    let r=Math.random()*80, a=Math.random()*Math.PI*2;
-                    let o = this.matter.add.image(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 'moita', null, {isStatic:true, shape:'circle'});
-                    o.setDepth(1).setScale(Phaser.Math.FloatBetween(0.8,1.5)).body.label='moita';
+        // ── 5. OBSTÁCULOS (preferem terra/grama, evitam água)
+        const isLand = (px, py) => {
+            const cx = Math.floor(px / CELL);
+            const cy = Math.floor(py / CELL);
+            if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
+            return grid[cy][cx] >= 1;  // areia ou acima
+        };
+        for (let i = 0; i < 16; i++) {
+            for (let tries = 0; tries < 8; tries++) {
+                const cx = Phaser.Math.Between(300, W-300);
+                const cy = Phaser.Math.Between(300, H-300);
+                if (!isLand(cx, cy)) continue;
+                if (Math.random() > 0.5) {
+                    for (let j = 0; j < 5; j++) {
+                        const r = Math.random()*80, a = Math.random()*Math.PI*2;
+                        const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
+                        if (!isLand(ox, oy)) continue;
+                        const o = this.matter.add.image(ox, oy, 'moita', null, {isStatic:true, shape:'circle'});
+                        o.setDepth(1).setScale(Phaser.Math.FloatBetween(0.8,1.5)).body.label = 'moita';
+                    }
+                } else {
+                    for (let j = 0; j < 3; j++) {
+                        const r = Math.random()*60, a = Math.random()*Math.PI*2, s = Phaser.Math.FloatBetween(1.0,2.5);
+                        const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
+                        if (!isLand(ox, oy)) continue;
+                        const o = this.matter.add.image(ox, oy, 'rocha_organica', null, {isStatic:true, shape:'circle'});
+                        o.setDepth(1).setScale(s).body.label = 'rocha';
+                    }
                 }
-            } else {
-                for(let j=0; j<3; j++) {
-                    let r=Math.random()*60, a=Math.random()*Math.PI*2, s=Phaser.Math.FloatBetween(1.0,2.5);
-                    let o = this.matter.add.image(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 'rocha_organica', null, {isStatic:true, shape:'circle'});
-                    o.setDepth(1).setScale(s).body.label='rocha';
-                }
+                break;
             }
         }
 
-        // ── CURRAIS ──────────────────────────────────────────────────
+        // ── 6. CURRAIS (em terra firme)
         this.currais = [];
-        this.driveThrus = this.currais; // alias temporário
-        for(let i=0; i<5; i++) {
-            let img = this.add.image(Phaser.Math.Between(400,W-400), Phaser.Math.Between(400,H-400), 'curral').setDepth(1);
-            this.add.text(img.x, img.y, 'CRL', {fontSize:'14px', fill:'#1a0800', fontStyle:'bold'}).setOrigin(0.5).setDepth(2);
-            this.currais.push({ x: img.x, y: img.y, sprite: img, processing: [], ready: [] });
+        this.driveThrus = this.currais;
+        for (let i = 0; i < 5; i++) {
+            for (let tries = 0; tries < 12; tries++) {
+                const cx = Phaser.Math.Between(400, W-400);
+                const cy = Phaser.Math.Between(400, H-400);
+                if (!isLand(cx, cy)) continue;
+                const img = this.add.image(cx, cy, 'curral').setDepth(1);
+                this.add.text(cx, cy, 'CRL', {fontSize:'14px', fill:'#1a0800', fontStyle:'bold'}).setOrigin(0.5).setDepth(2);
+                this.currais.push({ x: cx, y: cy, sprite: img, processing: [], ready: [] });
+                break;
+            }
         }
     }
 
