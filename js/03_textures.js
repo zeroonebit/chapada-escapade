@@ -9,16 +9,7 @@ Object.assign(Jogo.prototype, {
         // NAVE — agora vem de assets/pixel_labs/nave.png (carregado no preload)
         // Geometria antiga removida pra não sobrescrever o PNG.
 
-        // HAMBÚRGUER — moedinha vista de cima (pão com gergelim)
-        g.clear();
-        g.fillStyle(0xa0671e, 1); g.fillCircle(10, 10, 9);
-        g.fillStyle(0xc88e44, 1); g.fillCircle(10, 10, 7);
-        g.lineStyle(1.5, 0x5c2e0d, 1); g.strokeCircle(10, 10, 9);
-        g.fillStyle(0xfff0c0, 1);
-        g.fillCircle(10, 6, 1); g.fillCircle(7, 8, 1); g.fillCircle(13, 8, 1);
-        g.fillCircle(8, 12, 1); g.fillCircle(12, 12, 1); g.fillCircle(10, 14, 1);
-        g.fillStyle(0xffe9b0, 0.4); g.fillCircle(7, 7, 2);
-        g.generateTexture('hamburguer', 20, 20);
+        // HAMBÚRGUER — agora vem de assets/pixel_labs/items/burger_classic.png
 
         // CURRAL — chão de terra com cerca de madeira
         g.clear();
@@ -63,20 +54,7 @@ Object.assign(Jogo.prototype, {
         g.lineStyle(2, 0x440000, 1); g.strokeRect(2, 2, 28, 28);
         g.generateTexture('atirador', 32, 32);
 
-        // FAZENDEIRO — chapéu de cangaceiro top-down
-        g.clear();
-        g.fillStyle(0x5c3808, 0.35); g.fillEllipse(21, 30, 44, 12);
-        g.fillStyle(0xb88820, 1);
-        g.beginPath(); g.moveTo(20,2); g.lineTo(42,32); g.lineTo(0,32); g.closePath(); g.fillPath();
-        g.fillStyle(0xe0aa28, 1);
-        g.beginPath(); g.moveTo(20,2); g.lineTo(36,28); g.lineTo(4,28); g.closePath(); g.fillPath();
-        g.fillStyle(0xf0c840, 0.5);
-        g.beginPath(); g.moveTo(20,4); g.lineTo(10,26); g.lineTo(20,26); g.closePath(); g.fillPath();
-        g.fillStyle(0x7a4a10, 1); g.fillRect(6, 25, 28, 5);
-        g.fillStyle(0xc87840, 1); g.fillCircle(20, 29, 5);
-        g.lineStyle(2, 0x5c3808, 1);
-        g.beginPath(); g.moveTo(20,2); g.lineTo(42,32); g.lineTo(0,32); g.closePath(); g.strokePath();
-        g.generateTexture('fazendeiro', 42, 36);
+        // FAZENDEIRO — agora vem de assets/pixel_labs/chars/fazendeiro/*.png (8 dir)
 
         g.destroy();
     }

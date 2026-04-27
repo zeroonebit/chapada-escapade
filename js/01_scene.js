@@ -57,6 +57,8 @@ class Jogo extends Phaser.Scene {
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         this.nave.setDisplaySize(80, 80);
 
+        this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da nave
+
         // ── VACAS ────────────────────────────────────────────────────
         if (!this.EXPERIMENT_MODE) {
             this.vacas = [];

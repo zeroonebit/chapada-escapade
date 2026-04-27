@@ -3,10 +3,10 @@ Object.assign(Jogo.prototype, {
 
     _criarVaca(x, y, tipo = 'branca') {
         const label = tipo === 'boi' ? 'boi' : 'vaca';
-        const tex   = tipo === 'boi' ? 'boi_cima_sobe' : 'vaca_cima_sobe';
+        const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
         let v = this.matter.add.image(x, y, tex);
-        // PixelLab assets são 200×200; 0.30/0.35 dá ~60-70px in-world
-        const escala = tipo === 'boi' ? 0.35 : 0.30;
+        // PixelLab dir sprites são 180×180; 0.40/0.45 dá ~72-81px in-world
+        const escala = tipo === 'boi' ? 0.45 : 0.40;
         v.setScale(escala);
         const massa = tipo === 'boi' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);
@@ -220,10 +220,23 @@ Object.assign(Jogo.prototype, {
     },
 
     _texturaDirecional(v) {
-        // Sempre usa cima_sobe — sprite top-down puro pra rotação física ficar natural
+        // 4-dir picker baseado na velocidade do corpo (S/E/N/W)
         if (v.isBurger || v._inCurral) return;
         const base = v.tipo === 'boi' ? 'boi' : 'vaca';
-        const key = `${base}_cima_sobe`;
+        const body = v.body;
+        const vx = body?.velocity?.x || 0;
+        const vy = body?.velocity?.y || 0;
+        const speed = Math.sqrt(vx*vx + vy*vy);
+        let dir = v._lastDir || 'S';
+        if (speed > 0.05) {
+            const deg = (Math.atan2(vy, vx) * 180 / Math.PI + 360) % 360;
+            if (deg < 45 || deg >= 315) dir = 'E';
+            else if (deg < 135) dir = 'S';
+            else if (deg < 225) dir = 'W';
+            else dir = 'N';
+            v._lastDir = dir;
+        }
+        const key = `${base}_${dir}`;
         if (v.texture.key !== key) v.setTexture(key);
     },
 

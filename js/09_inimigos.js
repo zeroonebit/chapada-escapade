@@ -91,7 +91,8 @@ Object.assign(Jogo.prototype, {
         for (let i = 0; i < n; i++) {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
-            const f = this.matter.add.image(x, y, 'fazendeiro', null, {shape:{type:'circle',radius:16}});
+            const f = this.matter.add.image(x, y, 'faz_S', null, {shape:{type:'circle',radius:16}});
+            f.setScale(0.45);  // 180×0.45 = 81px visual
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';
@@ -126,7 +127,20 @@ Object.assign(Jogo.prototype, {
             // Caminhada idle (não anda nem atira sendo arremessado)
             if (f._wandering && !isAbducted) {
                 f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
-                f.setRotation(f.rotation + Phaser.Math.Angle.Wrap((f.wanderAngle - Math.PI/2) - f.rotation) * 0.1);
+            }
+            // Sprite direcional 8-dir baseado em velocidade
+            if (!isAbducted) {
+                const vx = f.body.velocity.x, vy = f.body.velocity.y;
+                const sp = Math.sqrt(vx*vx + vy*vy);
+                let dir = f._lastDir || 'S';
+                if (sp > 0.05) {
+                    const deg = (Math.atan2(vy, vx) * 180 / Math.PI + 360) % 360;
+                    const i = Math.round(deg / 45) % 8;
+                    dir = ['E','SE','S','SW','W','NW','N','NE'][i];
+                    f._lastDir = dir;
+                }
+                const k = `faz_${dir}`;
+                if (f.texture.key !== k) f.setTexture(k);
             }
             if (isAbducted) continue;
 
