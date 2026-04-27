@@ -46,45 +46,49 @@
 
 ### ✅ Pronto
 - Loop principal: nave → abdução → curral → burger → score
-- Feixe graviton com barra de energia (drain/regen)
-- Vacas brancas + bois marrons — sprite `cima_sobe` (top-down) com **rotação livre pela física** (glissagem visual ao entrar no feixe via `setAngularVelocity` random)
+- Feixe graviton com barra de energia (drain/regen) + **PNG halo do PixelLab com BlendMode.ADD** pra glow real
+- **Sprites do jogo todos via PixelLab MCP** em `assets/pixel_labs/`:
+  - Hero 200×200: vaca, boi, nave, beam
+  - Directional 128px: UFO 8d, Fazendeiro 8d, Boi 8d (chubby), Vaca 4d
+  - HUDs 400×200/400×120: SCORE, COWS, BURGERS, COMBUSTÍVEL, GRAVITON
+  - Items 120×120: burger_classic, burger_cheese, burger_double
+- **Vaca animada com personalidade** — 4 estados × 4 direções (104 frames):
+  - `eat` (60% prob, 2.5-5s) e `walk` (40% prob, 1.5-3.5s) quando longe (>240px)
+  - `run` quando player a < 240px
+  - `angry` quando capturada pelo beam
+  - State machine em `_atualizarIAVacas` + `_texturaDirecional` chama `v.play(animKey)`
+- **`matter.add.sprite()`** (não `image`) em `_criarVaca` — Sprite suporta `.anims`, Image não
 - Atiradores fixos (6 torres) com dano à barra COMBUSTÍVEL
-- Fazendeiros móveis com chapéu cangaceiro (8 wandering)
-- **Mobile controls (joystick + botão)** — `js/12_mobile.js`: joystick virtual à esquerda (vetor → alvo virtual 220px à frente da nave) + botão FEIXE à direita; substitui o "2° dedo" antigo
-- Fix do freeze (cleanup de walkTimer em destruição)
-- Idle das vacas a 50% da velocidade de fuga
-- **PNGs implementados no Phaser** — preload + texturas vaca/boi/HUD funcionando
-- **HUD novo:** COWS + BURGERS boxes (sliced de `refs/cow-burgers.png`) lado a lado no topo-esq; barras COMBUSTÍVEL e GRAVITON empilhadas no rodapé com frames-com-label baked-in (sliced de `refs/hud-vazia.png`) e fill desenhado por `Graphics.fillGradientStyle` (amarelo→vermelho / azul→roxo); score topo-centro
-- **Pausa no ESC** com símbolo ⏸ + label "PAUSE"
-- **Splash screen** com `splash.png` centralizado, hint piscando, física pausada até primeiro clique
-- **Renderer CANVAS** — evita bloqueio CORS ao abrir via `file://`
+- Fazendeiros móveis 8-dir (chapéu cangaceiro) — sprite muda baseado em velocidade
+- Boi 8-dir picker (mesma lógica do fazendeiro)
+- **Mobile controls** — `js/12_mobile.js`: joystick + botão FEIXE
+- **HUD PixelLab** integrado: SCORE topo-centro, COWS+BURGERS boxes top-left, COMBUSTÍVEL+GRAVITON barras no rodapé com gradiente fill via `Graphics.fillGradientStyle`
+- **Pausa no ESC** com símbolo ⏸
+- **Splash screen** com `splash.png`, dismiss no primeiro clique
 - **Game over / vitória** com layout limpo
-- **Refactor modular** — 13 arquivos `js/*.js` via `Object.assign(Jogo.prototype, {...})`
-- **Cenário procedural via Cellular Automata** — grid 40×30 cells de 80px, 4 níveis altitude (água/areia/grama/terra), 5 passes smoothing, render layered overlap (0 Wang tiles), sombras em deep cells, tufos de grama, obstáculos/currais checam `isLand`. `_isOverGrass`/`_grassDepth` consultam `terrainGrid`. Linha marrom horizontal removida.
-- **Deploy GitHub Pages** — `git push` em `main` faz deploy automático em ~30s na URL https://zeroonebit.github.io/chapada-escapade/
-- **Wang convention adotada:** cr31 2-corner (NE=1, SE=2, SW=4, NW=8), naming `wang_NN.png` (decimal 0–15). Deprecando o naming `wang_TLTRBLBR` antigo do `slice_tilesets.py`.
-- **Test pack** em `assets/terrain/test/` — 16 cores HSV-spread como placeholder Wang
-- **Wang playground standalone** em `tools/wang_playground/` — gerador procedural + lookup cr31 + canvas render, sem dep do Phaser
+- **Refactor modular** — 14 arquivos `js/*.js` via `Object.assign(Jogo.prototype, {...})`
+- **Cenário procedural via Cellular Automata** — grid 40×30, 4 níveis altitude. Render simplificado pra `add.rectangle` + manchas de terra (shader desligado nesta sessão).
+- **Deploy GitHub Pages** — push → ~30s deploy
+- **PixelLab MCP** — 25 tools, fórmula `Material/Type + Feature + Mood`, bug conhecido: 8d quadruped
+- **Wang playground standalone** em `tools/wang_playground/` (cr31 convention) — pronto pra portar quando reativar terrain shader
+- **Cleanup deprecated** — `assets/characters/`, `assets/ui/`, `assets/terrain/`, `refs/preview*` removidos via `git rm`. Só `assets/pixel_labs/`, `splash.png`, `favicon.svg` sobreviveram.
+- **Diagnostic try/catch** em `create()` e `update()` — erro vira box vermelho na tela
+- **`window.game` exposto** pra debug via `99_main.js`
 
 ### 🚧 Em andamento
-- Geração dos sprites Nano Banana restantes
-  - ✅ `assets/ui/` — score, burger, COWS box, BURGERS box, frames combustível/graviton, mapa
-  - ✅ `assets/characters/vaca/` e `boi/` — 6 sprites cada
-  - ✅ Tileset terreno base + transições — aprovados, falta slicear
-  - 🕒 Fazendeiro — prompt pronto, geração pendente
-  - 🕒 UFO/nave — pendente
-  - 🕒 Burgers, effects — pendentes
-- Validar gerador procedural + lookup Wang no `wang_playground/` antes de portar pro Chapada
-- Substituir layered overlap CA por Wang tiles "de verdade" (próximo passo: portar `wangIndex` + corner grid pro `04_cenario.js`)
+- Re-habilitar **shaders** (terrain `13_terrain_shader.js` + grass `14_grass_patch.js`) — desligados pra debug. Background atual é `add.rectangle` verde + manchas de terra.
+- Animar boi (chubby `e4c60ba7` tem walk-4-frames 8d + idle-shaking-head 8d + rest-idle 8d + eating south + attack south)
+- Animar fazendeiro e UFO
+- Bug pendente: **preview local na sessão atual quebrou** (`new Phaser.Game()` não executa, scripts carregam mas canvas vazio). Workaround: testar direto via Pages.
 
 ### 🔜 Próximos passos
-1. Abrir `wang_playground` em HTTP server (porta livre, não 8080) e validar lookup com test pack
-2. Gerar pack Wang real via PixelLab API (`POST /v2/tilesets`, chaining água→areia→grama→terra) ou slicear tilesets Nano Banana/GPT já aprovados pra `assets/terrain/{pack}/wang_NN.png`
-3. Portar `wangIndex` + corner grid pro `04_cenario.js`, substituir `drawWobblyCell` por `add.image`
-4. Gerar fazendeiro (pose única top-down 3/4) e implementar
-5. Gerar UFO + beam halo + burgers (Sheet 1 revisada)
-6. Anéis animados (capture FX)
-7. Minimapa no canto inferior esquerdo
+1. **Animar boi** (mesmo schema da vaca: walk + idle + eating + attack como angry-equivalente)
+2. **Animar fazendeiro** (running, attack, idle) — usar template animations
+3. **Animar UFO** (idle/breathing-idle pra dar vida; alert state quando energia baixa)
+4. **Re-habilitar terrain shader** após estabilizar — ou portar Wang playground (cr31) pra substituir CA layered overlap
+5. **Anéis animados** (capture FX) — usar `animate_character` ou Phaser particles
+6. **Minimapa** canto inferior esquerdo
+7. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
@@ -105,13 +109,16 @@
 - **Edits cirúrgicos** com a tool Edit, evitar reescrever blocos grandes
 - **Validar no preview** após cada mudança visual
 
-## Skills úteis pra este projeto
+## Skills úteis pra este projeto (`C:\Users\thiag\.claude\skills\`)
 
-- `procedural-tilemap` — Wang tiles, WFC e Cellular Automata pra terrain procedural (criada nesta sessão)
-- `engineering:debug` — quando rolar bug de física/matter.js
-- `design:design-critique` — pra avaliar feedback visual da arte gerada
-- `anthropic-skills:canvas-design` — se precisar gerar diagramas/mockups
-- Não precisa de testing-strategy/code-review formal — projeto pessoal/criativo
+- `procedural-tilemap` — Wang tiles, WFC, CA pra terrain procedural
+- `gamedev-assets` — busca de assets free/paid (Kenney, OpenGameArt, itch, Craftpix, Mana Seed)
+- `gameart-prompts` — formula de prompts pra IA visual (Nano Banana, RD, PixelLab, MJ)
+- `gpt-image-2` — GPT Image 2 specifics (Thinking Mode, text rendering, etc.)
+- `tileset-slicer` — slice + augment Wang via mirror/rotation
+- `engineering:debug` — bugs de física/matter.js
+- `design:design-critique` — feedback visual da arte gerada
+- `anthropic-skills:canvas-design` — diagramas/mockups
 
 ## Comandos do projeto
 

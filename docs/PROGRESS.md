@@ -4,6 +4,34 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-27 (cont.) — PixelLab MCP integrado + assets novos + vaca animada
+
+- **PixelLab MCP** ativado via `claude mcp add pixellab https://api.pixellab.ai/mcp -t http -H "Authorization: Bearer ..."` — 25 tools disponíveis (`create_character`, `create_map_object`, `animate_character`, etc.)
+- **Workflow PixelLab:** `create_character` (4d/8d sprite sheets) vs `create_map_object` (single sprite até 400×400) vs `animate_character` (templates como walk-4-frames, running-8-frames, eating, angry)
+- **Bug PixelLab descoberto:** `KeyError: 'bone_scaling'` no endpoint 8-rotations pra quadruped (workaround: 4-dir pra cat/bear/horse template)
+- **Bug PixelLab + workaround:** templates quadruped (cat/bear/horse) **bloqueiam anatomia** — descrições só customizam aparência. Boi não saía como touro com bear template; usar `chubby cow/bull` em prompt + `cat` template deu resultado mais próximo
+- **Hero assets 200×200** em `assets/pixel_labs/`: vaca, boi (Nelore brown), nave (UFO com alien verde na cúpula), beam halo (concêntrico cyan)
+- **Directional chars 128px** em `assets/pixel_labs/chars/{ufo,fazendeiro,vaca,boi}/{S,E,N,W,SE,NE,NW,SW}.png`:
+  - UFO 8d, Fazendeiro 8d, Boi 8d (chubby Nelore) — todos full 8 direções
+  - Vaca 4d (cat template, bug 8d quadruped)
+- **HUDs 400×200/400×120** em `assets/pixel_labs/hud/`: SCORE, COWS (com ícone vaca), BURGERS (com ícone), COMBUSTÍVEL (vermelho/laranja), GRAVITON (ciano sci-fi tech)
+- **Items burger 120×120** em `assets/pixel_labs/items/`: classic, cheese (queijo derretido), double (2 patties)
+- **Vaca animada** (id `7a011aff`): 4 estados × 4 dir × N frames = 104 frames PNG → `assets/pixel_labs/chars/vaca/anims/{walk,run,eat,angry}/{S,E,N,W}/`
+- **State machine de personalidade** em `_atualizarIAVacas`:
+  - `vaca_abduzida` → `angry` anim
+  - dist < 240px → `run` + flee force
+  - idle far → alterna entre `eat` (60%, 2.5-5s) e `walk` (40%, 1.5-3.5s)
+- **🐛 BUG CRÍTICO consertado:** `this.matter.add.image()` não suporta `.anims` — substituído por `this.matter.add.sprite()` em `_criarVaca`. Anims rodavam silenciosamente sem efeito antes da fix.
+- **🐛 Bug do travamento pós-splash:** `_setupLEDs()` foi perdido no refactor do `01_scene.js` create() → `_atualizarLEDs` quebrava `Cannot read properties of undefined (reading 'length')`. Re-adicionado.
+- **Geometria removida** em `03_textures.js`: nave (PNG sobrescreve), hambúrguer (PixelLab), fazendeiro (PixelLab). Sobreviveram: curral, gaiola, rocha, moita, atirador.
+- **Cleanup deprecated** via `git rm`: `assets/characters/`, `assets/ui/`, `assets/terrain/` (Wang antigos), `refs/preview_pixellab/`, `refs/preview_shader_*.png`, `refs/seamless_preview_*.png`, `refs/tilegpt.png`, `refs/tilenanobanana.jpg`, `refs/cow-burgers.png`, `refs/hud-vazia.png`. Sobraram: `assets/pixel_labs/`, `splash.png`, `favicon.svg`, refs originais (`vacas.jpg`, `farmer.jpg`, etc.).
+- **Workflow:** preview local quebrou nesta sessão (`new Phaser.Game(config)` em `99_main.js` não executa por causa não diagnosticada — scripts carregam, canvas existe, mas window.game vazio). Trocado pra **testar via GitHub Pages direto** (push → ~30s deploy). `99_main.js` agora expõe `window.game` pra debug.
+- **Diagnostic try/catch** em `update()` e `create()` — se quebrar, aparece box vermelho com stack trace na tela em vez de travar silencioso
+- **Shaders desligados temporariamente:** terrain (`13_terrain_shader.js`) substituído por `add.rectangle` verde sólido + manchas de terra; grass patch só em EXPERIMENT_MODE (forçado OFF). Re-habilitar quando confirmarmos estabilidade.
+- **Skill nova:** `pixellab-prompts` (implícita) — formula `Material/Type + Distinguishing Feature + Mood/Context`, doc oficial do MCP em `https://api.pixellab.ai/mcp/docs`
+
+---
+
 ## Sessão 2026-04-27 — Wang playground standalone + convenção cr31
 
 - **Pesquisa:** docs PixelLab MCP `/v2/tilesets` (Wang assíncrono, 16 tiles, 32px max, chaining via `*_base_tile_id`) + cr31 2-corner (NE=1, SE=2, SW=4, NW=8 — adotado como padrão do projeto, deprecando o naming `wang_TLTRBLBR` do `slice_tilesets.py`)
