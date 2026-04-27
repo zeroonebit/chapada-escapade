@@ -46,10 +46,20 @@ Object.assign(Jogo.prototype, {
         this.terrainGrid = grid;
         this.terrainCell = CELL;
 
-        // ── 3. RENDER via fragment shader cell-shaded (13_terrain_shader.js)
-        // Substitui o Wang tile rendering antigo — terreno gerado por GLSL com
-        // ink lines nas bordas, posterize cell-shade, água ondulando.
-        this._setupTerrainShader(W, H);
+        // ── 3. RENDER via fragment shader (DESLIGADO temporariamente — pode estar travando)
+        // Fallback: solid color baseado em altitude majoritária (grama)
+        this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(0);
+        // Manchas de terra pra ter alguma variação visual
+        const terraGfx = this.add.graphics().setDepth(0.1);
+        terraGfx.fillStyle(0xa06848, 1);
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (grid[y][x] === 3) {
+                    terraGfx.fillCircle(x*CELL + CELL/2, y*CELL + CELL/2, CELL*0.55);
+                }
+            }
+        }
+        // this._setupTerrainShader(W, H);  // re-habilitar quando confirmar não trava
 
         // Mantém função de noise pra compat (algumas funções consultam this._noiseR)
         const noise = (a, seed) =>

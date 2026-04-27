@@ -6,13 +6,24 @@ class Jogo extends Phaser.Scene {
     constructor() { super('Jogo'); }
 
     create() {
+        try { this._createBody(); }
+        catch(e) {
+            const msg = (e?.stack || e?.message || String(e)).substring(0, 800);
+            this.add.text(20, 100, 'CREATE ERR:\n' + msg, {
+                fontSize: '12px', fill: '#ff6666', backgroundColor:'#000', padding:{x:6,y:6}, wordWrap:{width:800}
+            }).setScrollFactor(0).setDepth(9999);
+            console.error('[CREATE ERR]', e);
+        }
+    }
+
+    _createBody() {
         const W = 3200, H = 2400;
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
 
-        // ── EXPERIMENT MODE: tecla T alterna (recarrega a página)
-        // ON = cena minimalista com grass patch verlet, sem HUD/inimigos/vacas
-        this.EXPERIMENT_MODE = localStorage.getItem('experimentMode') === '1';
+        // EXPERIMENT_MODE forçado OFF (debug — shader patch tava travando)
+        this.EXPERIMENT_MODE = false;
+        localStorage.setItem('experimentMode', '0');
 
         this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
 
