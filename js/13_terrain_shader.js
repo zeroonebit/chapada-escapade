@@ -77,64 +77,19 @@ vec3 inkFor(float t) {
 }
 
 void main() {
+    // DEBUG MODE: lê textura crua + colore por altitude por cell (sem blend)
     vec2 uv = fragCoord;
-
-    // Jitter as coords com fbm pra borda orgânica wavy
-    float jx = (fbm(uv * GRID_SIZE * 0.6) - 0.5) * 0.06;
-    float jy = (fbm(uv * GRID_SIZE * 0.6 + 100.0) - 0.5) * 0.06;
-    vec2 jUV = uv + vec2(jx, jy);
-
-    // Pega os 4 cells vizinhos
-    vec2 cellPos = jUV * GRID_SIZE - 0.5;
-    vec2 cell00uv = (floor(cellPos) + 0.5) / GRID_SIZE;
-    vec2 cell10uv = cell00uv + vec2(1.0 / GRID_SIZE.x, 0.0);
-    vec2 cell01uv = cell00uv + vec2(0.0, 1.0 / GRID_SIZE.y);
-    vec2 cell11uv = cell00uv + vec2(1.0 / GRID_SIZE.x, 1.0 / GRID_SIZE.y);
-
-    float a = sampleAlt(cell00uv);
-    float b = sampleAlt(cell10uv);
-    float c = sampleAlt(cell01uv);
-    float d = sampleAlt(cell11uv);
-
-    // Snap pra altitude dominante (por proximidade dentro do cell)
-    vec2 f = fract(cellPos);
-    float val;
-    if (f.x < 0.5 && f.y < 0.5) val = a;
-    else if (f.x >= 0.5 && f.y < 0.5) val = b;
-    else if (f.x < 0.5 && f.y >= 0.5) val = c;
-    else val = d;
-
-    // Detecta se está perto de borda (altitudes diferentes ao redor)
-    bool isBorder = (a != b) || (a != c) || (a != d) || (b != c) || (b != d) || (c != d);
-
-    vec3 baseColor = colorFor(val);
-    vec3 finalColor;
-
-    if (isBorder) {
-        // Linha de ink
-        vec3 ink = inkFor(val);
-        // Aproxima da borda? mistura mais ink
-        float edgeDist = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y));
-        float inkStrength = 1.0 - smoothstep(0.0, 0.35, edgeDist);
-        finalColor = mix(baseColor, ink, inkStrength * 0.7);
-    } else {
-        // Watercolor wash (sutil noise + posterize cell-shade)
-        float wash = (fbm(uv * 80.0) - 0.5) * 0.08;
-        float edgeDark = (fbm(uv * 200.0) - 0.5) * 0.04;
-        finalColor = baseColor + vec3(wash + edgeDark);
-        // Posterize 12 steps pra dar cell-shade hard
-        finalColor = floor(finalColor * 12.0) / 12.0;
-    }
-
-    // Animação de água (só em altitude 0)
-    if (val < 0.5) {
+    float alt = sampleAlt(uv);
+    vec3 color = colorFor(alt);
+    // Posterize sutil
+    color = floor(color * 12.0) / 12.0;
+    // Animação de água
+    if (alt < 0.5) {
         float ripple = sin(uv.x * 40.0 + iTime * 0.8) * 0.025
-                     + sin(uv.y * 30.0 + iTime * 0.6) * 0.025
-                     + sin((uv.x + uv.y) * 50.0 - iTime * 1.2) * 0.015;
-        finalColor += vec3(ripple);
+                     + sin(uv.y * 30.0 + iTime * 0.6) * 0.025;
+        color += vec3(ripple);
     }
-
-    gl_FragColor = vec4(finalColor, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
 `;
 
@@ -144,9 +99,9 @@ void main() {
             fragSrc
         );
 
-        // add.shader(shader, x, y, width, height)
-        this.terrainShader = this.add.shader(baseShader, W / 2, H / 2, W, H);
-        this.terrainShader.setSampler2D('iChannel0', texKey, 0);
+        // add.shader(shader, x, y, width, height, textures[]) — passa texKey no
+        // array pra Phaser auto-bindar em iChannel0 (setSampler2D depois nem sempre pega)
+        this.terrainShader = this.add.shader(baseShader, W / 2, H / 2, W, H, [texKey]);
         this.terrainShader.setDepth(0);
     }
 

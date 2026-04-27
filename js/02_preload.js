@@ -19,18 +19,8 @@ Object.assign(Jogo.prototype, {
         // ── SPLASH ───────────────────────────────────────────────────
         this.load.image('splash', 'splash.png');
 
-        // ── WANG TILESET (terreno) ──────────────────────────────────
-        // Pack escolhido via localStorage; 'T' pra alternar in-game (recarrega)
-        const pack = localStorage.getItem('terrainPack') || 'nanobanana';
-        this.terrainPack = pack;
-        // 14 patterns Wang (8 source + 6 derivados via mirror/rotation)
-        const WANG_PATTERNS = [
-            '0000','0001','0010','0011','0100','0101','0111',
-            '1000','1010','1011','1100','1101','1110','1111'
-        ];
-        WANG_PATTERNS.forEach(p => {
-            this.load.image(`wang_${p}`, `assets/terrain/${pack}/wang_${p}.png`);
-        });
+        // (Wang tileset PNGs removidos — terreno agora é renderizado pelo
+        //  fragment shader cell-shaded em js/13_terrain_shader.js)
     }
 
 });

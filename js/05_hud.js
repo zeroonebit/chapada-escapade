@@ -58,17 +58,14 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText.setPosition(300, 62);
 
         // Barras empilhadas no centro-rodapé com gap visível
-        // Combustível em cima (mais largo), Graviton embaixo
-        // Frames têm header + corpo; fill (gradiente) vai dentro do corpo
-        const PAC_Y = h - 60;
-        const ENE_Y = h - 18;
-        this.hud.pacImg.setPosition(w/2, PAC_Y);
+        // Graviton em cima (menor), Combustível embaixo (maior, mais importante)
+        const ENE_Y = h - 60;
+        const PAC_Y = h - 18;
         this.hud.eneImg.setPosition(w/2, ENE_Y);
+        this.hud.pacImg.setPosition(w/2, PAC_Y);
 
-        // Geometria da área interna onde o gradiente é desenhado:
-        // pacImg display = 380x68; corpo do frame começa abaixo do header
-        this._pacBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
         this._eneBar = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
+        this._pacBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
 
         // Hint inicial
         if (this.hud.hint) {
