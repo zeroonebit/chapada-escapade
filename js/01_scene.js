@@ -75,6 +75,7 @@ class Jogo extends Phaser.Scene {
 
         this._setupPausa();                 // 11_gameflow.js
         this._setupColisoes();              // 10_colisao.js
+        this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
         this._setupSplash();               // 11_gameflow.js — por último (sobrepõe tudo)
     }
 
@@ -103,8 +104,18 @@ class Jogo extends Phaser.Scene {
         this.textoContador.setText(cowsInBeam);
 
         const cam = this.cameras.main;
-        const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
-        const cursor = { x: wp.x, y: wp.y };
+        let cursor;
+        if (this.isMobile && this._joyVec && this._joyVec.active) {
+            // Joystick — vetor vira "alvo virtual" 220px à frente da nave
+            const REACH = 220;
+            cursor = {
+                x: this.nave.x + this._joyVec.x * REACH,
+                y: this.nave.y + this._joyVec.y * REACH
+            };
+        } else {
+            const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
+            cursor = { x: wp.x, y: wp.y };
+        }
 
         this._atualizarRastro(cursor);
         this._moverNave(cursor);
@@ -115,7 +126,7 @@ class Jogo extends Phaser.Scene {
         this._atualizarLEDs(delta);
 
         const querBeam = this.isMobile
-            ? this.input.pointer2.isDown
+            ? !!this._beamHeld
             : this.input.activePointer.isDown;
         const beamAtivo = querBeam && this.energiaLed > 0;
 

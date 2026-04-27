@@ -30,7 +30,7 @@ Object.assign(Jogo.prototype, {
 
         // ── Hint inicial ──────────────────────────────────────────────
         const hintMsg = this.isMobile
-            ? 'Arraste para mover  •  2° dedo para abduzir'
+            ? 'Joystick à esquerda  •  Botão à direita pra abduzir'
             : 'CLIQUE E SEGURE para abduzir';
         this.hud.hintBg = this.add.rectangle(0,0,490,46,0x000000,0.7).setScrollFactor(0).setDepth(105);
         this.hud.hint   = this.add.text(0,0,hintMsg,{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(106);
@@ -43,34 +43,29 @@ Object.assign(Jogo.prototype, {
 
     _posicionarHUD() {
         const w = this.scale.width, h = this.scale.height;
-        const Y = h - 30;  // linha base do rodapé
 
-        // Burger — canto inferior esquerdo
-        this.hud.burgerBg.setPosition(80, Y);
-        this.hud.burgerText.setPosition(115, Y + 2);
+        // Score — centro-topo
+        this.hud.scoreBg.setPosition(w/2, 28);
+        this.hud.scoreText.setPosition(w/2, 32);
 
-        // Score — canto inferior direito
-        this.hud.scoreBg.setPosition(w - 110, Y);
-        this.hud.scoreText.setPosition(w - 110, Y + 4);
+        // Burger — canto superior esquerdo
+        this.hud.burgerBg.setPosition(75, 50);
+        this.hud.burgerText.setPosition(118, 52);
 
-        // Barras lado a lado no centro do rodapé
-        const PAC_DISP = 340, PAC_INN = 300;
-        const ENE_DISP = 300, ENE_INN = 258;
-        const GAP = 20;
-        const totalW = PAC_DISP + GAP + ENE_DISP;
-        const startX = (w - totalW) / 2;
-        const PAC_X = startX + PAC_DISP/2;
-        const ENE_X = startX + PAC_DISP + GAP + ENE_DISP/2;
-
-        this.hud.pacImg.setPosition(PAC_X, Y);
-        this._pacLeft = PAC_X - PAC_INN/2;
+        // Barras empilhadas no centro-rodapé com gap visível
+        // Combustível em cima, Graviton embaixo
+        const PAC_INN = 300, ENE_INN = 258;
+        const PAC_Y = h - 56;
+        const ENE_Y = h - 22;  // ~34px de espaço entre os centros
+        this.hud.pacImg.setPosition(w/2, PAC_Y);
+        this._pacLeft = w/2 - PAC_INN/2;
         this._pacW    = PAC_INN;
-        this.hud.pacCover.setPosition(this._pacLeft + PAC_INN, Y);
+        this.hud.pacCover.setPosition(this._pacLeft + PAC_INN, PAC_Y);
 
-        this.hud.eneImg.setPosition(ENE_X, Y);
-        this._eneLeft = ENE_X - ENE_INN/2;
+        this.hud.eneImg.setPosition(w/2, ENE_Y);
+        this._eneLeft = w/2 - ENE_INN/2;
         this._eneW    = ENE_INN;
-        this.hud.eneCover.setPosition(this._eneLeft + ENE_INN, Y);
+        this.hud.eneCover.setPosition(this._eneLeft + ENE_INN, ENE_Y);
 
         // Hint inicial
         if (this.hud.hint) {
