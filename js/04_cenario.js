@@ -77,65 +77,38 @@ Object.assign(Jogo.prototype, {
             gfx.fillPath();
         };
 
-        // Cada layer: cor base + cor sombra interna pra dar profundidade
-        const LAYERS = [
-            { id: 1, color: 0xd9c98f, shade: 0xb8a060, alpha: 1.0 },  // areia
-            { id: 2, color: 0x82b048, shade: 0x6e9b3a, alpha: 1.0 },  // grama
-            { id: 3, color: 0xb8a870, shade: 0x9a8a55, alpha: 1.0 }   // terra
-        ];
+        // ── WANG TILE RENDERING (substitui o layered overlap antigo) ──
+        // Para cada cell, calcula bitmask Wang (TL TR BL BR) baseado em
+        // self + 3 vizinhos (right, below, down-right). Bit=1 quando altitude>=2 (grama).
+        const grassBit = (gx, gy) => {
+            if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return 0;
+            return grid[gy][gx] >= 2 ? 1 : 0;
+        };
 
-        for (const layer of LAYERS) {
-            const gfx = this.add.graphics().setDepth(0.1 + layer.id * 0.05);
-            gfx.fillStyle(layer.color, layer.alpha);
-            const seedBase = layer.id * 1234;
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x] < layer.id) continue;
-                    const cx = x * CELL + CELL/2;
-                    const cy = y * CELL + CELL/2;
-                    // Raio levemente maior que metade da célula → overlap suave
-                    drawWobblyCell(gfx, cx, cy, CELL * 0.65, seedBase + x*7 + y*13);
-                }
-            }
-            // Sombra interna (raio menor, cor mais escura) — só nas células "deep" (4 vizinhos do mesmo nível)
-            const shadeGfx = this.add.graphics().setDepth(0.1 + layer.id * 0.05 + 0.01);
-            shadeGfx.fillStyle(layer.shade, 0.5);
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x] < layer.id) continue;
-                    // Só pinta sombra se 4 cardinais também tiverem altitude >= layer
-                    const n = (y > 0)         && grid[y-1][x] >= layer.id;
-                    const s = (y < ROWS-1)    && grid[y+1][x] >= layer.id;
-                    const w_ = (x > 0)        && grid[y][x-1] >= layer.id;
-                    const e = (x < COLS-1)    && grid[y][x+1] >= layer.id;
-                    if (!(n && s && w_ && e)) continue;
-                    const cx = x * CELL + CELL/2;
-                    const cy = y * CELL + CELL/2;
-                    drawWobblyCell(shadeGfx, cx, cy, CELL * 0.45, seedBase + x*11 + y*17);
-                }
-            }
-        }
+        // Fallback pra patterns não geradas (diagonais 0110/1001)
+        const PATTERN_FALLBACK = { '0110': '0011', '1001': '1100' };
+        const tileExists = (key) => this.textures.exists(key);
 
-        // Tufos de grama (decoração) sobre as células de grama
-        const tuftGfx = this.add.graphics().setDepth(0.4);
         for (let y = 0; y < ROWS; y++) {
             for (let x = 0; x < COLS; x++) {
-                if (grid[y][x] !== 2) continue;
-                const cx = x * CELL, cy = y * CELL;
-                tuftGfx.fillStyle(0x4f7a22, 0.85);
-                for (let j = 0; j < 4; j++) {
-                    const px = cx + Math.random()*CELL;
-                    const py = cy + Math.random()*CELL;
-                    tuftGfx.fillTriangle(px-2, py+3, px+2, py+3, px, py-4);
+                const tl = grassBit(x,   y);
+                const tr = grassBit(x+1, y);
+                const bl = grassBit(x,   y+1);
+                const br = grassBit(x+1, y+1);
+                let pattern = `${tl}${tr}${bl}${br}`;
+                let tileKey = `wang_${pattern}`;
+                if (!tileExists(tileKey) && PATTERN_FALLBACK[pattern]) {
+                    tileKey = `wang_${PATTERN_FALLBACK[pattern]}`;
                 }
-                tuftGfx.fillStyle(0xb5d472, 0.6);
-                for (let j = 0; j < 2; j++) {
-                    const px = cx + Math.random()*CELL;
-                    const py = cy + Math.random()*CELL;
-                    tuftGfx.fillTriangle(px-1.5, py+2, px+1.5, py+2, px, py-3);
-                }
+                if (!tileExists(tileKey)) tileKey = `wang_0000`; // fallback final
+                const cx = x * CELL + CELL/2;
+                const cy = y * CELL + CELL/2;
+                // +2 px de overlap pra evitar gap de antialiasing
+                this.add.image(cx, cy, tileKey).setDisplaySize(CELL+2, CELL+2).setDepth(0.2);
             }
         }
+
+        // (Tufos decorativos removidos — agora vêm baked dentro dos Wang tiles)
 
         // ── 4. GRASS PATCHES — gera pontos de grama pra IA de fuga das vacas
         // (substitui o sistema antigo de blobs explícitos)

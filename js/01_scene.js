@@ -76,12 +76,44 @@ class Jogo extends Phaser.Scene {
         this._setupPausa();                 // 11_gameflow.js
         this._setupColisoes();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
+        this._setupTerrainPackSwitch();     // 01_scene.js (definido abaixo)
         this._setupSplash();               // 11_gameflow.js — por último (sobrepõe tudo)
+    }
+
+    // Indicador do pack atual + tecla T pra alternar (recarrega página)
+    _setupTerrainPackSwitch() {
+        const w = this.scale.width;
+        const pack = this.terrainPack || 'nanobanana';
+        const next = pack === 'nanobanana' ? 'gpt' : 'nanobanana';
+        // Pequeno badge no canto superior direito
+        const bg = this.add.rectangle(w-90, 18, 160, 22, 0x000000, 0.55)
+            .setStrokeStyle(1, 0x55ff88, 0.6)
+            .setScrollFactor(0).setDepth(120);
+        const txt = this.add.text(w-90, 18, `PACK: ${pack}  [T→${next}]`, {
+            fontSize: '10px', fill: '#88ffaa', fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(121);
+        // Reposiciona em resize
+        this.scale.on('resize', () => {
+            const w2 = this.scale.width;
+            bg.setPosition(w2-90, 18);
+            txt.setPosition(w2-90, 18);
+        });
+        // Tecla T toggle
+        this.teclaT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
     }
 
     update(time, delta) {
         if (!this.gameStarted) return;      // aguarda dismiss do splash
         if (this.gameOver) return;
+
+        // T — toggle terrain pack (recarrega a página com o outro pack)
+        if (this.teclaT && Phaser.Input.Keyboard.JustDown(this.teclaT)) {
+            const cur = localStorage.getItem('terrainPack') || 'nanobanana';
+            const nxt = cur === 'nanobanana' ? 'gpt' : 'nanobanana';
+            localStorage.setItem('terrainPack', nxt);
+            window.location.reload();
+            return;
+        }
 
         // ESC — toggle pausa
         if (Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
