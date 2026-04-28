@@ -25,6 +25,9 @@ class Jogo extends Phaser.Scene {
         this.EXPERIMENT_MODE = false;
         localStorage.setItem('experimentMode', '0');
 
+        // Carrega config de debug ANTES de qualquer spawn (afeta scales/counts)
+        this._loadDebugCfg();
+
         this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
 
         // ── REGISTRA ANIMS DA VACA (4 estados × 4 dir) ──────────────
@@ -71,21 +74,26 @@ class Jogo extends Phaser.Scene {
             this.terrainGrid = null;
             this._setupGrassPatch(W, H);    // 14_grass_patch.js
         } else {
+            // Cenário sempre roda (terreno/grama base); cercas/moitas opcionais via cfg.cenario
             this._setupCenario(W, H);
-            this._setupAtiradores();
+            if (this.dbg.enabled.atiradores) this._setupAtiradores();
+            else { this.balas = []; this.atiradores = []; }
             this.fazendeiros = [];
-            this._spawnFazendeiros(8);
+            if (this.dbg.enabled.fazendeiros) this._spawnFazendeiros(this.dbg.counts.fazendeiros);
         }
 
         // ── NAVE ─────────────────────────────────────────────────────
         this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1).setDisplaySize(72, 72);
-        const CONE_R = 40*5.55/2;
+        const beamScale = this.dbg.scale.beam;
+        const CONE_R = (40*5.55/2) * beamScale;
         this.raioCone = CONE_R;
         // Beam: PNG do PixelLab + blend ADD pra glow + alpha tween de pulse
+        // BlendModes.ADD pode causar artefatos quadrados em GPUs específicas — fallback NORMAL via cfg
         this.coneLuz = this.add.image(W/2, H/2, 'beam_halo')
             .setBlendMode(Phaser.BlendModes.ADD)
             .setDisplaySize(CONE_R * 2.4, CONE_R * 2.4)
             .setDepth(2).setVisible(false);
+        if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
         this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         this.nave.setDisplaySize(80, 80);
@@ -96,7 +104,10 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) {
             this.vacas = [];
             this.vacas_abduzidas = [];
-            this._spawnVacas(40);
+            // Só spawna se vaca OU boi tá habilitado — _spawnVacas filtra por tipo internamente
+            if (this.dbg.enabled.vacas || this.dbg.enabled.bois) {
+                this._spawnVacas(this.dbg.counts.vacas);
+            }
         }
 
         // ── ESTADO ───────────────────────────────────────────────────
@@ -143,6 +154,7 @@ class Jogo extends Phaser.Scene {
         }
 
         this._setupPausa();                 // 11_gameflow.js
+        this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupColisoes();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
 
@@ -203,7 +215,7 @@ class Jogo extends Phaser.Scene {
             return;
         }
 
-        // ESC — toggle pausa
+        // ESC — toggle pausa + debug menu
         if (Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
             this.pausado = !this.pausado;
             this.matter.world.enabled = !this.pausado;
@@ -211,6 +223,7 @@ class Jogo extends Phaser.Scene {
             this.pauseGrafico.setVisible(this.pausado);
             this.pauseLabel.setVisible(this.pausado);
             this.pauseHint.setVisible(this.pausado);
+            this._toggleDebugMenu(this.pausado);
         }
         if (this.pausado) return;
 

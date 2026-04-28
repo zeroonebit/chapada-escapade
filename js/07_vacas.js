@@ -7,7 +7,9 @@ Object.assign(Jogo.prototype, {
         // matter.add.SPRITE (não image) — sprite suporta .anims, image não
         let v = this.matter.add.sprite(x, y, tex);
         // setDisplaySize força tamanho visual fixo (anim frames 68px e static 180px viram mesma escala)
-        const tamanho = tipo === 'boi' ? 78 : 68;
+        const baseSize = tipo === 'boi' ? 78 : 68;
+        const sizeScale = tipo === 'boi' ? ((this.dbg?.scale?.boi) ?? 3.0) : ((this.dbg?.scale?.vaca) ?? 1.0);
+        const tamanho = baseSize * sizeScale;
         v.setDisplaySize(tamanho, tamanho);
         const massa = tipo === 'boi' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);
@@ -59,8 +61,15 @@ Object.assign(Jogo.prototype, {
 
     _spawnVacas(n) {
         const W=3200, H=2400;
+        const okVaca = this.dbg?.enabled?.vacas !== false;
+        const okBoi  = this.dbg?.enabled?.bois  !== false;
         for(let i=0; i<n; i++) {
-            const tipo = Math.random() < 0.20 ? 'boi' : 'branca';
+            // Respeita toggles: só spawna tipo habilitado; se ambos off, sai
+            let tipo;
+            if (okVaca && okBoi) tipo = Math.random() < 0.20 ? 'boi' : 'branca';
+            else if (okVaca)     tipo = 'branca';
+            else if (okBoi)      tipo = 'boi';
+            else return;
             this._criarVaca(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
         }
     },
@@ -182,10 +191,11 @@ Object.assign(Jogo.prototype, {
             // Atrito progressivo: 0.015 fora, sobe quadraticamente até quase travar
             v.setFrictionAir(0.015 + depth * depth * 2.8);
         }
+        const pullMul = this.dbg?.behavior?.pullBeam ?? 1.0;
         let dx = this.nave.x-v.x, dy = this.nave.y-v.y;
         let dist = Math.sqrt(dx*dx+dy*dy), ang = Math.atan2(dy, dx);
-        v.applyForce({x: Math.cos(ang)*0.0008, y: Math.sin(ang)*0.0008});
-        if (dist > this.raioCone*0.7) v.applyForce({x: Math.cos(ang)*0.003, y: Math.sin(ang)*0.003});
+        v.applyForce({x: Math.cos(ang)*0.0008*pullMul, y: Math.sin(ang)*0.0008*pullMul});
+        if (dist > this.raioCone*0.7) v.applyForce({x: Math.cos(ang)*0.003*pullMul, y: Math.sin(ang)*0.003*pullMul});
         if (dist > 10) v.applyForce({x: (Math.random()-0.5)*0.001, y: (Math.random()-0.5)*0.001});
         // sem reset de angular velocity — deixa girar com a física pra dar glissagem
     },
@@ -284,6 +294,7 @@ Object.assign(Jogo.prototype, {
     _atualizarIAVacas() {
         const FLEE_DIST = 240;            // raio onde vaca começa a correr (era 160)
         const FLEE_DIST_SQ = FLEE_DIST * FLEE_DIST;
+        const velMul = this.dbg?.behavior?.velVaca ?? 1.0;
         for (let i = 0; i < this.vacas.length; i++) {
             const v = this.vacas[i];
             if (!v.scene || !v.body || v._dying) continue;
@@ -296,7 +307,7 @@ Object.assign(Jogo.prototype, {
 
             const dx = v.x - this.nave.x, dy = v.y - this.nave.y;
             const distSq = dx*dx + dy*dy;
-            const baseF = v.tipo === 'boi' ? 0.0010 : 0.0016;
+            const baseF = (v.tipo === 'boi' ? 0.0010 : 0.0016) * velMul;
 
             if (distSq >= FLEE_DIST_SQ) {
                 // Far do player: alterna entre comer e andar com timer

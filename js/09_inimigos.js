@@ -33,7 +33,8 @@ Object.assign(Jogo.prototype, {
         const RANGE = 420;
         const RANGE_SQ = RANGE * RANGE;
         const VEL = 4.5;
-        const DANO = 13;
+        const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
+        const DANO = 13 * danoMul;
         const MAX_DIST = 580;
 
         for (const at of this.atiradores) {
@@ -92,8 +93,13 @@ Object.assign(Jogo.prototype, {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
             // matter.add.SPRITE (não image) — sprite suporta .anims pra running
-            const f = this.matter.add.sprite(x, y, 'faz_S', null, {shape:{type:'circle',radius:16}});
-            f.setDisplaySize(81, 81);  // anim frames e static têm tamanhos diferentes — força fixo
+            const fazScale = (this.dbg?.scale?.faz) ?? 2.0;
+            const fazSize  = 81 * fazScale;
+            const f = this.matter.add.sprite(x, y, 'faz_S');
+            // setBody EXPLÍCITO depois — o options no sprite parece ser ignorado em algumas
+            // versões do Phaser, deixando body do tamanho da textura (180×180 = bug)
+            f.setBody({type:'circle', radius:16});
+            f.setDisplaySize(fazSize, fazSize);
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';
@@ -116,7 +122,9 @@ Object.assign(Jogo.prototype, {
     },
 
     _atualizarFazendeiros(delta) {
-        const IDLE_F   = 0.0008; // mesmo ritmo do idle das vacas brancas
+        const velMul = this.dbg?.behavior?.velFaz ?? 1.0;
+        const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
+        const IDLE_F   = 0.0008 * velMul; // mesmo ritmo do idle das vacas brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
 
