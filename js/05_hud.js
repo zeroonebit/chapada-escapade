@@ -2,7 +2,8 @@
 Object.assign(Jogo.prototype, {
 
     _criarHUD() {
-        const D = 100, D2 = 101;
+        // HUD acima do atmosphere overlay (depth 195) e do storm flash (196)
+        const D = 200, D2 = 201;
 
         // ── Score ─────────────────────────────────────────────────────
         // frame limpo (sem dígitos baked-in); número sobreposto pelo código
@@ -35,19 +36,17 @@ Object.assign(Jogo.prototype, {
         const hintMsg = this.isMobile
             ? 'Joystick on the left  •  Button on the right to abduct'
             : 'CLICK AND HOLD to abduct';
-        this.hud.hintBg = this.add.rectangle(0,0,490,46,0x000000,0.7).setScrollFactor(0).setDepth(105);
-        this.hud.hint   = this.add.text(0,0,hintMsg,{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(106);
+        this.hud.hintBg = this.add.rectangle(0,0,490,46,0x000000,0.7).setScrollFactor(0).setDepth(205);
+        this.hud.hint   = this.add.text(0,0,hintMsg,{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(206);
 
         // ── Seta indicadora e rastro ──────────────────────────────────
-        this.setaIndicadora = this.add.graphics().setScrollFactor(0).setDepth(101);
+        this.setaIndicadora = this.add.graphics().setScrollFactor(0).setDepth(D2);
         this.rastroMouse    = [];
         this.graficoRastro  = this.add.graphics().setDepth(9);
 
         // ── Radar (canto inferior esquerdo) ───────────────────────────
-        // Círculo estilo radar com linha de scan girando.
-        // Posição calculada em _posicionarHUD.
-        this.hud.miniBg  = this.add.graphics().setScrollFactor(0).setDepth(100);
-        this.hud.miniGfx = this.add.graphics().setScrollFactor(0).setDepth(101);
+        this.hud.miniBg  = this.add.graphics().setScrollFactor(0).setDepth(D);
+        this.hud.miniGfx = this.add.graphics().setScrollFactor(0).setDepth(D2);
         this._radarAngle = 0;  // ângulo atual do scan (radianos)
     },
 
@@ -82,7 +81,8 @@ Object.assign(Jogo.prototype, {
 
         // Radar — disco circular no canto inferior esquerdo
         const R = 70, PAD = 14;
-        const rx = PAD + R, ry = h - R - PAD - 58;  // acima das barras
+        // Desce R/2 (metade do raio) em relação ao posicionamento anterior
+        const rx = PAD + R, ry = h - R - PAD - 58 + R/2;
         this._mini = { cx: rx, cy: ry, r: R };
         // Redesenha o fundo do radar (estático — só muda no resize)
         this.hud.miniBg.clear();
