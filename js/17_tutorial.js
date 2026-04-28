@@ -101,8 +101,7 @@ Object.assign(Jogo.prototype, {
         this.vacas = [];
 
         const cx = this.nave.x, cy = this.nave.y;
-        this._criarVaca(cx + 260, cy + 120, 'holstein');
-        this._criarVaca(cx - 190, cy + 180, 'holstein');
+        this._tutSpawnVacas(8);
 
         // Garante 1 curral próximo
         if (!this.currais || this.currais.length === 0) {
@@ -149,6 +148,8 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'ABDUCT': {
+                // Garante sempre vacas disponíveis pro player praticar
+                if (this._tutVacasVivas() < 3) this._tutSpawnVacas(4);
                 if (this.vacas_abduzidas.length > 0) {
                     this._tutHadAbductees = true;
                 }
@@ -157,11 +158,12 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'DELIVER': {
+                // Mantém vacas disponíveis caso player perca a abduzida
+                if (this._tutVacasVivas() + this.vacas_abduzidas.length < 2) this._tutSpawnVacas(3);
                 if (this.currais?.length > 0) {
                     const c = this.currais[0];
                     this._tutDrawArrow(c.x, c.y);
                 }
-                // Avança quando vaca foi entregue (entrou em processing OU já existe burger pronto)
                 const dropped = (this.currais || []).some(c =>
                     (c.processing && c.processing.length > 0) ||
                     (c.ready && c.ready.length > 0)
@@ -246,6 +248,26 @@ Object.assign(Jogo.prototype, {
         if (!this._criarFazendeiro) return;
         const cx = this.nave.x, cy = this.nave.y;
         this._criarFazendeiro(cx + 350, cy - 150);
+    },
+
+    // Spawna N vacas em circulo ao redor da nave (raios variados)
+    _tutSpawnVacas(n) {
+        const cx = this.nave.x, cy = this.nave.y;
+        for (let i = 0; i < n; i++) {
+            const ang = (i / n) * Math.PI * 2 + Math.random() * 0.4;
+            const r   = 200 + Math.random() * 220;
+            const x = cx + Math.cos(ang) * r;
+            const y = cy + Math.sin(ang) * r;
+            this._criarVaca(x, y, 'holstein');
+        }
+    },
+
+    // Conta vacas "úteis" (vivas, fora do curral, não inimigas, não burger)
+    _tutVacasVivas() {
+        return (this.vacas || []).filter(v =>
+            v && v.scene && !v._dying && !v._destroyed &&
+            !v.isBurger && !v.isEnemy && !v._inCurral
+        ).length;
     },
 
     // Atirador (torre) próximo da nave pra forçar tomar dano
