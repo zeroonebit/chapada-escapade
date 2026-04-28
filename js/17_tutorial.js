@@ -59,6 +59,8 @@ Object.assign(Jogo.prototype, {
         this.tutorialMode = true;
         this._tutStepIdx   = 0;
         this._tutStartPos  = { x: this.nave.x, y: this.nave.y };
+        this._tutStepShownAt = this.time?.now ?? 0;
+        this._tutMinReadMs   = 5000;  // tempo mínimo de leitura por etapa
         this._tutHadAbductees = false;
         this._tutDelivered = false;
         this._tutScoreAntes = this.scoreAtual || 0;
@@ -107,6 +109,10 @@ Object.assign(Jogo.prototype, {
         this._tutGfx.clear();
         this._tutAngle = (this._tutAngle || 0) + 0.04;
 
+        // Tempo mínimo de leitura — não avança antes do usuário ler
+        const elapsed = (this.time?.now ?? 0) - (this._tutStepShownAt || 0);
+        const canAdvance = elapsed >= (this._tutMinReadMs || 5000);
+
         const nave = this.nave;
 
         switch (step.key) {
@@ -114,13 +120,13 @@ Object.assign(Jogo.prototype, {
             case 'MOVE': {
                 const dx = nave.x - this._tutStartPos.x;
                 const dy = nave.y - this._tutStartPos.y;
-                if (Math.sqrt(dx*dx + dy*dy) > 200) this._tutAdvance();
+                if (canAdvance && Math.sqrt(dx*dx + dy*dy) > 200) this._tutAdvance();
                 break;
             }
 
             case 'BEAM': {
                 const beamOn = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
-                if (beamOn && this.energiaLed > 0) this._tutAdvance();
+                if (canAdvance && beamOn && this.energiaLed > 0) this._tutAdvance();
                 break;
             }
 
@@ -128,18 +134,16 @@ Object.assign(Jogo.prototype, {
                 if (this.vacas_abduzidas.length > 0) {
                     this._tutHadAbductees = true;
                 }
-                if (this._tutHadAbductees) this._tutAdvance();
+                if (canAdvance && this._tutHadAbductees) this._tutAdvance();
                 break;
             }
 
             case 'DELIVER': {
-                // Seta ao curral mais próximo
                 if (this.currais?.length > 0) {
                     const c = this.currais[0];
                     this._tutDrawArrow(c.x, c.y);
                 }
-                // Avança quando score aumentar (burger foi entregue ao curral → processado)
-                if ((this.scoreAtual || 0) > this._tutScoreAntes || this.burgerCount > 0) {
+                if (canAdvance && ((this.scoreAtual || 0) > this._tutScoreAntes || this.burgerCount > 0)) {
                     this._tutDelivered = true;
                     this._tutAdvance();
                 }
@@ -147,20 +151,16 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BURGER': {
-                // Aguarda coleta (burgerCount sobe quando coleta)
                 const atualB = this.burgerCount || 0;
-                if (atualB > (this._tutBurgerAntes || 0)) this._tutAdvance();
+                if (canAdvance && atualB > (this._tutBurgerAntes || 0)) this._tutAdvance();
                 break;
             }
 
             case 'BARS': {
-                // Descongela paciência pra mostrar as barras em ação
                 this._tutCombustivelCongelado = false;
-                // Avança quando player ativar e desativar o beam (monitora energia)
                 const beamOn2 = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
                 if (beamOn2) this._tutBarsGravitonWatched = true;
-                if (this._tutBarsGravitonWatched && !beamOn2 && this.energiaLed >= this.energiaMax * 0.8) {
-                    // Regenerou bastante — player entendeu o ciclo
+                if (canAdvance && this._tutBarsGravitonWatched && !beamOn2 && this.energiaLed >= this.energiaMax * 0.8) {
                     this._tutCombustivelCongelado = true;
                     this._tutAdvance();
                 }
@@ -168,26 +168,22 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER': {
-                // Spawna 1 fazendeiro se não existir
                 if (!this.fazendeiros || this.fazendeiros.length === 0) {
                     this._tutSpawnFazendeiro();
                 }
-                // Avança quando fazendeiro entrar no feixe (abdução)
                 const inBeam = this.vacas_abduzidas.some(e => e.isEnemy);
                 if (inBeam) {
                     this._tutFarmerAbducted = true;
-                    this._tutAdvance();
+                    if (canAdvance) this._tutAdvance();
                 }
                 break;
             }
 
             case 'FARMER_KILL': {
-                // Avança quando um fazendeiro morrer
                 const allDead = !this.fazendeiros || this.fazendeiros.every(f => !f.scene || f._dying || f._destroyed);
-                if (this._tutFarmerAbducted && allDead && this.fazendeiros.length > 0) {
+                if (canAdvance && this._tutFarmerAbducted && allDead && this.fazendeiros.length > 0) {
                     this._tutAdvance();
                 } else if (this._tutFarmerAbducted && (!this.fazendeiros || this.fazendeiros.length === 0)) {
-                    // Spawn outro pra caso tenha fugido antes de morrer
                     this._tutSpawnFazendeiro();
                 }
                 break;
@@ -226,6 +222,9 @@ Object.assign(Jogo.prototype, {
 
         const step = TUT_STEPS[idx];
         if (!step) return;
+
+        // Reset do timer de leitura mínima (5s pra cada nova etapa)
+        this._tutStepShownAt = this.time?.now ?? 0;
 
         const w = this.scale.width, h = this.scale.height;
         const BOX_W  = Math.min(480, w - 40);
