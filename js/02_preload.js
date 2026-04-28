@@ -59,11 +59,16 @@ Object.assign(Jogo.prototype, {
                                'cactus_dead_dry','cactus_branching','cactus_cluster_low',
                                'cactus_saguaro_2','cactus_dead_vine','bush_round',
                                'patch_cluster','bush_dry','agave_dark'];
+        const NATURE_CERCAS = ['fence_full_h','fence_normal','fence_long','fence_short',
+                               'fence_broken','fence_gate_open','fence_corner',
+                               'post_single','post_thin','plank_v'];
         NATURE_PEDRAS.forEach(n => this.load.image(`nat_pedra_${n}`, `assets/pixel_labs/chars/nature/pedras/${n}.png`));
         NATURE_VEGE.forEach(n   => this.load.image(`nat_vege_${n}`,  `assets/pixel_labs/chars/nature/vegetacao/${n}.png`));
-        // Expor pra outros módulos (cenário usa pra spawn random)
+        NATURE_CERCAS.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas/${n}.png`));
+        // Expor pra outros módulos
         this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
         this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);
+        this._natureCercasKeys = NATURE_CERCAS.map(n => `nat_cerca_${n}`);
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');

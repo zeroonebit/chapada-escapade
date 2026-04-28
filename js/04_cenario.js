@@ -165,31 +165,41 @@ Object.assign(Jogo.prototype, {
             return base * Phaser.Math.FloatBetween(0.85, 1.15);
         };
 
-        for (let i = 0; i < 16; i++) {
+        // Coloca uma peça testando overlap (até 12 tentativas), retorna true se conseguiu
+        const placed = [];
+        const tryPlace = (cx0, cy0, spread, tex, label) => {
+            const sc = scaleFor(tex);
+            const myR = 32 * sc * 0.85;  // raio de bounding circle (source 64×64) — 0.85 permite leve overlap
+            for (let att = 0; att < 12; att++) {
+                const rr = Math.random() * spread, aa = Math.random() * Math.PI * 2;
+                const ox = cx0 + Math.cos(aa) * rr, oy = cy0 + Math.sin(aa) * rr;
+                if (!isLand(ox, oy)) continue;
+                // Checa contra TODAS as peças já colocadas (não só do cluster atual)
+                let collides = false;
+                for (const p of placed) {
+                    const dx = p.x - ox, dy = p.y - oy;
+                    if ((dx*dx + dy*dy) < (p.r + myR) * (p.r + myR)) { collides = true; break; }
+                }
+                if (collides) continue;
+                placed.push({ x: ox, y: oy, r: myR });
+                const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
+                o.setDepth(1).setScale(sc).body.label = label;
+                return true;
+            }
+            return false;
+        };
+
+        for (let i = 0; i < 18; i++) {
             for (let tries = 0; tries < 8; tries++) {
                 const cx = Phaser.Math.Between(300, W-300);
                 const cy = Phaser.Math.Between(300, H-300);
                 if (!isLand(cx, cy)) continue;
                 if (Math.random() > 0.5) {
-                    // Cluster de vegetação (cactus / bushes) — escala per-asset
-                    for (let j = 0; j < 5; j++) {
-                        const r = Math.random()*80, a = Math.random()*Math.PI*2;
-                        const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
-                        if (!isLand(ox, oy)) continue;
-                        const tex = pickV() || 'moita';
-                        const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
-                        o.setDepth(1).setScale(scaleFor(tex)).body.label = 'moita';
-                    }
+                    // Cluster de vegetação — 5 peças em ~90px de spread
+                    for (let j = 0; j < 5; j++) tryPlace(cx, cy, 90, pickV() || 'moita', 'moita');
                 } else {
-                    // Cluster de pedras — escala per-asset
-                    for (let j = 0; j < 3; j++) {
-                        const r = Math.random()*60, a = Math.random()*Math.PI*2;
-                        const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
-                        if (!isLand(ox, oy)) continue;
-                        const tex = pickP() || 'rocha_organica';
-                        const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
-                        o.setDepth(1).setScale(scaleFor(tex)).body.label = 'rocha';
-                    }
+                    // Cluster de pedras — 3 peças em ~70px de spread
+                    for (let j = 0; j < 3; j++) tryPlace(cx, cy, 70, pickP() || 'rocha_organica', 'rocha');
                 }
                 break;
             }
@@ -198,17 +208,61 @@ Object.assign(Jogo.prototype, {
         // ── 6. CURRAIS (em terra firme)
         this.currais = [];
         this.driveThrus = this.currais;
+        // Currais procedural: retângulo de ~220×180 montado com cercas PixelLab
+        // Lados N/S/E/W com fence_long; cantos com post_thin; um gate_open na borda S
+        // O "centro" do curral é o ponto que a IA usa pra entrega — fica vazio
         for (let i = 0; i < 5; i++) {
             for (let tries = 0; tries < 12; tries++) {
-                const cx = Phaser.Math.Between(400, W-400);
-                const cy = Phaser.Math.Between(400, H-400);
+                const cx = Phaser.Math.Between(500, W-500);
+                const cy = Phaser.Math.Between(500, H-500);
                 if (!isLand(cx, cy)) continue;
-                const img = this.add.image(cx, cy, 'curral').setDepth(1);
-                this.add.text(cx, cy, 'CRL', {fontSize:'14px', fill:'#1a0800', fontStyle:'bold'}).setOrigin(0.5).setDepth(2);
-                this.currais.push({ x: cx, y: cy, sprite: img, processing: [], ready: [] });
+                this._construirCurral(cx, cy);
                 break;
             }
         }
+    },
+
+    _construirCurral(cx, cy) {
+        const W2 = 110, H2 = 90;        // half-extents do retângulo (curral 220×180)
+        const FENCE_SIZE = 60;          // tamanho visual de cada peça de cerca
+        const SEG = 56;                 // espaçamento entre peças
+
+        // Marcador central (texto "CRL" pra debug visual)
+        this.add.rectangle(cx, cy, W2*1.6, H2*1.6, 0x6e9b3a, 0.0).setDepth(0.5);
+        this.add.text(cx, cy, 'CRL', {
+            fontSize:'14px', fill:'#1a0800', fontStyle:'bold'
+        }).setOrigin(0.5).setDepth(2);
+
+        // Helper: posiciona uma cerca como matter static
+        const placeFence = (x, y, key, scale = 1.0, angle = 0) => {
+            const o = this.matter.add.image(x, y, key, null,
+                { isStatic: true, shape: { type:'rectangle', width: FENCE_SIZE*0.9, height: FENCE_SIZE*0.5 } });
+            o.setDepth(1).setScale(scale).setAngle(angle);
+            o.body.label = 'cerca';
+        };
+
+        // Lado norte (top): fence_long alinhado horizontal
+        for (let x = -W2 + SEG/2; x < W2; x += SEG) {
+            placeFence(cx + x, cy - H2, 'nat_cerca_fence_long', 1.0, 0);
+        }
+        // Lado sul (bottom): com gap no centro pro gate
+        for (let x = -W2 + SEG/2; x < W2; x += SEG) {
+            const isCenter = Math.abs(x) < SEG/2;
+            const key = isCenter ? 'nat_cerca_fence_gate_open' : 'nat_cerca_fence_long';
+            placeFence(cx + x, cy + H2, key, 1.0, 0);
+        }
+        // Lados leste/oeste: rotaciona 90° pra ficar vertical
+        for (let y = -H2 + SEG/2; y < H2; y += SEG) {
+            placeFence(cx - W2, cy + y, 'nat_cerca_fence_long', 1.0, 90);
+            placeFence(cx + W2, cy + y, 'nat_cerca_fence_long', 1.0, 90);
+        }
+        // Cantos com post_thin
+        placeFence(cx - W2, cy - H2, 'nat_cerca_post_thin', 1.0, 0);
+        placeFence(cx + W2, cy - H2, 'nat_cerca_post_thin', 1.0, 0);
+        placeFence(cx - W2, cy + H2, 'nat_cerca_post_thin', 1.0, 0);
+        placeFence(cx + W2, cy + H2, 'nat_cerca_post_thin', 1.0, 0);
+
+        this.currais.push({ x: cx, y: cy, sprite: null, processing: [], ready: [] });
     }
 
 });

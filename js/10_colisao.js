@@ -19,32 +19,46 @@ Object.assign(Jogo.prototype, {
         const entityIsEnemy   = !!entity.isEnemy;
         const entityAbducted  = this.vacas_abduzidas.includes(entity);
         const otherAbducted   = otherEntity && this.vacas_abduzidas.includes(otherEntity);
-        const colorEnemy      = 0xff8800;
-        const colorRock       = 0xff2222;
+        const vel             = entity.body.velocity;
+        const speed           = Math.sqrt(vel.x*vel.x + vel.y*vel.y);
+        const HIGH_SPEED      = 4.0;
+        const isHighImpact    = entityAbducted || otherAbducted || speed > HIGH_SPEED;
 
+        // Debounce: ignora hits no mesmo frame ou < 120ms
+        const now = this.time?.now ?? 0;
+        if (entity._lastHitT && (now - entity._lastHitT) < 120) return;
+
+        // ROCHA: dano por hit. Vaca/boi tem hp 3-5; fazendeiro tem hp 1 (morre direto)
         if (otherLabel === 'rocha') {
-            // Só explode se foi arremessado pelo beam (alta velocidade) OU está abduzido
-            // Andar autônomo contra pedra apenas colide (Matter empurra naturalmente)
-            const vel = entity.body.velocity;
-            const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
-            const HIGH_SPEED = 4.0;
-            if (entityAbducted || speed > HIGH_SPEED) {
-                this._explodir(entity, entityIsEnemy ? colorEnemy : colorRock);
+            if (!isHighImpact) return;
+            entity._lastHitT = now;
+            entity._hp = (entity._hp ?? 1) - 1;
+            this._hitFlash(entity, entityIsEnemy ? 0xff8800 : 0xffaa00);
+            if (entity._hp <= 0) {
+                this._explodir(entity, entityIsEnemy ? 0xff8800 : 0xff2222);
             }
         }
+        // VACA-VACA / VACA-BOI / BOI-BOI: dano só com impacto de alta velocidade
+        else if (otherLabel === 'vaca' || otherLabel === 'boi') {
+            if (entityIsEnemy) return;       // farmer NÃO toma dano de cow contact
+            if (!isHighImpact) return;       // toque suave: só quica (matter handles)
+            entity._lastHitT = now;
+            entity._hp = (entity._hp ?? 1) - 1;
+            this._hitFlash(entity, 0xffcc44);
+            if (entity._hp <= 0) this._explodir(entity, 0xff2222);
+        }
+        // FAZENDEIRO: cow vs farmer — NINGUÉM toma dano (faz só morre em rocha)
         else if (otherLabel === 'fazendeiro') {
-            // Algo bateu num fazendeiro — só mata se um dos dois foi arremessado
-            if (entityAbducted || otherAbducted) {
-                this._explodir(entity, colorEnemy);
-                this._explodir(otherEntity, colorEnemy);
-            }
+            return;
         }
-        else if ((otherLabel === 'vaca' || otherLabel === 'boi') && entityIsEnemy) {
-            // Fazendeiro encostou numa vaca/boi arremessado — fazendeiro morre
-            if (entityAbducted || otherAbducted) {
-                this._explodir(entity, colorEnemy);
-            }
-        }
+    },
+
+    _hitFlash(entity, color = 0xffcc00) {
+        if (!entity || !entity.scene || entity._dying) return;
+        entity.setTint(color);
+        this.time.delayedCall(120, () => {
+            if (entity.scene && !entity._dying) entity.clearTint();
+        });
     },
 
     _repovoar() {

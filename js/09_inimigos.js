@@ -114,6 +114,9 @@ Object.assign(Jogo.prototype, {
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';
             f.isEnemy = true;
+            // HP=1: fazendeiro só morre em pedra com impacto alto
+            f._hp = 1;
+            f.setBounce(0.2);
             f.wanderAngle = Math.random() * Math.PI * 2;
             f._wandering = true;
             f._cooldown = Phaser.Math.Between(1000, 3500);

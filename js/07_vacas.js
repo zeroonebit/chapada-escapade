@@ -26,6 +26,10 @@ Object.assign(Jogo.prototype, {
         v.burgerYield = tipo === 'boi' ? (Math.random() < 0.5 ? 2 : 3) : 1;
         v.wanderAngle = Math.random() * Math.PI * 2;
         v._wandering = true;
+        // Sistema de saúde colisional: 3-5 hits antes de explodir
+        v._hpMax = Phaser.Math.Between(3, 5);
+        v._hp    = v._hpMax;
+        v.setBounce(0.5);  // bola que quica e perde energia (matter handles decay)
 
         v.walkTimer = this.time.addEvent({
             delay: Phaser.Math.Between(1200, 2800),
