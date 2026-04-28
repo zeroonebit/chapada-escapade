@@ -118,10 +118,10 @@ Object.assign(Jogo.prototype, {
 
         const html = `
             <div id="debug-menu">
-                <h2>⚙ DEBUG MENU</h2>
+                <h2>⚙ CONFIGS</h2>
                 <div class="tab-bar">
                     <button class="tab-btn active" data-tab="controles">CONTROLES</button>
-                    <button class="tab-btn" data-tab="looks">LOOKS</button>
+                    <button class="tab-btn" data-tab="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx">VFX</button>
                     <button class="tab-btn" data-tab="debug">DEBUG</button>
                 </div>
