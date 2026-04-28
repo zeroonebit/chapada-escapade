@@ -122,9 +122,14 @@ Object.assign(Jogo.prototype, {
     // Sombra com blur fake (3 elipses stackadas com alpha decrescente)
     // Container atrelado à entidade — posição sincronizada no _atualizarSombras
     _attachSombra(entity, opts = {}) {
+        // Tamanho proporcional ao displayWidth da entidade (pega no momento da criação).
+        // Se a entidade escalar depois, sombra fica fixa no tamanho inicial — ok pra MVP.
+        const dw = entity.displayWidth || 60;
+        const dh = entity.displayHeight || 60;
         const {
-            rx = 22, ry = 8, alpha = 0.35, color = 0x000000,
-            offY = 14, offX = 4
+            rx = dw * 0.36, ry = dh * 0.14,
+            alpha = 0.40, color = 0x000000,
+            offY = dh * 0.30, offX = dw * 0.06
         } = opts;
         const c = this.add.container(entity.x + offX, entity.y + offY);
         c.add(this.add.ellipse(0, 0, rx*2.6, ry*2.6, color, alpha*0.18));

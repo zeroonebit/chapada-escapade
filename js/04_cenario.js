@@ -56,22 +56,43 @@ Object.assign(Jogo.prototype, {
             // são os cantos entre cells. Fica robusto: cantos compartilhados sempre
             // batem entre cells vizinhas (sem costura).
             const CW = COLS + 1, CH = ROWS + 1;
+            // Canto = 1 (UPPER, grama verde) só se a maioria dos 4 cells ao redor é
+            // PURO grass (===2). Sand/water/terra todos contam como 0 (LOWER, areia).
+            // Isso evita o bug "tudo idx=15" quando grass+terra dominavam o grid.
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
                 for (let x = 0; x < CW; x++) {
-                    // Canto (x,y) = "alto" se a maioria dos 4 cells ao redor é grama+
                     let hi = 0, total = 0;
                     for (let dy = -1; dy <= 0; dy++) {
                         for (let dx = -1; dx <= 0; dx++) {
                             const cy = y + dy, cx = x + dx;
                             if (cy < 0 || cy >= ROWS || cx < 0 || cx >= COLS) continue;
                             total++;
-                            if (grid[cy][cx] >= 2) hi++;
+                            if (grid[cy][cx] === 2) hi++;
                         }
                     }
-                    corners[y][x] = (total > 0 && hi >= total / 2) ? 1 : 0;
+                    // 50%+ de pureza pra ser upper
+                    corners[y][x] = (total > 0 && hi * 2 >= total) ? 1 : 0;
                 }
+            }
+            // Pass extra de smoothing nos cantos pra fechar manchas isoladas
+            for (let pass = 0; pass < 2; pass++) {
+                const next = [];
+                for (let y = 0; y < CH; y++) {
+                    next[y] = [];
+                    for (let x = 0; x < CW; x++) {
+                        let s = 0, c = 0;
+                        for (let dy = -1; dy <= 1; dy++)
+                            for (let dx = -1; dx <= 1; dx++) {
+                                const ny = y+dy, nx = x+dx;
+                                if (ny<0||ny>=CH||nx<0||nx>=CW) continue;
+                                s += corners[ny][nx]; c++;
+                            }
+                        next[y][x] = (s/c) >= 0.5 ? 1 : 0;
+                    }
+                }
+                corners.length = 0; corners.push(...next);
             }
             // Cell (x,y) lê seus 4 cantos:
             //   NW = corners[y][x],  NE = corners[y][x+1]
@@ -208,14 +229,18 @@ Object.assign(Jogo.prototype, {
         // ── 6. CURRAIS (em terra firme)
         this.currais = [];
         this.driveThrus = this.currais;
-        // Currais procedural: retângulo de ~220×180 montado com cercas PixelLab
-        // Lados N/S/E/W com fence_long; cantos com post_thin; um gate_open na borda S
-        // O "centro" do curral é o ponto que a IA usa pra entrega — fica vazio
+        // Currais SÓ em cells de terra (grid===3) — área marrom, fora da grama
+        const isTerra = (px, py) => {
+            const cx = Math.floor(px / CELL);
+            const cy = Math.floor(py / CELL);
+            if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
+            return grid[cy][cx] === 3;
+        };
         for (let i = 0; i < 5; i++) {
-            for (let tries = 0; tries < 12; tries++) {
+            for (let tries = 0; tries < 30; tries++) {
                 const cx = Phaser.Math.Between(500, W-500);
                 const cy = Phaser.Math.Between(500, H-500);
-                if (!isLand(cx, cy)) continue;
+                if (!isTerra(cx, cy)) continue;
                 this._construirCurral(cx, cy);
                 break;
             }
@@ -245,11 +270,18 @@ Object.assign(Jogo.prototype, {
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
             placeFence(cx + x, cy - H2, 'nat_cerca_fence_long', 1.0, 0);
         }
-        // Lado sul (bottom): com gap no centro pro gate
+        // Lado sul (bottom): SEMPRE com porta aberta no centro (sem colisão)
+        // Pula 2 segmentos centrais pra criar abertura larga; gate visual só
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
-            const isCenter = Math.abs(x) < SEG/2;
-            const key = isCenter ? 'nat_cerca_fence_gate_open' : 'nat_cerca_fence_long';
-            placeFence(cx + x, cy + H2, key, 1.0, 0);
+            const inGate = Math.abs(x) < SEG;  // 2 segments wide door
+            if (inGate) {
+                if (Math.abs(x) < SEG/2) {
+                    // Visual da porta aberta — sem matter body, vacas atravessam
+                    this.add.image(cx + x, cy + H2, 'nat_cerca_fence_gate_open').setDepth(1);
+                }
+                continue; // pula colisão nessa região
+            }
+            placeFence(cx + x, cy + H2, 'nat_cerca_fence_long', 1.0, 0);
         }
         // Lados leste/oeste: rotaciona 90° pra ficar vertical
         for (let y = -H2 + SEG/2; y < H2; y += SEG) {

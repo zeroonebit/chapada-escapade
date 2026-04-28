@@ -17,6 +17,7 @@ const DBG_DEFAULTS = {
         faz:  2.0,   // user pediu 2x default
         beam: 1.0,
         nave: 1.0,   // escala da nave/UFO principal
+        burger: 1.0, // escala dos hambúrgueres
     },
     behavior: {
         danoAtirador: 1.0,
@@ -111,38 +112,41 @@ Object.assign(Jogo.prototype, {
                 <fieldset>
                     <legend>ESCALAS (visual) — 0 a 10</legend>
                     <label><span>Vaca</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="scale.vaca">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
                         <span class="val" data-show="scale.vaca"></span></label>
                     <label><span>Boi</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="scale.boi">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
                         <span class="val" data-show="scale.boi"></span></label>
                     <label><span>Fazendeiro</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="scale.faz">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
                         <span class="val" data-show="scale.faz"></span></label>
                     <label><span>Beam radius</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="scale.beam">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="scale.beam">
                         <span class="val" data-show="scale.beam"></span></label>
                     <label><span>Nave (UFO) escala</span>
-                        <input type="range" min="0.3" max="6" step="0.1" data-cfg="scale.nave">
+                        <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.nave">
                         <span class="val" data-show="scale.nave"></span></label>
+                    <label><span>Hambúrguer escala</span>
+                        <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.burger">
+                        <span class="val" data-show="scale.burger"></span></label>
                 </fieldset>
 
                 <fieldset>
                     <legend>COMPORTAMENTO (live) — 0 a 10</legend>
                     <label><span>Dano atiradores</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.danoAtirador">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.danoAtirador">
                         <span class="val" data-show="behavior.danoAtirador"></span></label>
                     <label><span>Velocidade fazendeiros</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.velFaz">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velFaz">
                         <span class="val" data-show="behavior.velFaz"></span></label>
                     <label><span>Velocidade vacas/bois</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.velVaca">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velVaca">
                         <span class="val" data-show="behavior.velVaca"></span></label>
                     <label><span>Força do beam (pull)</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.pullBeam">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
                         <span class="val" data-show="behavior.pullBeam"></span></label>
                     <label><span>Velocidade rotação disco</span>
-                        <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.discoRot">
+                        <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.discoRot">
                         <span class="val" data-show="behavior.discoRot"></span></label>
                     <label><span>Distorção esférica (barrel)</span>
                         <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">

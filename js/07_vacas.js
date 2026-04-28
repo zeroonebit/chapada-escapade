@@ -54,7 +54,12 @@ Object.assign(Jogo.prototype, {
     },
 
     _criarBurgerEntity(x, y) {
-        const b = this.matter.add.image(x, y, 'hamburguer', null, { shape: { type: 'circle', radius: 10 } });
+        // Variantes random: classic, cheese, double — ponderado pra classic mais comum
+        const variants = ['burger_classic','burger_classic','burger_cheese','burger_double'];
+        const tex = variants[Phaser.Math.Between(0, variants.length-1)];
+        const b = this.matter.add.image(x, y, tex, null, { shape: { type: 'circle', radius: 10 } });
+        const burgerScale = this.dbg?.scale?.burger ?? 1.0;
+        b.setDisplaySize(28 * burgerScale, 28 * burgerScale);
         b.setFrictionAir(0.015).setMass(0.5).setDepth(3).setCollisionCategory(2);
         b.isBurger = true;
         b.valorBurger = 100;
@@ -66,6 +71,7 @@ Object.assign(Jogo.prototype, {
         b.tipo = 'burger';
         b.tempoAbducao = 0;
         b.burgerYield = 1;
+        b.body.label = 'hamburguer';
         return b;
     },
 
@@ -236,7 +242,11 @@ Object.assign(Jogo.prototype, {
         }
 
         v.setBody({type:'circle', radius:10});
-        v.setTexture('hamburguer');
+        const variants = ['burger_classic','burger_classic','burger_cheese','burger_double'];
+        const tex = variants[Phaser.Math.Between(0, variants.length-1)];
+        v.setTexture(tex);
+        const burgerScale = this.dbg?.scale?.burger ?? 1.0;
+        v.setDisplaySize(28 * burgerScale, 28 * burgerScale);
         v.isBurger = true;
         v.setMass(0.5).setDepth(3);
         this.burgerCount++;

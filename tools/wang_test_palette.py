@@ -77,13 +77,6 @@ def make_tile(idx):
             elif name == "SW" and nb == "SE":
                 draw.line([(x1-1, y0), (x1-1, y1-1)], fill=DRY_GRASS)
 
-    # Index pequeno e discreto no canto inferior direito (debug)
-    try:
-        font = ImageFont.truetype("arial.ttf", 7)
-    except OSError:
-        font = ImageFont.load_default()
-    txt = f"{idx:X}"  # hex 0-F (mais curto que 00-15)
-    draw.text((TILE - 7, TILE - 9), txt, fill=(50, 30, 10, 180), font=font)
     return img
 
 
