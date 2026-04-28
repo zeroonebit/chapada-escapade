@@ -21,7 +21,7 @@ const DBG_DEFAULTS = {
         danoAtirador: 1.0,
         velFaz:       1.0,
         velVaca:      1.0,
-        pullBeam:     1.0,
+        pullBeam:     0.5,   // reduzido — beam estava arremessando bichos contra obstáculos
         discoRot:     0.0,   // velocidade angular da nave (rad/s)
     },
     counts: {

@@ -91,26 +91,38 @@ Object.assign(Jogo.prototype, {
             if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
             return grid[cy][cx] >= 1;  // areia ou acima
         };
+        // Pools de assets PixelLab carregados em preload (nat_vege_* e nat_pedra_*)
+        const vegeKeys   = this._natureVegeKeys   || [];
+        const pedrasKeys = this._naturePedrasKeys || [];
+        const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
+        const pickP = () => pedrasKeys[Phaser.Math.Between(0, pedrasKeys.length - 1)];
+
         for (let i = 0; i < 16; i++) {
             for (let tries = 0; tries < 8; tries++) {
                 const cx = Phaser.Math.Between(300, W-300);
                 const cy = Phaser.Math.Between(300, H-300);
                 if (!isLand(cx, cy)) continue;
                 if (Math.random() > 0.5) {
+                    // Cluster de vegetação (cactus / bushes)
                     for (let j = 0; j < 5; j++) {
                         const r = Math.random()*80, a = Math.random()*Math.PI*2;
                         const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
                         if (!isLand(ox, oy)) continue;
-                        const o = this.matter.add.image(ox, oy, 'moita', null, {isStatic:true, shape:'circle'});
-                        o.setDepth(1).setScale(Phaser.Math.FloatBetween(0.8,1.5)).body.label = 'moita';
+                        const tex = pickV() || 'moita';
+                        const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
+                        const sc = Phaser.Math.FloatBetween(0.45, 0.85);
+                        o.setDepth(1).setScale(sc).body.label = 'moita';
                     }
                 } else {
+                    // Cluster de pedras
                     for (let j = 0; j < 3; j++) {
-                        const r = Math.random()*60, a = Math.random()*Math.PI*2, s = Phaser.Math.FloatBetween(1.0,2.5);
+                        const r = Math.random()*60, a = Math.random()*Math.PI*2;
                         const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
                         if (!isLand(ox, oy)) continue;
-                        const o = this.matter.add.image(ox, oy, 'rocha_organica', null, {isStatic:true, shape:'circle'});
-                        o.setDepth(1).setScale(s).body.label = 'rocha';
+                        const tex = pickP() || 'rocha_organica';
+                        const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
+                        const sc = Phaser.Math.FloatBetween(0.55, 1.0);
+                        o.setDepth(1).setScale(sc).body.label = 'rocha';
                     }
                 }
                 break;

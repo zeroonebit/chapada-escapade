@@ -238,29 +238,20 @@ Object.assign(Jogo.prototype, {
         const vy = body?.velocity?.y || 0;
         const speed = Math.sqrt(vx*vx + vy*vy);
 
-        // Direção: usa velocidade se em movimento, senão wanderAngle, senão último
-        let dir = v._lastDir || 'S';
+        // Direção 8-dir (vaca chubby agora é 8-dir como o boi)
         let angRad = null;
         if (speed > 0.08) angRad = Math.atan2(vy, vx);
         else if (typeof v.wanderAngle === 'number') angRad = v.wanderAngle;
+        let dir8 = v._lastDir8 || 'S';
         if (angRad !== null) {
             const deg = (angRad * 180 / Math.PI + 360) % 360;
-            if (deg < 45 || deg >= 315) dir = 'E';
-            else if (deg < 135) dir = 'S';
-            else if (deg < 225) dir = 'W';
-            else dir = 'N';
-            v._lastDir = dir;
+            const i = Math.round(deg / 45) % 8;
+            dir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
+            v._lastDir8 = dir8;
         }
 
-        // Boi: 8-dir picker. Movendo → toca walk anim. Parado → sprite estático.
+        // Boi: walk anim quando movendo, estático quando parado
         if (v.tipo === 'boi') {
-            let dir8 = v._lastDir8 || 'S';
-            if (angRad !== null) {
-                const deg = (angRad * 180 / Math.PI + 360) % 360;
-                const i = Math.round(deg / 45) % 8;
-                dir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
-                v._lastDir8 = dir8;
-            }
             const moving = speed > 0.08;
             if (moving) {
                 const animKey = `boi_walk_${dir8}`;
@@ -275,14 +266,14 @@ Object.assign(Jogo.prototype, {
             return;
         }
 
-        // Vaca: state machine
+        // Vaca chubby: state machine 4 estados × 8 dir
         let state;
         if (this.vacas_abduzidas.includes(v))     state = 'angry';
         else if (v._fleeing)                       state = 'run';
         else if (v._eating)                        state = 'eat';
         else                                       state = 'walk';
 
-        const animKey = `vaca_${state}_${dir}`;
+        const animKey = `vaca_${state}_${dir8}`;
         const cur = v.anims.currentAnim?.key;
         if (cur !== animKey && this.anims.exists(animKey)) {
             v.play(animKey, true);

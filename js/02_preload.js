@@ -7,20 +7,16 @@ Object.assign(Jogo.prototype, {
         this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
 
         // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
-        // Vaca: 4 direções (cat template — 8d com bug bone_scaling)
-        ['south','east','north','west'].forEach(d => {
-            const k = ({south:'S', east:'E', north:'N', west:'W'})[d];
-            this.load.image(`vaca_${k}`, `assets/pixel_labs/chars/vaca/${d}.png`);
-        });
-        // Boi (chubby), Fazendeiro, UFO: 8 direções
+        // Vaca (chubby holstein, 8-dir), Boi, Fazendeiro, UFO: 8 direções
         const dirs8 = {
             'south':'S','east':'E','north':'N','west':'W',
             'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
         };
         Object.entries(dirs8).forEach(([d, k]) => {
-            this.load.image(`boi_${k}`, `assets/pixel_labs/chars/boi/${d}.png`);
-            this.load.image(`faz_${k}`, `assets/pixel_labs/chars/fazendeiro/${d}.png`);
-            this.load.image(`ufo_${k}`, `assets/pixel_labs/chars/ufo/${d}.png`);
+            this.load.image(`vaca_${k}`, `assets/pixel_labs/chars/vaca/${d}.png`);
+            this.load.image(`boi_${k}`,  `assets/pixel_labs/chars/boi/${d}.png`);
+            this.load.image(`faz_${k}`,  `assets/pixel_labs/chars/fazendeiro/${d}.png`);
+            this.load.image(`ufo_${k}`,  `assets/pixel_labs/chars/ufo/${d}.png`);
         });
 
         // ── LEGACY KEYS (pointam pra direcional sul, compat com código antigo) ──
@@ -34,25 +30,17 @@ Object.assign(Jogo.prototype, {
         // hambúrguer agora vem do PixelLab (substitui geometria antiga)
         this.load.image('hamburguer',      'assets/pixel_labs/items/burger_classic.png');
 
-        // ── ANIMAÇÕES VACA (4 estados × 4 direções × N frames) ───────
-        // walk=4, run=8, eat=7, angry=7 — total 104 frames
-        const VACA_ANIMS = { walk: 4, run: 8, eat: 7, angry: 7 };
-        ['S','E','N','W'].forEach(d => {
-            const longDir = ({S:'south', E:'east', N:'north', W:'west'})[d];
-            Object.entries(VACA_ANIMS).forEach(([name, count]) => {
-                for (let i = 0; i < count; i++) {
-                    const f = String(i).padStart(3, '0');
-                    this.load.image(`vaca_${name}_${d}_${i}`,
-                        `assets/pixel_labs/chars/vaca/anims/${name}/${d}/frame_${f}.png`);
-                }
-            });
-        });
-
-        // ── ANIMAÇÕES 8-DIR (faz running, boi walk) — 4 frames cada ──
+        // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
+        // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
         const D8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
-            { char: 'fazendeiro', prefix: 'faz_run',  anim: 'running', frames: 4 },
-            { char: 'boi',        prefix: 'boi_walk', anim: 'walk',    frames: 4 },
+            // Vaca chubby (8d) — walk + idle_head_shake (eat) + lie_down (angry-ish)
+            { char: 'vaca',       prefix: 'vaca_walk',  anim: 'walk',            frames: 4 },
+            { char: 'vaca',       prefix: 'vaca_eat',   anim: 'idle_head_shake', frames: 11 },
+            { char: 'vaca',       prefix: 'vaca_angry', anim: 'lie_down',        frames: 8 },
+            // Fazendeiro running, Boi walk
+            { char: 'fazendeiro', prefix: 'faz_run',    anim: 'running',         frames: 4 },
+            { char: 'boi',        prefix: 'boi_walk',   anim: 'walk',            frames: 4 },
         ];
         ANIM8.forEach(({char, prefix, anim, frames}) => {
             D8.forEach(d => {
@@ -63,6 +51,18 @@ Object.assign(Jogo.prototype, {
                 }
             });
         });
+
+        // ── NATURE POOL (rocks + bushes/cactus pra cenário) ──────────
+        const NATURE_PEDRAS = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];
+        const NATURE_VEGE   = ['bush_round_dense','cactus_saguaro_tall','cactus_medium',
+                               'cactus_dead_dry','cactus_branching','cactus_cluster_low',
+                               'cactus_saguaro_2','cactus_dead_vine','bush_round',
+                               'patch_cluster','bush_dry','agave_dark'];
+        NATURE_PEDRAS.forEach(n => this.load.image(`nat_pedra_${n}`, `assets/pixel_labs/chars/nature/pedras/${n}.png`));
+        NATURE_VEGE.forEach(n   => this.load.image(`nat_vege_${n}`,  `assets/pixel_labs/chars/nature/vegetacao/${n}.png`));
+        // Expor pra outros módulos (cenário usa pra spawn random)
+        this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
+        this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');

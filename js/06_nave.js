@@ -19,9 +19,12 @@ Object.assign(Jogo.prototype, {
 
     _desenharCone(r) {
         this.coneLuz.clear();
-        this.coneLuz.fillStyle(0x66ff99, 0.06); this.coneLuz.fillCircle(0, 0, r);
-        this.coneLuz.fillStyle(0x66ff99, 0.10); this.coneLuz.fillCircle(0, 0, r * 0.78);
-        this.coneLuz.fillStyle(0x88ffaa, 0.14); this.coneLuz.fillCircle(0, 0, r * 0.45);
+        // Camadas concêntricas, alpha crescente do exterior pro centro — gera halo suave
+        this.coneLuz.fillStyle(0x66ff99, 0.05); this.coneLuz.fillCircle(0, 0, r * 1.10);
+        this.coneLuz.fillStyle(0x66ff99, 0.08); this.coneLuz.fillCircle(0, 0, r * 0.92);
+        this.coneLuz.fillStyle(0x88ffaa, 0.12); this.coneLuz.fillCircle(0, 0, r * 0.72);
+        this.coneLuz.fillStyle(0xaaffcc, 0.16); this.coneLuz.fillCircle(0, 0, r * 0.50);
+        this.coneLuz.fillStyle(0xddffee, 0.22); this.coneLuz.fillCircle(0, 0, r * 0.28);
     },
 
     _atualizarLEDs(delta) {

@@ -30,28 +30,16 @@ class Jogo extends Phaser.Scene {
 
         this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
 
-        // ── REGISTRA ANIMS DA VACA (4 estados × 4 dir) ──────────────
-        const VACA_ANIMS = { walk: 4, run: 8, eat: 7, angry: 7 };
-        const FRAME_RATES = { walk: 6, run: 12, eat: 4, angry: 8 };
-        ['S','E','N','W'].forEach(d => {
-            Object.entries(VACA_ANIMS).forEach(([name, count]) => {
-                const key = `vaca_${name}_${d}`;
-                if (this.anims.exists(key)) return;
-                const frames = [];
-                for (let i = 0; i < count; i++) frames.push({ key: `vaca_${name}_${d}_${i}` });
-                this.anims.create({
-                    key, frames,
-                    frameRate: FRAME_RATES[name],
-                    repeat: -1
-                });
-            });
-        });
-
-        // ── REGISTRA ANIMS 8-DIR (faz running, boi walk) ────────────
+        // ── REGISTRA ANIMS 8-DIR (vaca chubby, faz, boi) ─────────────
+        // Vaca chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
+        // "run" reusa walk com fps maior (anim chubby não tem run dedicado).
         const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
-            { prefix: 'faz_run',  frames: 4, fps: 10 },
-            { prefix: 'boi_walk', frames: 4, fps: 6  },
+            { prefix: 'vaca_walk',  frames: 4,  fps: 6  },
+            { prefix: 'vaca_eat',   frames: 11, fps: 4  },
+            { prefix: 'vaca_angry', frames: 8,  fps: 8  },
+            { prefix: 'faz_run',    frames: 4,  fps: 10 },
+            { prefix: 'boi_walk',   frames: 4,  fps: 6  },
         ];
         DIRS8.forEach(d => {
             ANIM8.forEach(({prefix, frames, fps}) => {
@@ -61,6 +49,13 @@ class Jogo extends Phaser.Scene {
                 for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
                 this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
             });
+            // vaca_run é vaca_walk em fps×2 — registra como anim separado
+            const runKey = `vaca_run_${d}`;
+            if (!this.anims.exists(runKey)) {
+                const fr = [];
+                for (let i = 0; i < 4; i++) fr.push({ key: `vaca_walk_${d}_${i}` });
+                this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
+            }
         });
 
         if (this.EXPERIMENT_MODE) {
@@ -87,12 +82,10 @@ class Jogo extends Phaser.Scene {
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
         this.raioCone = CONE_R;
-        // Beam: PNG do PixelLab + blend SCREEN (mais suave que ADD, sem artefato quadrado)
-        this.coneLuz = this.add.image(W/2, H/2, 'beam_halo')
-            .setBlendMode(Phaser.BlendModes.SCREEN)
-            .setDisplaySize(CONE_R * 2.4, CONE_R * 2.4)
-            .setDepth(2).setVisible(false)
-            .setAlpha(0.85);
+        // Beam: Graphics com círculos concêntricos de alpha variável (sem PNG → sem
+        // artefato de mask). Desenhado em _desenharCone(raio) chamado em _updateBody.
+        this.coneLuz = this.add.graphics().setDepth(2).setVisible(false);
+        this._desenharCone(CONE_R);
         if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
         this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
