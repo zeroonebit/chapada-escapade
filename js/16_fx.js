@@ -15,7 +15,7 @@ void main() {
     float r2 = dot(c, c);
     vec2 d = c * (1.0 + strength * r2 * 1.6) + 0.5;
     if (d.x < 0.0 || d.x > 1.0 || d.y < 0.0 || d.y > 1.0) {
-        gl_FragColor = vec4(0.04, 0.05, 0.03, 1.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         gl_FragColor = texture2D(uMainSampler, d);
     }
