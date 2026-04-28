@@ -17,6 +17,9 @@ Object.assign(Jogo.prototype, {
         const D = 150, D2 = 151;
         const COR_VERDE = 0x00ff55;
         const COR_VERMELHO = 0xff3366;
+        // Alpha defaults: silhueta discreta no canto, vai pra 0 ao tocar
+        const IDLE_ALPHA = 0.25;
+        const HIDE_ALPHA = 0.0;
 
         // Base do joystick (anel)
         this.joyBase = this.add.circle(0, 0, 60, 0x000000, 0.30)
@@ -28,28 +31,43 @@ Object.assign(Jogo.prototype, {
         // Botão de feixe (anel + label)
         this.beamBtn = this.add.circle(0, 0, 60, COR_VERMELHO, 0.30)
             .setStrokeStyle(3, COR_VERMELHO, 0.85).setScrollFactor(0).setDepth(D);
-        this.beamBtnLabel = this.add.text(0, 0, 'FEIXE', {
+        this.beamBtnLabel = this.add.text(0, 0, 'BEAM', {
             fontSize: '13px', fill: '#ffffff', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+
+        // Aplica alpha inicial idle (silhueta)
+        [this.joyBase, this.joyKnob].forEach(o => o.setAlpha(IDLE_ALPHA));
+        [this.beamBtn, this.beamBtnLabel].forEach(o => o.setAlpha(IDLE_ALPHA));
+
+        // Helpers de fade
+        const fadeJoy = (alpha) => {
+            this.tweens.add({ targets: [this.joyBase, this.joyKnob], alpha, duration: 150 });
+        };
+        const fadeBeam = (alpha) => {
+            this.tweens.add({ targets: [this.beamBtn, this.beamBtnLabel], alpha, duration: 150 });
+        };
+        this._mobileFadeJoy  = fadeJoy;
+        this._mobileFadeBeam = fadeBeam;
+        this._mobileIdleAlpha = IDLE_ALPHA;
+        this._mobileHideAlpha = HIDE_ALPHA;
 
         this._posicionarMobileControls();
 
         // ── Pointer handlers ────────────────────────────────────────
         this.input.on('pointerdown', (p) => {
             if (!this.gameStarted || this.gameOver || this.pausado) return;
-            // Joystick area (raio expandido pra 1.5x)
             const dj = Phaser.Math.Distance.Between(p.x, p.y, this._joyCx, this._joyCy);
             if (dj < 90 && this._joyPointerId === null) {
                 this._joyPointerId = p.id;
                 this._atualizarJoy(p);
+                fadeJoy(HIDE_ALPHA);
                 return;
             }
-            // Botão de feixe
             const db = Phaser.Math.Distance.Between(p.x, p.y, this._beamCx, this._beamCy);
             if (db < 75 && this._beamPointerId === null) {
                 this._beamPointerId = p.id;
                 this._beamHeld = true;
-                this.beamBtn.setFillStyle(COR_VERMELHO, 0.65);
+                fadeBeam(HIDE_ALPHA);
             }
         });
 
@@ -61,11 +79,12 @@ Object.assign(Jogo.prototype, {
             this._joyPointerId = null;
             this._joyVec = { x: 0, y: 0, active: false };
             this.joyKnob.setPosition(this._joyCx, this._joyCy);
+            fadeJoy(IDLE_ALPHA);
         };
         const releaseBeam = () => {
             this._beamPointerId = null;
             this._beamHeld = false;
-            this.beamBtn.setFillStyle(COR_VERMELHO, 0.30);
+            fadeBeam(IDLE_ALPHA);
         };
 
         this.input.on('pointerup', (p) => {
