@@ -97,32 +97,57 @@ Object.assign(Jogo.prototype, {
         const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
         const pickP = () => pedrasKeys[Phaser.Math.Between(0, pedrasKeys.length - 1)];
 
+        // Scale BASE por asset — sources são 64×64 mas conteúdo varia muito
+        // (saguaro alto preenche todo, agave preenche pouco). Map manual + jitter ±15%.
+        const SCALE_MAP = {
+            // pedras
+            'boulder_red_cluster': 1.6,   // cluster largo
+            'rock_small_smooth':   1.0,   // pedrinha
+            'rock_pillar_tall':    1.9,   // formação alta
+            // vegetação — saguaros e clusters maiores, dead/dry menores
+            'cactus_saguaro_tall': 2.0,
+            'cactus_saguaro_2':    1.9,
+            'cactus_branching':    1.7,
+            'cactus_medium':       1.3,
+            'cactus_cluster_low':  1.4,
+            'cactus_dead_dry':     1.0,
+            'cactus_dead_vine':    1.0,
+            'agave_dark':          1.3,
+            'bush_round_dense':    1.5,
+            'bush_round':          1.4,
+            'bush_dry':            0.9,
+            'patch_cluster':       1.6,
+        };
+        const scaleFor = (texKey) => {
+            const name = texKey.replace(/^nat_(pedra|vege)_/, '');
+            const base = SCALE_MAP[name] || 1.0;
+            return base * Phaser.Math.FloatBetween(0.85, 1.15);
+        };
+
         for (let i = 0; i < 16; i++) {
             for (let tries = 0; tries < 8; tries++) {
                 const cx = Phaser.Math.Between(300, W-300);
                 const cy = Phaser.Math.Between(300, H-300);
                 if (!isLand(cx, cy)) continue;
                 if (Math.random() > 0.5) {
-                    // Cluster de vegetação (cactus / bushes)
+                    // Cluster de vegetação (cactus / bushes) — escala per-asset
                     for (let j = 0; j < 5; j++) {
                         const r = Math.random()*80, a = Math.random()*Math.PI*2;
                         const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
                         if (!isLand(ox, oy)) continue;
                         const tex = pickV() || 'moita';
                         const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
-                        const sc = Phaser.Math.FloatBetween(0.45, 0.85);
-                        o.setDepth(1).setScale(sc).body.label = 'moita';
+                        o.setDepth(1).setScale(scaleFor(tex)).body.label = 'moita';
                     }
                 } else {
-                    // Cluster de pedras
+                    // Cluster de pedras — escala per-asset
                     for (let j = 0; j < 3; j++) {
                         const r = Math.random()*60, a = Math.random()*Math.PI*2;
                         const ox = cx + Math.cos(a)*r, oy = cy + Math.sin(a)*r;
                         if (!isLand(ox, oy)) continue;
                         const tex = pickP() || 'rocha_organica';
                         const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
-                        const sc = Phaser.Math.FloatBetween(0.55, 1.0);
-                        o.setDepth(1).setScale(sc).body.label = 'rocha';
+                        o.setDepth(1).setScale(scaleFor(tex)).body.label = 'rocha';
                     }
                 }
                 break;
