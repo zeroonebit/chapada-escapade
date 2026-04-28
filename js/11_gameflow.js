@@ -77,30 +77,29 @@ Object.assign(Jogo.prototype, {
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
 
-        // Estado inicial: PLAY / TUTORIAL
-        let pickerActive = false;
-        btnL.on('pointerdown', () => {
-            if (pickerActive) {
-                _startGame(true, 'mouse');     // estado 2: MOUSE escolhido
-            } else {
-                _startGame(false);             // estado 1: PLAY
+        // Picker state machine: 'home' (PLAY/TUT) -> 'input' (MOUSE/WASD) ou 'lang' (ENG/PTBR)
+        let picker = 'home';
+        const _setLang = (lang) => {
+            if (this.dbg?.behavior) {
+                this.dbg.behavior.lang = lang;
+                if (this._saveDebugCfg) this._saveDebugCfg();
             }
+        };
+        btnL.on('pointerdown', () => {
+            if (picker === 'input') return _startGame(true, 'mouse');
+            if (picker === 'lang')  { _setLang('en'); return _startGame(false); }
+            // 'home': clicar PLAY transforma em picker de idioma ENG / PTBR
+            picker = 'lang';
+            lblL.setText('ENG'); lblL.setFontSize(20);
+            lblR.setText('PTBR'); lblR.setFontSize(20);
         });
         btnR.on('pointerdown', () => {
-            if (pickerActive) {
-                _startGame(true, 'wasd');      // estado 2: WASD escolhido
-                return;
-            }
-            // Transforma pra picker MOUSE / WASD
-            pickerActive = true;
-            // Esquerdo vira MOUSE (mantem cor verde, troca label)
-            lblL.setText('MOUSE');
-            lblL.setFontSize(16);
-            lblL.setColor('#001a08');
-            // Direito vira WASD
-            lblR.setText('WASD');
-            lblR.setFontSize(16);
-            // Hover handlers iguais (já bound)
+            if (picker === 'input') return _startGame(true, 'wasd');
+            if (picker === 'lang')  { _setLang('pt'); return _startGame(false); }
+            // 'home': clicar TUTORIAL transforma em picker de input MOUSE / WASD
+            picker = 'input';
+            lblL.setText('MOUSE'); lblL.setFontSize(16); lblL.setColor('#001a08');
+            lblR.setText('WASD');  lblR.setFontSize(16);
         });
 
         // Resize

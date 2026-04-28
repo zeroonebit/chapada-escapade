@@ -28,6 +28,7 @@ const DBG_DEFAULTS = {
         discoRot:      0.0,
         barrel:        0.15,
         inputMode:     'mouse',  // 'mouse' | 'wasd'
+        lang:          'en',     // 'en' | 'pt' (escolhido na splash via PLAY > ENG/PTBR)
     },
     counts: {
         vacas:       100,
