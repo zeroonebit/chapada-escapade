@@ -208,11 +208,13 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'GRAVITON_BAR': {
-                // Player precisa ativar e soltar o beam pra ver oscilar
+                // Player precisa: 1) usar o beam ate cair < 50%; 2) soltar e ver recarregar 100%
                 const beamG = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
-                if (beamG) this._tutGravitonWatched = true;
-                // Avança quando: assistiu o beam ativo + soltou + barra começou a regenerar (>= 70%)
-                if (canAdvance && this._tutGravitonWatched && !beamG && this.energiaLed >= this.energiaMax * 0.7) {
+                if (this.energiaLed <= this.energiaMax * 0.5) this._tutGravitonDrained = true;
+                if (canAdvance &&
+                    this._tutGravitonDrained &&
+                    !beamG &&
+                    this.energiaLed >= this.energiaMax * 0.99) {
                     this._tutAdvance();
                 }
                 break;
