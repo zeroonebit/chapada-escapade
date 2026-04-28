@@ -74,8 +74,11 @@ Object.assign(Jogo.prototype, {
             }
             this.matter.world.enabled = true;
             allBtns.forEach(o => o.destroy());
+            this._splashStartGame = null;
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
+        // Expõe pro botão PREVIEW do CONFIGS poder iniciar a partir do splash
+        this._splashStartGame = _startGame;
 
         // Picker state machine
         // home          → PLAY  | TUTORIAL

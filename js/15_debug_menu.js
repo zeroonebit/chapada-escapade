@@ -375,13 +375,18 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // PREVIEW: esconde só o menu, mantém o jogo rodando real-time
-        // Pressionar ESC reabre o menu. Se jogo está pausado, despausa.
+        // PREVIEW: esconde só o menu pra ver o jogo real-time
+        // - Splash: inicia jogo modo normal (PLAY) automaticamente — sem cena não tem o que ver
+        // - Em jogo: despausa
+        // - ESC reabre o menu
         document.getElementById('dbg-preview').addEventListener('click', () => {
             this._toggleDebugMenu(false);
             this._splashConfigsOpen = false;
-            // Despausa pra preview ficar rodando (se gameStarted)
-            if (this.gameStarted && this.pausado) {
+            if (!this.gameStarted) {
+                // Splash → starta modo normal (sem tutorial)
+                if (this._splashStartGame) this._splashStartGame(false);
+            } else if (this.pausado) {
+                // Em jogo → despausa
                 this.pausado = false;
                 this.matter.world.enabled = true;
                 if (this.pauseOverlay)  this.pauseOverlay.setVisible(false);
