@@ -50,6 +50,7 @@ const DBG_DEFAULTS = {
         timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:      false,     // ciclo auto a cada 60s
         weather:            'clear',   // clear|rain|fog|storm
+        weatherShuffle:     false,     // PREVIEW aleatoriza weather+TOD a cada click
     },
 };
 
@@ -225,6 +226,7 @@ Object.assign(Jogo.prototype, {
                                 <option value="fog">Fog</option>
                                 <option value="storm">Storm (rain+fog+lightning)</option>
                             </select></label>
+                        <label><span>Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
                     <fieldset>
                         <legend>CHUVA</legend>
@@ -375,25 +377,64 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // PREVIEW: esconde só o menu pra ver o jogo real-time
-        // - Splash: inicia jogo modo normal (PLAY) automaticamente — sem cena não tem o que ver
-        // - Em jogo: despausa
-        // - ESC reabre o menu
+        // PREVIEW: 5s timeslice — esconde menu + inimigos pra você ver o mood escolhido
+        // Shuffle ON: aleatoriza weather + TOD a cada click. Após 5s, restaura tudo e reabre menu.
         document.getElementById('dbg-preview').addEventListener('click', () => {
+            this._tutPreviewActive = true;
+
+            // Shuffle: random weather + TOD
+            if (this.dbg?.fx?.weatherShuffle) {
+                const TODs = ['dawn','day','dusk','sunset','night','midnight'];
+                const WTHs = ['clear','rain','fog','storm'];
+                this.dbg.fx.timeOfDay = TODs[Math.floor(Math.random()*TODs.length)];
+                this.dbg.fx.weather   = WTHs[Math.floor(Math.random()*WTHs.length)];
+                if (this._saveDebugCfg) this._saveDebugCfg();
+                if (this._applyAtmosphere) this._applyAtmosphere();
+            }
+
+            // Snapshot do estado atual pra restaurar depois
+            const inSplash = !this.gameStarted;
+            const snap = {
+                inSplash,
+                pausadoBefore: this.pausado,
+                matterBefore:  this.matter.world.enabled,
+                splash:  inSplash ? (this._splashElements || []).slice() : [],
+                farmers: (this.fazendeiros || []).slice(),
+                towers:  (this.atiradores  || []).slice(),
+                bullets: (this.balas       || []).slice(),
+            };
+            // Hide
             this._toggleDebugMenu(false);
             this._splashConfigsOpen = false;
-            if (!this.gameStarted) {
-                // Splash → starta modo normal (sem tutorial)
-                if (this._splashStartGame) this._splashStartGame(false);
-            } else if (this.pausado) {
-                // Em jogo → despausa
-                this.pausado = false;
-                this.matter.world.enabled = true;
-                if (this.pauseOverlay)  this.pauseOverlay.setVisible(false);
-                if (this.pauseGrafico)  this.pauseGrafico.setVisible(false);
-                if (this.pauseLabel)    this.pauseLabel.setVisible(false);
-                if (this.pauseHint)     this.pauseHint.setVisible(false);
-            }
+            snap.splash.forEach(o  => o && o.scene && o.setVisible(false));
+            snap.farmers.forEach(f => f && f.scene && f.setVisible(false));
+            snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(false));
+            snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(false));
+            // Despausa pra atmosfera/chuva animarem
+            this.pausado = false;
+            this.matter.world.enabled = true;
+            if (this.pauseOverlay) this.pauseOverlay.setVisible(false);
+            if (this.pauseGrafico) this.pauseGrafico.setVisible(false);
+            if (this.pauseLabel)   this.pauseLabel.setVisible(false);
+            if (this.pauseHint)    this.pauseHint.setVisible(false);
+
+            // 5s depois: restaura
+            this.time.delayedCall(5000, () => {
+                this._tutPreviewActive = false;
+                snap.splash.forEach(o  => o && o.scene && o.setVisible(true));
+                snap.farmers.forEach(f => f && f.scene && f.setVisible(true));
+                snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(true));
+                snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(true));
+                this.pausado = snap.pausadoBefore;
+                this.matter.world.enabled = snap.matterBefore;
+                if (this.pauseOverlay) this.pauseOverlay.setVisible(snap.pausadoBefore);
+                if (this.pauseGrafico) this.pauseGrafico.setVisible(snap.pausadoBefore);
+                if (this.pauseLabel)   this.pauseLabel.setVisible(snap.pausadoBefore);
+                if (this.pauseHint)    this.pauseHint.setVisible(snap.pausadoBefore);
+                // Reabre o menu CONFIGS
+                this._toggleDebugMenu(true);
+                if (inSplash) this._splashConfigsOpen = true;
+            });
         });
 
         document.getElementById('dbg-apply').addEventListener('click', () => {

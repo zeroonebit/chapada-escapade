@@ -64,6 +64,8 @@ Object.assign(Jogo.prototype, {
         setHoverPlay(); setHoverTut();
 
         const allBtns = [this.splashBg, this.splashImg, btnL, lblL, btnR, lblR];
+        // Expõe pra função PREVIEW poder esconder/mostrar temporariamente
+        this._splashElements = allBtns;
 
         const _startGame = (tutorial, inputMode) => {
             this.gameStarted  = true;
