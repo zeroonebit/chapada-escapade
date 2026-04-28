@@ -222,7 +222,7 @@ Object.assign(Jogo.prototype, {
 
     _texturaDirecional(v) {
         // State machine + animação: vacas têm walk/run/eat/angry × 4 dir.
-        // Bois ainda não têm anim — usam sprite estático direcional.
+        // Bois têm walk × 8 dir (anim) + rotations estáticas (quando parado).
         if (v.isBurger || v._inCurral) return;
 
         const body = v.body;
@@ -244,7 +244,7 @@ Object.assign(Jogo.prototype, {
             v._lastDir = dir;
         }
 
-        // Boi: 8-dir picker (chubby boi PixelLab tem 8 rotations)
+        // Boi: 8-dir picker. Movendo → toca walk anim. Parado → sprite estático.
         if (v.tipo === 'boi') {
             let dir8 = v._lastDir8 || 'S';
             if (angRad !== null) {
@@ -253,8 +253,17 @@ Object.assign(Jogo.prototype, {
                 dir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
                 v._lastDir8 = dir8;
             }
-            const key = `boi_${dir8}`;
-            if (v.texture.key !== key) v.setTexture(key);
+            const moving = speed > 0.08;
+            if (moving) {
+                const animKey = `boi_walk_${dir8}`;
+                if (v.anims.currentAnim?.key !== animKey && this.anims.exists(animKey)) {
+                    v.play(animKey, true);
+                }
+            } else {
+                if (v.anims?.isPlaying) v.anims.stop();
+                const key = `boi_${dir8}`;
+                if (v.texture.key !== key) v.setTexture(key);
+            }
             return;
         }
 

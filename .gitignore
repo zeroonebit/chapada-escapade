@@ -19,3 +19,6 @@ __pycache__/
 
 # Backup local (mantém .html versionado, mas não duplica refs muito grandes)
 # refs/  # descomente se quiser excluir os JPGs originais de prompts (~MBs)
+
+# PixelLab raw downloads (ZIPs e unzip extraído) — só o resultado em chars/ entra no git
+assets/pixel_labs/_inbox/

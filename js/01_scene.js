@@ -44,6 +44,22 @@ class Jogo extends Phaser.Scene {
             });
         });
 
+        // ── REGISTRA ANIMS 8-DIR (faz running, boi walk) ────────────
+        const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
+        const ANIM8 = [
+            { prefix: 'faz_run',  frames: 4, fps: 10 },
+            { prefix: 'boi_walk', frames: 4, fps: 6  },
+        ];
+        DIRS8.forEach(d => {
+            ANIM8.forEach(({prefix, frames, fps}) => {
+                const key = `${prefix}_${d}`;
+                if (this.anims.exists(key)) return;
+                const fr = [];
+                for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
+                this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
+            });
+        });
+
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
             this.add.rectangle(W/2, H/2, W, H, 0x1a1a1a).setDepth(0);

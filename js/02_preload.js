@@ -47,6 +47,22 @@ Object.assign(Jogo.prototype, {
                 }
             });
         });
+
+        // ── ANIMAÇÕES 8-DIR (faz running, boi walk) — 4 frames cada ──
+        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
+        const ANIM8 = [
+            { char: 'fazendeiro', prefix: 'faz_run',  anim: 'running', frames: 4 },
+            { char: 'boi',        prefix: 'boi_walk', anim: 'walk',    frames: 4 },
+        ];
+        ANIM8.forEach(({char, prefix, anim, frames}) => {
+            D8.forEach(d => {
+                for (let i = 0; i < frames; i++) {
+                    const f = String(i).padStart(3, '0');
+                    this.load.image(`${prefix}_${d}_${i}`,
+                        `assets/pixel_labs/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
+                }
+            });
+        });
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');

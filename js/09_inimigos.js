@@ -91,8 +91,9 @@ Object.assign(Jogo.prototype, {
         for (let i = 0; i < n; i++) {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
-            const f = this.matter.add.image(x, y, 'faz_S', null, {shape:{type:'circle',radius:16}});
-            f.setScale(0.45);  // 180×0.45 = 81px visual
+            // matter.add.SPRITE (não image) — sprite suporta .anims pra running
+            const f = this.matter.add.sprite(x, y, 'faz_S', null, {shape:{type:'circle',radius:16}});
+            f.setDisplaySize(81, 81);  // anim frames e static têm tamanhos diferentes — força fixo
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';
@@ -133,14 +134,23 @@ Object.assign(Jogo.prototype, {
                 const vx = f.body.velocity.x, vy = f.body.velocity.y;
                 const sp = Math.sqrt(vx*vx + vy*vy);
                 let dir = f._lastDir || 'S';
-                if (sp > 0.05) {
+                const moving = sp > 0.05;
+                if (moving) {
                     const deg = (Math.atan2(vy, vx) * 180 / Math.PI + 360) % 360;
                     const i = Math.round(deg / 45) % 8;
                     dir = ['E','SE','S','SW','W','NW','N','NE'][i];
+                    // Chapéu de palha cobre o corpo na vista N pura — reroteia pra NE/NW
+                    if (dir === 'N') dir = (vx >= 0) ? 'NE' : 'NW';
                     f._lastDir = dir;
                 }
-                const k = `faz_${dir}`;
-                if (f.texture.key !== k) f.setTexture(k);
+                if (moving) {
+                    const animKey = `faz_run_${dir}`;
+                    if (f.anims.currentAnim?.key !== animKey) f.play(animKey, true);
+                } else {
+                    if (f.anims.isPlaying) f.anims.stop();
+                    const k = `faz_${dir}`;
+                    if (f.texture.key !== k) f.setTexture(k);
+                }
             }
             if (isAbducted) continue;
 
