@@ -148,12 +148,11 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Vaca chubby sprite no curral**: substituir cima_sobe/cima_desce pelo chubby idle/walk/eat — pedido do usuário
 
 ### 🔜 Próximos passos
-1. **Reorganizar etapas tutorial**: GRAVITON_BAR após BEAM (mostra graviton com glow); COMBUSTIVEL_BAR após BURGER (com glow + explica restauração)
-2. **Curral mascote chubby** com idle/walk/eat anims; counter ×N maior; só renderiza se count > 0
-3. **Variations de curral** (portas abertas/fechadas/cantos arredondados) usando cercas_v2
-4. **Burger pickup highlight** no tutorial — glow no burger + coleta direta no burger
-5. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-6. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
+1. **Salvar configs do user como defaults no git** — pegar `localStorage.getItem('chapEscapadeDebug')` do user e fazer override de `DBG_DEFAULTS` em `js/15_debug_menu.js` pra todos jogadores começarem com a mesma experiência tunada
+2. **Toggle de input WASD + Space** na aba CONTROLES do debug menu — alternativa ao mouse (W/A/S/D pra mover, Space pra graviton); manter mouse como padrão
+3. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+4. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
+5. **Balde de leite** no curral (item não existe ainda — gerar via PixelLab MCP ou `/create-object`)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
