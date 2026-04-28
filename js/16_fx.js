@@ -1,5 +1,36 @@
 // 16_fx.js — Efeitos visuais: chuva, neblina, sparks, shockwaves, beam halo dust
 // Usa Graphics + tweens (sem textura) pra ficar leve e sem dependências.
+
+// ── BARREL POST-FX (distorção esférica sutil — efeito "superfície curva") ──
+// PostFX pipeline GLSL aplicado na câmera principal. Strength 0=sem efeito,
+// 0.3=sutil, 0.6=forte. Controlado via dbg.behavior.barrel slider.
+const BARREL_FRAG = `
+precision mediump float;
+uniform sampler2D uMainSampler;
+uniform float strength;
+varying vec2 outTexCoord;
+void main() {
+    vec2 uv = outTexCoord;
+    vec2 c = uv - 0.5;
+    float r2 = dot(c, c);
+    vec2 d = c * (1.0 + strength * r2 * 1.6) + 0.5;
+    if (d.x < 0.0 || d.x > 1.0 || d.y < 0.0 || d.y > 1.0) {
+        gl_FragColor = vec4(0.04, 0.05, 0.03, 1.0);
+    } else {
+        gl_FragColor = texture2D(uMainSampler, d);
+    }
+}`;
+
+if (typeof Phaser !== 'undefined' && Phaser.Renderer?.WebGL?.Pipelines?.PostFXPipeline) {
+    window.BarrelPipeline = class BarrelPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
+        constructor(game) {
+            super({ game, name: 'BarrelPipeline', fragShader: BARREL_FRAG });
+            this._strength = 0;
+        }
+        onPreRender() { this.set1f('strength', this._strength); }
+    };
+}
+
 Object.assign(Jogo.prototype, {
 
     _setupFX() {
@@ -68,6 +99,20 @@ Object.assign(Jogo.prototype, {
             this.fxFog.setPosition(w/2, h/2);
             this.fxFog.setDisplaySize(w * 1.05, h * 1.05);
         }
+    },
+
+    _setupBarrel() {
+        if (!window.BarrelPipeline) return;
+        const cam = this.cameras.main;
+        try {
+            cam.setPostPipeline(window.BarrelPipeline);
+            this._barrelPipeline = cam.getPostPipeline(window.BarrelPipeline);
+        } catch (e) { console.warn('BarrelPipeline failed:', e); }
+    },
+
+    _updateBarrel() {
+        if (!this._barrelPipeline) return;
+        this._barrelPipeline._strength = this.dbg?.behavior?.barrel ?? 0;
     },
 
     _applyFXVisibility() {

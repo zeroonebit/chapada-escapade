@@ -16,6 +16,7 @@ const DBG_DEFAULTS = {
         boi:  3.0,   // user pediu 3x default
         faz:  2.0,   // user pediu 2x default
         beam: 1.0,
+        nave: 1.0,   // escala da nave/UFO principal
     },
     behavior: {
         danoAtirador: 1.0,
@@ -23,6 +24,7 @@ const DBG_DEFAULTS = {
         velVaca:      1.0,
         pullBeam:     0.5,   // reduzido — beam estava arremessando bichos contra obstáculos
         discoRot:     0.0,   // velocidade angular da nave (rad/s)
+        barrel:       0.15,  // distorção esférica (0=plano, 0.3=sutil, 0.6=forte)
     },
     counts: {
         vacas:       100,   // mapa 2.5x maior — era 40
@@ -120,6 +122,9 @@ Object.assign(Jogo.prototype, {
                     <label><span>Beam radius</span>
                         <input type="range" min="0" max="10" step="0.1" data-cfg="scale.beam">
                         <span class="val" data-show="scale.beam"></span></label>
+                    <label><span>Nave (UFO) escala</span>
+                        <input type="range" min="0.3" max="6" step="0.1" data-cfg="scale.nave">
+                        <span class="val" data-show="scale.nave"></span></label>
                 </fieldset>
 
                 <fieldset>
@@ -139,6 +144,9 @@ Object.assign(Jogo.prototype, {
                     <label><span>Velocidade rotação disco</span>
                         <input type="range" min="0" max="10" step="0.1" data-cfg="behavior.discoRot">
                         <span class="val" data-show="behavior.discoRot"></span></label>
+                    <label><span>Distorção esférica (barrel)</span>
+                        <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">
+                        <span class="val" data-show="behavior.barrel"></span></label>
                 </fieldset>
 
                 <fieldset>

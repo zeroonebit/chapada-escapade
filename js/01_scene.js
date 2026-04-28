@@ -95,7 +95,8 @@ class Jogo extends Phaser.Scene {
         if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
         this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
-        this.nave.setDisplaySize(80, 80);
+        const naveScale = this.dbg?.scale?.nave ?? 1.0;
+        this.nave.setDisplaySize(80 * naveScale, 80 * naveScale);
         // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
         // via discoRot slider no _updateBody
         this.nave.setFixedRotation();
@@ -158,6 +159,7 @@ class Jogo extends Phaser.Scene {
         this._setupPausa();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
+        this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
         this._setupColisoes();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
@@ -308,6 +310,7 @@ class Jogo extends Phaser.Scene {
             }
         }
 
+        this._updateBarrel();
         this._atualizarLEDs(delta);
 
         const querBeam = this.isMobile
