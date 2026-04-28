@@ -206,7 +206,14 @@ class Jogo extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (!this.gameStarted) return;      // aguarda dismiss do splash
+        // ESC funciona desde o splash pra abrir CONFIGS antes do jogo iniciar
+        if (!this.gameStarted) {
+            if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
+                this._splashConfigsOpen = !this._splashConfigsOpen;
+                this._toggleDebugMenu(this._splashConfigsOpen);
+            }
+            return;
+        }
         if (this.gameOver) return;
         // Diagnostic: wrap update body so erros aparecem em tela em vez de travar silencioso
         try { this._updateBody(time, delta); }
