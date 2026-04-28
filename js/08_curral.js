@@ -39,10 +39,11 @@ Object.assign(Jogo.prototype, {
             feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_outro_hay_bale')
                 .setDisplaySize(84, 76).setDepth(1.9);
         }
-        // Balde de leite ao lado esquerdo da vaca (símbolo do produto que vira burger)
+        // Balde ao lado esquerdo da vaca — random entre cheio (leite) e vazio
         let balde = null;
-        if (this.textures.exists('nat_obj_bucket_milk')) {
-            balde = this.add.image(curral.x - 44, curral.y + 14, 'nat_obj_bucket_milk')
+        const baldeKey = Math.random() < 0.5 ? 'nat_obj_bucket_milk' : 'nat_obj_bucket_empty';
+        if (this.textures.exists(baldeKey)) {
+            balde = this.add.image(curral.x - 44, curral.y + 14, baldeKey)
                 .setDisplaySize(28, 32).setDepth(1.9);
         }
 
