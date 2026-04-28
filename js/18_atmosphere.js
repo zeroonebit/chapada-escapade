@@ -65,20 +65,31 @@ Object.assign(Jogo.prototype, {
             case 'clear':
                 cfg.chuva = false;
                 cfg.neblina = false;
+                cfg.snow = false;
                 break;
             case 'rain':
                 cfg.chuva = true;
                 cfg.neblina = false;
+                cfg.snow = false;
                 cfg.chuvaIntensidade = Math.max(0.5, cfg.chuvaIntensidade ?? 0.5);
                 break;
             case 'fog':
                 cfg.chuva = false;
                 cfg.neblina = true;
+                cfg.snow = false;
                 cfg.neblinaIntensidade = Math.max(0.6, cfg.neblinaIntensidade ?? 0.5);
+                break;
+            case 'snow':
+                cfg.chuva = false;
+                cfg.neblina = false;
+                cfg.snow = true;
+                cfg.snowCount = Math.max(80, cfg.snowCount ?? 100);
+                cfg.snowIntensidade = Math.max(0.7, cfg.snowIntensidade ?? 0.85);
                 break;
             case 'storm':
                 cfg.chuva = true;
                 cfg.neblina = true;
+                cfg.snow = false;
                 cfg.chuvaIntensidade = 1.0;
                 cfg.neblinaIntensidade = 0.85;
                 cfg.chuvaCount = 250;

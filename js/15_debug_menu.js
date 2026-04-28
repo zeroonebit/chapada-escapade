@@ -49,8 +49,11 @@ const DBG_DEFAULTS = {
         wangtiles:          false,
         timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:      false,     // ciclo auto a cada 60s
-        weather:            'clear',   // clear|rain|fog|storm
+        weather:            'clear',   // clear|rain|snow|fog|storm
         weatherShuffle:     false,     // PREVIEW aleatoriza weather+TOD a cada click
+        snow:               false,
+        snowCount:          100,       // 0..400 flocos
+        snowIntensidade:    0.85,      // 0..1 alpha
     },
 };
 
@@ -223,6 +226,7 @@ Object.assign(Jogo.prototype, {
                             <select data-cfg="fx.weather" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="clear">Clear</option>
                                 <option value="rain">Rain</option>
+                                <option value="snow">Snow</option>
                                 <option value="fog">Fog</option>
                                 <option value="storm">Storm (rain+fog+lightning)</option>
                             </select></label>

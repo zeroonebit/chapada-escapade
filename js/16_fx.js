@@ -44,6 +44,13 @@ Object.assign(Jogo.prototype, {
         this._rainCountAtual = 0;
         this._rebuildRain();
 
+        // ── NEVE ───────────────────────────────────────────────────────
+        // Flocos com tamanhos variados (1-4px), queda lenta, drift horizontal
+        this.fxSnow = this.add.container(0, 0).setScrollFactor(0).setDepth(181).setVisible(false);
+        this._snowFlakes = [];
+        this._snowCountAtual = 0;
+        this._rebuildSnow();
+
         // ── NEBLINA (vinheta com gradiente radial) ────────────────────
         // Gera uma textura canvas com radial gradient: centro transparente,
         // bordas brancas com alpha médio. Mesmo conceito da fumaça (camadas
@@ -136,6 +143,53 @@ Object.assign(Jogo.prototype, {
         this.time.delayedCall(Phaser.Math.Between(0, 800), fall);
     },
 
+    _rebuildSnow() {
+        if (!this.fxSnow) return;
+        const cfg = this.dbg?.fx || {};
+        const target = Math.max(0, Math.round(cfg.snowCount ?? 100));
+        this._snowFlakes.forEach(d => this.tweens.killTweensOf(d));
+        while (this._snowFlakes.length > target) {
+            const f = this._snowFlakes.pop();
+            if (f && f.scene) f.destroy();
+        }
+        while (this._snowFlakes.length < target) {
+            // Tamanho variado: 1-4px de raio
+            const r = Phaser.Math.FloatBetween(1.0, 3.5);
+            const flake = this.add.circle(0, 0, r, 0xffffff, 0.85);
+            flake._radius = r;
+            this.fxSnow.add(flake);
+            this._snowFlakes.push(flake);
+        }
+        this._snowCountAtual = target;
+        this._snowFlakes.forEach(f => this._startSnowFlake(f));
+    },
+
+    _startSnowFlake(flake) {
+        const w = this.scale.width, h = this.scale.height;
+        const reset = () => {
+            flake.x = Phaser.Math.Between(-30, w + 30);
+            flake.y = Phaser.Math.Between(-50, -10);
+        };
+        const fall = () => {
+            if (!flake || !flake.scene) return;
+            // Velocidade: flocos maiores caem mais rápido (peso visual)
+            const baseDur = Phaser.Math.Between(3000, 6000);
+            const sizeFactor = 1.0 / Math.max(0.5, flake._radius * 0.6);
+            const dur = baseDur * sizeFactor;
+            // Drift horizontal sinuoso
+            const drift = Phaser.Math.Between(-60, 60);
+            this.tweens.add({
+                targets: flake,
+                y: h + 30,
+                x: flake.x + drift,
+                duration: dur,
+                onComplete: () => { reset(); fall(); }
+            });
+        };
+        reset();
+        this.time.delayedCall(Phaser.Math.Between(0, 1500), fall);
+    },
+
     _fxResize() {
         const w = this.scale.width, h = this.scale.height;
         if (this.fxFog && this.fxFog.setDisplaySize) {
@@ -169,9 +223,15 @@ Object.assign(Jogo.prototype, {
             const visible = !!cfg.chuva;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
-            // Frequência (count) mudou? rebuilda
             const targetCount = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
             if (targetCount !== this._rainCountAtual) this._rebuildRain();
+        }
+        if (this.fxSnow) {
+            const visible = !!cfg.snow;
+            this.fxSnow.setVisible(visible);
+            if (visible) this.fxSnow.setAlpha(cfg.snowIntensidade ?? 0.85);
+            const targetCount = Math.max(0, Math.round(cfg.snowCount ?? 100));
+            if (targetCount !== this._snowCountAtual) this._rebuildSnow();
         }
         if (this.fxFog) {
             const visible = !!cfg.neblina;
