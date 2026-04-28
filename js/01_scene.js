@@ -181,11 +181,13 @@ class Jogo extends Phaser.Scene {
             localStorage.setItem('experimentMode', cur ? '0' : '1');
             window.location.reload();
         };
-        if (!this._tBound) {
-            this._tBound = true;
-            window.addEventListener('keydown', (e) => {
+        // H1: listener leak — guarda referência pra remover no shutdown
+        // (cada scene.restart adicionava novo listener sem limpar o anterior)
+        if (!this._tHandler) {
+            this._tHandler = (e) => {
                 if (e.key === 't' || e.key === 'T') toggleExperimentMode();
-            });
+            };
+            window.addEventListener('keydown', this._tHandler);
         }
         this._toggleExperimentMode = toggleExperimentMode;
 
@@ -203,6 +205,35 @@ class Jogo extends Phaser.Scene {
         }
 
         this._setupSplash();               // 11_gameflow.js — por último (sobrepõe tudo)
+
+        // M4: shutdown handler centralizado (cleanup ao restart de scene)
+        this.events.once('shutdown', () => this._sceneCleanup());
+    }
+
+    // M4: chamado em scene.shutdown — limpa listeners globais, timers DOM,
+    // graphics persistentes que sobreviveriam ao restart
+    _sceneCleanup() {
+        // H1: remove listener global do keydown
+        if (this._tHandler) {
+            window.removeEventListener('keydown', this._tHandler);
+            this._tHandler = null;
+        }
+        // M7: cancela debounce timers do save de localStorage
+        if (this._saveDbgTimer)    { clearTimeout(this._saveDbgTimer);    this._saveDbgTimer = null; }
+        if (this._rainRebuildTimer){ clearTimeout(this._rainRebuildTimer);this._rainRebuildTimer = null; }
+        if (this._snowRebuildTimer){ clearTimeout(this._snowRebuildTimer);this._snowRebuildTimer = null; }
+        // M2: graphics persistentes
+        if (this._atmoGfx?.destroy)       this._atmoGfx.destroy();
+        if (this._atmoFlashGfx?.destroy)  this._atmoFlashGfx.destroy();
+        if (this._tutGfx?.destroy)        this._tutGfx.destroy();
+        if (this._tutGlowWorld?.destroy)  this._tutGlowWorld.destroy();
+        // H2: reset flags de tutorial pra nao vazar
+        this._tutBeamNoDrain = false;
+        this._tutBeamNoPull  = false;
+        this._tutVacasImortais = false;
+        this._tutFreezeNave = false;
+        this._tutCombustivelCongelado = false;
+        this._tutGravitonDrain2x = false;
     }
 
     update(time, delta) {

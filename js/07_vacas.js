@@ -114,6 +114,9 @@ Object.assign(Jogo.prototype, {
         if (!entity || entity._dying || entity._destroyed) return;
         entity._dying = true;
         if (this.vacas_abduzidas.includes(entity)) this._soltarVaca(entity);
+        // H4: limpa _timer/walkTimer pra evitar timer orphan referenciando dead farmer
+        if (entity._timer && entity._timer.remove) { entity._timer.remove(); entity._timer = null; }
+        if (entity.walkTimer && entity.walkTimer.remove) { entity.walkTimer.remove(); entity.walkTimer = null; }
         if (entity.isEnemy) {
             this.fazendeiros = this.fazendeiros.filter(f => f !== entity);
         } else {
