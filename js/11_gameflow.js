@@ -3,42 +3,58 @@ Object.assign(Jogo.prototype, {
 
     // ── SPLASH ────────────────────────────────────────────────────────────
     _setupSplash() {
-        this.gameStarted = false;
-        this.matter.world.enabled = false; // congela física até o primeiro clique
+        this.gameStarted  = false;
+        this.tutorialMode = false;
+        this.matter.world.enabled = false;
 
         const w = this.scale.width, h = this.scale.height;
 
-        // Fundo escuro
         this.splashBg = this.add.rectangle(w/2, h/2, w, h, 0x000a03, 1)
             .setScrollFactor(0).setDepth(500);
 
-        // Splash fullscreen — cobre toda a tela mantendo aspect ratio (cover)
         this.splashImg = this.add.image(w/2, h/2, 'splash')
             .setScrollFactor(0).setDepth(501);
         const tex = this.splashImg.texture.getSourceImage();
-        const scaleC = Math.max(w / tex.width, h / tex.height);
-        this.splashImg.setScale(scaleC);
+        this.splashImg.setScale(Math.max(w / tex.width, h / tex.height));
 
-        // Hint piscando no rodapé
-        const hintTxt = this.sys.game.device.input.touch
-            ? '[ TOQUE PARA COMEÇAR ]' : '[ CLIQUE PARA COMEÇAR ]';
-        this.splashHint = this.add.text(w/2, h - 36, hintTxt, {
-            fontSize: '17px', fill: '#ffffff', fontStyle: 'bold',
-            stroke: '#000000', strokeThickness: 4
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+        // ── Botões JOGAR / TUTORIAL ───────────────────────────────────
+        const BTN_W = 180, BTN_H = 46, GAP = 18;
+        const bY = h - 70;
 
-        this.tweens.add({
-            targets: this.splashHint, alpha: 0.1, duration: 620, yoyo: true, repeat: -1
-        });
+        // JOGAR
+        const btnJogar = this.add.rectangle(w/2 - BTN_W/2 - GAP/2, bY, BTN_W, BTN_H, 0x00cc44)
+            .setScrollFactor(0).setDepth(502).setInteractive({ useHandCursor: true });
+        const lblJogar = this.add.text(w/2 - BTN_W/2 - GAP/2, bY, 'JOGAR', {
+            fontSize: '18px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 3
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // Dismiss no primeiro clique/toque
-        this.input.once('pointerdown', () => {
-            this.gameStarted = true;
+        // TUTORIAL
+        const btnTut = this.add.rectangle(w/2 + BTN_W/2 + GAP/2, bY, BTN_W, BTN_H, 0x224433)
+            .setScrollFactor(0).setDepth(502)
+            .setStrokeStyle(2, 0x00ff55, 0.8)
+            .setInteractive({ useHandCursor: true });
+        const lblTut = this.add.text(w/2 + BTN_W/2 + GAP/2, bY, 'TUTORIAL', {
+            fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
+
+        btnJogar.on('pointerover', () => btnJogar.setFillStyle(0x44ff88));
+        btnJogar.on('pointerout',  () => btnJogar.setFillStyle(0x00cc44));
+        btnTut.on('pointerover',   () => btnTut.setFillStyle(0x336655));
+        btnTut.on('pointerout',    () => btnTut.setFillStyle(0x224433));
+
+        const _startGame = (tutorial) => {
+            this.gameStarted  = true;
+            this.tutorialMode = !!tutorial;
             this.matter.world.enabled = true;
-            [this.splashBg, this.splashImg, this.splashHint].forEach(o => o.destroy());
-        });
+            [this.splashBg, this.splashImg, btnJogar, lblJogar, btnTut, lblTut]
+                .forEach(o => o.destroy());
+            if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
+        };
 
-        // Resize: refit splash fullscreen
+        btnJogar.on('pointerdown', () => _startGame(false));
+        btnTut.on('pointerdown',   () => _startGame(true));
+
+        // Resize
         this.scale.on('resize', () => {
             if (this.gameStarted) return;
             const w2 = this.scale.width, h2 = this.scale.height;
@@ -46,7 +62,11 @@ Object.assign(Jogo.prototype, {
             this.splashImg.setPosition(w2/2, h2/2);
             const tex2 = this.splashImg.texture.getSourceImage();
             this.splashImg.setScale(Math.max(w2 / tex2.width, h2 / tex2.height));
-            this.splashHint.setPosition(w2/2, h2 - 36);
+            const bY2 = h2 - 70;
+            btnJogar.setPosition(w2/2 - BTN_W/2 - GAP/2, bY2);
+            lblJogar.setPosition(w2/2 - BTN_W/2 - GAP/2, bY2);
+            btnTut.setPosition(w2/2 + BTN_W/2 + GAP/2, bY2);
+            lblTut.setPosition(w2/2 + BTN_W/2 + GAP/2, bY2);
         });
     },
 

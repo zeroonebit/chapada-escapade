@@ -41,9 +41,13 @@ class Jogo extends Phaser.Scene {
             { prefix: 'vaca_angry', frames: 8,  fps: 8  },
             { prefix: 'faz_run',    frames: 4,  fps: 10 },
             { prefix: 'boi_walk',   frames: 4,  fps: 6  },
+            { prefix: 'ufo_hover',  frames: 4,  fps: 8  },
+            // boi_idle: 7 dirs (sem N) — fallback pra static em N
+            { prefix: 'boi_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         DIRS8.forEach(d => {
-            ANIM8.forEach(({prefix, frames, fps}) => {
+            ANIM8.forEach(({prefix, frames, fps, dirs}) => {
+                if (dirs && !dirs.includes(d)) return;  // pula dirs não disponíveis
                 const key = `${prefix}_${d}`;
                 if (this.anims.exists(key)) return;
                 const fr = [];
@@ -93,13 +97,16 @@ class Jogo extends Phaser.Scene {
         this.coneLuz = this.add.graphics().setDepth(2).setVisible(false);
         this._desenharCone(CONE_R);
         if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
-        this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
+        // matter.add.SPRITE (não image) — sprite suporta .anims pra hovering_idle 8-dir
+        this.nave = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         const naveScale = this.dbg?.scale?.nave ?? 1.0;
         this.nave.setDisplaySize(80 * naveScale, 80 * naveScale);
         // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
         // via discoRot slider no _updateBody
         this.nave.setFixedRotation();
+        this._naveDir8 = 'S';
+        if (this.anims.exists('ufo_hover_S')) this.nave.play('ufo_hover_S');
 
         this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da nave
 
@@ -235,8 +242,9 @@ class Jogo extends Phaser.Scene {
 
         this.dificuldade += 0.000018 * delta;
 
-        this._atualizarPaciencia(delta);
+        if (!this._tutPacienciaCongelada) this._atualizarPaciencia(delta);
         if (!this.EXPERIMENT_MODE) this._atualizarIAVacas();
+        if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
         // COWS = vacas + bois live no feixe; BURGERS = total entregue
         let cowsInBeam = 0;
@@ -279,6 +287,19 @@ class Jogo extends Phaser.Scene {
         const tiltTarget = Phaser.Math.Clamp(-vAxDelta * 8, -0.4, 0.4);
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
         this.nave.rotation = this._discoBaseAngle + this._tiltCurrent;
+
+        // ── UFO directional hover anim ───────────────────────────────
+        // Acima de threshold, escolhe dir8 do vetor velocidade; abaixo, mantém última dir
+        const navSpeedAnim = Math.sqrt(navVx*navVx + navVy*navVy);
+        if (navSpeedAnim > 0.5) {
+            const deg = (Math.atan2(navVy, navVx) * 180 / Math.PI + 360) % 360;
+            const i = Math.round(deg / 45) % 8;
+            this._naveDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
+        }
+        const hoverKey = `ufo_hover_${this._naveDir8 || 'S'}`;
+        if (this.nave.anims && this.anims.exists(hoverKey) && this.nave.anims.currentAnim?.key !== hoverKey) {
+            this.nave.play(hoverKey, true);
+        }
 
         // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
         // que CRESCEM e ficam transparentes conforme se afastam (estilo escape de carro)
@@ -374,5 +395,7 @@ class Jogo extends Phaser.Scene {
         } else {
             this._updateGrassMouse();
         }
+
+        this._atualizarMinimapa();
     }
 }

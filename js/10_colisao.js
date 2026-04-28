@@ -62,6 +62,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _repovoar() {
+        if (this.tutorialMode) return;
         const W=8000, H=6000;
         if (this.vacas.length >= 20) return;
         let n = Math.min(4, 40 - this.vacas.length);
@@ -72,7 +73,7 @@ Object.assign(Jogo.prototype, {
             else if (e===1) { x=Phaser.Math.Between(200, W-200); y=H-200; }
             else if (e===2) { x=200; y=Phaser.Math.Between(200, H-200); }
             else { x=W-200; y=Phaser.Math.Between(200, H-200); }
-            const tipo = Math.random() < 0.20 ? 'boi' : 'branca';
+            const tipo = Math.random() < 0.20 ? 'boi' : 'holstein';
             this._criarVaca(x, y, tipo);
         }
     }
