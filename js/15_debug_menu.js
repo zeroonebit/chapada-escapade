@@ -27,6 +27,7 @@ const DBG_DEFAULTS = {
         danoAtirador:  1.0,
         discoRot:      0.0,
         barrel:        0.15,
+        inputMode:     'mouse',  // 'mouse' | 'wasd'
     },
     counts: {
         vacas:       100,
@@ -123,6 +124,11 @@ Object.assign(Jogo.prototype, {
                     <div class="note">Aplicam live sem reiniciar.</div>
                     <fieldset>
                         <legend>NAVE</legend>
+                        <label><span>Input</span>
+                            <select data-cfg="behavior.inputMode" style="background:#001a08;color:#aaffcc;border:1px solid #224433;padding:2px 6px;font-family:inherit;font-size:11px;">
+                                <option value="mouse">Mouse</option>
+                                <option value="wasd">WASD + Space</option>
+                            </select></label>
                         <label><span>Sensibilidade</span>
                             <input type="range" min="0.1" max="5" step="0.01" data-cfg="behavior.sensibilidade">
                             <span class="val" data-show="behavior.sensibilidade"></span></label>
@@ -285,6 +291,16 @@ Object.assign(Jogo.prototype, {
                 if (display && typeof val === 'number') display.textContent = val.toFixed(2);
 
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
+            });
+        });
+
+        // Bind <select> (input mode etc)
+        root.querySelectorAll('select[data-cfg]').forEach(sel => {
+            const [section, key] = sel.dataset.cfg.split('.');
+            sel.value = this.dbg[section][key];
+            sel.addEventListener('change', () => {
+                this.dbg[section][key] = sel.value;
+                this._saveDebugCfg();
             });
         });
 

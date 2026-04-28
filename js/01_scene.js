@@ -174,6 +174,7 @@ class Jogo extends Phaser.Scene {
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
         // Phaser key listener + fallback nativo no window (caso Phaser perca foco)
         this.teclaT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+        this._keysWASD = this.input.keyboard.addKeys('W,A,S,D,SPACE');
         const toggleExperimentMode = () => {
             const cur = localStorage.getItem('experimentMode') === '1';
             localStorage.setItem('experimentMode', cur ? '0' : '1');
@@ -257,7 +258,28 @@ class Jogo extends Phaser.Scene {
 
         const cam = this.cameras.main;
         let cursor;
-        if (this.isMobile && this._joyVec && this._joyVec.active) {
+        const inputMode = this.dbg?.behavior?.inputMode ?? 'mouse';
+        // Modo WASD: monta vetor das teclas + Space pra beam
+        if (inputMode === 'wasd' && this._keysWASD) {
+            let dx = 0, dy = 0;
+            if (this._keysWASD.W.isDown) dy -= 1;
+            if (this._keysWASD.S.isDown) dy += 1;
+            if (this._keysWASD.A.isDown) dx -= 1;
+            if (this._keysWASD.D.isDown) dx += 1;
+            if (dx !== 0 || dy !== 0) {
+                const len = Math.hypot(dx, dy);
+                const REACH = 220;
+                cursor = {
+                    x: this.nave.x + (dx/len) * REACH,
+                    y: this.nave.y + (dy/len) * REACH
+                };
+            } else {
+                // Sem input: cursor na nave (não move)
+                cursor = { x: this.nave.x, y: this.nave.y };
+            }
+            // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
+            this._beamHeld = this._keysWASD.SPACE.isDown;
+        } else if (this.isMobile && this._joyVec && this._joyVec.active) {
             // Joystick — vetor vira "alvo virtual" 220px à frente da nave
             const REACH = 220;
             cursor = {
@@ -334,7 +356,7 @@ class Jogo extends Phaser.Scene {
         this._updateBarrel();
         this._atualizarLEDs(delta);
 
-        const querBeam = this.isMobile
+        const querBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
             : this.input.activePointer.isDown;
         const beamAtivo = querBeam && this.energiaLed > 0;

@@ -17,23 +17,26 @@ Object.assign(Jogo.prototype, {
         const tex = this.splashImg.texture.getSourceImage();
         this.splashImg.setScale(Math.min(w / tex.width, h / tex.height));
 
-        // ── Botões JOGAR / TUTORIAL ───────────────────────────────────
-        const BTN_W = 180, BTN_H = 46, GAP = 18;
-        const bY = h - 70;
+        // ── Botões JOGAR / TUTORIAL — afastados pros cantos inferiores ─
+        const BTN_W = 180, BTN_H = 46;
+        const SIDE_PAD = 60;            // afastamento da lateral
+        const bY = h - 38;              // mais perto da base
+        const xLeft  = SIDE_PAD + BTN_W/2;
+        const xRight = w - SIDE_PAD - BTN_W/2;
 
-        // JOGAR
-        const btnJogar = this.add.rectangle(w/2 - BTN_W/2 - GAP/2, bY, BTN_W, BTN_H, 0x00cc44)
+        // JOGAR (canto inferior esquerdo)
+        const btnJogar = this.add.rectangle(xLeft, bY, BTN_W, BTN_H, 0x00cc44)
             .setScrollFactor(0).setDepth(502).setInteractive({ useHandCursor: true });
-        const lblJogar = this.add.text(w/2 - BTN_W/2 - GAP/2, bY, 'JOGAR', {
+        const lblJogar = this.add.text(xLeft, bY, 'JOGAR', {
             fontSize: '18px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // TUTORIAL
-        const btnTut = this.add.rectangle(w/2 + BTN_W/2 + GAP/2, bY, BTN_W, BTN_H, 0x224433)
+        // TUTORIAL (canto inferior direito)
+        const btnTut = this.add.rectangle(xRight, bY, BTN_W, BTN_H, 0x224433)
             .setScrollFactor(0).setDepth(502)
             .setStrokeStyle(2, 0x00ff55, 0.8)
             .setInteractive({ useHandCursor: true });
-        const lblTut = this.add.text(w/2 + BTN_W/2 + GAP/2, bY, 'TUTORIAL', {
+        const lblTut = this.add.text(xRight, bY, 'TUTORIAL', {
             fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
@@ -62,11 +65,13 @@ Object.assign(Jogo.prototype, {
             this.splashImg.setPosition(w2/2, h2/2);
             const tex2 = this.splashImg.texture.getSourceImage();
             this.splashImg.setScale(Math.max(w2 / tex2.width, h2 / tex2.height));
-            const bY2 = h2 - 70;
-            btnJogar.setPosition(w2/2 - BTN_W/2 - GAP/2, bY2);
-            lblJogar.setPosition(w2/2 - BTN_W/2 - GAP/2, bY2);
-            btnTut.setPosition(w2/2 + BTN_W/2 + GAP/2, bY2);
-            lblTut.setPosition(w2/2 + BTN_W/2 + GAP/2, bY2);
+            const bY2 = h2 - 38;
+            const xL  = SIDE_PAD + BTN_W/2;
+            const xR  = w2 - SIDE_PAD - BTN_W/2;
+            btnJogar.setPosition(xL, bY2);
+            lblJogar.setPosition(xL, bY2);
+            btnTut.setPosition(xR, bY2);
+            lblTut.setPosition(xR, bY2);
         });
     },
 
