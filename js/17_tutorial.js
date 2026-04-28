@@ -456,25 +456,28 @@ Object.assign(Jogo.prototype, {
         }
         const nextKey = TUT_STEPS[nextIdx].key;
 
-        // Reset de flags por etapa
-        // BEAM_VISUAL: cone aparece, sem pull, sem drain
+        // Reset de flags por etapa (separadas: NoDrain != NoPull)
+        // BEAM_VISUAL: cone aparece, SEM pull, SEM drain
         if (nextKey === 'BEAM_VISUAL') {
-            this._tutBeamVisualOnly = true;
+            this._tutBeamNoDrain = true;
+            this._tutBeamNoPull  = true;
             this._tutGravitonDrain2x = false;
         }
-        // GRAVITON_BAR: barra graviton aparece + drain 2x + pull AINDA OFF (não abduz)
+        // GRAVITON_BAR: barra aparece, drain ATIVO (2x), pull AINDA OFF
         if (nextKey === 'GRAVITON_BAR') {
-            this._tutBeamVisualOnly = true;       // ainda sem pull
-            this._tutGravitonDrain2x = true;      // drain didático
-            this._setBarrasVisibility(false, true); // só graviton visível
+            this._tutBeamNoDrain = false;          // drain liga pro player ver consumo
+            this._tutBeamNoPull  = true;           // ainda sem abduzir
+            this._tutGravitonDrain2x = true;       // 2x didático
+            this._setBarrasVisibility(false, true);
             this._tutGravitonDrained = false;
         }
         // ABDUCT: pull liga, drain volta normal, vacas imortais, spawna 50 globais
         if (nextKey === 'ABDUCT') {
-            this._tutBeamVisualOnly = false;
+            this._tutBeamNoDrain = false;
+            this._tutBeamNoPull  = false;
             this._tutGravitonDrain2x = false;
             this._tutVacasImortais = true;
-            this._tutVacasGlobalSpawned = false;  // spawn no update
+            this._tutVacasGlobalSpawned = false;
         }
         // BURGER: combustível inicia em 15%, barra combustível aparece
         if (nextKey === 'BURGER') {
@@ -574,7 +577,8 @@ Object.assign(Jogo.prototype, {
         this._tutGfx?.clear();
         this._tutGlowWorld?.clear();
         this._tutFreezeNave = false;
-        this._tutBeamVisualOnly = false;
+        this._tutBeamNoDrain = false;
+        this._tutBeamNoPull  = false;
         this._tutGravitonDrain2x = false;
         this._tutVacasImortais = false;
         this._tutCombustivelCongelado = false;

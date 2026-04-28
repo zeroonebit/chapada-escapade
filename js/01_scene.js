@@ -361,16 +361,17 @@ class Jogo extends Phaser.Scene {
         const querBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
             : this.input.activePointer.isDown;
-        // Tutorial BEAM_VISUAL: cone aparece, sem drain (energia infinita) e sem pull
-        const visualOnly = !!this._tutBeamVisualOnly;
-        const beamAtivo = querBeam && (visualOnly || this.energiaLed > 0);
+        // Tutorial flags:
+        //  _tutBeamNoDrain: cone aparece, NÃO consome graviton (etapa BEAM_VISUAL)
+        //  _tutBeamNoPull:  cone aparece, NÃO atrai entidades (BEAM_VISUAL + GRAVITON_BAR)
+        const noDrain = !!this._tutBeamNoDrain;
+        const beamAtivo = querBeam && (noDrain || this.energiaLed > 0);
 
-        if (querBeam && !visualOnly && this.energiaLed > 0) {
-            // Multiplicador de drain (tutorial GRAVITON_BAR usa 2x pra didática)
+        if (querBeam && !noDrain && this.energiaLed > 0) {
             const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
             this.energiaLed -= this.energiaDrain * drainMul * (delta/1000);
             if (this.energiaLed < 0) this.energiaLed = 0;
-        } else if (!querBeam && !visualOnly) {
+        } else if (!querBeam && !noDrain) {
             this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * (delta/1000));
         }
 
@@ -403,8 +404,9 @@ class Jogo extends Phaser.Scene {
             }
             this.coneLuz.setVisible(true);
             this.coneLuz.setAlpha(1);
-            // Tutorial BEAM_VISUAL: cone aparece mas zero pull (não abduz nem move)
-            if (!visualOnly) {
+            // Tutorial BEAM_VISUAL e GRAVITON_BAR: cone aparece mas zero pull
+            const noPull = !!this._tutBeamNoPull;
+            if (!noPull) {
                 if (this.vacas_abduzidas.length < 5) this._tentarAbduzir();
                 this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
             }
