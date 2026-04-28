@@ -54,6 +54,8 @@ Object.assign(Jogo.prototype, {
             this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
         }
 
+        // Limites do mundo + margem pra detectar saída de tela
+        const W = 8000, H = 6000;
         this.balas = this.balas.filter(b => {
             if (!b.sprite || !b.sprite.active) return false;
             b.sprite.x += b.vx;
@@ -69,7 +71,11 @@ Object.assign(Jogo.prototype, {
                 b.sprite.destroy();
                 return false;
             }
-            if (b.dist > MAX_DIST) { b.sprite.destroy(); return false; }
+            // Bala segue até sair dos limites do mundo (não fade após MAX_DIST)
+            if (b.sprite.x < -50 || b.sprite.x > W+50 || b.sprite.y < -50 || b.sprite.y > H+50) {
+                b.sprite.destroy();
+                return false;
+            }
             return true;
         });
 
@@ -100,6 +106,9 @@ Object.assign(Jogo.prototype, {
             // versões do Phaser, deixando body do tamanho da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
             f.setDisplaySize(fazSize, fazSize);
+            // Lock rotação física: sem isso, colisões com vacas (que vêm pelo beam)
+            // viravam o sprite de lado e ele aparecia "deitado" como humano de perfil
+            f.setFixedRotation();
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';

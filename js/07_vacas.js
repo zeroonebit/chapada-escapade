@@ -6,6 +6,7 @@ Object.assign(Jogo.prototype, {
         const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
         // matter.add.SPRITE (não image) — sprite suporta .anims, image não
         let v = this.matter.add.sprite(x, y, tex);
+        v.setFixedRotation();  // sem isso, colisão com beam/atirador deita o bicho de lado
         // setDisplaySize força tamanho visual fixo (anim frames 68px e static 180px viram mesma escala)
         const baseSize = tipo === 'boi' ? 78 : 68;
         const sizeScale = tipo === 'boi' ? ((this.dbg?.scale?.boi) ?? 3.0) : ((this.dbg?.scale?.vaca) ?? 1.0);
@@ -350,6 +351,12 @@ Object.assign(Jogo.prototype, {
         this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v !== vaca);
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
+        // Volta pra orientação south (default) suavemente — re-vira pra câmera ao soltar
+        vaca._lastDir8 = 'S';
+        if (vaca.scene && vaca.tipo === 'boi' && this.textures.exists('boi_S')) {
+            if (vaca.anims?.isPlaying) vaca.anims.stop();
+            vaca.setTexture('boi_S');
+        }
     },
 
     _soltarTodas() {

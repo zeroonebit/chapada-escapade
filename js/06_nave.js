@@ -29,7 +29,9 @@ Object.assign(Jogo.prototype, {
 
     _atualizarLEDs(delta) {
         const N = this.leds.length;
-        const LED_R = 22;
+        // Raio do anel = ~48% do displayWidth da nave (borda visual exterior)
+        // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se nave escalar.
+        const LED_R = (this.nave?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
         const fullRevs = Math.floor(this._ledHead / N);
         const corBase = (fullRevs % 2 === 0)

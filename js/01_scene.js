@@ -272,15 +272,15 @@ class Jogo extends Phaser.Scene {
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
         this.nave.rotation = this._discoBaseAngle + this._tiltCurrent;
 
-        // Fumacinha de rastro atrás da nave quando se move
+        // Escapamento: puff maior, menos frequente, mais opaco — estilo carro
         const navSpeed = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeed > 0.6) {
             this._smokeTimer = (this._smokeTimer ?? 0) + delta;
-            if (this._smokeTimer > 55) {
+            if (this._smokeTimer > 220) {
                 this._smokeTimer = 0;
-                const px = this.nave.x - (navVx/navSpeed) * 26;
-                const py = this.nave.y - (navVy/navSpeed) * 26;
-                this._spawnSmoke(px, py, { color: 0xddeeff, alpha: 0.35, size: 5, dur: 520, drift: 16 });
+                const px = this.nave.x - (navVx/navSpeed) * 32;
+                const py = this.nave.y - (navVy/navSpeed) * 32;
+                this._spawnSmoke(px, py, { color: 0xccccdd, alpha: 0.55, size: 11, dur: 1200, drift: 22 });
             }
         }
 
