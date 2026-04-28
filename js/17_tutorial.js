@@ -363,11 +363,11 @@ Object.assign(Jogo.prototype, {
                     break;
                 }
                 case 'burger_pronto': {
-                    // Glow em todo burger ready de qualquer curral
+                    // Glow em todo slot ready de qualquer curral
                     (this.currais || []).forEach(c => {
-                        (c.readyIcons || []).forEach(r => {
-                            if (r.icon && r.icon.scene) {
-                                this._tutGlowAt(r.icon.x, r.icon.y, 22);
+                        (c.slots || []).forEach(s => {
+                            if (s && s.state === 'ready' && s.icon && s.icon.scene) {
+                                this._tutGlowAt(s.icon.x, s.icon.y, 22);
                             }
                         });
                     });

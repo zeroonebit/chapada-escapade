@@ -1,91 +1,41 @@
-// 08_curral.js — Currais: 1 vaca representativa com counter + fila de burgers fora
+// 08_curral.js — Curral com slots fixos: 3 vacas max, 3 burgers max
+// Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
+const BURGER_SLOTS = ['burger_classic', 'burger_cheese', 'burger_double'];
+const SLOT_VALOR   = [100, 150, 220];      // pontos por tipo (mais elaborado vale mais)
+const SLOT_FUEL    = [22, 28, 36];          // fuel restaurado por tipo
+
 Object.assign(Jogo.prototype, {
 
     _verificarEntrega() {
         for (const c of this.currais) {
+            // Drop por proximidade do curral
             const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
-            // Drop ainda usa proximidade do curral (sentido: vc voa pro curral entregar)
             if (d < 110) this._dropCowsAtCurral(c);
-            // Coleta agora é por proximidade do burger (não do curral)
-            this._coletarBurgersPerto(c);
+            // Coleta via beam (atrai burgers ready)
+            this._atrairBurgersBeam(c);
         }
     },
 
-    // Coleta burgers individuais que estão a < PICKUP px da nave (não exige estar em cima do curral)
-    _coletarBurgersPerto(curral) {
-        const PICKUP = 60;
-        if (!curral.readyIcons || curral.readyIcons.length === 0) return;
-        const colhidos = [];
-        const restantes = [];
-        for (const r of curral.readyIcons) {
-            if (!r.icon || !r.icon.scene) continue;
-            const dx = r.icon.x - this.nave.x, dy = r.icon.y - this.nave.y;
-            if (dx*dx + dy*dy <= PICKUP * PICKUP) colhidos.push(r);
-            else                                  restantes.push(r);
-        }
-        if (colhidos.length === 0) return;
-
-        curral.readyIcons = restantes;
-        // Mantém compat com array `ready` (icons brutos)
-        const colhidosIcons = colhidos.map(r => r.icon);
-        curral.ready = (curral.ready || []).filter(b => !colhidosIcons.includes(b));
-
-        let pontosBrutos = 0, qtd = 0;
-        for (const r of colhidos) {
-            const b = r.icon;
-            pontosBrutos += b.valorBurger || 100;
-            qtd++;
-            if (r.bounce) r.bounce.stop();
-            this.tweens.killTweensOf(b);
-            this.tweens.add({
-                targets: b,
-                x: this.nave.x, y: this.nave.y,
-                alpha: 0, scale: 0.4,
-                duration: 320, ease: 'Cubic.easeIn',
-                onComplete: () => { if (b.scene) b.destroy(); }
-            });
-        }
-        this._reflowFila(curral);
-
-        const multi = qtd>=4 ? 3 : qtd>=2 ? 2 : 1;
-        const pontos = pontosBrutos * multi;
-        this.scoreAtual += pontos;
-        this.textoScore.setText(this.scoreAtual);
-        this.combustivelAtual = Math.min(this.combustivelMax, this.combustivelAtual + 28*qtd);
-        this.cameras.main.flash(220, 255, 220, 0);
-        const lbl = '+' + pontos + (multi>1 ? ' x'+multi : '');
-        const popup = this.add.text(this.nave.x, this.nave.y-60, lbl, {
-            fontSize:'20px',fill:'#ffcc00',fontStyle:'bold'
-        }).setDepth(50).setOrigin(0.5);
-        this.tweens.add({targets:popup, y:popup.y-70, alpha:0, duration:900, onComplete:()=>popup.destroy()});
-    },
-
-    // Vaca chubby representativa no centro do curral, com anims rotativas
-    // (eat 60% / walk 30% / lie 10%). Counter "xN" maior acima.
-    // Só renderiza se mascoteCount > 0; esconde quando zera.
+    // Vaca chubby representativa com anims rotativas + counter "xN"
     _ensureCowMascote(curral) {
         if (curral.mascote && curral.mascote.scene) {
             curral.mascote.setVisible(true);
             curral.mascoteCountTxt.setVisible(true);
             return curral.mascote;
         }
-        // Sprite com .anims (puro add.sprite, sem física)
         const m = this.add.sprite(curral.x, curral.y, 'vaca_S')
             .setDisplaySize(64, 64).setDepth(2);
-
-        // State machine de idle (anim aleatória 2-4s, depois sorteia próxima)
         const dirs = ['S','SE','E','SW','W'];
         const pickAnim = () => {
             const r = Math.random();
             const dir = dirs[Math.floor(Math.random() * dirs.length)];
             let key;
-            if (r < 0.60) key = `vaca_eat_${dir}`;       // 60% comendo
-            else if (r < 0.90) key = `vaca_walk_${dir}`; // 30% andando
-            else key = `vaca_angry_${dir}`;              // 10% deitada (lie_down)
+            if (r < 0.60) key = `vaca_eat_${dir}`;
+            else if (r < 0.90) key = `vaca_walk_${dir}`;
+            else key = `vaca_angry_${dir}`;
             if (this.anims.exists(key)) m.play(key, true);
         };
         pickAnim();
-        // Roda nova anim a cada 3-5s
         m._animTimer = this.time.addEvent({
             delay: Phaser.Math.Between(3000, 5000),
             loop: true,
@@ -95,23 +45,18 @@ Object.assign(Jogo.prototype, {
                 m._animTimer.delay = Phaser.Math.Between(3000, 5000);
             }
         });
-
-        // Counter "xN" MAIOR (20px) com stroke grosso
         const txt = this.add.text(curral.x, curral.y - 48, 'x0', {
             fontSize: '22px', fill: '#ffee88', fontStyle: 'bold',
             stroke: '#000000', strokeThickness: 5
         }).setOrigin(0.5).setDepth(40);
-
         curral.mascote = m;
         curral.mascoteCount = 0;
         curral.mascoteCountTxt = txt;
-        // Começa invisível (count=0)
         m.setVisible(false);
         txt.setVisible(false);
         return m;
     },
 
-    // Atualiza visibilidade da mascote baseado no counter (esconde se 0)
     _updateMascoteVisibilidade(curral) {
         if (!curral.mascote) return;
         const visible = curral.mascoteCount > 0;
@@ -119,19 +64,47 @@ Object.assign(Jogo.prototype, {
         if (curral.mascoteCountTxt) curral.mascoteCountTxt.setVisible(visible);
     },
 
+    // Posição do slot fixo (0/1/2) abaixo do gate sul do curral
+    _slotPos(curral, slotIdx) {
+        const SLOT_W = 32;
+        const baseY = curral.y + 110;  // abaixo da entrada
+        const startX = curral.x - SLOT_W;
+        return { x: startX + slotIdx * SLOT_W, y: baseY };
+    },
+
+    _ensureSlots(curral) {
+        if (!curral.slots) curral.slots = [null, null, null];
+    },
+
+    // Conta slots livres (null) — limita aceitação de vacas
+    _slotsLivres(curral) {
+        this._ensureSlots(curral);
+        return curral.slots.filter(s => s === null).length;
+    },
+
     _dropCowsAtCurral(curral) {
-        const drop = this.vacas_abduzidas.filter(v => !v.isBurger && !v.isEnemy);
-        if (drop.length === 0) return;
-        this.vacas_abduzidas = this.vacas_abduzidas.filter(v => !drop.includes(v));
+        this._ensureSlots(curral);
+        const candidatas = this.vacas_abduzidas.filter(v => !v.isBurger && !v.isEnemy);
+        if (candidatas.length === 0) return;
+
+        const livres = this._slotsLivres(curral);
+        if (livres === 0) return;  // curral cheio — vacas continuam abduzidas
+
+        const aceitas = candidatas.slice(0, livres);
+        // Remove só as aceitas das abduzidas; restantes continuam no beam
+        this.vacas_abduzidas = this.vacas_abduzidas.filter(v => !aceitas.includes(v));
 
         this._ensureCowMascote(curral);
 
-        for (const v of drop) {
+        for (const v of aceitas) {
             if (!v.scene || !v.body) continue;
             v._inCurral = true;
-            const yld = v.burgerYield || 1;
 
-            // Incrementa counter da mascote
+            // Acha primeiro slot livre e ocupa
+            const slotIdx = curral.slots.findIndex(s => s === null);
+            if (slotIdx === -1) break;  // sanity check
+
+            // Counter +1
             curral.mascoteCount += 1;
             curral.mascoteCountTxt.setText('x' + curral.mascoteCount);
             this._updateMascoteVisibilidade(curral);
@@ -140,115 +113,120 @@ Object.assign(Jogo.prototype, {
                 duration: 320, ease: 'Back.easeOut'
             });
 
-            // Remove a vaca real do mundo (não polui o curral com vários sprites)
-            curral.processing.push(v);
-            this._spawnBurgerLoadingFila(v, curral, yld);
-            this.time.delayedCall(3000, () => this._processarVacaNoCurral(v, curral));
+            // Spawna burger LOADING já com a textura final do slot (não cicla mais)
+            const tex = BURGER_SLOTS[slotIdx];
+            const pos = this._slotPos(curral, slotIdx);
+            const icon = this.add.image(pos.x, pos.y, tex)
+                .setDepth(40).setScale(0.45).setAlpha(0.4);
+            const pisca = this.tweens.add({
+                targets: icon, alpha: 0.95, duration: 280, yoyo: true, repeat: -1
+            });
+            curral.slots[slotIdx] = { state: 'loading', icon, pisca, vaca: v, slotIdx };
+
+            // Remove a vaca real do mundo (mascote representa)
+            this.vacas = this.vacas.filter(x => x !== v);
+            this._destruirVaca(v);
+
+            // Após 3s vira ready
+            this.time.delayedCall(3000, () => this._processarSlot(curral, slotIdx));
         }
         this.cameras.main.flash(150, 100, 200, 100);
     },
 
-    // Calcula slot na fila externa (sul do curral, abaixo da porta)
-    // Retorna {x, y} no mundo. Slots de 24px de largura, em até 12 colunas; depois quebra linha.
-    _filaSlot(curral, idx) {
-        const SLOT_W = 24;
-        const PER_ROW = 12;
-        const ROW_H = 26;
-        const baseY = curral.y + 96 + 24;  // H2=96 + offset abaixo do gate
-        const col = idx % PER_ROW;
-        const row = Math.floor(idx / PER_ROW);
-        const startX = curral.x - (PER_ROW * SLOT_W) / 2 + SLOT_W/2;
-        return { x: startX + col * SLOT_W, y: baseY + row * ROW_H };
-    },
+    _processarSlot(curral, slotIdx) {
+        this._ensureSlots(curral);
+        const slot = curral.slots[slotIdx];
+        if (!slot || slot.state !== 'loading' || !slot.icon || !slot.icon.scene) return;
 
-    // Spawna ícones de burger LOADING (piscando) na fila fora do curral.
-    // Quando ficarem prontos, _processarVacaNoCurral troca pra fixos.
-    _spawnBurgerLoadingFila(v, curral, yld) {
-        if (!curral.loadingIcons) curral.loadingIcons = [];
-        if (!curral.readyIcons)   curral.readyIcons   = [];
-        const variants = ['burger_classic', 'burger_cheese', 'burger_double'];
-
-        // Remove a vaca antes de spawnar pra liberar contagem visual
-        if (v && v.scene) {
-            this.vacas = this.vacas.filter(x => x !== v);
-            this._destruirVaca(v);
-        }
-
-        for (let i = 0; i < yld; i++) {
-            const slotIdx = curral.loadingIcons.length + curral.readyIcons.length;
-            const pos = this._filaSlot(curral, slotIdx);
-            const icon = this.add.image(pos.x, pos.y, variants[0])
-                .setDepth(40).setScale(0.4).setAlpha(0.95);
-            // Piscando enquanto loading
-            const pisca = this.tweens.add({
-                targets: icon, alpha: 0.35, duration: 220, yoyo: true, repeat: -1
-            });
-            // Cycle loading sprite a cada 1s
-            this.time.delayedCall(1000, () => { if (icon.scene) icon.setTexture(variants[1]); });
-            this.time.delayedCall(2000, () => { if (icon.scene) icon.setTexture(variants[2]); });
-            curral.loadingIcons.push({ icon, pisca });
-        }
-    },
-
-    _processarVacaNoCurral(v, curral) {
-        if (!v) return;
-        const yld = v.burgerYield || 1;
-        curral.processing = curral.processing.filter(p => p !== v);
-
-        // Decrementa o counter da mascote (vaca "saiu" do estoque virando burger)
+        // Decrementa counter (vaca "saiu" do estoque)
         curral.mascoteCount = Math.max(0, curral.mascoteCount - 1);
         if (curral.mascoteCountTxt) {
             curral.mascoteCountTxt.setText('x' + curral.mascoteCount);
         }
         this._updateMascoteVisibilidade(curral);
 
-        if (!curral.loadingIcons) curral.loadingIcons = [];
-        if (!curral.readyIcons)   curral.readyIcons   = [];
+        // Para piscar e fixa burger pronto com bounce sutil
+        if (slot.pisca) slot.pisca.stop();
+        slot.icon.setAlpha(1);
+        slot.bounce = this.tweens.add({
+            targets: slot.icon,
+            y: slot.icon.y - 3,
+            duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+        });
+        slot.state = 'ready';
+    },
 
-        // Pega os primeiros yld ícones loading e converte em ready (fixos)
-        const promote = curral.loadingIcons.splice(0, yld);
-        const variants = ['burger_classic', 'burger_cheese', 'burger_double'];
-        for (const item of promote) {
-            const icon = item.icon;
+    // Atrai burgers ready em direção à nave quando o beam está ativo e burger no raioCone
+    _atrairBurgersBeam(curral) {
+        this._ensureSlots(curral);
+        const beamOn = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
+        if (!beamOn || this.energiaLed <= 0) return;
+        const r2 = (this.raioCone || 100) * (this.raioCone || 100);
+        for (let i = 0; i < curral.slots.length; i++) {
+            const slot = curral.slots[i];
+            if (!slot || slot.state !== 'ready' || slot._sendoColetado) continue;
+            const icon = slot.icon;
             if (!icon || !icon.scene) continue;
-            // Para o piscar e fixa
-            if (item.pisca) item.pisca.stop();
-            icon.setAlpha(1);
-            icon.setTexture(variants[Phaser.Math.Between(0, 2)]);
-            // Bounce sutil pra mostrar que está pronto
-            const ready = {
-                icon,
-                bounce: this.tweens.add({
-                    targets: icon, y: icon.y - 3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-                })
-            };
-            ready.icon.valorBurger = 100;
-            curral.readyIcons.push(ready);
-            curral.ready.push(icon);  // mantém compat com _coletarDoCurral
+            const dx = icon.x - this.nave.x, dy = icon.y - this.nave.y;
+            if (dx*dx + dy*dy > r2) continue;
+            // Dentro do beam: dispara coleta
+            this._coletarSlot(curral, i);
         }
     },
 
-    // DEPRECATED — substituído por _coletarBurgersPerto (coleta in-place por proximidade)
-    // Mantido como no-op pra compat caso seja chamado de algum lugar.
-    _coletarDoCurral(curral) { /* no-op */ },
-
-    // Repõe os ícones loading restantes pros slots iniciais da fila
-    _reflowFila(curral) {
-        const all = [...(curral.loadingIcons || [])];
-        all.forEach((item, i) => {
-            const pos = this._filaSlot(curral, i);
-            if (item.icon && item.icon.scene) {
+    _coletarSlot(curral, slotIdx) {
+        const slot = curral.slots[slotIdx];
+        if (!slot || slot._sendoColetado) return;
+        slot._sendoColetado = true;
+        const icon = slot.icon;
+        const pontos = SLOT_VALOR[slotIdx] || 100;
+        const fuel   = SLOT_FUEL[slotIdx] || 28;
+        if (slot.bounce) slot.bounce.stop();
+        this.tweens.killTweensOf(icon);
+        // Tween de atração pra nave (efeito beam)
+        this.tweens.add({
+            targets: icon,
+            x: this.nave.x, y: this.nave.y,
+            scale: 0.25, alpha: 0,
+            duration: 380, ease: 'Cubic.easeIn',
+            onUpdate: () => {
+                // Atualiza pra acompanhar movimento da nave
+                if (icon.scene && this.nave) {
+                    // segue dinamicamente o destino
+                }
+            },
+            onComplete: () => {
+                if (icon.scene) icon.destroy();
+                // Aplica recompensa ao chegar
+                this.scoreAtual += pontos;
+                this.textoScore.setText(this.scoreAtual);
+                this.combustivelAtual = Math.min(this.combustivelMax, this.combustivelAtual + fuel);
+                this.cameras.main.flash(140, 255, 220, 0);
+                const lbl = `+${pontos}`;
+                const popup = this.add.text(this.nave.x, this.nave.y - 50, lbl, {
+                    fontSize: '18px', fill: '#ffcc00', fontStyle: 'bold'
+                }).setDepth(50).setOrigin(0.5);
                 this.tweens.add({
-                    targets: item.icon, x: pos.x, y: pos.y,
-                    duration: 240, ease: 'Cubic.easeOut'
+                    targets: popup, y: popup.y - 60, alpha: 0,
+                    duration: 700, onComplete: () => popup.destroy()
                 });
+                // Libera o slot
+                curral.slots[slotIdx] = null;
             }
         });
     },
 
+    // Compat com tutorial e radar (verifica se tem burger pronto pra coletar)
     _anyCurralReady() {
-        for (const c of this.currais) if (c.ready && c.ready.length > 0) return true;
+        for (const c of this.currais) {
+            if (!c.slots) continue;
+            if (c.slots.some(s => s && s.state === 'ready' && !s._sendoColetado)) return true;
+        }
         return false;
-    }
+    },
+
+    // No-op compat
+    _coletarDoCurral() { /* substituído por _atrairBurgersBeam */ },
+    _coletarBurgersPerto() { /* substituído por _atrairBurgersBeam */ },
 
 });
