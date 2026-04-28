@@ -140,19 +140,43 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - `tools/organize_cercas_v2.py` — copia inbox → chars/nature/cercas_v2 com nomes legíveis
 - Skill `~/.claude/skills/pixellab-asset-download/SKILL.md` documenta o padrão completo
 
+### ✅ Pronto (cont. — sessão 2026-04-29 noite)
+- **Atmosphere system** (`js/18_atmosphere.js`) — 6 TOD presets + auto-cycle + 5 weather (clear/rain/snow/fog/storm) + storm flash
+- **Snow weather** com flocos brancos r=1-3.5px com drift sinuoso
+- **Tutorial reorganização** completa: BEAM_VISUAL/GRAVITON_BAR/ABDUCT/DELIVER/BURGER/COMBUSTIVEL com flags separadas (`_tutBeamNoDrain` vs `_tutBeamNoPull`)
+- **Tutorial bug GRAVITON_BAR travado** corrigido (drain/regen estavam bloqueados)
+- **Vaca chubby sprite no curral** (mascote 68px com anim `vaca_eat_S` fixa + hay bale 84×76)
+- **3 slots fixos por curral** (classic/cheese/double, pontos progressivos 100/150/220)
+- **Coleta de hamburger via beam graviton** (atrai burgers ready dentro do raioCone)
+- **Curral variants** random (4 tipos: padrão / rústico fechado / grande aberto duplo / pequeno reto)
+- **Sliders editáveis** (digita valor direto no number input ao lado)
+- **Sensibilidade discreto** 1/1.25/1.5
+- **Toggle Input WASD/Mouse** no menu CONFIGS
+- **Toggle Language ENG/PTBR** no menu CONFIGS + sistema i18n
+- **CONFIGS menu acessível desde splash** (ESC funciona antes do jogo)
+- **Botão PREVIEW** (5s timeslice + esconde inimigos + checkbox shuffle)
+- **Splash multi-stage** (PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD)
+- **Splash fit-to-screen** + barrel ativo desde o loading
+- **Hit area expandida** dos botões (compensa barrel post-fx)
+- **Responsividade mobile** (`<meta viewport>` faltando + safe-area + media query 100% no celular)
+- **Mobile controls fade** (silhueta 0.25 → invisível 0.0 ao tocar)
+- **Beam capacity rework** (cap 5 vacas/bois OU 1 fazendeiro mutex; nave -10% velocidade por animal)
+- **Fazendeiro bounce 0.45** em vaca/boi/cacto (sem dano)
+- **HUD acima do atmosphere** (depth 100 → 200) + radar desce R/2
+- **Linha verde dos cantos** eliminada
+- **Skill `pixellab-asset-download`** + 3 memórias (perguntas explícitas, prompts complexos, heartbeat)
+
 ### 🚧 Em andamento
-- **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida)
-- **Tutorial reorganização**: separar BARS em GRAVITON (após BEAM) + COMBUSTIVEL (após BURGER) — pedido do usuário
-- **Curral variations**: portas abertas/fechadas, cantos retos/redondos usando os assets v2 — pedido do usuário
-- **Coleta de hamburger no tutorial**: highlight no burger + coleta na posição do burger (não em cima do curral) — pedido do usuário
-- **Vaca chubby sprite no curral**: substituir cima_sobe/cima_desce pelo chubby idle/walk/eat — pedido do usuário
+- **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
+- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida)
 
 ### 🔜 Próximos passos
-1. **Salvar configs do user como defaults no git** — pegar `localStorage.getItem('chapEscapadeDebug')` do user e fazer override de `DBG_DEFAULTS` em `js/15_debug_menu.js` pra todos jogadores começarem com a mesma experiência tunada
-2. **Toggle de input WASD + Space** na aba CONTROLES do debug menu — alternativa ao mouse (W/A/S/D pra mover, Space pra graviton); manter mouse como padrão
-3. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-4. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
-5. **Balde de leite** no curral (item não existe ainda — gerar via PixelLab MCP ou `/create-object`)
+1. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + adicionar migration code
+2. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+3. **Etapas 7-9 do tutorial** (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar texto + glow + condições
+4. **Labels de inputs** com `data-i18n` no menu CONFIGS (ainda só legends/notes/buttons traduzidos)
+5. **Balde de leite** no curral (gerar via PixelLab MCP)
+6. **Tileset Wang real** com transição grass↔sand↔dirt
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
