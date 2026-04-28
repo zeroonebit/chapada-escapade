@@ -30,27 +30,32 @@ Object.assign(Jogo.prototype, {
             fall();
         }
 
-        // ── NEBLINA ────────────────────────────────────────────────────
-        // 3 retângulos com alpha baixo e tints diferentes que pulsam de alpha
-        this.fxFog = this.add.container(0, 0).setScrollFactor(0).setDepth(170).setVisible(false);
-        const fogLayers = [
-            { col: 0xeeeeee, a: 0.10, dur: 4000 },
-            { col: 0xccddee, a: 0.08, dur: 5500 },
-            { col: 0xaaccdd, a: 0.06, dur: 7000 },
-        ];
-        fogLayers.forEach(({col, a, dur}) => {
-            const r = this.add.rectangle(w/2, h/2, w*1.5, h*1.5, col, a);
-            this.fxFog.add(r);
-            this.tweens.add({
-                targets: r,
-                alpha: { from: a*0.4, to: a*1.4 },
-                duration: dur, yoyo: true, repeat: -1
-            });
-            this.tweens.add({
-                targets: r,
-                x: { from: w/2 - 30, to: w/2 + 30 },
-                duration: dur*1.3, yoyo: true, repeat: -1
-            });
+        // ── NEBLINA (vinheta com gradiente radial) ────────────────────
+        // Gera uma textura canvas com radial gradient: centro transparente,
+        // bordas brancas com alpha médio. Mesmo conceito da fumaça (camadas
+        // alpha) mas em formato de vinheta full-screen.
+        if (!this.textures.exists('vignette_neblina')) {
+            const SZ = 512;
+            const c = document.createElement('canvas');
+            c.width = SZ; c.height = SZ;
+            const ctx = c.getContext('2d');
+            const grad = ctx.createRadialGradient(SZ/2, SZ/2, SZ*0.10, SZ/2, SZ/2, SZ*0.55);
+            grad.addColorStop(0.00, 'rgba(255,255,255,0.00)');
+            grad.addColorStop(0.40, 'rgba(255,255,255,0.05)');
+            grad.addColorStop(0.70, 'rgba(255,255,255,0.18)');
+            grad.addColorStop(1.00, 'rgba(255,255,255,0.40)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, SZ, SZ);
+            this.textures.addCanvas('vignette_neblina', c);
+        }
+        this.fxFog = this.add.image(w/2, h/2, 'vignette_neblina')
+            .setScrollFactor(0).setDepth(170).setVisible(false);
+        this.fxFog.setDisplaySize(w * 1.05, h * 1.05);
+        // Pulsação suave de alpha pra dar vida sem distrair
+        this.tweens.add({
+            targets: this.fxFog,
+            alpha: { from: 0.85, to: 1.0 },
+            duration: 4500, yoyo: true, repeat: -1
         });
 
         // Resize: recompõe os tamanhos
@@ -59,11 +64,9 @@ Object.assign(Jogo.prototype, {
 
     _fxResize() {
         const w = this.scale.width, h = this.scale.height;
-        if (this.fxFog) {
-            this.fxFog.list.forEach(r => {
-                r.setPosition(w/2, h/2);
-                r.setSize(w*1.5, h*1.5);
-            });
+        if (this.fxFog && this.fxFog.setDisplaySize) {
+            this.fxFog.setPosition(w/2, h/2);
+            this.fxFog.setDisplaySize(w * 1.05, h * 1.05);
         }
     },
 
