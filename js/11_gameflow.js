@@ -19,7 +19,7 @@ Object.assign(Jogo.prototype, {
 
         // ── Botões JOGAR / TUTORIAL — afastados pros cantos inferiores ─
         const BTN_W = 180, BTN_H = 46;
-        const SIDE_PAD = 60;            // afastamento da lateral
+        const SIDE_PAD = 150;           // 60 + BTN_W/2 (puxa cada botão metade do tamanho pro centro)
         const bY = h - 38;              // mais perto da base
         const xLeft  = SIDE_PAD + BTN_W/2;
         const xRight = w - SIDE_PAD - BTN_W/2;
