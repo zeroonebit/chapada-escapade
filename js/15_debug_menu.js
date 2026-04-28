@@ -92,10 +92,13 @@ Object.assign(Jogo.prototype, {
             #debug-menu label { display:flex; align-items:center; justify-content:space-between;
                 margin:3px 0; gap:8px; cursor:pointer; }
             #debug-menu label:hover { color:#ffffff; }
-            #debug-menu input[type=range] { flex:1; max-width:130px; accent-color:#00ff55; }
+            #debug-menu input[type=range] { flex:1; max-width:120px; accent-color:#00ff55; }
             #debug-menu input[type=number] { width:54px; background:#001a08; color:#aaffcc;
-                border:1px solid #224433; padding:2px 4px; }
-            #debug-menu .val { min-width:40px; text-align:right; color:#00ff55; font-weight:bold; }
+                border:1px solid #224433; padding:2px 4px; font-family:inherit; font-size:11px; }
+            #debug-menu input.val { width:56px; text-align:right; color:#00ff55;
+                font-weight:bold; background:#001a08; border:1px solid #224433;
+                padding:2px 4px; font-family:inherit; font-size:11px; }
+            #debug-menu input.val:focus { outline:1px solid #00ff55; }
             #debug-menu .btn-row { display:flex; gap:6px; margin-top:10px; }
             #debug-menu button { flex:1; background:#00aa44; color:#001a08; border:none;
                 padding:7px 8px; font-family:inherit; font-weight:bold; cursor:pointer;
@@ -130,26 +133,27 @@ Object.assign(Jogo.prototype, {
                                 <option value="wasd">WASD + Space</option>
                             </select></label>
                         <label><span>Sensibilidade</span>
-                            <input type="range" min="0.1" max="5" step="0.01" data-cfg="behavior.sensibilidade">
-                            <span class="val" data-show="behavior.sensibilidade"></span></label>
+                            <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensibilidade" list="sens-ticks">
+                            <datalist id="sens-ticks"><option value="1"></option><option value="1.25"></option><option value="1.5"></option></datalist>
+                            <input type="number" class="val" data-show="behavior.sensibilidade" /></label>
                         <label><span>Rotação disco</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.discoRot">
-                            <span class="val" data-show="behavior.discoRot"></span></label>
+                            <input type="number" class="val" data-show="behavior.discoRot" /></label>
                         <label><span>Força beam (pull)</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
-                            <span class="val" data-show="behavior.pullBeam"></span></label>
+                            <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
                     <fieldset>
                         <legend>ENTIDADES</legend>
                         <label><span>Velocidade vacas/bois</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velVaca">
-                            <span class="val" data-show="behavior.velVaca"></span></label>
+                            <input type="number" class="val" data-show="behavior.velVaca" /></label>
                         <label><span>Velocidade fazendeiros</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velFaz">
-                            <span class="val" data-show="behavior.velFaz"></span></label>
+                            <input type="number" class="val" data-show="behavior.velFaz" /></label>
                         <label><span>Dano atiradores</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.danoAtirador">
-                            <span class="val" data-show="behavior.danoAtirador"></span></label>
+                            <input type="number" class="val" data-show="behavior.danoAtirador" /></label>
                     </fieldset>
                     <fieldset>
                         <legend>QUANTIDADES (reiniciar)</legend>
@@ -167,28 +171,28 @@ Object.assign(Jogo.prototype, {
                         <legend>ESCALAS</legend>
                         <label><span>Vaca</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
-                            <span class="val" data-show="scale.vaca"></span></label>
+                            <input type="number" class="val" data-show="scale.vaca" /></label>
                         <label><span>Boi</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
-                            <span class="val" data-show="scale.boi"></span></label>
+                            <input type="number" class="val" data-show="scale.boi" /></label>
                         <label><span>Fazendeiro</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
-                            <span class="val" data-show="scale.faz"></span></label>
+                            <input type="number" class="val" data-show="scale.faz" /></label>
                         <label><span>Beam radius</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.beam">
-                            <span class="val" data-show="scale.beam"></span></label>
+                            <input type="number" class="val" data-show="scale.beam" /></label>
                         <label><span>Nave (UFO)</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.nave">
-                            <span class="val" data-show="scale.nave"></span></label>
+                            <input type="number" class="val" data-show="scale.nave" /></label>
                         <label><span>Hambúrguer</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.burger">
-                            <span class="val" data-show="scale.burger"></span></label>
+                            <input type="number" class="val" data-show="scale.burger" /></label>
                     </fieldset>
                     <fieldset>
                         <legend>CÂMERA</legend>
                         <label><span>Distorção esférica</span>
                             <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">
-                            <span class="val" data-show="behavior.barrel"></span></label>
+                            <input type="number" class="val" data-show="behavior.barrel" /></label>
                     </fieldset>
                 </div>
 
@@ -200,26 +204,26 @@ Object.assign(Jogo.prototype, {
                         <label><span>Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
                         <label><span>Intensidade (alpha)</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
-                            <span class="val" data-show="fx.chuvaIntensidade"></span></label>
+                            <input type="number" class="val" data-show="fx.chuvaIntensidade" /></label>
                         <label><span>Frequência (gotas)</span>
                             <input type="range" min="0" max="400" step="5" data-cfg="fx.chuvaCount">
-                            <span class="val" data-show="fx.chuvaCount"></span></label>
+                            <input type="number" class="val" data-show="fx.chuvaCount" /></label>
                         <label><span>Ângulo (-1=esq, +1=dir)</span>
                             <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
-                            <span class="val" data-show="fx.chuvaAngulo"></span></label>
+                            <input type="number" class="val" data-show="fx.chuvaAngulo" /></label>
                         <label><span>Velocidade</span>
                             <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
-                            <span class="val" data-show="fx.chuvaVelocidade"></span></label>
+                            <input type="number" class="val" data-show="fx.chuvaVelocidade" /></label>
                         <label><span>Comprimento traço</span>
                             <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.chuvaTamanho">
-                            <span class="val" data-show="fx.chuvaTamanho"></span></label>
+                            <input type="number" class="val" data-show="fx.chuvaTamanho" /></label>
                     </fieldset>
                     <fieldset>
                         <legend>NEBLINA</legend>
                         <label><span>Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
                         <label><span>Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
-                            <span class="val" data-show="fx.neblinaIntensidade"></span></label>
+                            <input type="number" class="val" data-show="fx.neblinaIntensidade" /></label>
                     </fieldset>
                     <fieldset>
                         <legend>EFEITOS</legend>
@@ -267,7 +271,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Bind inputs
+        // Bind inputs (range / checkbox / number sem .val)
         root.querySelectorAll('input[data-cfg]').forEach(input => {
             const [section, key] = input.dataset.cfg.split('.');
             const v = this.dbg[section][key];
@@ -276,8 +280,17 @@ Object.assign(Jogo.prototype, {
             } else {
                 input.value = v;
             }
-            const display = root.querySelector(`[data-show="${input.dataset.cfg}"]`);
-            if (display) display.textContent = (typeof v === 'number') ? v.toFixed(2) : v;
+            // Display = number editavel ao lado do range
+            const display = root.querySelector(`input.val[data-show="${input.dataset.cfg}"]`);
+            if (display) {
+                display.value = (typeof v === 'number') ? v.toFixed(2) : v;
+                // Copia step/min/max do slider pro number input pra UX consistente
+                if (input.type === 'range') {
+                    display.step = input.step;
+                    display.min  = input.min;
+                    display.max  = input.max;
+                }
+            }
 
             input.addEventListener('input', () => {
                 let val;
@@ -288,10 +301,34 @@ Object.assign(Jogo.prototype, {
                 this.dbg[section][key] = val;
                 this._saveDebugCfg();
 
-                if (display && typeof val === 'number') display.textContent = val.toFixed(2);
+                if (display && typeof val === 'number') display.value = val.toFixed(2);
 
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
             });
+        });
+
+        // Bind dos number inputs editaveis (.val) — usuario digita -> atualiza slider + dbg
+        root.querySelectorAll('input.val[data-show]').forEach(numInp => {
+            const cfg = numInp.dataset.show;
+            const [section, key] = cfg.split('.');
+            const slider = root.querySelector(`input[type=range][data-cfg="${cfg}"]`);
+            const apply = () => {
+                let val = parseFloat(numInp.value);
+                if (isNaN(val)) return;
+                if (slider) {
+                    const min = parseFloat(slider.min);
+                    const max = parseFloat(slider.max);
+                    if (!isNaN(min) && val < min) val = min;
+                    if (!isNaN(max) && val > max) val = max;
+                    slider.value = val;
+                }
+                this.dbg[section][key] = val;
+                this._saveDebugCfg();
+                numInp.value = val.toFixed(2);
+                if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
+            };
+            numInp.addEventListener('change', apply);  // confirma com Enter ou blur
+            numInp.addEventListener('blur', apply);
         });
 
         // Bind <select> (input mode etc)
