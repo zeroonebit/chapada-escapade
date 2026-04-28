@@ -123,8 +123,15 @@ Object.assign(Jogo.prototype, {
         }
     },
 
+    // M7: debounce 500ms — slider drag dispara setItem ~10x/s sem isso
     _saveDebugCfg() {
-        if (this.dbg) localStorage.setItem(DBG_KEY, JSON.stringify(this.dbg));
+        if (!this.dbg) return;
+        if (this._saveDbgTimer) clearTimeout(this._saveDbgTimer);
+        this._saveDbgTimer = setTimeout(() => {
+            try { localStorage.setItem(DBG_KEY, JSON.stringify(this.dbg)); }
+            catch (e) { console.warn('[DBG SAVE FAIL]', e); }
+            this._saveDbgTimer = null;
+        }, 500);
     },
 
     _setupDebugMenu() {

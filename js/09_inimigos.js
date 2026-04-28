@@ -47,6 +47,11 @@ Object.assign(Jogo.prototype, {
             if (!emRange || at.cooldown > 0) continue;
 
             at.cooldown = Phaser.Math.Between(2000, 3500);
+            // M5: cap rígido de 100 balas — descarta a mais antiga se cheio
+            if (this.balas.length >= 100) {
+                const oldest = this.balas.shift();
+                if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
+            }
             const ang = Math.atan2(dy, dx);
             const bSprite = this.add.circle(at.x, at.y, 5, 0xff4400).setDepth(8);
             this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
@@ -185,6 +190,11 @@ Object.assign(Jogo.prototype, {
             if (distSq <= SHOOT_SQ && distSq > 80*80 && f._cooldown <= 0) {
                 f._cooldown = Phaser.Math.Between(2200, 3800);
                 const ang = Math.atan2(dy, dx);
+                // Cap rígido (M5)
+                if (this.balas.length >= 100) {
+                    const oldest = this.balas.shift();
+                    if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
+                }
                 const bSprite = this.add.circle(f.x, f.y, 4, 0xff4400).setDepth(8);
                 this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
                 const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);

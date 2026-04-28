@@ -190,6 +190,22 @@ Object.assign(Jogo.prototype, {
         this.time.delayedCall(Phaser.Math.Between(0, 1500), fall);
     },
 
+    _scheduleRebuildRain() {
+        if (this._rainRebuildTimer) clearTimeout(this._rainRebuildTimer);
+        this._rainRebuildTimer = setTimeout(() => {
+            this._rebuildRain();
+            this._rainRebuildTimer = null;
+        }, 200);
+    },
+
+    _scheduleRebuildSnow() {
+        if (this._snowRebuildTimer) clearTimeout(this._snowRebuildTimer);
+        this._snowRebuildTimer = setTimeout(() => {
+            this._rebuildSnow();
+            this._snowRebuildTimer = null;
+        }, 200);
+    },
+
     _fxResize() {
         const w = this.scale.width, h = this.scale.height;
         if (this.fxFog && this.fxFog.setDisplaySize) {
@@ -223,15 +239,16 @@ Object.assign(Jogo.prototype, {
             const visible = !!cfg.chuva;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
+            // H3: debounce 200ms pra evitar churn em slider drag
             const targetCount = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
-            if (targetCount !== this._rainCountAtual) this._rebuildRain();
+            if (targetCount !== this._rainCountAtual) this._scheduleRebuildRain();
         }
         if (this.fxSnow) {
             const visible = !!cfg.snow;
             this.fxSnow.setVisible(visible);
             if (visible) this.fxSnow.setAlpha(cfg.snowIntensidade ?? 0.85);
             const targetCount = Math.max(0, Math.round(cfg.snowCount ?? 100));
-            if (targetCount !== this._snowCountAtual) this._rebuildSnow();
+            if (targetCount !== this._snowCountAtual) this._scheduleRebuildSnow();
         }
         if (this.fxFog) {
             const visible = !!cfg.neblina;
