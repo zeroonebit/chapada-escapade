@@ -103,6 +103,9 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_burgers_box',       'assets/pixel_labs/hud/burgers.png');
         this.load.image('hud_frame_combustivel', 'assets/pixel_labs/hud/combustivel.png');
         this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
+        this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
+        this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
+        this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
         // ── BURGERS (3 variantes) ────────────────────────────────────
         this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
         this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');

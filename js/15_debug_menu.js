@@ -440,6 +440,7 @@ Object.assign(Jogo.prototype, {
                 }
                 if (section === 'behavior' && key === 'lang') {
                     if (this._applyMenuI18n) this._applyMenuI18n();
+                    if (this._applyHudI18n) this._applyHudI18n();
                 }
             });
         });
