@@ -28,7 +28,7 @@ Object.assign(Jogo.prototype, {
         const now = this.time?.now ?? 0;
         if (entity._lastHitT && (now - entity._lastHitT) < 120) return;
 
-        // ROCHA: dano por hit. Vaca/boi tem hp 3-5; fazendeiro tem hp 1 (morre direto)
+        // ROCHA: única forma de morte do fazendeiro. Vaca/boi tem hp 3-5
         if (otherLabel === 'rocha') {
             if (!isHighImpact) return;
             entity._lastHitT = now;
@@ -40,14 +40,18 @@ Object.assign(Jogo.prototype, {
         }
         // VACA-VACA / VACA-BOI / BOI-BOI: dano só com impacto de alta velocidade
         else if (otherLabel === 'vaca' || otherLabel === 'boi') {
-            if (entityIsEnemy) return;       // farmer NÃO toma dano de cow contact
-            if (!isHighImpact) return;       // toque suave: só quica (matter handles)
+            if (entityIsEnemy) return;       // fazendeiro: bounce físico, sem dano
+            if (!isHighImpact) return;
             entity._lastHitT = now;
             entity._hp = (entity._hp ?? 1) - 1;
             this._hitFlash(entity, 0xffcc44);
             if (entity._hp <= 0) this._explodir(entity, 0xff2222);
         }
-        // FAZENDEIRO: cow vs farmer — NINGUÉM toma dano (faz só morre em rocha)
+        // CACTO/MOITA: fazendeiro só quica, sem dano. Vaca/boi também não toma dano.
+        else if (otherLabel === 'moita') {
+            return;  // bounce já tratado pelo Matter (setBounce na entidade)
+        }
+        // FAZENDEIRO: cow vs farmer — ninguém toma dano (físico só)
         else if (otherLabel === 'fazendeiro') {
             return;
         }

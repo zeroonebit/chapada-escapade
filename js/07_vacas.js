@@ -181,26 +181,32 @@ Object.assign(Jogo.prototype, {
 
     // ── ABDUÇÃO E FÍSICA NO FEIXE ────────────────────────────────────
     _tentarAbduzir() {
+        // Conta carga atual: vacas/bois (não-burger, não-enemy) e fazendeiros (isEnemy)
+        const cargaVacas    = this.vacas_abduzidas.filter(v => !v.isBurger && !v.isEnemy).length;
+        const cargaFarmers  = this.vacas_abduzidas.filter(v => v.isEnemy).length;
+        // Mutex: vaca/boi e fazendeiro não convivem no beam
+        const podeVacas    = cargaFarmers === 0 && cargaVacas < 5;
+        const podeFarmers  = cargaVacas === 0 && cargaFarmers < 1;
+
         const tryAbduct = (v) => {
-            if (this.vacas_abduzidas.length >= 5) return;
-            // Beam IGNORA presaNaGrama (resgata da grama) — só bloqueia se já abduzida/morta/no curral
             if (v._dying || v._destroyed || v.presaNaMoita || v._inCurral || this.vacas_abduzidas.includes(v)) return;
-            let d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, v.x, v.y);
-            if (d <= this.raioCone) {
-                // Resgata da grama se estiver presa
-                if (v.presaNaGrama) {
-                    v.presaNaGrama = false;
-                    if (v.scene && v.body) {
-                        v.setStatic(false);
-                        v.clearTint();
-                    }
+            // Filtra por mutex
+            if (v.isEnemy && !podeFarmers) return;
+            if (!v.isEnemy && !podeVacas) return;
+            const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, v.x, v.y);
+            if (d > this.raioCone) return;
+            if (v.presaNaGrama) {
+                v.presaNaGrama = false;
+                if (v.scene && v.body) {
+                    v.setStatic(false);
+                    v.clearTint();
                 }
-                this.vacas_abduzidas.push(v);
-                v.setFrictionAir(0.015).setDepth(3);
-                v.setAngularVelocity((Math.random() - 0.5) * 0.4); // spin inicial pra glissagem
-                if (v.walkTimer) v.walkTimer.paused = true;
-                if (this._spawnCaptureRings) this._spawnCaptureRings(v);
             }
+            this.vacas_abduzidas.push(v);
+            v.setFrictionAir(0.015).setDepth(3);
+            v.setAngularVelocity((Math.random() - 0.5) * 0.4);
+            if (v.walkTimer) v.walkTimer.paused = true;
+            if (this._spawnCaptureRings) this._spawnCaptureRings(v);
         };
         this.vacas.forEach(tryAbduct);
         this.fazendeiros.forEach(tryAbduct);

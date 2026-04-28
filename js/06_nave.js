@@ -74,14 +74,20 @@ Object.assign(Jogo.prototype, {
     },
 
     _moverNave(c) {
-        if (this._tutFreezeNave) return;  // tutorial: trava nave em certas etapas
+        if (this._tutFreezeNave) return;
         let dist = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
-            let ang = Phaser.Math.Angle.Between(this.nave.x, this.nave.y, c.x, c.y);
+            // Carga: -10% velocidade por vaca/boi abduzido (max -50% com 5 animais)
+            // Fazendeiros NÃO desaceleram a nave
+            const cargaVacas = (this.vacas_abduzidas || [])
+                .filter(v => !v.isBurger && !v.isEnemy).length;
+            const cargaMul = Math.max(0.5, 1 - 0.10 * cargaVacas);
+            const ang = Phaser.Math.Angle.Between(this.nave.x, this.nave.y, c.x, c.y);
+            const mag = Math.min(dist*0.0001, 0.0035) * sens * cargaMul;
             this.nave.applyForce({
-                x: Math.cos(ang) * Math.min(dist*0.0001, 0.0035) * sens,
-                y: Math.sin(ang) * Math.min(dist*0.0001, 0.0035) * sens
+                x: Math.cos(ang) * mag,
+                y: Math.sin(ang) * mag,
             });
         }
     },

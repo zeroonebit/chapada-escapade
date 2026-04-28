@@ -23,8 +23,11 @@ Object.assign(Jogo.prototype, {
             curral.mascoteCountTxt.setVisible(true);
             return curral.mascote;
         }
-        const m = this.add.sprite(curral.x, curral.y, 'vaca_S')
-            .setDisplaySize(64, 64).setDepth(2);
+        // Usa o primeiro frame do eat anim (chubby comendo) como textura inicial
+        // garantida — evita ficar sprite estático antigo se anim não disparar
+        const initTex = this.textures.exists('vaca_eat_S_0') ? 'vaca_eat_S_0' : 'vaca_S';
+        const m = this.add.sprite(curral.x, curral.y, initTex)
+            .setDisplaySize(72, 72).setDepth(2);
         const dirs = ['S','SE','E','SW','W'];
         const pickAnim = () => {
             const r = Math.random();
@@ -34,6 +37,11 @@ Object.assign(Jogo.prototype, {
             else if (r < 0.90) key = `vaca_walk_${dir}`;
             else key = `vaca_angry_${dir}`;
             if (this.anims.exists(key)) m.play(key, true);
+            else {
+                // Fallback: usa frame estático do eat
+                const fb = `vaca_eat_${dir}_0`;
+                if (this.textures.exists(fb)) m.setTexture(fb);
+            }
         };
         pickAnim();
         m._animTimer = this.time.addEvent({

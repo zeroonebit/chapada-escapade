@@ -116,7 +116,7 @@ Object.assign(Jogo.prototype, {
             f.isEnemy = true;
             // HP=1: fazendeiro só morre em pedra com impacto alto
             f._hp = 1;
-            f.setBounce(0.2);
+            f.setBounce(0.45);  // bounce mais visível ao bater em vaca/boi/cacto
             f.wanderAngle = Math.random() * Math.PI * 2;
             f._wandering = true;
             f._cooldown = Phaser.Math.Between(1000, 3500);
