@@ -11,24 +11,24 @@ const TUT_STEPS = [
         highlight: ['nave'],
     },
     {
-        key: 'BEAM',
-        title: '② FEIXE GRAVITON',
-        text: 'Segure o botão do mouse (ou botão direito no mobile) para ativar o feixe graviton da nave.',
-        note: 'Ative o feixe para avançar.',
+        key: 'BEAM_VISUAL',
+        title: '② BEAM (visual only)',
+        text: 'Hold the button to activate the gravity beam visually. Right now it does NOT pull anything yet — just feel the activation.',
+        note: 'Activate the beam at least once to advance.',
         highlight: ['nave'],
     },
     {
         key: 'GRAVITON_BAR',
-        title: '③ BARRA DE GRAVITON',
-        text: 'Essa barra azul no rodapé é o GRAVITON da nave. Ela depleta enquanto você usa o feixe e regenera sozinha quando você solta.\n\nSem graviton o feixe desliga.',
-        note: 'Ative e solte o feixe algumas vezes para ver a barra oscilar.',
+        title: '③ GRAVITON BAR',
+        text: 'The blue bar at the bottom is your GRAVITON energy. Holding the beam drains it (2x speed in this tutorial). Releasing recharges it.\n\nRun it below 50% then let it recharge fully.',
+        note: 'Drain below 50% then release to recharge to 100%.',
         highlight: ['graviton'],
     },
     {
         key: 'ABDUCT',
-        title: '④ ABDUZIR UMA VACA',
-        text: 'Posicione a nave sobre uma vaca ou boi e ative o feixe. O animal será atraído.',
-        note: 'Abduzir pelo menos 1 animal para avançar.',
+        title: '④ ABDUCT A COW',
+        text: 'Beam now works for real! Position the ship over a cow and activate the beam to lift it up.',
+        note: 'Abduct at least 1 cow to advance.',
         highlight: ['vacas'],
     },
     {
@@ -40,17 +40,10 @@ const TUT_STEPS = [
     },
     {
         key: 'BURGER',
-        title: '⑥ COLETAR HAMBÚRGUER',
-        text: 'Aguarde a vaca se transformar em hambúrguer (3 segundos) e passe SOBRE o burger destacado para coletar.',
-        note: 'Colete o hambúrguer para avançar.',
-        highlight: ['burger_pronto'],
-    },
-    {
-        key: 'COMBUSTIVEL_BAR',
-        title: '⑦ BARRA DE COMBUSTÍVEL',
-        text: 'Essa barra amarela é o COMBUSTÍVEL da nave. Cada hambúrguer coletado RESTAURA combustível.\n\nSe esvaziar = game over. É a sua barra de vida.',
-        note: 'Continue para ver como o combustível depleta quando você toma dano.',
-        highlight: ['combustivel'],
+        title: '⑥ COLLECT THE BURGER',
+        text: 'Wait for the cow to become a burger (3 seconds), then activate the beam near it to absorb it.\n\nLook at the YELLOW bar — your FUEL is critically low (15%). Each burger restores fuel.',
+        note: 'Collect a burger to refill your fuel.',
+        highlight: ['burger_pronto', 'combustivel'],
     },
     {
         key: 'TAKE_DAMAGE',
@@ -93,7 +86,7 @@ Object.assign(Jogo.prototype, {
         this._tutBox   = null;
         this._tutBarsGravitonWatched = false;
 
-        // Limpa entidades inimizas — modo tutorial começa limpo
+        // Limpa entidades inimigas — modo tutorial começa limpo
         (this.fazendeiros || []).slice().forEach(f => {
             if (f && f.scene) { f._destroyed = true; f.destroy(); }
         });
@@ -101,24 +94,49 @@ Object.assign(Jogo.prototype, {
         (this.atiradores || []).slice().forEach(t => { if (t && t.scene) t.destroy(); });
         this.atiradores = [];
 
-        // Remove vacas existentes, spawna 2 perto da nave (sem lotação confusa)
+        // Remove vacas existentes — só spawna na etapa ABDUCT (com 50 globais)
         (this.vacas || []).slice().forEach(v => {
             if (v && v.scene && !v.isBurger) { v._destroyed = true; v.destroy(); }
         });
         this.vacas = [];
 
         const cx = this.nave.x, cy = this.nave.y;
-        this._tutSpawnVacas(8);
-
         // Garante 1 curral próximo
         if (!this.currais || this.currais.length === 0) {
             this._construirCurral(cx + 480, cy + 300);
         }
 
-        // Combustível não drena durante tutorial (exceto na etapa BARS onde mostramos)
+        // Estado inicial: barras escondidas, beam visual only desligado, drains normal
         this._tutCombustivelCongelado = true;
+        this._tutBeamVisualOnly = false;          // só liga em BEAM_VISUAL
+        this._tutGravitonDrain2x  = false;
+        this._tutVacasImortais    = false;
+        this._setBarrasVisibility(false, false);  // ambas escondidas
 
         this._tutShowStep(0);
+    },
+
+    // Spawn de 50 vacas espalhadas uniformemente pelo mapa global (8000x6000)
+    _tutSpawnVacasGlobal(n) {
+        const W = 8000, H = 6000;
+        const PAD = 300;
+        // Grid pseudo-uniforme: divide mapa em cells e spawna 1 por cell + jitter
+        const cols = Math.ceil(Math.sqrt(n * (W/H)));
+        const rows = Math.ceil(n / cols);
+        const cw = (W - PAD*2) / cols;
+        const rh = (H - PAD*2) / rows;
+        let placed = 0;
+        for (let r = 0; r < rows && placed < n; r++) {
+            for (let c = 0; c < cols && placed < n; c++) {
+                const cx = PAD + cw * c + cw/2;
+                const cy = PAD + rh * r + rh/2;
+                const jx = (Math.random() - 0.5) * cw * 0.6;
+                const jy = (Math.random() - 0.5) * rh * 0.6;
+                const tipo = Math.random() < 0.20 ? 'boi' : 'holstein';
+                this._criarVaca(cx + jx, cy + jy, tipo);
+                placed++;
+            }
+        }
     },
 
     _updateTutorial(time, delta) {
@@ -148,15 +166,35 @@ Object.assign(Jogo.prototype, {
                 break;
             }
 
-            case 'BEAM': {
-                const beamOn = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
-                if (canAdvance && beamOn && this.energiaLed > 0) this._tutAdvance();
+            case 'BEAM_VISUAL': {
+                // Cone aparece, sem pull e sem drain (flag em scene update)
+                const beamOn = (this.dbg?.behavior?.inputMode === 'wasd' || this.isMobile)
+                    ? !!this._beamHeld
+                    : this.input.activePointer.isDown;
+                if (canAdvance && beamOn) this._tutAdvance();
+                break;
+            }
+
+            case 'GRAVITON_BAR': {
+                const beamG = (this.dbg?.behavior?.inputMode === 'wasd' || this.isMobile)
+                    ? !!this._beamHeld
+                    : this.input.activePointer.isDown;
+                if (this.energiaLed <= this.energiaMax * 0.5) this._tutGravitonDrained = true;
+                if (canAdvance &&
+                    this._tutGravitonDrained &&
+                    !beamG &&
+                    this.energiaLed >= this.energiaMax * 0.99) {
+                    this._tutAdvance();
+                }
                 break;
             }
 
             case 'ABDUCT': {
-                // Garante sempre vacas disponíveis pro player praticar
-                if (this._tutVacasVivas() < 3) this._tutSpawnVacas(4);
+                // Spawn 50 vacas globais uma vez ao entrar na etapa
+                if (!this._tutVacasGlobalSpawned) {
+                    this._tutSpawnVacasGlobal(50);
+                    this._tutVacasGlobalSpawned = true;
+                }
                 if (this.vacas_abduzidas.length > 0) {
                     this._tutHadAbductees = true;
                 }
@@ -416,15 +454,37 @@ Object.assign(Jogo.prototype, {
             this._tutConcluir();
             return;
         }
-        // Dados por etapa
-        if (TUT_STEPS[nextIdx].key === 'BURGER') {
+        const nextKey = TUT_STEPS[nextIdx].key;
+
+        // Reset de flags por etapa
+        // BEAM_VISUAL: cone aparece, sem pull, sem drain
+        if (nextKey === 'BEAM_VISUAL') {
+            this._tutBeamVisualOnly = true;
+            this._tutGravitonDrain2x = false;
+        }
+        // GRAVITON_BAR: barra graviton aparece + drain 2x + pull AINDA OFF (não abduz)
+        if (nextKey === 'GRAVITON_BAR') {
+            this._tutBeamVisualOnly = true;       // ainda sem pull
+            this._tutGravitonDrain2x = true;      // drain didático
+            this._setBarrasVisibility(false, true); // só graviton visível
+            this._tutGravitonDrained = false;
+        }
+        // ABDUCT: pull liga, drain volta normal, vacas imortais, spawna 50 globais
+        if (nextKey === 'ABDUCT') {
+            this._tutBeamVisualOnly = false;
+            this._tutGravitonDrain2x = false;
+            this._tutVacasImortais = true;
+            this._tutVacasGlobalSpawned = false;  // spawn no update
+        }
+        // BURGER: combustível inicia em 15%, barra combustível aparece
+        if (nextKey === 'BURGER') {
+            this.combustivelAtual = this.combustivelMax * 0.15;
+            this._setBarrasVisibility(true, true);
             this._tutScoreBurgerAntes = this.scoreAtual || 0;
         }
-        if (TUT_STEPS[nextIdx].key === 'BARS') {
-            this._tutBarsGravitonWatched = false;
-        }
-        if (TUT_STEPS[nextIdx].key === 'TAKE_DAMAGE') {
+        if (nextKey === 'TAKE_DAMAGE') {
             this._tutAtiradorSpawned = false;
+            this._tutVacasImortais = false;  // dano normal volta
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -514,6 +574,12 @@ Object.assign(Jogo.prototype, {
         this._tutGfx?.clear();
         this._tutGlowWorld?.clear();
         this._tutFreezeNave = false;
+        this._tutBeamVisualOnly = false;
+        this._tutGravitonDrain2x = false;
+        this._tutVacasImortais = false;
+        this._tutCombustivelCongelado = false;
+        // Reseta visibilidade das barras (jogo normal sempre mostra)
+        if (this._setBarrasVisibility) this._setBarrasVisibility(true, true);
 
         const w = this.scale.width, h = this.scale.height;
 

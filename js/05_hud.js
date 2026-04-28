@@ -100,6 +100,14 @@ Object.assign(Jogo.prototype, {
         this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
     },
 
+    // Mostra/esconde as barras de combustível e graviton (usado pelo tutorial)
+    _setBarrasVisibility(combVisible, gravVisible) {
+        if (this.hud.combImg)  this.hud.combImg.setVisible(combVisible);
+        if (this.hud.combFill) this.hud.combFill.setVisible(combVisible);
+        if (this.hud.eneImg)   this.hud.eneImg.setVisible(gravVisible);
+        if (this.hud.eneFill)  this.hud.eneFill.setVisible(gravVisible);
+    },
+
     _atualizarMinimapa() {
         const m = this._mini; if (!m || !this.hud?.miniGfx || !this.nave) return;
         const { cx, cy, r } = m;

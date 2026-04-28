@@ -15,6 +15,8 @@ Object.assign(Jogo.prototype, {
 
     _colisaoAmbiente(entity, otherLabel, otherEntity) {
         if (entity._dying || entity._destroyed) return;
+        // Tutorial: vacas/bois imortais (skip total)
+        if (this._tutVacasImortais && (entity.body.label === 'vaca' || entity.body.label === 'boi')) return;
 
         const entityIsEnemy   = !!entity.isEnemy;
         const entityAbducted  = this.vacas_abduzidas.includes(entity);

@@ -17,58 +17,73 @@ Object.assign(Jogo.prototype, {
         const tex = this.splashImg.texture.getSourceImage();
         this.splashImg.setScale(Math.min(w / tex.width, h / tex.height));
 
-        // ── Botões JOGAR / TUTORIAL — afastados pros cantos inferiores ─
-        const BTN_W = 180, BTN_H = 46;
-        const SIDE_PAD = 150;           // 60 + BTN_W/2 (puxa cada botão metade do tamanho pro centro)
-        const bY = h - 38;              // mais perto da base
-        const xLeft  = SIDE_PAD + BTN_W/2;
-        const xRight = w - SIDE_PAD - BTN_W/2;
+        // ── 3 BOTÕES: PLAY / TUTORIAL MOUSE / TUTORIAL WASD ─────────────
+        const BTN_W = 170, BTN_H = 46;
+        const GAP = 16;
+        const bY = h - 38;
+        const totalW = BTN_W * 3 + GAP * 2;
+        const startX = (w - totalW) / 2 + BTN_W / 2;
 
-        // Hit area expandida pra compensar deslocamento visual do barrel post-fx
-        // (barrel distorce o pixel mas a hit area continua nas coords originais)
         const HIT_PAD_X = 40, HIT_PAD_Y = 20;
-        const hitArea = new Phaser.Geom.Rectangle(
+        const mkHit = () => new Phaser.Geom.Rectangle(
             -HIT_PAD_X, -HIT_PAD_Y, BTN_W + HIT_PAD_X*2, BTN_H + HIT_PAD_Y*2
         );
 
-        // JOGAR (canto inferior esquerdo)
-        const btnJogar = this.add.rectangle(xLeft, bY, BTN_W, BTN_H, 0x00cc44)
+        // PLAY
+        const btnPlay = this.add.rectangle(startX, bY, BTN_W, BTN_H, 0x00cc44)
             .setScrollFactor(0).setDepth(502)
-            .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
-        btnJogar.input.cursor = 'pointer';
-        const lblJogar = this.add.text(xLeft, bY, 'JOGAR', {
+            .setInteractive(mkHit(), Phaser.Geom.Rectangle.Contains);
+        btnPlay.input.cursor = 'pointer';
+        const lblPlay = this.add.text(startX, bY, 'PLAY', {
             fontSize: '18px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // TUTORIAL (canto inferior direito)
-        const hitArea2 = new Phaser.Geom.Rectangle(
-            -HIT_PAD_X, -HIT_PAD_Y, BTN_W + HIT_PAD_X*2, BTN_H + HIT_PAD_Y*2
-        );
-        const btnTut = this.add.rectangle(xRight, bY, BTN_W, BTN_H, 0x224433)
+        // TUTORIAL MOUSE
+        const btnTutMouse = this.add.rectangle(startX + (BTN_W+GAP), bY, BTN_W, BTN_H, 0x224433)
             .setScrollFactor(0).setDepth(502)
             .setStrokeStyle(2, 0x00ff55, 0.8)
-            .setInteractive(hitArea2, Phaser.Geom.Rectangle.Contains);
-        btnTut.input.cursor = 'pointer';
-        const lblTut = this.add.text(xRight, bY, 'TUTORIAL', {
-            fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
+            .setInteractive(mkHit(), Phaser.Geom.Rectangle.Contains);
+        btnTutMouse.input.cursor = 'pointer';
+        const lblTutMouse = this.add.text(startX + (BTN_W+GAP), bY, 'TUTORIAL\nMOUSE', {
+            fontSize: '13px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 1, align: 'center'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        btnJogar.on('pointerover', () => btnJogar.setFillStyle(0x44ff88));
-        btnJogar.on('pointerout',  () => btnJogar.setFillStyle(0x00cc44));
-        btnTut.on('pointerover',   () => btnTut.setFillStyle(0x336655));
-        btnTut.on('pointerout',    () => btnTut.setFillStyle(0x224433));
+        // TUTORIAL WASD
+        const btnTutWasd = this.add.rectangle(startX + (BTN_W+GAP)*2, bY, BTN_W, BTN_H, 0x224433)
+            .setScrollFactor(0).setDepth(502)
+            .setStrokeStyle(2, 0x00ff55, 0.8)
+            .setInteractive(mkHit(), Phaser.Geom.Rectangle.Contains);
+        btnTutWasd.input.cursor = 'pointer';
+        const lblTutWasd = this.add.text(startX + (BTN_W+GAP)*2, bY, 'TUTORIAL\nWASD', {
+            fontSize: '13px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 1, align: 'center'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        const _startGame = (tutorial) => {
+        btnPlay.on('pointerover',     () => btnPlay.setFillStyle(0x44ff88));
+        btnPlay.on('pointerout',      () => btnPlay.setFillStyle(0x00cc44));
+        btnTutMouse.on('pointerover', () => btnTutMouse.setFillStyle(0x336655));
+        btnTutMouse.on('pointerout',  () => btnTutMouse.setFillStyle(0x224433));
+        btnTutWasd.on('pointerover',  () => btnTutWasd.setFillStyle(0x336655));
+        btnTutWasd.on('pointerout',   () => btnTutWasd.setFillStyle(0x224433));
+
+        const allBtns = [this.splashBg, this.splashImg, btnPlay, lblPlay,
+                         btnTutMouse, lblTutMouse, btnTutWasd, lblTutWasd];
+
+        const _startGame = (tutorial, inputMode) => {
             this.gameStarted  = true;
             this.tutorialMode = !!tutorial;
+            // Aplica input mode escolhido
+            if (inputMode && this.dbg?.behavior) {
+                this.dbg.behavior.inputMode = inputMode;
+                if (this._saveDebugCfg) this._saveDebugCfg();
+            }
             this.matter.world.enabled = true;
-            [this.splashBg, this.splashImg, btnJogar, lblJogar, btnTut, lblTut]
-                .forEach(o => o.destroy());
+            allBtns.forEach(o => o.destroy());
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
 
-        btnJogar.on('pointerdown', () => _startGame(false));
-        btnTut.on('pointerdown',   () => _startGame(true));
+        btnPlay.on('pointerdown',     () => _startGame(false));
+        btnTutMouse.on('pointerdown', () => _startGame(true, 'mouse'));
+        btnTutWasd.on('pointerdown',  () => _startGame(true, 'wasd'));
 
         // Resize
         this.scale.on('resize', () => {
@@ -77,14 +92,15 @@ Object.assign(Jogo.prototype, {
             this.splashBg.setPosition(w2/2, h2/2).setSize(w2, h2);
             this.splashImg.setPosition(w2/2, h2/2);
             const tex2 = this.splashImg.texture.getSourceImage();
-            this.splashImg.setScale(Math.max(w2 / tex2.width, h2 / tex2.height));
+            this.splashImg.setScale(Math.min(w2 / tex2.width, h2 / tex2.height));
             const bY2 = h2 - 38;
-            const xL  = SIDE_PAD + BTN_W/2;
-            const xR  = w2 - SIDE_PAD - BTN_W/2;
-            btnJogar.setPosition(xL, bY2);
-            lblJogar.setPosition(xL, bY2);
-            btnTut.setPosition(xR, bY2);
-            lblTut.setPosition(xR, bY2);
+            const sX  = (w2 - totalW) / 2 + BTN_W / 2;
+            btnPlay.setPosition(sX, bY2);
+            lblPlay.setPosition(sX, bY2);
+            btnTutMouse.setPosition(sX + (BTN_W+GAP), bY2);
+            lblTutMouse.setPosition(sX + (BTN_W+GAP), bY2);
+            btnTutWasd.setPosition(sX + (BTN_W+GAP)*2, bY2);
+            lblTutWasd.setPosition(sX + (BTN_W+GAP)*2, bY2);
         });
     },
 
