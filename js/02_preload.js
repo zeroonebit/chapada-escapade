@@ -42,9 +42,14 @@ Object.assign(Jogo.prototype, {
             // Fazendeiro running, Boi walk
             { char: 'fazendeiro', prefix: 'faz_run',    anim: 'running',         frames: 4 },
             { char: 'boi',        prefix: 'boi_walk',   anim: 'walk',            frames: 4 },
+            // UFO hovering 8-dir (idle bob/light flicker)
+            { char: 'ufo',        prefix: 'ufo_hover',  anim: 'hovering_idle',   frames: 4 },
+            // Boi idle_head_shake — sem N (7 dirs)
+            { char: 'boi', prefix: 'boi_idle', anim: 'idle_head_shake', frames: 11,
+              dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
-        ANIM8.forEach(({char, prefix, anim, frames}) => {
-            D8.forEach(d => {
+        ANIM8.forEach(({char, prefix, anim, frames, dirs}) => {
+            (dirs || D8).forEach(d => {
                 for (let i = 0; i < frames; i++) {
                     const f = String(i).padStart(3, '0');
                     this.load.image(`${prefix}_${d}_${i}`,
@@ -62,9 +67,16 @@ Object.assign(Jogo.prototype, {
         const NATURE_CERCAS = ['fence_full_h','fence_normal','fence_long','fence_short',
                                'fence_broken','fence_gate_open','fence_corner',
                                'post_single','post_thin','plank_v'];
+        // Cercas v2 (paleta clara consistente, design ornamental)
+        const NATURE_CERCAS_V2 = ['fence_double_short_h','fence_curved_short','fence_curved_long',
+                                  'gate_open_double','gate_closed_solid','gate_thin_double',
+                                  'post_lantern_low','post_lantern_thin','post_double_rope',
+                                  'post_carved','post_thin_simple','tower_ornamental_thin',
+                                  'segment_tall_dual','beam_horizontal'];
         NATURE_PEDRAS.forEach(n => this.load.image(`nat_pedra_${n}`, `assets/pixel_labs/chars/nature/pedras/${n}.png`));
         NATURE_VEGE.forEach(n   => this.load.image(`nat_vege_${n}`,  `assets/pixel_labs/chars/nature/vegetacao/${n}.png`));
         NATURE_CERCAS.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas/${n}.png`));
+        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas_v2/${n}.png`));
         // Expor pra outros módulos
         this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
         this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);

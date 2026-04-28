@@ -229,18 +229,19 @@ Object.assign(Jogo.prototype, {
         // ── 6. CURRAIS (em terra firme)
         this.currais = [];
         this.driveThrus = this.currais;
-        // Currais SÓ em cells de terra (grid===3) — área marrom, fora da grama
-        const isTerra = (px, py) => {
-            const cx = Math.floor(px / CELL);
-            const cy = Math.floor(py / CELL);
-            if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
-            return grid[cy][cx] === 3;
-        };
+        // Currais — qualquer posição válida (terra ou grama), longe das bordas
+        // e com distância mínima entre si pra não sobrepor
+        const curralPositions = [];
+        const MIN_DIST = 800;
         for (let i = 0; i < 5; i++) {
-            for (let tries = 0; tries < 30; tries++) {
-                const cx = Phaser.Math.Between(500, W-500);
-                const cy = Phaser.Math.Between(500, H-500);
-                if (!isTerra(cx, cy)) continue;
+            for (let tries = 0; tries < 50; tries++) {
+                const cx = Phaser.Math.Between(600, W-600);
+                const cy = Phaser.Math.Between(600, H-600);
+                const tooClose = curralPositions.some(p =>
+                    Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < MIN_DIST
+                );
+                if (tooClose) continue;
+                curralPositions.push({x: cx, y: cy});
                 this._construirCurral(cx, cy);
                 break;
             }
@@ -248,51 +249,52 @@ Object.assign(Jogo.prototype, {
     },
 
     _construirCurral(cx, cy) {
-        const W2 = 110, H2 = 90;        // half-extents do retângulo (curral 220×180)
-        const FENCE_SIZE = 60;          // tamanho visual de cada peça de cerca
-        const SEG = 56;                 // espaçamento entre peças
+        const W2 = 120, H2 = 96;
+        const SEG = 56;
+        const SCALE = 0.9;
 
-        // Marcador central (texto "CRL" pra debug visual)
-        this.add.rectangle(cx, cy, W2*1.6, H2*1.6, 0x6e9b3a, 0.0).setDepth(0.5);
-        this.add.text(cx, cy, 'CRL', {
-            fontSize:'14px', fill:'#1a0800', fontStyle:'bold'
-        }).setOrigin(0.5).setDepth(2);
+        // Chão de terra visível dentro do curral
+        this.add.rectangle(cx, cy, W2*2, H2*2, 0x7a5230, 0.38).setDepth(0.6);
+        this.add.rectangle(cx, cy, W2*1.6, H2*1.5, 0x8b6535, 0.22).setDepth(0.61);
 
-        // Helper: posiciona uma cerca como matter static
-        const placeFence = (x, y, key, scale = 1.0, angle = 0) => {
-            const o = this.matter.add.image(x, y, key, null,
-                { isStatic: true, shape: { type:'rectangle', width: FENCE_SIZE*0.9, height: FENCE_SIZE*0.5 } });
-            o.setDepth(1).setScale(scale).setAngle(angle);
-            o.body.label = 'cerca';
+        const placeFence = (x, y, key, scale = SCALE, angle = 0) => {
+            this.add.image(x, y, key).setScale(scale).setAngle(angle).setDepth(1.5);
         };
 
-        // Lado norte (top): fence_long alinhado horizontal
+        // Cercas v2 — paleta clara consistente. fence_curved_long é a viga horizontal principal.
+        const SIDE_KEY  = 'nat_cerca_fence_curved_long';
+        const GATE_KEY  = 'nat_cerca_gate_open_double';
+        const POST_KEY  = 'nat_cerca_post_carved';
+        const TOWER_KEY = 'nat_cerca_tower_ornamental_thin';
+        const LANT_KEY  = 'nat_cerca_post_lantern_low';
+
+        // Norte (linha contínua)
+        for (let x = -W2 + SEG/2; x < W2; x += SEG)
+            placeFence(cx + x, cy - H2, SIDE_KEY);
+
+        // Sul — gate aberto no centro
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
-            placeFence(cx + x, cy - H2, 'nat_cerca_fence_long', 1.0, 0);
-        }
-        // Lado sul (bottom): SEMPRE com porta aberta no centro (sem colisão)
-        // Pula 2 segmentos centrais pra criar abertura larga; gate visual só
-        for (let x = -W2 + SEG/2; x < W2; x += SEG) {
-            const inGate = Math.abs(x) < SEG;  // 2 segments wide door
-            if (inGate) {
-                if (Math.abs(x) < SEG/2) {
-                    // Visual da porta aberta — sem matter body, vacas atravessam
-                    this.add.image(cx + x, cy + H2, 'nat_cerca_fence_gate_open').setDepth(1);
-                }
-                continue; // pula colisão nessa região
+            if (Math.abs(x) < SEG * 0.6) {
+                placeFence(cx + x, cy + H2, GATE_KEY, SCALE * 1.2);
+            } else {
+                placeFence(cx + x, cy + H2, SIDE_KEY);
             }
-            placeFence(cx + x, cy + H2, 'nat_cerca_fence_long', 1.0, 0);
         }
-        // Lados leste/oeste: rotaciona 90° pra ficar vertical
+
+        // Leste/oeste (rotacionados 90)
         for (let y = -H2 + SEG/2; y < H2; y += SEG) {
-            placeFence(cx - W2, cy + y, 'nat_cerca_fence_long', 1.0, 90);
-            placeFence(cx + W2, cy + y, 'nat_cerca_fence_long', 1.0, 90);
+            placeFence(cx - W2, cy + y, SIDE_KEY, SCALE, 90);
+            placeFence(cx + W2, cy + y, SIDE_KEY, SCALE, 90);
         }
-        // Cantos com post_thin
-        placeFence(cx - W2, cy - H2, 'nat_cerca_post_thin', 1.0, 0);
-        placeFence(cx + W2, cy - H2, 'nat_cerca_post_thin', 1.0, 0);
-        placeFence(cx - W2, cy + H2, 'nat_cerca_post_thin', 1.0, 0);
-        placeFence(cx + W2, cy + H2, 'nat_cerca_post_thin', 1.0, 0);
+
+        // Cantos: torres ornamentais finas (mais bonitas que post simples)
+        [[-W2,-H2],[W2,-H2],[-W2,H2],[W2,H2]].forEach(([ox,oy]) =>
+            placeFence(cx+ox, cy+oy, TOWER_KEY, SCALE * 1.1)
+        );
+
+        // Lanternas decorativas nos cantos da entrada (sul)
+        placeFence(cx - SEG, cy + H2 + 10, LANT_KEY, SCALE * 0.8);
+        placeFence(cx + SEG, cy + H2 + 10, LANT_KEY, SCALE * 0.8);
 
         this.currais.push({ x: cx, y: cy, sprite: null, processing: [], ready: [] });
     }
