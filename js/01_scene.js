@@ -272,15 +272,21 @@ class Jogo extends Phaser.Scene {
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
         this.nave.rotation = this._discoBaseAngle + this._tiltCurrent;
 
-        // Escapamento: puff maior, menos frequente, mais opaco — estilo carro
+        // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
+        // que CRESCEM e ficam transparentes conforme se afastam (estilo escape de carro)
         const navSpeed = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeed > 0.6) {
             this._smokeTimer = (this._smokeTimer ?? 0) + delta;
-            if (this._smokeTimer > 220) {
+            if (this._smokeTimer > 100) {
                 this._smokeTimer = 0;
-                const px = this.nave.x - (navVx/navSpeed) * 32;
-                const py = this.nave.y - (navVy/navSpeed) * 32;
-                this._spawnSmoke(px, py, { color: 0xccccdd, alpha: 0.55, size: 11, dur: 1200, drift: 22 });
+                const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
+                const px = this.nave.x + ux * 30;
+                const py = this.nave.y + uy * 30;
+                // Pequena nuvem inicial, alpha alto. _spawnSmoke já tween scale 2.2x + alpha→0
+                this._spawnSmoke(px, py, {
+                    color: 0xbbbbcc, alpha: 0.75, size: 4,
+                    dur: 1400, drift: 26
+                });
             }
         }
 

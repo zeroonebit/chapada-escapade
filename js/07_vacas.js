@@ -244,16 +244,20 @@ Object.assign(Jogo.prototype, {
         const speed = Math.sqrt(vx*vx + vy*vy);
 
         // Direção 8-dir (vaca chubby agora é 8-dir como o boi)
+        // Durante janela de 3s pós-abdução, força south (independe de velocidade/wander)
+        const now = this.time?.now ?? 0;
+        const returningSouth = v._returnSouthUntil && now < v._returnSouthUntil;
         let angRad = null;
         if (speed > 0.08) angRad = Math.atan2(vy, vx);
         else if (typeof v.wanderAngle === 'number') angRad = v.wanderAngle;
         let dir8 = v._lastDir8 || 'S';
-        if (angRad !== null) {
+        if (angRad !== null && !returningSouth) {
             const deg = (angRad * 180 / Math.PI + 360) % 360;
             const i = Math.round(deg / 45) % 8;
             dir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
             v._lastDir8 = dir8;
         }
+        if (returningSouth) dir8 = 'S';
 
         // Boi: walk anim quando movendo, estático quando parado
         if (v.tipo === 'boi') {
@@ -289,6 +293,7 @@ Object.assign(Jogo.prototype, {
         const FLEE_DIST = 240;            // raio onde vaca começa a correr (era 160)
         const FLEE_DIST_SQ = FLEE_DIST * FLEE_DIST;
         const velMul = this.dbg?.behavior?.velVaca ?? 1.0;
+        const now = this.time?.now ?? 0;
         for (let i = 0; i < this.vacas.length; i++) {
             const v = this.vacas[i];
             if (!v.scene || !v.body || v._dying) continue;
@@ -297,6 +302,16 @@ Object.assign(Jogo.prototype, {
             if (this.vacas_abduzidas.includes(v)) {
                 this._texturaDirecional(v);
                 continue;
+            }
+            // Janela pós-soltar: trava IA, deixa atrito alto frear, força south
+            if (v._returnSouthUntil && now < v._returnSouthUntil) {
+                this._texturaDirecional(v);
+                continue;
+            }
+            // Saiu da janela: restaura atrito padrão se ainda estiver alto
+            if (v._returnSouthUntil && now >= v._returnSouthUntil && v.body) {
+                v.setFrictionAir(0.08);
+                v._returnSouthUntil = 0;
             }
 
             const dx = v.x - this.nave.x, dy = v.y - this.nave.y;
@@ -351,8 +366,11 @@ Object.assign(Jogo.prototype, {
         this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v !== vaca);
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
-        // Volta pra orientação south (default) suavemente — re-vira pra câmera ao soltar
+        // Janela de 3s onde a vaca/boi força orientação south e atrito alto pra parar
+        // Picker e IA respeitam essa flag pra ignorar wandering durante esse período
         vaca._lastDir8 = 'S';
+        vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;
+        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.4); // freia rapido
         if (vaca.scene && vaca.tipo === 'boi' && this.textures.exists('boi_S')) {
             if (vaca.anims?.isPlaying) vaca.anims.stop();
             vaca.setTexture('boi_S');

@@ -127,17 +127,21 @@ Object.assign(Jogo.prototype, {
     },
 
     _spawnSmoke(x, y, opts = {}) {
-        const { color = 0xccddee, alpha = 0.45, size = 6, dur = 600, drift = 0 } = opts;
+        const {
+            color = 0xccddee, alpha = 0.45, size = 6, dur = 600, drift = 0,
+            growTo = 3.5, easing = 'Quad.easeOut'
+        } = opts;
         const s = this.add.circle(x, y, size, color, alpha).setDepth(8);
         const dx = (Math.random() - 0.5) * drift;
         const dy = (Math.random() - 0.5) * drift;
         this.tweens.add({
             targets: s,
-            scale: 2.2,
+            scale: growTo,
             alpha: 0,
             x: x + dx,
             y: y + dy,
             duration: dur,
+            ease: easing,
             onComplete: () => s.destroy()
         });
     },
