@@ -79,6 +79,12 @@ Object.assign(Jogo.prototype, {
         this.load.image('splash', 'splashv3.png');
         this.load.image('game_icon', 'icon.png');
 
+        // ── WANG TILES (16 tiles cr31 cores sólidas pra debug) ──────
+        for (let i = 0; i < 16; i++) {
+            const f = String(i).padStart(2, '0');
+            this.load.image(`wang_${f}`, `assets/terrain/test/wang_${f}.png`);
+        }
+
         // (Wang tileset PNGs removidos — terreno agora é renderizado pelo
         //  fragment shader cell-shaded em js/13_terrain_shader.js)
     }

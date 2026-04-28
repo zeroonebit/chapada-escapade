@@ -34,6 +34,7 @@ const DBG_DEFAULTS = {
         beamSparks:   true,
         beamShake:    true,
         explosaoBoa:  true,
+        wangtiles:    false,  // renderiza terreno com 16 tiles wang cr31 (debug)
     },
 };
 
@@ -147,6 +148,7 @@ Object.assign(Jogo.prototype, {
                     <label><span>Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                     <label><span>Shake/flash ao ligar beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                     <label><span>Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
+                    <label><span>Wang tiles terreno (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                 </fieldset>
 
                 <fieldset>
