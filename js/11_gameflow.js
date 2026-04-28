@@ -77,7 +77,11 @@ Object.assign(Jogo.prototype, {
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
 
-        // Picker state machine: 'home' (PLAY/TUT) -> 'input' (MOUSE/WASD) ou 'lang' (ENG/PTBR)
+        // Picker state machine
+        // home          → PLAY  | TUTORIAL
+        //  ├─ click PLAY     → lang     → ENG | PTBR
+        //  │   └─ click       → playInput → MOUSE | WASD → start game
+        //  └─ click TUT      → tutInput → MOUSE | WASD → start tutorial
         let picker = 'home';
         const _setLang = (lang) => {
             if (this.dbg?.behavior) {
@@ -85,21 +89,27 @@ Object.assign(Jogo.prototype, {
                 if (this._saveDebugCfg) this._saveDebugCfg();
             }
         };
+        const _toInputPicker = () => {
+            lblL.setText('MOUSE'); lblL.setFontSize(16); lblL.setColor('#001a08');
+            lblR.setText('WASD');  lblR.setFontSize(16);
+        };
+
         btnL.on('pointerdown', () => {
-            if (picker === 'input') return _startGame(true, 'mouse');
-            if (picker === 'lang')  { _setLang('en'); return _startGame(false); }
-            // 'home': clicar PLAY transforma em picker de idioma ENG / PTBR
+            if (picker === 'tutInput')  return _startGame(true, 'mouse');
+            if (picker === 'playInput') return _startGame(false, 'mouse');
+            if (picker === 'lang')      { _setLang('en'); picker = 'playInput'; return _toInputPicker(); }
+            // 'home': PLAY → escolhe idioma
             picker = 'lang';
-            lblL.setText('ENG'); lblL.setFontSize(20);
+            lblL.setText('ENG');  lblL.setFontSize(20);
             lblR.setText('PTBR'); lblR.setFontSize(20);
         });
         btnR.on('pointerdown', () => {
-            if (picker === 'input') return _startGame(true, 'wasd');
-            if (picker === 'lang')  { _setLang('pt'); return _startGame(false); }
-            // 'home': clicar TUTORIAL transforma em picker de input MOUSE / WASD
-            picker = 'input';
-            lblL.setText('MOUSE'); lblL.setFontSize(16); lblL.setColor('#001a08');
-            lblR.setText('WASD');  lblR.setFontSize(16);
+            if (picker === 'tutInput')  return _startGame(true, 'wasd');
+            if (picker === 'playInput') return _startGame(false, 'wasd');
+            if (picker === 'lang')      { _setLang('pt'); picker = 'playInput'; return _toInputPicker(); }
+            // 'home': TUTORIAL → escolhe input direto
+            picker = 'tutInput';
+            _toInputPicker();
         });
 
         // Resize
