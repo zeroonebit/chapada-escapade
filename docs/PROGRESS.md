@@ -4,6 +4,71 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-29 — Tutorial guiado completo + curral redesign + 14 cercas v2 + chuva controlável
+
+**~30 commits, ~14h, das 09:00 às 23:00**
+
+### Tutorial guiado (novo módulo `js/17_tutorial.js`)
+- Splash com 2 botões: **JOGAR** / **TUTORIAL**
+- 8 etapas sequenciais: MOVE → BEAM → ABDUCT → DELIVER → BURGER → BARS → TAKE_DAMAGE → FARMER → FARMER_KILL
+- Hint overlay com progresso (pontos), título, texto, nota de conclusão
+- Tempo mínimo de leitura por etapa (5s) — não avança antes de dar tempo de ler
+- Caixa subida pra `h - 110` (libera visão das barras combustível/graviton)
+- **Sistema de glow amarelo pulsante por etapa** via `highlight: [...]` em TUT_STEPS
+  - Targets: nave, graviton, combustível, vacas, curral, fazendeiro, atirador, rocha
+  - `_tutGlowAt` (mundo) e `_tutGlowAtScreenRect` (HUD) com 3 anéis pulsantes
+- Setas verdes pulsantes apontando pra curral, fazendeiro, rocha
+- Nova etapa **TAKE_DAMAGE**: spawna atirador perto, trava `_moverNave`, libera após dano no combustível
+- Auto-respawn de vacas: 8 iniciais + reposiciona quando vivas < 3 (resolve travamento)
+- Conclusão: botão "JOGAR AGORA" + spawna inimigos normais
+
+### Curral redesign visual
+- **1 vaca representativa** (top-down "eat bob") no centro com counter `×N` pulsante
+- Vacas reais somem ao entregar — só sobe o counter
+- Burgers spawnam **fora** do curral (sul, abaixo do gate) em fila de 24px
+- Loading: piscando + ciclo classic→cheese→double a cada 1s (3s total)
+- Ready: sprite fixo com bounce sutil
+- `_reflowFila`: ao coletar, loadings remanescentes deslizam pros slots da frente
+- Tempo de processamento: 5s → 3s
+
+### Cercas v2 (14 assets PixelLab novos)
+- Pipeline `tools/pixellab_fetch_new.py` baixa 20 IDs detectados via Chrome MCP
+- `tools/pixellab_montage_new.py` gera contact sheet pra ID visual
+- `tools/organize_cercas_v2.py` copia 14 cercas com nomes legíveis
+- `chars/nature/cercas_v2/`: fence_curved_long, gate_open_double, post_carved, tower_ornamental_thin, post_lantern_low, etc
+- `_construirCurral` reescrito com paleta clara consistente (mantém SCALE 0.9, cantos com torres ornamentais, lanternas decorativas na entrada)
+
+### Chuva controlável (4 controles live em VFX)
+- `_rebuildRain` recria pool de gotas quando `chuvaCount` muda
+- `_startRainDrop` lê live: ângulo (-1 a +1), velocidade (0.2-3x), comprimento traço (0.3-3x), frequência (0-400 gotas)
+- Aba VFX dividida em CHUVA / NEBLINA com 6 controles na chuva
+
+### Debug menu refatorado
+- **4 abas**: CONTROLES / LOOKS / VFX / DEBUG
+- Slider novo: **sensibilidade da nave** (multiplica força em `_moverNave` live)
+- Step 0.05 → 0.01 + display `toFixed(2)` (era `toFixed(1)`, parecia pular 0.1)
+- Barrel distortion movido pra LOOKS
+
+### Bug fixes
+- **Barrel distortion não funcionava** — `addPostPipeline` no renderer ANTES de `setPostPipeline` (Phaser 3.60 exige)
+- **BURGER não avançava** — checava `burgerCount` (não incrementa via curral); agora usa `scoreAtual > antes`
+- **DELIVER não detectava entrega** — agora checa `processing.length > 0 || ready.length > 0`
+- **Linha verde nos cantos** — barrel out-of-bounds `vec4(0.04,0.05,0.03)` → `vec4(0,0,0)` + remove `box-shadow` verde do `#game-host`
+- **Vaca west bug do farmer** — corrigido manualmente pelo usuário no editor PixelLab
+- **Curral invisível** — chão de terra alpha 0.0 → 0.38; spawn ignora terrain CA constraint
+
+### Refactor & cleanup
+- **`paciencia` → `combustivel`** em todo o codebase (8 arquivos)
+- Removidas pastas duplicadas `vaca_chubby/`, `vaca_holstein/`, `vaca_skinny_4dir/` (457 arquivos)
+- Workflow git: sync automático ao final de cada request (worktree → main → push)
+
+### Memory & skills
+- Skill nova `~/.claude/skills/pixellab-asset-download/` documentando padrão Backblaze CDN + 2 caminhos (Chrome MCP / DevTools manual)
+- Memória `feedback_explicit_questions.md`: sempre destacar perguntas com caixa visual numerada
+- Memória `feedback_heartbeat_5min.md`: heartbeat 5min em tasks longas
+
+---
+
 ## Sessão 2026-04-27 (noite) → 2026-04-28 — Maratona: anims completas + debug menu + FX stack + nature + currais + Wang
 
 **24+ commits, ~15h, das 21:14 (27/04) à 00:00+ (28/04)**

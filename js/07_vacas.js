@@ -1,7 +1,7 @@
 // 07_vacas.js — Vacas/bois: criação, IA, abdução, física no feixe, virar burger
 Object.assign(Jogo.prototype, {
 
-    _criarVaca(x, y, tipo = 'branca') {
+    _criarVaca(x, y, tipo = 'holstein') {
         const label = tipo === 'boi' ? 'boi' : 'vaca';
         const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
         // matter.add.SPRITE (não image) — sprite suporta .anims, image não
@@ -80,11 +80,13 @@ Object.assign(Jogo.prototype, {
         const okVaca = this.dbg?.enabled?.vacas !== false;
         const okBoi  = this.dbg?.enabled?.bois  !== false;
         for(let i=0; i<n; i++) {
-            // Respeita toggles: só spawna tipo habilitado; se ambos off, sai
             let tipo;
-            if (okVaca && okBoi) tipo = Math.random() < 0.20 ? 'boi' : 'branca';
-            else if (okVaca)     tipo = 'branca';
-            else if (okBoi)      tipo = 'boi';
+            if (okVaca && okBoi) {
+                const r = Math.random();
+                if (r < 0.20) tipo = 'boi';
+                else          tipo = 'holstein';
+            } else if (okVaca) tipo = 'holstein';
+            else if (okBoi)    tipo = 'boi';
             else return;
             this._criarVaca(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
         }
@@ -197,6 +199,7 @@ Object.assign(Jogo.prototype, {
                 v.setFrictionAir(0.015).setDepth(3);
                 v.setAngularVelocity((Math.random() - 0.5) * 0.4); // spin inicial pra glissagem
                 if (v.walkTimer) v.walkTimer.paused = true;
+                if (this._spawnCaptureRings) this._spawnCaptureRings(v);
             }
         };
         this.vacas.forEach(tryAbduct);
@@ -279,7 +282,7 @@ Object.assign(Jogo.prototype, {
         }
         if (returningSouth) dir8 = 'S';
 
-        // Boi: walk anim quando movendo, estático quando parado
+        // Boi: walk quando movendo, idle_head_shake quando parado (fallback static se N)
         if (v.tipo === 'boi') {
             const moving = speed > 0.08;
             if (moving) {
@@ -288,9 +291,15 @@ Object.assign(Jogo.prototype, {
                     v.play(animKey, true);
                 }
             } else {
-                if (v.anims?.isPlaying) v.anims.stop();
-                const key = `boi_${dir8}`;
-                if (v.texture.key !== key) v.setTexture(key);
+                const idleKey = `boi_idle_${dir8}`;
+                if (this.anims.exists(idleKey)) {
+                    if (v.anims.currentAnim?.key !== idleKey) v.play(idleKey, true);
+                } else {
+                    // dir sem idle (ex: N) — usa frame estático
+                    if (v.anims?.isPlaying) v.anims.stop();
+                    const key = `boi_${dir8}`;
+                    if (v.texture.key !== key) v.setTexture(key);
+                }
             }
             return;
         }

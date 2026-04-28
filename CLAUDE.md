@@ -120,13 +120,40 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Vaca holstein removida** (sprite slim não combina com estética chubby)
 - **Currais visíveis** — chão de terra preenchido (alpha 0.38) + cercas decorativas sem colisão + distância mínima 800px entre currais
 
+### ✅ Pronto (cont. — sessão 2026-04-29)
+- **Tutorial guiado completo** (`js/17_tutorial.js`) — 8 etapas, glow amarelo por elemento, setas pulsantes, freeze de nave em TAKE_DAMAGE, auto-respawn de vacas, conclusão com botão JOGAR AGORA
+- **Splash JOGAR/TUTORIAL** com 2 botões (sem dismiss cego)
+- **Tutorial min-read 5s** por etapa antes de avançar
+- **Curral redesign**: 1 vaca representativa "eat bob" + counter ×N; burgers em fila externa (sul) com loading piscando + ready fixo; tempo 5s→3s
+- **14 cercas v2 PixelLab** integradas em `chars/nature/cercas_v2/` — currais agora usam `fence_curved_long` + `tower_ornamental_thin` + `gate_open_double` + lanternas decorativas
+- **Chuva controlável** 4 sliders live: ângulo, velocidade, comprimento, frequência (0-400 gotas)
+- **Debug menu refatorado** em 4 abas (CONTROLES / LOOKS / VFX / DEBUG); slider sensibilidade da nave; step 0.01; toFixed(2)
+- **Barrel distortion funcionando** (faltava `addPostPipeline` antes do `setPostPipeline`)
+- **Linha verde nos cantos eliminada** (barrel out-of-bounds + box-shadow verde removido)
+- **Rename `paciencia` → `combustivel`** em todo o codebase
+- **Cleanup**: vaca_chubby/holstein/skinny removidas (457 arquivos duplicados)
+- **Workflow git automático** — sync worktree → main → push ao final de cada request
+
+### 🛠 Pipeline PixelLab (novo)
+- `tools/pixellab_fetch_new.py` — baixa por ID via Backblaze CDN (sem API key)
+- `tools/pixellab_montage_new.py` — contact sheet pra ID visual
+- `tools/organize_cercas_v2.py` — copia inbox → chars/nature/cercas_v2 com nomes legíveis
+- Skill `~/.claude/skills/pixellab-asset-download/SKILL.md` documenta o padrão completo
+
 ### 🚧 Em andamento
 - **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida)
+- **Tutorial reorganização**: separar BARS em GRAVITON (após BEAM) + COMBUSTIVEL (após BURGER) — pedido do usuário
+- **Curral variations**: portas abertas/fechadas, cantos retos/redondos usando os assets v2 — pedido do usuário
+- **Coleta de hamburger no tutorial**: highlight no burger + coleta na posição do burger (não em cima do curral) — pedido do usuário
+- **Vaca chubby sprite no curral**: substituir cima_sobe/cima_desce pelo chubby idle/walk/eat — pedido do usuário
 
 ### 🔜 Próximos passos
-1. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-2. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
-3. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
+1. **Reorganizar etapas tutorial**: GRAVITON_BAR após BEAM (mostra graviton com glow); COMBUSTIVEL_BAR após BURGER (com glow + explica restauração)
+2. **Curral mascote chubby** com idle/walk/eat anims; counter ×N maior; só renderiza se count > 0
+3. **Variations de curral** (portas abertas/fechadas/cantos arredondados) usando cercas_v2
+4. **Burger pickup highlight** no tutorial — glow no burger + coleta direta no burger
+5. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+6. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
