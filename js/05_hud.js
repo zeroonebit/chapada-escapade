@@ -33,8 +33,8 @@ Object.assign(Jogo.prototype, {
 
         // ── Hint inicial ──────────────────────────────────────────────
         const hintMsg = this.isMobile
-            ? 'Joystick à esquerda  •  Botão à direita pra abduzir'
-            : 'CLIQUE E SEGURE para abduzir';
+            ? 'Joystick on the left  •  Button on the right to abduct'
+            : 'CLICK AND HOLD to abduct';
         this.hud.hintBg = this.add.rectangle(0,0,490,46,0x000000,0.7).setScrollFactor(0).setDepth(105);
         this.hud.hint   = this.add.text(0,0,hintMsg,{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(106);
 
