@@ -42,14 +42,14 @@ const TUT_STEPS = [
     {
         key: 'FARMER',
         title: '⑦ FAZENDEIROS',
-        text: 'Fazendeiros patrulham o mapa e disparam no seu campo de força. Use o feixe pra atraí-los e conduzi-los.',
-        note: 'Abduzir um fazendeiro para avançar.',
+        text: 'Fazendeiros são inimigos perigosos: patrulham o mapa e disparam no seu campo de força.\n\nUse o FEIXE GRAVITON sobre eles do mesmo jeito que abduz uma vaca — o feixe os arrasta junto.',
+        note: 'Capture um fazendeiro com o feixe para avançar.',
     },
     {
         key: 'FARMER_KILL',
-        title: '⑧ ELIMINAR FAZENDEIROS',
-        text: 'Leve o fazendeiro até uma pedra e solte o feixe. Ao colidir com alta velocidade, ele é eliminado!',
-        note: 'Elimine um fazendeiro para concluir o tutorial.',
+        title: '⑧ ARREMESSAR NAS ROCHAS',
+        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA grande e mantenha o feixe ativo enquanto avança.\n\nA colisão em alta velocidade elimina o fazendeiro instantaneamente!',
+        note: 'Mate um fazendeiro batendo em uma pedra para concluir.',
     },
 ];
 
@@ -171,6 +171,9 @@ Object.assign(Jogo.prototype, {
                 if (!this.fazendeiros || this.fazendeiros.length === 0) {
                     this._tutSpawnFazendeiro();
                 }
+                // Seta apontando pro fazendeiro vivo mais próximo
+                const target = this.fazendeiros.find(f => f.scene && !f._dying && !f._destroyed);
+                if (target) this._tutDrawArrow(target.x, target.y);
                 const inBeam = this.vacas_abduzidas.some(e => e.isEnemy);
                 if (inBeam) {
                     this._tutFarmerAbducted = true;
@@ -180,6 +183,12 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
+                // Seta pra rocha mais próxima do fazendeiro abduzido
+                const farmer = this.vacas_abduzidas.find(e => e.isEnemy);
+                if (farmer) {
+                    const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
+                    if (rocha) this._tutDrawArrow(rocha.x, rocha.y);
+                }
                 const allDead = !this.fazendeiros || this.fazendeiros.every(f => !f.scene || f._dying || f._destroyed);
                 if (canAdvance && this._tutFarmerAbducted && allDead && this.fazendeiros.length > 0) {
                     this._tutAdvance();
@@ -195,6 +204,19 @@ Object.assign(Jogo.prototype, {
         if (!this._criarFazendeiro) return;
         const cx = this.nave.x, cy = this.nave.y;
         this._criarFazendeiro(cx + 350, cy - 150);
+    },
+
+    // Procura no matter.world todos os corpos com label='rocha' e retorna o mais perto
+    _tutAcharRochaPerto(x, y) {
+        const bodies = this.matter?.world?.localWorld?.bodies || [];
+        let best = null, bestD = Infinity;
+        for (const b of bodies) {
+            if (b.label !== 'rocha') continue;
+            const dx = b.position.x - x, dy = b.position.y - y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < bestD) { bestD = d2; best = b.position; }
+        }
+        return best;
     },
 
     _tutAdvance() {
