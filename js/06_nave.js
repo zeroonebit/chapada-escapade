@@ -76,10 +76,11 @@ Object.assign(Jogo.prototype, {
     _moverNave(c) {
         let dist = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
         if (dist > 50) {
+            const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
             let ang = Phaser.Math.Angle.Between(this.nave.x, this.nave.y, c.x, c.y);
             this.nave.applyForce({
-                x: Math.cos(ang) * Math.min(dist*0.0001, 0.0035),
-                y: Math.sin(ang) * Math.min(dist*0.0001, 0.0035)
+                x: Math.cos(ang) * Math.min(dist*0.0001, 0.0035) * sens,
+                y: Math.sin(ang) * Math.min(dist*0.0001, 0.0035) * sens
             });
         }
     },
