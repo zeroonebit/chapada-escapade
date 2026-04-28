@@ -276,7 +276,10 @@ Object.assign(Jogo.prototype, {
                 </div>
 
                 <div class="btn-row">
-                    <button id="dbg-apply">APLICAR + REINICIAR</button>
+                    <button id="dbg-preview" style="background:#003355;color:#aaffcc;">👁 PREVIEW (live)</button>
+                </div>
+                <div class="btn-row">
+                    <button id="dbg-apply">APPLY + RESTART</button>
                     <button id="dbg-reset" class="secondary">RESET</button>
                 </div>
                 <div style="text-align:center; margin-top:6px; font-size:10px; color:#446655;">
@@ -370,6 +373,22 @@ Object.assign(Jogo.prototype, {
                     if (this._applyAtmosphere) this._applyAtmosphere();
                 }
             });
+        });
+
+        // PREVIEW: esconde só o menu, mantém o jogo rodando real-time
+        // Pressionar ESC reabre o menu. Se jogo está pausado, despausa.
+        document.getElementById('dbg-preview').addEventListener('click', () => {
+            this._toggleDebugMenu(false);
+            this._splashConfigsOpen = false;
+            // Despausa pra preview ficar rodando (se gameStarted)
+            if (this.gameStarted && this.pausado) {
+                this.pausado = false;
+                this.matter.world.enabled = true;
+                if (this.pauseOverlay)  this.pauseOverlay.setVisible(false);
+                if (this.pauseGrafico)  this.pauseGrafico.setVisible(false);
+                if (this.pauseLabel)    this.pauseLabel.setVisible(false);
+                if (this.pauseHint)     this.pauseHint.setVisible(false);
+            }
         });
 
         document.getElementById('dbg-apply').addEventListener('click', () => {
