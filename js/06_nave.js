@@ -2,17 +2,10 @@
 Object.assign(Jogo.prototype, {
 
     _setupLEDs() {
-        // 12 LEDs em torno da nave, gradiente "cometa", alterna azul/vermelho
+        // LEDs desativados (giroflex era distrativo) — efeito agora vem de partículas
+        // coloridas saindo no escapamento. Mantém arrays vazios pra compat com o picker.
         this.leds = [];
         this.ledHalos = [];
-        const N_LEDS = 12;
-        for (let i = 0; i < N_LEDS; i++) {
-            const ang = (i / N_LEDS) * Math.PI * 2 - Math.PI/2;
-            const halo = this.add.circle(0, 0, 6, 0x000000, 0).setDepth(9);
-            const led  = this.add.circle(0, 0, 2.2, 0x222222).setDepth(11);
-            led._ang = ang; halo._ang = ang;
-            this.leds.push(led); this.ledHalos.push(halo);
-        }
         this._ledHead = 0;
         this._ledRotMs = 900;
     },

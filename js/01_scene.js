@@ -280,6 +280,7 @@ class Jogo extends Phaser.Scene {
 
         // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
         // que CRESCEM e ficam transparentes conforme se afastam (estilo escape de carro)
+        // + partículas coloridas misturadas (substitui o LED giroflex)
         const navSpeed = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeed > 0.6) {
             this._smokeTimer = (this._smokeTimer ?? 0) + delta;
@@ -288,11 +289,22 @@ class Jogo extends Phaser.Scene {
                 const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
                 const px = this.nave.x + ux * 30;
                 const py = this.nave.y + uy * 30;
-                // Pequena nuvem inicial, alpha alto. _spawnSmoke já tween scale 2.2x + alpha→0
                 this._spawnSmoke(px, py, {
                     color: 0xbbbbcc, alpha: 0.75, size: 4,
                     dur: 1400, drift: 26
                 });
+                // Partícula colorida ocasional (substitui o LED rotativo)
+                if (Math.random() < 0.55) {
+                    const colors = [0x33aaff, 0xff4466, 0xffcc33, 0x44ff88, 0xcc66ff];
+                    const col = colors[Math.floor(Math.random() * colors.length)];
+                    // Offset radial pra parecer que sai de pontos diferentes do disco
+                    const radial = (Math.random() - 0.5) * 24;
+                    const perpX = -uy * radial, perpY = ux * radial;
+                    this._spawnSmoke(px + perpX, py + perpY, {
+                        color: col, alpha: 0.95, size: 2.2,
+                        dur: 750, drift: 30, growTo: 1.4
+                    });
+                }
             }
         }
 

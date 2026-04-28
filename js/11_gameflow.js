@@ -12,18 +12,20 @@ Object.assign(Jogo.prototype, {
         this.splashBg = this.add.rectangle(w/2, h/2, w, h, 0x000a03, 1)
             .setScrollFactor(0).setDepth(500);
 
-        // Logo splash.png (imagem circular com título, alien, vaca, chapada...)
-        const imgSz = Math.min(w * 0.70, h * 0.78);
-        this.splashImg = this.add.image(w/2, h/2 - 18, 'splash')
-            .setDisplaySize(imgSz, imgSz)
+        // Splash fullscreen — cobre toda a tela mantendo aspect ratio (cover)
+        this.splashImg = this.add.image(w/2, h/2, 'splash')
             .setScrollFactor(0).setDepth(501);
+        const tex = this.splashImg.texture.getSourceImage();
+        const scaleC = Math.max(w / tex.width, h / tex.height);
+        this.splashImg.setScale(scaleC);
 
-        // Hint piscando abaixo da imagem
+        // Hint piscando no rodapé
         const hintTxt = this.sys.game.device.input.touch
             ? '[ TOQUE PARA COMEÇAR ]' : '[ CLIQUE PARA COMEÇAR ]';
-        this.splashHint = this.add.text(w/2, h/2 + imgSz/2 + 14, hintTxt, {
-            fontSize: '17px', fill: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+        this.splashHint = this.add.text(w/2, h - 36, hintTxt, {
+            fontSize: '17px', fill: '#ffffff', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 4
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
         this.tweens.add({
             targets: this.splashHint, alpha: 0.1, duration: 620, yoyo: true, repeat: -1
@@ -36,14 +38,15 @@ Object.assign(Jogo.prototype, {
             [this.splashBg, this.splashImg, this.splashHint].forEach(o => o.destroy());
         });
 
-        // Resize
+        // Resize: refit splash fullscreen
         this.scale.on('resize', () => {
             if (this.gameStarted) return;
             const w2 = this.scale.width, h2 = this.scale.height;
-            const sz = Math.min(w2 * 0.70, h2 * 0.78);
             this.splashBg.setPosition(w2/2, h2/2).setSize(w2, h2);
-            this.splashImg.setPosition(w2/2, h2/2 - 18).setDisplaySize(sz, sz);
-            this.splashHint.setPosition(w2/2, h2/2 + sz/2 + 14);
+            this.splashImg.setPosition(w2/2, h2/2);
+            const tex2 = this.splashImg.texture.getSourceImage();
+            this.splashImg.setScale(Math.max(w2 / tex2.width, h2 / tex2.height));
+            this.splashHint.setPosition(w2/2, h2 - 36);
         });
     },
 
@@ -99,7 +102,14 @@ Object.assign(Jogo.prototype, {
 
         const w = this.scale.width, h = this.scale.height;
 
-        this.add.rectangle(w/2, h/2, w, h, 0x001a08, 0.90)
+        // Splash de fundo verde — repete o look do início
+        const bgV = this.add.image(w/2, h/2, 'splash')
+            .setScrollFactor(0).setDepth(199).setTint(0x114422);
+        const texV = bgV.texture.getSourceImage();
+        bgV.setScale(Math.max(w / texV.width, h / texV.height));
+        bgV.setAlpha(0.55);
+
+        this.add.rectangle(w/2, h/2, w, h, 0x001a08, 0.55)
             .setScrollFactor(0).setDepth(200);
 
         // Linha decorativa
@@ -143,7 +153,14 @@ Object.assign(Jogo.prototype, {
 
         const w = this.scale.width, h = this.scale.height;
 
-        this.add.rectangle(w/2, h/2, w, h, 0x050000, 0.88)
+        // Splash de fundo desaturado em vermelho — repete o look do início
+        const bgImg = this.add.image(w/2, h/2, 'splash')
+            .setScrollFactor(0).setDepth(199).setTint(0x441111);
+        const texGO = bgImg.texture.getSourceImage();
+        bgImg.setScale(Math.max(w / texGO.width, h / texGO.height));
+        bgImg.setAlpha(0.55);
+
+        this.add.rectangle(w/2, h/2, w, h, 0x050000, 0.55)
             .setScrollFactor(0).setDepth(200);
 
         // Linha decorativa
