@@ -37,10 +37,23 @@
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
 2. Não esperar o usuário pedir — fazer automático na primeira mensagem
 
-### 🚦 Workflow de teste e commits
-- **Testar via GitHub Pages** — `git push` e ~30s o Pages atualiza em https://zeroonebit.github.io/chapada-escapade/
+### 🚦 Workflow de trabalho (padrão fixo)
+- **Sempre trabalhar na worktree** (`H:\Projects\ChapadaEscapade\.claude\worktrees\intelligent-euler-7a236d`)
+- **Ao final de cada request com mudança de código:** commit na worktree + sync completo (merge main + push)
 - Preview local da sessão atual quebrou (canvas vazio, scripts não rodam) — não usar
-- **Commit só** quando o usuário disser `/checkpoint` no fim da sessão OU pedir explicitamente (incluindo "vamos voltar pro github" / "push")
+- **Testar via GitHub Pages** — após push, ~30s o Pages atualiza em https://zeroonebit.github.io/chapada-escapade/
+
+### 📤 Sync ao final de cada request (AUTOMÁTICO após qualquer mudança)
+Executar **todos** os passos abaixo, sem pular nenhum:
+1. `git add` + `git commit` na worktree (branch `claude/intelligent-euler-7a236d`)
+2. `git push origin claude/intelligent-euler-7a236d`
+3. Mudar pro branch `main` dentro do projeto principal (`H:\Projects\ChapadaEscapade`) e fazer merge:
+   ```
+   cd H:/Projects/ChapadaEscapade
+   git merge claude/intelligent-euler-7a236d
+   git push origin main
+   ```
+4. Resultado: worktree ✅ + projeto local ✅ + GitHub Pages ✅ — todos sincronizados
 
 ## Estado atual (atualizar a cada sessão)
 
@@ -81,12 +94,12 @@
 - **Fazendeiro running** anim 8-dir wired (matter.add.sprite + setBody radius 16; rotations top-down corrigidas)
 - **Fix do norte do fazendeiro** (rerota N → NE/NW)
 - **UFO `b7bc12d9` re-baixado** (dome opaca, sem alien) — nave aponta pra `chars/ufo/south.png`
-- **5 chars completos integrados** (~620 frames): vaca chubby, boi, fazendeiro, ufo, vaca_holstein
+- **4 chars completos integrados** (~620 frames): vaca chubby, boi, fazendeiro, ufo (holstein removida)
 - **Mapa 2.5×** (3200×2400 → 8000×6000) + spawn defaults boost (vacas 100, fazendeiros 20)
 - **31 nature assets** scrapeados via Chrome MCP (pedras/vegetação/cercas/placas/outros) com per-asset SCALE_MAP + bounds-aware placement
-- **Currais procedural** com cercas reais (gate sempre aberto + sem colisão; só em terra)
+- **Currais procedural** com cercas decorativas (sem colisão, gate aberto, chão de terra visível; spawn em qualquer terrain)
 - **Wang tiles cr31** toggle no debug — corner grid próprio + threshold só grama + paleta terrosa Chapada
-- **Debug menu DOM completo** na pausa (ESC) — 30+ controles persisted em localStorage, todos sliders step 0.01
+- **Debug menu DOM completo** na pausa (ESC) — 30+ controles persisted em localStorage, sliders step 0.05; intensidade chuva/neblina separados
 - **FX stack** (`16_fx.js`): chuva, neblina vinheta radial, beam sparkles + shake/flash, explosão fancy, sombras blur, escapamento estilo carro + partículas coloridas (substituiu LEDs giroflex), distorção esférica (barrel post-fx GLSL), smoke puff no muzzle do farmer
 - **HP system colisional:** vaca/boi 3-5 hits + setBounce(0.5); farmer só morre em pedra (HP 1, setBounce 0.2); debounce 120ms; cow-cow elastic decay
 - **Beam revertido pra Graphics concêntrico** (5 círculos, sem artefatos PNG) + pull default 0.5
@@ -98,19 +111,22 @@
 - **Tilt suave da nave** baseado em vel lateral; LED ring proporcional ao displayWidth
 - **`docs/CONQUISTAS.md`** — log de achievements/estatísticas atualizado por sessão
 
+### ✅ Pronto (cont. — sessão 2026-04-28 tarde)
+- **UFO hovering_idle** 8-dir (MatterSprite + picker de velocidade, 4 fps)
+- **Anéis de captura** — 3 anéis verdes saem do alvo e sobem até a nave ao abduzir
+- **Radar** no canto inferior esq. — disco estilo sonar com scan line girando; branco=vacas, marrom=bois, amarelo=fazendeiros, azul=currais, verde=nave
+- **Boi idle_head_shake** 7-dir wired (fallback static em N)
+- **Sliders step 0.05** + sliders de intensidade chuva/neblina separados (live)
+- **Vaca holstein removida** (sprite slim não combina com estética chubby)
+- **Currais visíveis** — chão de terra preenchido (alpha 0.38) + cercas decorativas sem colisão + distância mínima 800px entre currais
+
 ### 🚧 Em andamento
-- Re-habilitar **shaders** (terrain `13_terrain_shader.js` + grass `14_grass_patch.js`) — desligados pra debug. Cellular Automata + add.rectangle ainda é o fallback.
-- **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida) — proxima geração via PixelLab `create_topdown_tileset` ou Nano Banana
+- **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida)
 
 ### 🔜 Próximos passos
 1. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-2. **Re-habilitar terrain shader** OU substituir totalmente pelo Wang renderer
-3. **UFO hovering_idle** anim — assets já carregados em `chars/ufo/anims/hovering_idle/`
-4. **Anéis animados** (capture FX) na abdução
-5. **Minimapa** canto inferior esquerdo
-6. **Boi attack/eating/idle_head_shake/rest_idle** anims (já no disco, falta wire)
-7. **Vaca holstein** 4-dir como variante de spawn
-8. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
+2. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
+3. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
