@@ -18,7 +18,6 @@ Object.assign(Jogo.prototype, {
         for (const v of drop) {
             if (!v.scene || !v.body) continue;
             v._inCurral = true;
-            // Troca para sprite top-down (vista de cima) dentro do curral
             const base = v.tipo === 'boi' ? 'boi' : 'vaca';
             const cimaTex = Math.random() < 0.5 ? `${base}_cima_sobe` : `${base}_cima_desce`;
             v.setTexture(cimaTex);
@@ -30,9 +29,30 @@ Object.assign(Jogo.prototype, {
             v.y = curral.y + Math.sin(ang) * r;
             this.tweens.add({ targets: v, alpha: 0.55, duration: 500, yoyo: true, repeat: -1 });
             curral.processing.push(v);
-            this.time.delayedCall(5000, () => this._processarVacaNoCurral(v, curral));
+            this._spawnBurgerCountdown(v, curral);
+            this.time.delayedCall(3000, () => this._processarVacaNoCurral(v, curral));
         }
         this.cameras.main.flash(150, 100, 200, 100);
+    },
+
+    // Ícone de burger acima da vaca, ciclando classic→cheese→double a cada 1s (3s total)
+    _spawnBurgerCountdown(v, curral) {
+        if (!v || !v.scene) return;
+        const variants = ['burger_classic', 'burger_cheese', 'burger_double'];
+        const icon = this.add.image(v.x, v.y - 32, variants[0])
+            .setDepth(40).setScale(0.35).setAlpha(0.95);
+        const piscar = this.tweens.add({
+            targets: icon, alpha: 0.4, duration: 220, yoyo: true, repeat: -1
+        });
+        // Loading: troca o sprite a cada 1s (mostra o "progresso" do hamburger)
+        const t1 = this.time.delayedCall(1000, () => { if (icon.scene) icon.setTexture(variants[1]); });
+        const t2 = this.time.delayedCall(2000, () => { if (icon.scene) icon.setTexture(variants[2]); });
+        const t3 = this.time.delayedCall(3000, () => {
+            if (piscar) piscar.stop();
+            if (icon.scene) icon.destroy();
+        });
+        // Acompanha posição (vaca pode estar com tween de alpha)
+        v._burgerIcon = icon;
     },
 
     _processarVacaNoCurral(v, curral) {
