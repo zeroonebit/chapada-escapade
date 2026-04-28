@@ -207,14 +207,20 @@ Object.assign(Jogo.prototype, {
                 break;
             }
 
-            case 'BARS': {
-                this._tutCombustivelCongelado = false;
-                const beamOn2 = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
-                if (beamOn2) this._tutBarsGravitonWatched = true;
-                if (canAdvance && this._tutBarsGravitonWatched && !beamOn2 && this.energiaLed >= this.energiaMax * 0.8) {
-                    this._tutCombustivelCongelado = true;
+            case 'GRAVITON_BAR': {
+                // Player precisa ativar e soltar o beam pra ver oscilar
+                const beamG = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
+                if (beamG) this._tutGravitonWatched = true;
+                // Avança quando: assistiu o beam ativo + soltou + barra começou a regenerar (>= 70%)
+                if (canAdvance && this._tutGravitonWatched && !beamG && this.energiaLed >= this.energiaMax * 0.7) {
                     this._tutAdvance();
                 }
+                break;
+            }
+
+            case 'COMBUSTIVEL_BAR': {
+                // Apenas mostra a barra com glow — avança após canAdvance (5s mínimo)
+                if (canAdvance) this._tutAdvance();
                 break;
             }
 
