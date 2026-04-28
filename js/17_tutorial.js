@@ -8,48 +8,63 @@ const TUT_STEPS = [
         title: '① MOVER A NAVE',
         text: 'Use o mouse (clique e arraste) ou joystick para mover a nave pela tela.',
         note: 'Mova pelo menos 200 pixels para avançar.',
+        highlight: ['nave'],
     },
     {
         key: 'BEAM',
         title: '② FEIXE GRAVITON',
-        text: 'Segure o botão do mouse (ou botão direito no mobile) para ativar o feixe graviton.',
+        text: 'Segure o botão do mouse (ou botão direito no mobile) para ativar o feixe graviton da nave.',
         note: 'Ative o feixe para avançar.',
+        highlight: ['nave', 'graviton'],
     },
     {
         key: 'ABDUCT',
         title: '③ ABDUZIR UMA VACA',
         text: 'Posicione a nave sobre uma vaca ou boi e ative o feixe. O animal será atraído.',
         note: 'Abduzir pelo menos 1 animal para avançar.',
+        highlight: ['vacas'],
     },
     {
         key: 'DELIVER',
         title: '④ LEVAR AO CURRAL',
         text: 'Com a vaca no feixe, leve-a até o curral. A seta verde indica o caminho.',
         note: 'Entregue a vaca no curral para avançar.',
+        highlight: ['curral'],
     },
     {
         key: 'BURGER',
         title: '⑤ COLETAR HAMBÚRGUER',
-        text: 'Aguarde a vaca se transformar em hambúrguer e passe sobre ele para coletar.',
+        text: 'Aguarde a vaca se transformar em hambúrguer (3 segundos) e passe sobre ele para coletar.',
         note: 'Colete o hambúrguer para avançar.',
+        highlight: ['curral'],
     },
     {
         key: 'BARS',
         title: '⑥ BARRAS DE ENERGIA',
-        text: 'COMBUSTÍVEL (baixo): depleta quando você é atingido pelo campo de força inimigo. Se esvaziar, game over!\n\nGRAVITON (baixo): depleta ao usar o feixe e regenera sozinho quando inativo.',
-        note: 'Ative e desative o feixe para ver o graviton oscilar.',
+        text: 'COMBUSTÍVEL (amarela): depleta quando você é atingido por tiros. Se esvaziar, game over.\n\nGRAVITON (azul): depleta ao usar o feixe e regenera sozinho quando inativo.',
+        note: 'Ative e solte o feixe para ver o graviton oscilar.',
+        highlight: ['combustivel', 'graviton'],
+    },
+    {
+        key: 'TAKE_DAMAGE',
+        title: '⑦ TOMAR DANO',
+        text: 'Um atirador apareceu! Ele vai disparar contra você. Sua nave está PRESA até você tomar um tiro — assim entende como o COMBUSTÍVEL funciona quando atingido.',
+        note: 'Aguarde tomar um tiro para a nave ser liberada.',
+        highlight: ['atirador', 'combustivel'],
     },
     {
         key: 'FARMER',
-        title: '⑦ FAZENDEIROS',
-        text: 'Fazendeiros são inimigos perigosos: patrulham o mapa e disparam no seu campo de força.\n\nUse o FEIXE GRAVITON sobre eles do mesmo jeito que abduz uma vaca — o feixe os arrasta junto.',
+        title: '⑧ FAZENDEIROS',
+        text: 'Fazendeiros são inimigos que patrulham o mapa.\n\nUse o FEIXE GRAVITON sobre eles igual abduz uma vaca — o feixe os arrasta junto.',
         note: 'Capture um fazendeiro com o feixe para avançar.',
+        highlight: ['fazendeiro'],
     },
     {
         key: 'FARMER_KILL',
-        title: '⑧ ARREMESSAR NAS ROCHAS',
-        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA grande e mantenha o feixe ativo enquanto avança.\n\nA colisão em alta velocidade elimina o fazendeiro instantaneamente!',
+        title: '⑨ ARREMESSAR NAS ROCHAS',
+        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA mantendo o feixe ativo.\n\nA colisão em alta velocidade elimina o fazendeiro!',
         note: 'Mate um fazendeiro batendo em uma pedra para concluir.',
+        highlight: ['fazendeiro', 'rocha'],
     },
 ];
 
@@ -109,6 +124,9 @@ Object.assign(Jogo.prototype, {
         this._tutGfx.clear();
         this._tutAngle = (this._tutAngle || 0) + 0.04;
 
+        // Glow amarelo nos elementos relevantes da etapa atual
+        if (step.highlight) this._tutDrawHighlights(step.highlight);
+
         // Tempo mínimo de leitura — não avança antes do usuário ler
         const elapsed = (this.time?.now ?? 0) - (this._tutStepShownAt || 0);
         const canAdvance = elapsed >= (this._tutMinReadMs || 5000);
@@ -143,7 +161,12 @@ Object.assign(Jogo.prototype, {
                     const c = this.currais[0];
                     this._tutDrawArrow(c.x, c.y);
                 }
-                if (canAdvance && ((this.scoreAtual || 0) > this._tutScoreAntes || this.burgerCount > 0)) {
+                // Avança quando vaca foi entregue (entrou em processing OU já existe burger pronto)
+                const dropped = (this.currais || []).some(c =>
+                    (c.processing && c.processing.length > 0) ||
+                    (c.ready && c.ready.length > 0)
+                );
+                if (canAdvance && dropped) {
                     this._tutDelivered = true;
                     this._tutAdvance();
                 }
@@ -151,8 +174,27 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BURGER': {
-                const atualB = this.burgerCount || 0;
-                if (canAdvance && atualB > (this._tutBurgerAntes || 0)) this._tutAdvance();
+                // Avança quando score sobe (coleta do curral incrementa scoreAtual)
+                if (canAdvance && (this.scoreAtual || 0) > (this._tutScoreBurgerAntes || 0)) {
+                    this._tutAdvance();
+                }
+                break;
+            }
+
+            case 'TAKE_DAMAGE': {
+                // Trava nave + spawna 1 atirador perto (uma vez)
+                this._tutFreezeNave = true;
+                if (!this._tutAtiradorSpawned) {
+                    this._tutSpawnAtiradorPerto();
+                    this._tutAtiradorSpawned = true;
+                    this._tutCombustivelAntes = this.combustivelAtual;
+                    this._tutCombustivelCongelado = true;  // sem drain passivo
+                }
+                // Aguarda tomar dano (combustivel desce abaixo do registrado)
+                if (this.combustivelAtual < (this._tutCombustivelAntes - 0.5)) {
+                    this._tutFreezeNave = false;
+                    if (canAdvance) this._tutAdvance();
+                }
                 break;
             }
 
@@ -206,6 +248,107 @@ Object.assign(Jogo.prototype, {
         this._criarFazendeiro(cx + 350, cy - 150);
     },
 
+    // Atirador (torre) próximo da nave pra forçar tomar dano
+    _tutSpawnAtiradorPerto() {
+        const cx = this.nave.x + 320, cy = this.nave.y - 80;
+        const spr = this.add.image(cx, cy, 'atirador').setDepth(2).setScale(1.4);
+        if (this._attachSombra) this._attachSombra(spr, { rx: 22, ry: 8, alpha: 0.40, offY: 16, offX: 4 });
+        if (!this.atiradores) this.atiradores = [];
+        const at = { x: cx, y: cy, sprite: spr, cooldown: 600 };
+        this.atiradores.push(at);
+        this._tutAtiradorRef = at;
+    },
+
+    // Glow amarelo pulsante ao redor de coords (mundo ou tela)
+    _tutGlowAt(x, y, radius, opts = {}) {
+        const { color = 0xffcc33, screen = false } = opts;
+        const g = screen ? this._tutGfx : (this._tutGlowWorld || (this._tutGlowWorld = this.add.graphics().setDepth(7)));
+        if (!screen) g.clear === undefined ? null : null;  // mundo é limpo no início
+        const pulse = 0.6 + 0.4 * Math.sin(this._tutAngle * 2.5);
+        // 3 anéis com alpha decrescente pra simular blur/glow
+        for (let i = 0; i < 3; i++) {
+            const r = radius * (1 + i * 0.35) * pulse;
+            const a = 0.55 / (i + 1);
+            g.lineStyle(3 - i, color, a);
+            g.strokeCircle(x, y, r);
+        }
+    },
+
+    _tutDrawHighlights(targets) {
+        // Inicializa/limpa graphics de glow no mundo (não-scrollFactor)
+        if (!this._tutGlowWorld) {
+            this._tutGlowWorld = this.add.graphics().setDepth(7);
+        }
+        this._tutGlowWorld.clear();
+
+        for (const t of targets) {
+            switch (t) {
+                case 'nave': {
+                    if (this.nave) this._tutGlowAt(this.nave.x, this.nave.y, 38);
+                    break;
+                }
+                case 'graviton': {
+                    const eb = this._eneBar;
+                    if (eb) this._tutGlowAtScreenRect(eb.x, eb.y, eb.w, eb.h);
+                    break;
+                }
+                case 'combustivel': {
+                    const cb = this._combBar;
+                    if (cb) this._tutGlowAtScreenRect(cb.x, cb.y, cb.w, cb.h);
+                    break;
+                }
+                case 'vacas': {
+                    (this.vacas || []).forEach(v => {
+                        if (v && v.scene && !v.isBurger && !v.isEnemy && !v._dying) {
+                            this._tutGlowAt(v.x, v.y, 26);
+                        }
+                    });
+                    break;
+                }
+                case 'curral': {
+                    (this.currais || []).forEach(c => this._tutGlowAt(c.x, c.y, 110));
+                    break;
+                }
+                case 'fazendeiro': {
+                    (this.fazendeiros || []).forEach(f => {
+                        if (f && f.scene && !f._dying && !f._destroyed) {
+                            this._tutGlowAt(f.x, f.y, 28);
+                        }
+                    });
+                    break;
+                }
+                case 'atirador': {
+                    (this.atiradores || []).forEach(a => {
+                        if (a && a.sprite && a.sprite.scene) {
+                            this._tutGlowAt(a.x, a.y, 32);
+                        }
+                    });
+                    break;
+                }
+                case 'rocha': {
+                    const farmer = (this.vacas_abduzidas || []).find(e => e.isEnemy);
+                    if (farmer) {
+                        const r = this._tutAcharRochaPerto(farmer.x, farmer.y);
+                        if (r) this._tutGlowAt(r.x, r.y, 36);
+                    }
+                    break;
+                }
+            }
+        }
+    },
+
+    // Glow retangular pra elementos do HUD (em tela, scrollFactor 0)
+    _tutGlowAtScreenRect(x, y, w, h) {
+        const g = this._tutGfx;
+        const pulse = 0.6 + 0.4 * Math.sin(this._tutAngle * 2.5);
+        for (let i = 0; i < 3; i++) {
+            const pad = 4 + i * 5;
+            const a = 0.55 / (i + 1) * pulse;
+            g.lineStyle(3 - i, 0xffcc33, a);
+            g.strokeRoundedRect(x - pad, y - pad, w + pad*2, h + pad*2, 6);
+        }
+    },
+
     // Procura no matter.world todos os corpos com label='rocha' e retorna o mais perto
     _tutAcharRochaPerto(x, y) {
         const bodies = this.matter?.world?.localWorld?.bodies || [];
@@ -227,10 +370,13 @@ Object.assign(Jogo.prototype, {
         }
         // Dados por etapa
         if (TUT_STEPS[nextIdx].key === 'BURGER') {
-            this._tutBurgerAntes = this.burgerCount || 0;
+            this._tutScoreBurgerAntes = this.scoreAtual || 0;
         }
         if (TUT_STEPS[nextIdx].key === 'BARS') {
             this._tutBarsGravitonWatched = false;
+        }
+        if (TUT_STEPS[nextIdx].key === 'TAKE_DAMAGE') {
+            this._tutAtiradorSpawned = false;
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -253,7 +399,8 @@ Object.assign(Jogo.prototype, {
         const isLong = step.text.includes('\n');
         const BOX_H  = isLong ? 148 : 96;
         const bx = w / 2;
-        const by = h - BOX_H / 2 - 10;
+        // Subido pra ficar acima das barras de combustivel/graviton (que ocupam ~80px no rodapé)
+        const by = h - BOX_H / 2 - 110;
 
         const bg = this.add.rectangle(bx, by, BOX_W, BOX_H, 0x000a04, 0.92)
             .setScrollFactor(0).setDepth(508);
@@ -317,6 +464,8 @@ Object.assign(Jogo.prototype, {
             this._tutBox = null;
         }
         this._tutGfx?.clear();
+        this._tutGlowWorld?.clear();
+        this._tutFreezeNave = false;
 
         const w = this.scale.width, h = this.scale.height;
 

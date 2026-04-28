@@ -74,6 +74,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _moverNave(c) {
+        if (this._tutFreezeNave) return;  // tutorial: trava nave em certas etapas
         let dist = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
