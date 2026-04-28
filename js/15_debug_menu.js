@@ -452,6 +452,8 @@ Object.assign(Jogo.prototype, {
         // Shuffle ON: aleatoriza weather + TOD a cada click. Após 5s, restaura tudo e reabre menu.
         document.getElementById('dbg-preview').addEventListener('click', () => {
             this._tutPreviewActive = true;
+            // Safety: reset flag depois de 6s mesmo que algo falhe
+            this.time.delayedCall(6000, () => { this._tutPreviewActive = false; });
 
             // Shuffle: random weather + TOD
             if (this.dbg?.fx?.weatherShuffle) {
