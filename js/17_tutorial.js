@@ -41,9 +41,9 @@ const TUT_STEPS = [
     {
         key: 'BURGER',
         title: '⑥ COLETAR HAMBÚRGUER',
-        text: 'Aguarde a vaca se transformar em hambúrguer (3 segundos) e passe sobre ele para coletar.',
+        text: 'Aguarde a vaca se transformar em hambúrguer (3 segundos) e passe SOBRE o burger destacado para coletar.',
         note: 'Colete o hambúrguer para avançar.',
-        highlight: ['curral'],
+        highlight: ['burger_pronto'],
     },
     {
         key: 'COMBUSTIVEL_BAR',
@@ -360,6 +360,17 @@ Object.assign(Jogo.prototype, {
                         const r = this._tutAcharRochaPerto(farmer.x, farmer.y);
                         if (r) this._tutGlowAt(r.x, r.y, 36);
                     }
+                    break;
+                }
+                case 'burger_pronto': {
+                    // Glow em todo burger ready de qualquer curral
+                    (this.currais || []).forEach(c => {
+                        (c.readyIcons || []).forEach(r => {
+                            if (r.icon && r.icon.scene) {
+                                this._tutGlowAt(r.icon.x, r.icon.y, 22);
+                            }
+                        });
+                    });
                     break;
                 }
             }

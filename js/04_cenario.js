@@ -248,55 +248,70 @@ Object.assign(Jogo.prototype, {
         }
     },
 
+    // 4 variantes de curral aleatorias por spawn
     _construirCurral(cx, cy) {
-        const W2 = 120, H2 = 96;
+        const VARIANTS = [
+            // V1: padrao chapada (fence curved + tower ornamental + lanterna baixa, gate aberto)
+            { side:'fence_curved_long', gate:'gate_open_double', corner:'tower_ornamental_thin',
+              lantern:'post_lantern_low', size:'medio', gateOpen:true },
+            // V2: rustico fechado (fence curva curta + posts esculpidos + lanterna alta)
+            { side:'fence_curved_short', gate:'gate_closed_solid', corner:'post_carved',
+              lantern:'post_lantern_thin', size:'medio', gateOpen:false },
+            // V3: grande aberto duplo (fence curved long + cantos com posts duplos + lanterna baixa)
+            { side:'fence_curved_long', gate:'gate_thin_double', corner:'post_double_rope',
+              lantern:'post_lantern_low', size:'grande', gateOpen:true },
+            // V4: pequeno reto (fence dupla curta horizontal + posts simples + sem lanterna)
+            { side:'fence_double_short_h', gate:'gate_open_double', corner:'post_thin_simple',
+              lantern:null, size:'pequeno', gateOpen:true },
+        ];
+        const v = VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
+        const SIZE_MAP = { pequeno:[100,80], medio:[120,96], grande:[150,120] };
+        const [W2, H2] = SIZE_MAP[v.size];
         const SEG = 56;
         const SCALE = 0.9;
 
-        // Chão de terra visível dentro do curral
+        // Chão de terra
         this.add.rectangle(cx, cy, W2*2, H2*2, 0x7a5230, 0.38).setDepth(0.6);
         this.add.rectangle(cx, cy, W2*1.6, H2*1.5, 0x8b6535, 0.22).setDepth(0.61);
 
-        const placeFence = (x, y, key, scale = SCALE, angle = 0) => {
-            this.add.image(x, y, key).setScale(scale).setAngle(angle).setDepth(1.5);
+        const place = (x, y, key, scale = SCALE, angle = 0) => {
+            this.add.image(x, y, `nat_cerca_${key}`).setScale(scale).setAngle(angle).setDepth(1.5);
         };
 
-        // Cercas v2 — paleta clara consistente. fence_curved_long é a viga horizontal principal.
-        const SIDE_KEY  = 'nat_cerca_fence_curved_long';
-        const GATE_KEY  = 'nat_cerca_gate_open_double';
-        const POST_KEY  = 'nat_cerca_post_carved';
-        const TOWER_KEY = 'nat_cerca_tower_ornamental_thin';
-        const LANT_KEY  = 'nat_cerca_post_lantern_low';
-
-        // Norte (linha contínua)
+        // Norte
         for (let x = -W2 + SEG/2; x < W2; x += SEG)
-            placeFence(cx + x, cy - H2, SIDE_KEY);
+            place(cx + x, cy - H2, v.side);
 
-        // Sul — gate aberto no centro
+        // Sul (gate sempre no centro, aberto ou fechado)
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
             if (Math.abs(x) < SEG * 0.6) {
-                placeFence(cx + x, cy + H2, GATE_KEY, SCALE * 1.2);
+                place(cx + x, cy + H2, v.gate, SCALE * 1.2);
             } else {
-                placeFence(cx + x, cy + H2, SIDE_KEY);
+                place(cx + x, cy + H2, v.side);
             }
         }
 
-        // Leste/oeste (rotacionados 90)
+        // Leste/oeste rotacionados
         for (let y = -H2 + SEG/2; y < H2; y += SEG) {
-            placeFence(cx - W2, cy + y, SIDE_KEY, SCALE, 90);
-            placeFence(cx + W2, cy + y, SIDE_KEY, SCALE, 90);
+            place(cx - W2, cy + y, v.side, SCALE, 90);
+            place(cx + W2, cy + y, v.side, SCALE, 90);
         }
 
-        // Cantos: torres ornamentais finas (mais bonitas que post simples)
+        // Cantos
         [[-W2,-H2],[W2,-H2],[-W2,H2],[W2,H2]].forEach(([ox,oy]) =>
-            placeFence(cx+ox, cy+oy, TOWER_KEY, SCALE * 1.1)
+            place(cx+ox, cy+oy, v.corner, SCALE * 1.1)
         );
 
-        // Lanternas decorativas nos cantos da entrada (sul)
-        placeFence(cx - SEG, cy + H2 + 10, LANT_KEY, SCALE * 0.8);
-        placeFence(cx + SEG, cy + H2 + 10, LANT_KEY, SCALE * 0.8);
+        // Lanternas decorativas (opcional)
+        if (v.lantern) {
+            place(cx - SEG, cy + H2 + 10, v.lantern, SCALE * 0.8);
+            place(cx + SEG, cy + H2 + 10, v.lantern, SCALE * 0.8);
+        }
 
-        this.currais.push({ x: cx, y: cy, sprite: null, processing: [], ready: [] });
+        this.currais.push({
+            x: cx, y: cy, sprite: null, processing: [], ready: [],
+            variant: v
+        });
     }
 
 });
