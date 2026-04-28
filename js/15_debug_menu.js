@@ -35,6 +35,10 @@ const DBG_DEFAULTS = {
     fx: {
         chuva:              false,
         chuvaIntensidade:   0.5,
+        chuvaAngulo:        0.3,   // -1..1 (negativo = pra esquerda)
+        chuvaVelocidade:    1.0,   // 0.2..3 multiplicador
+        chuvaTamanho:       1.0,   // 0.3..3 mult. do comprimento da gota
+        chuvaCount:         80,    // 0..400 frequência (qtd de gotas)
         neblina:            false,
         neblinaIntensidade: 0.5,
         beamSparks:         true,
@@ -186,13 +190,28 @@ Object.assign(Jogo.prototype, {
                 <div class="tab-panel" id="tab-vfx" style="display:none">
                     <div class="note">Todos aplicam live.</div>
                     <fieldset>
-                        <legend>ATMOSFERA</legend>
-                        <label><span>Chuva</span><input type="checkbox" data-cfg="fx.chuva"></label>
-                        <label><span>Intensidade chuva</span>
+                        <legend>CHUVA</legend>
+                        <label><span>Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
+                        <label><span>Intensidade (alpha)</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
                             <span class="val" data-show="fx.chuvaIntensidade"></span></label>
-                        <label><span>Neblina</span><input type="checkbox" data-cfg="fx.neblina"></label>
-                        <label><span>Intensidade neblina</span>
+                        <label><span>Frequência (gotas)</span>
+                            <input type="range" min="0" max="400" step="5" data-cfg="fx.chuvaCount">
+                            <span class="val" data-show="fx.chuvaCount"></span></label>
+                        <label><span>Ângulo (-1=esq, +1=dir)</span>
+                            <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
+                            <span class="val" data-show="fx.chuvaAngulo"></span></label>
+                        <label><span>Velocidade</span>
+                            <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
+                            <span class="val" data-show="fx.chuvaVelocidade"></span></label>
+                        <label><span>Comprimento traço</span>
+                            <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.chuvaTamanho">
+                            <span class="val" data-show="fx.chuvaTamanho"></span></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>NEBLINA</legend>
+                        <label><span>Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
+                        <label><span>Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
                             <span class="val" data-show="fx.neblinaIntensidade"></span></label>
                     </fieldset>

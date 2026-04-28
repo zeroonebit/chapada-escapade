@@ -37,29 +37,12 @@ Object.assign(Jogo.prototype, {
         const w = this.scale.width, h = this.scale.height;
 
         // ── CHUVA ──────────────────────────────────────────────────────
-        // 80 gotas pré-criadas que loopam. Tween infinito por gota com offset
-        // de start aleatório pra desincronizar.
+        // Gotas com angulo/comprimento/velocidade controlados live via dbg.fx.
+        // Container guarda referência das gotas pra recriar quando frequencia muda.
         this.fxRain = this.add.container(0, 0).setScrollFactor(0).setDepth(180).setVisible(false);
-        const dropCount = 80;
-        for (let i = 0; i < dropCount; i++) {
-            const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
-            this.fxRain.add(drop);
-            const reset = () => {
-                drop.x = Phaser.Math.Between(-50, w + 50);
-                drop.y = Phaser.Math.Between(-100, -10);
-            };
-            reset();
-            const fall = () => {
-                this.tweens.add({
-                    targets: drop,
-                    y: h + 30, x: drop.x + 30,
-                    duration: Phaser.Math.Between(550, 850),
-                    delay: Phaser.Math.Between(0, 600),
-                    onComplete: () => { reset(); fall(); }
-                });
-            };
-            fall();
-        }
+        this._rainDrops = [];
+        this._rainCountAtual = 0;
+        this._rebuildRain();
 
         // ── NEBLINA (vinheta com gradiente radial) ────────────────────
         // Gera uma textura canvas com radial gradient: centro transparente,
@@ -93,6 +76,66 @@ Object.assign(Jogo.prototype, {
         this.scale.on('resize', () => this._fxResize());
     },
 
+    // Recria as gotas com base em dbg.fx.chuvaCount.
+    // Cada gota lê angulo/comprimento/velocidade dinamicamente em cada ciclo.
+    _rebuildRain() {
+        if (!this.fxRain) return;
+        const w = this.scale.width, h = this.scale.height;
+        const cfg = this.dbg?.fx || {};
+        const target = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
+
+        // Para tweens das gotas existentes
+        this._rainDrops.forEach(d => this.tweens.killTweensOf(d));
+        // Destrói excesso
+        while (this._rainDrops.length > target) {
+            const d = this._rainDrops.pop();
+            if (d && d.scene) d.destroy();
+        }
+        // Cria diferença
+        while (this._rainDrops.length < target) {
+            const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
+            this.fxRain.add(drop);
+            this._rainDrops.push(drop);
+        }
+        this._rainCountAtual = target;
+
+        // (Re)inicia ciclo de cada gota
+        this._rainDrops.forEach(drop => this._startRainDrop(drop));
+    },
+
+    _startRainDrop(drop) {
+        const w = this.scale.width, h = this.scale.height;
+        const reset = () => {
+            drop.x = Phaser.Math.Between(-100, w + 100);
+            drop.y = Phaser.Math.Between(-120, -10);
+        };
+        const fall = () => {
+            if (!drop || !drop.scene) return;
+            const c = this.dbg?.fx || {};
+            const ang     = c.chuvaAngulo  ?? 0.3;   // -1..1 (incl. horiz por unidade vert)
+            const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento)
+            const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. velocidade)
+            const baseLen = 18 * lenMul;
+            const dx      = -ang * baseLen;
+            // Atualiza geometria da linha (direção visual)
+            drop.setTo(0, 0, dx, baseLen);
+            drop.setLineWidth(1.4 * Math.max(0.5, Math.min(2, lenMul)));
+            // Duração base 700ms — velMul maior = duração menor (cai mais rápido)
+            const dur = Phaser.Math.Between(550, 850) / Math.max(0.2, velMul);
+            // Drift horizontal proporcional ao angulo e altura percorrida
+            const driftX = ang * (h + 60) * 0.45;
+            this.tweens.add({
+                targets: drop,
+                y: h + 40, x: drop.x + driftX,
+                duration: dur,
+                onComplete: () => { reset(); fall(); }
+            });
+        };
+        reset();
+        // Start desincronizado por delay aleatório
+        this.time.delayedCall(Phaser.Math.Between(0, 800), fall);
+    },
+
     _fxResize() {
         const w = this.scale.width, h = this.scale.height;
         if (this.fxFog && this.fxFog.setDisplaySize) {
@@ -121,6 +164,9 @@ Object.assign(Jogo.prototype, {
             const visible = !!cfg.chuva;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
+            // Frequência (count) mudou? rebuilda
+            const targetCount = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
+            if (targetCount !== this._rainCountAtual) this._rebuildRain();
         }
         if (this.fxFog) {
             const visible = !!cfg.neblina;
