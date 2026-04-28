@@ -88,7 +88,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _spawnFazendeiros(n) {
-        const W = 3200, H = 2400;
+        const W = 8000, H = 6000;
         for (let i = 0; i < n; i++) {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);

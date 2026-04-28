@@ -17,7 +17,8 @@ class Jogo extends Phaser.Scene {
     }
 
     _createBody() {
-        const W = 3200, H = 2400;
+        // Mapa 2.5× maior (era 3200x2400) — mais espaço pra cenário, currais, exploração
+        const W = 8000, H = 6000;
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
 
@@ -151,6 +152,8 @@ class Jogo extends Phaser.Scene {
 
         this._setupPausa();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
+        this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
+        this._applyFXVisibility();
         this._setupColisoes();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
 
@@ -306,6 +309,22 @@ class Jogo extends Phaser.Scene {
         }
 
         if (beamAtivo) {
+            // FX: detecta transição off→on pra dar shake/flash uma vez
+            if (!this._beamWasOn) {
+                this._beamWasOn = true;
+                if (this.dbg?.fx?.beamShake) {
+                    this.cameras.main.shake(120, 0.004);
+                    this.cameras.main.flash(120, 80, 200, 120, false);
+                }
+            }
+            // Sparkles emitidos a cada ~80ms enquanto o beam está ativo
+            if (this.dbg?.fx?.beamSparks) {
+                this._beamSparkleTimer = (this._beamSparkleTimer ?? 0) + delta;
+                if (this._beamSparkleTimer > 80) {
+                    this._beamSparkleTimer = 0;
+                    this._emitBeamSparkle();
+                }
+            }
             this.coneLuz.setVisible(true);
             this.coneLuz.setAlpha(1);
             if (this.vacas_abduzidas.length < 5) this._tentarAbduzir();
@@ -316,6 +335,7 @@ class Jogo extends Phaser.Scene {
             this.coneLuz.setAlpha(0.35);
             this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
         } else {
+            this._beamWasOn = false;
             this._soltarTodas();
             this.coneLuz.setVisible(false);
         }

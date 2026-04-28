@@ -25,8 +25,15 @@ const DBG_DEFAULTS = {
         discoRot:     0.0,   // velocidade angular da nave (rad/s)
     },
     counts: {
-        vacas:       40,
-        fazendeiros: 8,
+        vacas:       100,   // mapa 2.5x maior — era 40
+        fazendeiros: 20,    // mapa 2.5x maior — era 8
+    },
+    fx: {
+        chuva:        false,
+        neblina:      false,
+        beamSparks:   true,
+        beamShake:    true,
+        explosaoBoa:  true,
     },
 };
 
@@ -40,6 +47,7 @@ Object.assign(Jogo.prototype, {
                 scale:    Object.assign({}, DBG_DEFAULTS.scale,    raw.scale),
                 behavior: Object.assign({}, DBG_DEFAULTS.behavior, raw.behavior),
                 counts:   Object.assign({}, DBG_DEFAULTS.counts,   raw.counts),
+                fx:       Object.assign({}, DBG_DEFAULTS.fx,       raw.fx),
             };
         } catch (e) {
             this.dbg = JSON.parse(JSON.stringify(DBG_DEFAULTS));
@@ -133,6 +141,15 @@ Object.assign(Jogo.prototype, {
                 </fieldset>
 
                 <fieldset>
+                    <legend>EFEITOS (live)</legend>
+                    <label><span>Chuva</span><input type="checkbox" data-cfg="fx.chuva"></label>
+                    <label><span>Neblina</span><input type="checkbox" data-cfg="fx.neblina"></label>
+                    <label><span>Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
+                    <label><span>Shake/flash ao ligar beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
+                    <label><span>Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
+                </fieldset>
+
+                <fieldset>
                     <legend>QUANTIDADES</legend>
                     <label><span>Vacas spawn</span>
                         <input type="number" min="0" max="200" step="1" data-cfg="counts.vacas"></label>
@@ -176,6 +193,9 @@ Object.assign(Jogo.prototype, {
                 this._saveDebugCfg();
 
                 if (display && typeof val === 'number') display.textContent = val.toFixed(1) + 'x';
+
+                // Live-apply: efeitos visuais (chuva/neblina) atualizam na hora
+                if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
             });
         });
 

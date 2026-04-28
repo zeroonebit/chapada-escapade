@@ -60,7 +60,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _spawnVacas(n) {
-        const W=3200, H=2400;
+        const W=8000, H=6000;
         const okVaca = this.dbg?.enabled?.vacas !== false;
         const okBoi  = this.dbg?.enabled?.bois  !== false;
         for(let i=0; i<n; i++) {
@@ -104,6 +104,10 @@ Object.assign(Jogo.prototype, {
         entity.setTint(color);
         if (this.cameras.main.worldView.contains(entity.x, entity.y)) {
             this.cameras.main.shake(120, 0.007);
+        }
+        // FX upgrade: shockwave + sparks (toggle via dbg.fx.explosaoBoa)
+        if (this.dbg?.fx?.explosaoBoa && this._spawnExplosao) {
+            this._spawnExplosao(entity.x, entity.y, color, 1.0);
         }
         this.tweens.add({
             targets: entity,

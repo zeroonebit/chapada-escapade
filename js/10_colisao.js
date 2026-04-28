@@ -48,7 +48,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _repovoar() {
-        const W=3200, H=2400;
+        const W=8000, H=6000;
         if (this.vacas.length >= 20) return;
         let n = Math.min(4, 40 - this.vacas.length);
         for (let i=0; i<n; i++) {
