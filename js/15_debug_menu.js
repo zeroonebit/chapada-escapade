@@ -447,8 +447,9 @@ Object.assign(Jogo.prototype, {
 
             // Shuffle: random weather + TOD
             if (this.dbg?.fx?.weatherShuffle) {
+                // Shuffle aleatoriza WEATHER + TIME OF DAY ambos
                 const TODs = ['dawn','day','dusk','sunset','night','midnight'];
-                const WTHs = ['clear','rain','fog','storm'];
+                const WTHs = ['clear','rain','snow','fog','storm'];
                 this.dbg.fx.timeOfDay = TODs[Math.floor(Math.random()*TODs.length)];
                 this.dbg.fx.weather   = WTHs[Math.floor(Math.random()*WTHs.length)];
                 if (this._saveDebugCfg) this._saveDebugCfg();
