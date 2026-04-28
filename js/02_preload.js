@@ -2,6 +2,11 @@
 Object.assign(Jogo.prototype, {
 
     preload() {
+        // Error handler: avisa no console quando asset 404 (default Phaser falha silente)
+        this.load.on('loaderror', (file) => {
+            console.warn('[ASSET 404]', file.src || file.url || file.key);
+        });
+
         // ── HERO ASSETS 200×200 (single sprite usado em algumas situações) ──
         // Nave aponta pra UFO south (versão dome opaca, sem alien visível dentro)
         this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');

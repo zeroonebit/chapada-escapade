@@ -255,13 +255,9 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) this._atualizarIAVacas();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
-        // COWS = vacas + bois live no feixe; BURGERS = total entregue
-        let cowsInBeam = 0;
-        for (const v of this.vacas_abduzidas) {
-            if (v.isBurger || v.isEnemy) continue;
-            cowsInBeam++;
-        }
-        this.hud.cowsText.setText(cowsInBeam);
+        // COWS counter: usa _cowsInBeamCount mantido por _updateBeamCounters
+        // (era for-loop por frame antes — H5 do audit)
+        this.hud.cowsText.setText(this._cowsInBeamCount || 0);
         this.hud.burgersText.setText(this.burgerCount);
 
         const cam = this.cameras.main;

@@ -181,20 +181,19 @@ Object.assign(Jogo.prototype, {
 
     // ── ABDUÇÃO E FÍSICA NO FEIXE ────────────────────────────────────
     _tentarAbduzir() {
-        // Conta carga atual: vacas/bois (não-burger, não-enemy) e fazendeiros (isEnemy)
-        const cargaVacas    = this.vacas_abduzidas.filter(v => !v.isBurger && !v.isEnemy).length;
-        const cargaFarmers  = this.vacas_abduzidas.filter(v => v.isEnemy).length;
-        // Mutex: vaca/boi e fazendeiro não convivem no beam
-        const podeVacas    = cargaFarmers === 0 && cargaVacas < 5;
-        const podeFarmers  = cargaVacas === 0 && cargaFarmers < 1;
+        // Conta carga atual usando contador (em vez de filter — perf)
+        const cargaVacas    = this._cowsInBeamCount  || 0;
+        const cargaFarmers  = this._farmersInBeamCount || 0;
+        // Mutex via constants
+        const podeVacas    = cargaFarmers === 0 && cargaVacas < BEAM_CAP_VACAS;
+        const podeFarmers  = cargaVacas === 0 && cargaFarmers < BEAM_CAP_FARMERS;
 
+        const r2 = this.raioCone * this.raioCone;  // squared pra evitar sqrt
         const tryAbduct = (v) => {
             if (v._dying || v._destroyed || v.presaNaMoita || v._inCurral || this.vacas_abduzidas.includes(v)) return;
-            // Filtra por mutex
             if (v.isEnemy && !podeFarmers) return;
             if (!v.isEnemy && !podeVacas) return;
-            const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, v.x, v.y);
-            if (d > this.raioCone) return;
+            if (distSq(this.nave.x, this.nave.y, v.x, v.y) > r2) return;
             if (v.presaNaGrama) {
                 v.presaNaGrama = false;
                 if (v.scene && v.body) {
@@ -210,6 +209,19 @@ Object.assign(Jogo.prototype, {
         };
         this.vacas.forEach(tryAbduct);
         this.fazendeiros.forEach(tryAbduct);
+        this._updateBeamCounters();
+    },
+
+    // H5: reconciler — atualiza _cowsInBeamCount / _farmersInBeamCount após mutação
+    // Eliminou o filter() por frame em _updateBody (era 2 iter por update tick)
+    _updateBeamCounters() {
+        let cows = 0, farmers = 0;
+        for (const v of this.vacas_abduzidas) {
+            if (v.isEnemy) farmers++;
+            else if (!v.isBurger) cows++;
+        }
+        this._cowsInBeamCount    = cows;
+        this._farmersInBeamCount = farmers;
     },
 
     _fisicaBacia(v) {
@@ -236,6 +248,7 @@ Object.assign(Jogo.prototype, {
             const yld = v.burgerYield || 2;
             const px = v.x, py = v.y;
             this.vacas_abduzidas = this.vacas_abduzidas.filter(x => x !== v);
+            this._updateBeamCounters();
             this.vacas = this.vacas.filter(x => x !== v);
             this._destruirVaca(v);
             for (let i = 0; i < yld; i++) {
@@ -325,8 +338,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _atualizarIAVacas() {
-        const FLEE_DIST = 240;            // raio onde vaca começa a correr (era 160)
-        const FLEE_DIST_SQ = FLEE_DIST * FLEE_DIST;
+        // FLEE_DIST/FLEE_DIST_SQ vêm de 00_constants.js
         const velMul = this.dbg?.behavior?.velVaca ?? 1.0;
         const now = this.time?.now ?? 0;
         for (let i = 0; i < this.vacas.length; i++) {
@@ -399,6 +411,7 @@ Object.assign(Jogo.prototype, {
 
     _soltarVaca(vaca) {
         this.vacas_abduzidas = this.vacas_abduzidas.filter(v => v !== vaca);
+        this._updateBeamCounters();
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
         // Janela de 3s onde a vaca/boi força orientação south e atrito alto pra parar
@@ -418,6 +431,7 @@ Object.assign(Jogo.prototype, {
             if (v.walkTimer) v.walkTimer.paused = false;
         });
         this.vacas_abduzidas = [];
+        this._updateBeamCounters();
     },
 
     _dropNonBurgers() {

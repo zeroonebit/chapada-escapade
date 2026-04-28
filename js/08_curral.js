@@ -92,6 +92,7 @@ Object.assign(Jogo.prototype, {
         const aceitas = candidatas.slice(0, livres);
         // Remove só as aceitas das abduzidas; restantes continuam no beam
         this.vacas_abduzidas = this.vacas_abduzidas.filter(v => !aceitas.includes(v));
+        if (this._updateBeamCounters) this._updateBeamCounters();
 
         this._ensureCowMascote(curral);
 
@@ -223,9 +224,5 @@ Object.assign(Jogo.prototype, {
         }
         return false;
     },
-
-    // No-op compat
-    _coletarDoCurral() { /* substituído por _atrairBurgersBeam */ },
-    _coletarBurgersPerto() { /* substituído por _atrairBurgersBeam */ },
 
 });
