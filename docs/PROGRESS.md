@@ -4,6 +4,21 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-28 (noite) — Batch v2 assets PixelLab + variações de cor + gallery
+
+- **36 assets nature/objetos** gerados via PixelLab MCP em `assets/pixel_labs/chars/nature/v2/inbox/`: bromélias, palmeiras, pedras, gramado, cochos, fardos, baldes, moinho, crop circles, satélite, wrecked_truck, gas_can, radio tower, lanterna, barris, caixas, flores, crânio, igrejinha, mesa rock
+- **HUD bars regeneradas** com style transfer: crop PIL de `refs/huds.jpg` → resize 192×64 → base64 → PixelLab inpainting 55%
+  - `combustivel_v2.png` — gradiente red→orange
+  - `graviton_v2.png` — gradiente cyan→purple
+- **4 variações wrecked_truck**: red / blue / green / yellow (128×128, high top-down)
+- **4 variações gas_can**: red (existia) + blue / green / yellow (96×96, high top-down)
+- **`tools/asset_gallery.html`** criada — galeria single-page com arrow nav, auto-refresh 8s, grid thumbnails, fundo xadrez; serve via port 8081
+- **`.claude/launch.json`** atualizado com config "Chapada Escapade (gallery)" na porta 8081
+- Refs salvas: `slice_combustivel.png`, `slice_combustivel_192.png`, `slice_graviton.png`, `slice_graviton_192.png` + b64 txt
+- Git sync completo: 52 arquivos commitados → worktree ✅ → main ✅ → GitHub Pages ✅
+
+---
+
 ## Sessão 2026-04-29 — Tutorial guiado completo + curral redesign + 14 cercas v2 + chuva controlável
 
 **~30 commits, ~14h, das 09:00 às 23:00**

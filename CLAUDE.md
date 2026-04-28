@@ -134,6 +134,14 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Cleanup**: vaca_chubby/holstein/skinny removidas (457 arquivos duplicados)
 - **Workflow git automático** — sync worktree → main → push ao final de cada request
 
+### ✅ Pronto (cont. — sessão 2026-04-28 noite)
+- **Batch v2 — 36 assets** natureza/objetos em `chars/nature/v2/inbox/` (bromélias, palmeiras, pedras, cochos, fardos, moinho, satélite, radio tower, barris, caixas, flores, igrejinha, mesa rock, etc.)
+- **HUD bars v2** — `combustivel_v2.png` (red→orange) e `graviton_v2.png` (cyan→purple) via style transfer com crop de `refs/huds.jpg`
+- **Variações wrecked_truck**: red / blue / green / yellow
+- **Variações gas_can**: blue / green / yellow (+ red já existia)
+- **`tools/asset_gallery.html`** — galeria de preview com arrow nav, auto-refresh, grid thumbs, fundo xadrez (port 8081)
+- **`.claude/launch.json`** — config "gallery" porta 8081 adicionada
+
 ### 🛠 Pipeline PixelLab (novo)
 - `tools/pixellab_fetch_new.py` — baixa por ID via Backblaze CDN (sem API key)
 - `tools/pixellab_montage_new.py` — contact sheet pra ID visual
@@ -146,13 +154,15 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Curral variations**: portas abertas/fechadas, cantos retos/redondos usando os assets v2 — pedido do usuário
 - **Coleta de hamburger no tutorial**: highlight no burger + coleta na posição do burger (não em cima do curral) — pedido do usuário
 - **Vaca chubby sprite no curral**: substituir cima_sobe/cima_desce pelo chubby idle/walk/eat — pedido do usuário
+- **Integrar assets v2 no cenário**: adicionar os 36+ novos assets em `js/03_cenario.js` NATURE_ASSETS com SCALE_MAP e bounds-aware scatter
 
 ### 🔜 Próximos passos
-1. **Salvar configs do user como defaults no git** — pegar `localStorage.getItem('chapEscapadeDebug')` do user e fazer override de `DBG_DEFAULTS` em `js/15_debug_menu.js` pra todos jogadores começarem com a mesma experiência tunada
-2. **Toggle de input WASD + Space** na aba CONTROLES do debug menu — alternativa ao mouse (W/A/S/D pra mover, Space pra graviton); manter mouse como padrão
-3. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-4. **Boi rest_idle/attack** anims (parcial — só S no disco; precisaria gerar outras dirs via PixelLab)
-5. **Balde de leite** no curral (item não existe ainda — gerar via PixelLab MCP ou `/create-object`)
+1. **Integrar assets v2 no cenário** — adicionar `wrecked_truck_*`, `gas_can_*`, bromélias, palmeiras, pedras etc. em `js/03_cenario.js` NATURE_ASSETS com escala e posicionamento corretos
+2. **Salvar configs do user como defaults no git** — pegar `localStorage.getItem('chapEscapadeDebug')` e fazer override de `DBG_DEFAULTS` em `js/15_debug_menu.js`
+3. **Toggle de input WASD + Space** na aba CONTROLES do debug menu
+4. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+5. **Boi rest_idle/attack** anims (parcial — só S no disco)
+6. **Balde de leite** no curral (gerar via PixelLab MCP)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
