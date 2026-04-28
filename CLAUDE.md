@@ -75,20 +75,42 @@
 - **Diagnostic try/catch** em `create()` e `update()` — erro vira box vermelho na tela
 - **`window.game` exposto** pra debug via `99_main.js`
 
+### ✅ Pronto (cont. — sessão 2026-04-27/28)
+- **Vaca chubby 8-dir** substitui skinny 4-dir (anims walk + idle_head_shake→eat + lie_down→angry; vaca_run = walk @ fps×2)
+- **Boi walk** anim 8-dir wired (state machine: walking quando movendo, estático parado)
+- **Fazendeiro running** anim 8-dir wired (matter.add.sprite + setBody radius 16; rotations top-down corrigidas)
+- **Fix do norte do fazendeiro** (rerota N → NE/NW)
+- **UFO `b7bc12d9` re-baixado** (dome opaca, sem alien) — nave aponta pra `chars/ufo/south.png`
+- **5 chars completos integrados** (~620 frames): vaca chubby, boi, fazendeiro, ufo, vaca_holstein
+- **Mapa 2.5×** (3200×2400 → 8000×6000) + spawn defaults boost (vacas 100, fazendeiros 20)
+- **31 nature assets** scrapeados via Chrome MCP (pedras/vegetação/cercas/placas/outros) com per-asset SCALE_MAP + bounds-aware placement
+- **Currais procedural** com cercas reais (gate sempre aberto + sem colisão; só em terra)
+- **Wang tiles cr31** toggle no debug — corner grid próprio + threshold só grama + paleta terrosa Chapada
+- **Debug menu DOM completo** na pausa (ESC) — 30+ controles persisted em localStorage, todos sliders step 0.01
+- **FX stack** (`16_fx.js`): chuva, neblina vinheta radial, beam sparkles + shake/flash, explosão fancy, sombras blur, escapamento estilo carro + partículas coloridas (substituiu LEDs giroflex), distorção esférica (barrel post-fx GLSL), smoke puff no muzzle do farmer
+- **HP system colisional:** vaca/boi 3-5 hits + setBounce(0.5); farmer só morre em pedra (HP 1, setBounce 0.2); debounce 120ms; cow-cow elastic decay
+- **Beam revertido pra Graphics concêntrico** (5 círculos, sem artefatos PNG) + pull default 0.5
+- **Balas atiradores persistem** até sair do mundo
+- **setFixedRotation** em fazendeiro/vaca/boi (fim do "boneco deitado")
+- **Soltar do beam:** force south orientation 3s
+- **Burger variants** random (classic/cheese/double)
+- **Splash v3 fullscreen** + game over/vitória com splash desaturado + favicon icon.png
+- **Tilt suave da nave** baseado em vel lateral; LED ring proporcional ao displayWidth
+- **`docs/CONQUISTAS.md`** — log de achievements/estatísticas atualizado por sessão
+
 ### 🚧 Em andamento
-- Re-habilitar **shaders** (terrain `13_terrain_shader.js` + grass `14_grass_patch.js`) — desligados pra debug. Background atual é `add.rectangle` verde + manchas de terra.
-- Animar boi (chubby `e4c60ba7` tem walk-4-frames 8d + idle-shaking-head 8d + rest-idle 8d + eating south + attack south)
-- Animar fazendeiro e UFO
-- Bug pendente: **preview local na sessão atual quebrou** (`new Phaser.Game()` não executa, scripts carregam mas canvas vazio). Workaround: testar direto via Pages.
+- Re-habilitar **shaders** (terrain `13_terrain_shader.js` + grass `14_grass_patch.js`) — desligados pra debug. Cellular Automata + add.rectangle ainda é o fallback.
+- **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida) — proxima geração via PixelLab `create_topdown_tileset` ou Nano Banana
 
 ### 🔜 Próximos passos
-1. **Animar boi** (mesmo schema da vaca: walk + idle + eating + attack como angry-equivalente)
-2. **Animar fazendeiro** (running, attack, idle) — usar template animations
-3. **Animar UFO** (idle/breathing-idle pra dar vida; alert state quando energia baixa)
-4. **Re-habilitar terrain shader** após estabilizar — ou portar Wang playground (cr31) pra substituir CA layered overlap
-5. **Anéis animados** (capture FX) — usar `animate_character` ou Phaser particles
-6. **Minimapa** canto inferior esquerdo
-7. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
+1. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+2. **Re-habilitar terrain shader** OU substituir totalmente pelo Wang renderer
+3. **UFO hovering_idle** anim — assets já carregados em `chars/ufo/anims/hovering_idle/`
+4. **Anéis animados** (capture FX) na abdução
+5. **Minimapa** canto inferior esquerdo
+6. **Boi attack/eating/idle_head_shake/rest_idle** anims (já no disco, falta wire)
+7. **Vaca holstein** 4-dir como variante de spawn
+8. **Code review:** ver tamanho do projeto e considerar TypeScript / build step (Vite) se passar de ~25 arquivos JS
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)

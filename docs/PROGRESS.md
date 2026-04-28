@@ -4,6 +4,99 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-27 (noite) → 2026-04-28 — Maratona: anims completas + debug menu + FX stack + nature + currais + Wang
+
+**24+ commits, ~15h, das 21:14 (27/04) à 00:00+ (28/04)**
+
+### Animações & sprites
+- **Fazendeiro running 8-dir** wired no jogo (anim play por direção via velocity picker)
+  - Fix do norte: rerota `N` puro pra `NE`/`NW` (chapéu cobre corpo na vista superior)
+  - Fazendeiro convertido `matter.add.image` → `matter.add.sprite` + `setBody({type:'circle',radius:16})`
+  - Static rotations top-down (156×156) substituíram as full-body antigas (180×180 cowboy)
+- **Boi walk 8-dir** wired (state machine: walking quando movendo, sprite estático parado)
+  - Wander force bumpada 0.0010 → 0.0030 (boi diagonal funciona agora)
+- **Vaca chubby 8-dir** substitui skinny 4-dir
+  - Anims walk(4f) / idle_head_shake→eat(11f) / lie_down→angry(8f) — 32 anim sets
+  - vaca_run = vaca_walk com fps×2
+  - Old skinny preservada em `chars/vaca_skinny_4dir/`
+- **5 chars PixelLab** completos integrados — `chars/{vaca,boi,fazendeiro,ufo,vaca_holstein}/` (~620 frames)
+- **UFO `b7bc12d9` re-baixado** (dome opaca, sem alien) — nave aponta pra `chars/ufo/south.png`
+- **Scary_walk fazendeiro deletado** (full-body humanoid não-topdown)
+- **Splashv3 + icon.png** — favicon novo, splash fullscreen (cover scale)
+- **Game over + vitória** com splash desaturado (vermelho 0x441111 / verde 0x114422)
+
+### Mapa & cenário
+- **Mapa 2.5×** (3200×2400 → 8000×6000) em todos os 4 lugares hardcoded
+- **31 nature assets** scrapeados via Chrome MCP do `/create-object` PixelLab
+  - Categorias: `pedras` (3), `vegetacao` (12), `cercas` (10), `placas` (4), `outros` (2)
+  - Per-asset proportional `SCALE_MAP` (saguaro 2.0, pillar 1.9, agave 1.3, dry 0.9 etc)
+  - Bounds-aware placement (até 12 retries por peça, raio 32×scale×0.85, sem overlap)
+  - Labels baked-in detectados + cropados (16/31 PNGs)
+- **Cellular Automata terreno** com grid 100×75 cells (4 níveis: água/areia/grama/terra)
+- **Currais procedural** com 10 cercas variantes (fence_long/gate_open/post_thin)
+  - Retângulo 220×180, gate sempre aberto + sem matter body (vacas atravessam)
+  - **Currais só em terra** (`grid===3`)
+- **Wang tiles cr31** toggle no debug menu
+  - Corner grid (COLS+1)×(ROWS+1) próprio (sem costura)
+  - Threshold corrigido: só `grass===2` é UPPER (era `>=2` que pegava terra → todos idx=15)
+  - 2 passes de smoothing extra nos cantos
+  - Paleta terrosa: areia `#c9a574` + grama `#6e9b3a` + dry transition `#a89548`
+
+### Debug menu (DOM-based, ESC)
+- 30+ controles persistidos em localStorage
+- ON/OFF: vacas, bois, fazendeiros, atiradores, beam visual, cenário
+- Sliders escala: vaca, boi, faz, beam, nave, hambúrguer (todos step **0.01**)
+- Sliders comportamento: dano atiradores, vel faz, vel vacas, pull beam, discoRot, **barrel** (distorção esférica)
+- Quantidades: spawn count vacas (100) + fazendeiros (20)
+- FX toggles: chuva, neblina, sparkles beam, shake, explosão fancy, **wangtiles**
+- APLICAR + REINICIAR + RESET defaults
+
+### FX stack (16_fx.js)
+- **Chuva:** 80 gotas em loop diagonal
+- **Neblina:** vinheta canvas com gradiente radial (centro nítido, bordas brancas alpha 0-40%)
+- **Beam sparkles:** pontinhos verdes orbitando que viajam pro centro da nave
+- **Beam shake/flash** ao ligar (transição off→on, verde 0x50c878)
+- **Explosão upgrade:** shockwave anel + 8 sparks + flash branco central
+- **Distorção esférica (barrel)** PostFXPipeline GLSL — `r²·strength·1.6` — slider 0-0.8
+- **Sombras com blur fake** (3 elipses stacked, alpha 0.18/0.40/0.85) em todas as entidades + nave
+  - Proporcional a `entity.displayWidth` (boi grande = sombra grande)
+- **Escapamento estilo carro:** spawn 100ms, size 4, growTo 3.5×, alpha 0.75→0
+- **Partículas coloridas** misturadas no escapamento (5 cores) — substituiu LEDs giroflex
+- **Smoke puff no muzzle** dos disparos do farmer
+
+### Sistema de jogo
+- **HP system colisional:**
+  - Vaca/boi: HP random 3-5 + setBounce(0.5)
+  - Fazendeiro: HP 1 + setBounce(0.2) — só morre em pedra
+  - Debounce 120ms entre hits
+  - `_hitFlash(entity, color)` tint pulse 120ms ao tomar dano
+  - Cow vs farmer: ninguém toma dano (faz só morre em rocha)
+- **Beam pull fix:** removida re-prisão na grama (vacas saiam intocaveis do beam)
+- **Beam graphics revert:** voltou pros 5 círculos concêntricos (alpha 0.05→0.22) — sem artefatos PNG
+- **pullBeam default 0.5** (era 1.0 — bichos arremessavam contra obstáculos e morriam)
+- **Balas atiradores persistem** até saírem do mundo 8000×6000 (era fade após MAX_DIST=580)
+- **Fazendeiro/vaca/boi `setFixedRotation`** — fim do bug "boneco deitado" por colisão
+- **Soltar do beam:** `_returnSouthUntil = now + 3000` força orientação south + fricção alta 3s
+- **Burger variants** random no spawn e no virar (classic 2× weight + cheese + double)
+
+### Nave (UFO)
+- `setFixedRotation` + rotação manual via slider `discoRot`
+- **Tilt suave** baseado em mudança de velocidade lateral (banking)
+- **LED ring radius proportional** ao `nave.displayWidth*0.48`
+- LEDs giroflex desativados → partículas coloridas no escapamento
+
+### Tools
+- `pixellab_objects_fetch.py` — baixa 31 map_objects via CDN backblaze
+- `pixellab_montage.py` — gera contact sheet pra ID visual
+- `crop_nature_labels.py` — detecta + crop banda de label
+- `organize_nature.py` — copia inbox → chars/nature com nomes legíveis
+- `wang_test_palette.py` — atualizado pra paleta terrosa Chapada
+
+### Conquistas doc
+- `docs/CONQUISTAS.md` criado — log de achievements + estatísticas atualizado por sessão
+
+---
+
 ## Sessão 2026-04-27 (cont.) — PixelLab MCP integrado + assets novos + vaca animada
 
 - **PixelLab MCP** ativado via `claude mcp add pixellab https://api.pixellab.ai/mcp -t http -H "Authorization: Bearer ..."` — 25 tools disponíveis (`create_character`, `create_map_object`, `animate_character`, etc.)
