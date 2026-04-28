@@ -47,6 +47,9 @@ const DBG_DEFAULTS = {
         beamShake:          true,
         explosaoBoa:        true,
         wangtiles:          false,
+        timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
+        timeAutoCycle:      false,     // ciclo auto a cada 60s
+        weather:            'clear',   // clear|rain|fog|storm
     },
 };
 
@@ -201,6 +204,29 @@ Object.assign(Jogo.prototype, {
                 <div class="tab-panel" id="tab-vfx" style="display:none">
                     <div class="note">Todos aplicam live.</div>
                     <fieldset>
+                        <legend>TIME OF DAY</legend>
+                        <label><span>Time</span>
+                            <select data-cfg="fx.timeOfDay" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="dawn">Dawn</option>
+                                <option value="day">Day</option>
+                                <option value="dusk">Dusk</option>
+                                <option value="sunset">Sunset</option>
+                                <option value="night">Night</option>
+                                <option value="midnight">Midnight</option>
+                            </select></label>
+                        <label><span>Auto-cycle (60s/preset)</span><input type="checkbox" data-cfg="fx.timeAutoCycle"></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>WEATHER</legend>
+                        <label><span>Preset</span>
+                            <select data-cfg="fx.weather" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="clear">Clear</option>
+                                <option value="rain">Rain</option>
+                                <option value="fog">Fog</option>
+                                <option value="storm">Storm (rain+fog+lightning)</option>
+                            </select></label>
+                    </fieldset>
+                    <fieldset>
                         <legend>CHUVA</legend>
                         <label><span>Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
                         <label><span>Intensidade (alpha)</span>
@@ -332,13 +358,17 @@ Object.assign(Jogo.prototype, {
             numInp.addEventListener('blur', apply);
         });
 
-        // Bind <select> (input mode etc)
+        // Bind <select> (input mode, timeOfDay, weather etc)
         root.querySelectorAll('select[data-cfg]').forEach(sel => {
             const [section, key] = sel.dataset.cfg.split('.');
             sel.value = this.dbg[section][key];
             sel.addEventListener('change', () => {
                 this.dbg[section][key] = sel.value;
                 this._saveDebugCfg();
+                // TOD ou weather mudou? aplica live
+                if (section === 'fx' && (key === 'timeOfDay' || key === 'weather')) {
+                    if (this._applyAtmosphere) this._applyAtmosphere();
+                }
             });
         });
 

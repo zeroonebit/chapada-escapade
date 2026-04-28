@@ -166,6 +166,7 @@ class Jogo extends Phaser.Scene {
         this._setupPausa();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
+        this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
         this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
         this._setupColisoes();              // 10_colisao.js
@@ -354,6 +355,7 @@ class Jogo extends Phaser.Scene {
         }
 
         this._updateBarrel();
+        this._atmoUpdate(delta);
         this._atualizarLEDs(delta);
 
         const querBeam = (inputMode === 'wasd' || this.isMobile)
