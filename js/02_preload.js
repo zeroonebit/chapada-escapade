@@ -77,6 +77,9 @@ Object.assign(Jogo.prototype, {
         NATURE_VEGE.forEach(n   => this.load.image(`nat_vege_${n}`,  `assets/pixel_labs/chars/nature/vegetacao/${n}.png`));
         NATURE_CERCAS.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas/${n}.png`));
         NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas_v2/${n}.png`));
+        // Outros itens decorativos (feno, pile de toras)
+        const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
+        NATURE_OUTROS.forEach(n => this.load.image(`nat_outro_${n}`, `assets/pixel_labs/chars/nature/outros/${n}.png`));
         // Expor pra outros módulos
         this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
         this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);

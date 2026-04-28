@@ -21,47 +21,37 @@ Object.assign(Jogo.prototype, {
         if (curral.mascote && curral.mascote.scene) {
             curral.mascote.setVisible(true);
             curral.mascoteCountTxt.setVisible(true);
+            if (curral.mascoteFeno) curral.mascoteFeno.setVisible(true);
             return curral.mascote;
         }
-        // Usa o primeiro frame do eat anim (chubby comendo) como textura inicial
-        // garantida — evita ficar sprite estático antigo se anim não disparar
+        // Tamanho REAL da vaca (igual _criarVaca: baseSize 68 * scale.vaca)
+        const SIZE = 68 * (this.dbg?.scale?.vaca ?? 1.0);
+
+        // Vaca chubby comendo virada pra sul (anim fixa eat_S)
         const initTex = this.textures.exists('vaca_eat_S_0') ? 'vaca_eat_S_0' : 'vaca_S';
-        const m = this.add.sprite(curral.x, curral.y, initTex)
-            .setDisplaySize(72, 72).setDepth(2);
-        const dirs = ['S','SE','E','SW','W'];
-        const pickAnim = () => {
-            const r = Math.random();
-            const dir = dirs[Math.floor(Math.random() * dirs.length)];
-            let key;
-            if (r < 0.60) key = `vaca_eat_${dir}`;
-            else if (r < 0.90) key = `vaca_walk_${dir}`;
-            else key = `vaca_angry_${dir}`;
-            if (this.anims.exists(key)) m.play(key, true);
-            else {
-                // Fallback: usa frame estático do eat
-                const fb = `vaca_eat_${dir}_0`;
-                if (this.textures.exists(fb)) m.setTexture(fb);
-            }
-        };
-        pickAnim();
-        m._animTimer = this.time.addEvent({
-            delay: Phaser.Math.Between(3000, 5000),
-            loop: true,
-            callback: () => {
-                if (!m.scene) return;
-                pickAnim();
-                m._animTimer.delay = Phaser.Math.Between(3000, 5000);
-            }
-        });
+        const m = this.add.sprite(curral.x - 14, curral.y, initTex)
+            .setDisplaySize(SIZE, SIZE).setDepth(2);
+        if (this.anims.exists('vaca_eat_S')) m.play('vaca_eat_S', true);
+
+        // Fardo de feno ao lado direito (vaca olha pra ele e come)
+        let feno = null;
+        if (this.textures.exists('nat_outro_hay_bale')) {
+            feno = this.add.image(curral.x + 30, curral.y + 6, 'nat_outro_hay_bale')
+                .setDisplaySize(42, 38).setDepth(1.9);
+        }
+
         const txt = this.add.text(curral.x, curral.y - 48, 'x0', {
             fontSize: '22px', fill: '#ffee88', fontStyle: 'bold',
             stroke: '#000000', strokeThickness: 5
         }).setOrigin(0.5).setDepth(40);
+
         curral.mascote = m;
+        curral.mascoteFeno = feno;
         curral.mascoteCount = 0;
         curral.mascoteCountTxt = txt;
         m.setVisible(false);
         txt.setVisible(false);
+        if (feno) feno.setVisible(false);
         return m;
     },
 
@@ -70,6 +60,7 @@ Object.assign(Jogo.prototype, {
         const visible = curral.mascoteCount > 0;
         curral.mascote.setVisible(visible);
         if (curral.mascoteCountTxt) curral.mascoteCountTxt.setVisible(visible);
+        if (curral.mascoteFeno) curral.mascoteFeno.setVisible(visible);
     },
 
     // Posição do slot fixo (0/1/2) abaixo do gate sul do curral
