@@ -173,6 +173,15 @@ Object.assign(Jogo.prototype, {
                 this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
                 const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);
                 this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
+                // Puff de fumaça do disparo (3 nuvenzinhas com offset aleatório)
+                const muzzleX = f.x + Math.cos(ang) * 18;
+                const muzzleY = f.y + Math.sin(ang) * 18;
+                for (let p = 0; p < 3; p++) {
+                    this._spawnSmoke(muzzleX, muzzleY, {
+                        color: 0xeeeeee, alpha: 0.55, size: 5 + Math.random()*3,
+                        dur: 380, drift: 14
+                    });
+                }
             }
         }
     }

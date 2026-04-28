@@ -184,12 +184,10 @@ Object.assign(Jogo.prototype, {
 
     _fisicaBacia(v) {
         if (!v.scene || !v.body || v._dying) return;
-        // Inimigos não ficam presos na grama — flutuam livres pra serem arremessados
+        // Não re-prende em grama enquanto abduzida (bug: vaca grudava de novo no frame seguinte)
+        // Atrito baixo enquanto no feixe — pra deslizar livre até a nave
         if (!v.isBurger && !v.isEnemy) {
-            const depth = this._grassDepth(v.x, v.y);
-            if (depth > 0.7) { this._prenderNaGrama(v); return; }
-            // Atrito progressivo: 0.015 fora, sobe quadraticamente até quase travar
-            v.setFrictionAir(0.015 + depth * depth * 2.8);
+            v.setFrictionAir(0.015);
         }
         const pullMul = this.dbg?.behavior?.pullBeam ?? 1.0;
         let dx = this.nave.x-v.x, dy = this.nave.y-v.y;
@@ -307,7 +305,9 @@ Object.assign(Jogo.prototype, {
 
             const dx = v.x - this.nave.x, dy = v.y - this.nave.y;
             const distSq = dx*dx + dy*dy;
-            const baseF = (v.tipo === 'boi' ? 0.0010 : 0.0016) * velMul;
+            // Bumpou o boi pra 0.0030 (era 0.0010) — antes força/massa não vencia atrito,
+            // boi parecia preso e picker caía no wanderAngle (random) em vez do vetor velocidade
+            const baseF = (v.tipo === 'boi' ? 0.0030 : 0.0016) * velMul;
 
             if (distSq >= FLEE_DIST_SQ) {
                 // Far do player: alterna entre comer e andar com timer
@@ -322,7 +322,7 @@ Object.assign(Jogo.prototype, {
                         : Phaser.Math.Between(1500, 3500);  // anda 1.5-3.5s
                 }
                 if (!v._eating && v._wandering) {
-                    const idleF = baseF * 0.5;
+                    const idleF = baseF * 0.6;
                     v.applyForce({ x: Math.cos(v.wanderAngle) * idleF, y: Math.sin(v.wanderAngle) * idleF });
                 }
                 this._texturaDirecional(v);

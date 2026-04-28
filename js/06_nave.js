@@ -121,6 +121,22 @@ Object.assign(Jogo.prototype, {
         );
     },
 
+    _spawnSmoke(x, y, opts = {}) {
+        const { color = 0xccddee, alpha = 0.45, size = 6, dur = 600, drift = 0 } = opts;
+        const s = this.add.circle(x, y, size, color, alpha).setDepth(8);
+        const dx = (Math.random() - 0.5) * drift;
+        const dy = (Math.random() - 0.5) * drift;
+        this.tweens.add({
+            targets: s,
+            scale: 2.2,
+            alpha: 0,
+            x: x + dx,
+            y: y + dy,
+            duration: dur,
+            onComplete: () => s.destroy()
+        });
+    },
+
     _atualizarPaciencia(delta) {
         this.pacienciaAtual -= 2.2 * this.dificuldade * (delta/1000);
         if (this.pacienciaAtual <= 0) { this.pacienciaAtual = 0; this._gameOver(); }

@@ -87,16 +87,19 @@ class Jogo extends Phaser.Scene {
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
         this.raioCone = CONE_R;
-        // Beam: PNG do PixelLab + blend ADD pra glow + alpha tween de pulse
-        // BlendModes.ADD pode causar artefatos quadrados em GPUs específicas — fallback NORMAL via cfg
+        // Beam: PNG do PixelLab + blend SCREEN (mais suave que ADD, sem artefato quadrado)
         this.coneLuz = this.add.image(W/2, H/2, 'beam_halo')
-            .setBlendMode(Phaser.BlendModes.ADD)
+            .setBlendMode(Phaser.BlendModes.SCREEN)
             .setDisplaySize(CONE_R * 2.4, CONE_R * 2.4)
-            .setDepth(2).setVisible(false);
+            .setDepth(2).setVisible(false)
+            .setAlpha(0.85);
         if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
         this.nave = this.matter.add.image(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         this.nave.setDisplaySize(80, 80);
+        // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
+        // via discoRot slider no _updateBody
+        this.nave.setFixedRotation();
 
         this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da nave
 
@@ -261,6 +264,30 @@ class Jogo extends Phaser.Scene {
 
         this.sombraNave.setPosition(this.nave.x+12, this.nave.y+22);
         this.coneLuz.setPosition(this.nave.x, this.nave.y);
+
+        // Disco: rotação base (slider) + tilt baseado em mudança de velocidade lateral
+        const discoRot = this.dbg?.behavior?.discoRot ?? 0;
+        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + discoRot * (delta / 1000);
+        const navVx = this.nave.body.velocity.x;
+        const navVy = this.nave.body.velocity.y;
+        const vAxDelta = navVx - (this._lastNavVx ?? navVx);
+        this._lastNavVx = navVx;
+        const tiltTarget = Phaser.Math.Clamp(-vAxDelta * 8, -0.4, 0.4);
+        this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
+        this.nave.rotation = this._discoBaseAngle + this._tiltCurrent;
+
+        // Fumacinha de rastro atrás da nave quando se move
+        const navSpeed = Math.sqrt(navVx*navVx + navVy*navVy);
+        if (navSpeed > 0.6) {
+            this._smokeTimer = (this._smokeTimer ?? 0) + delta;
+            if (this._smokeTimer > 55) {
+                this._smokeTimer = 0;
+                const px = this.nave.x - (navVx/navSpeed) * 26;
+                const py = this.nave.y - (navVy/navSpeed) * 26;
+                this._spawnSmoke(px, py, { color: 0xddeeff, alpha: 0.35, size: 5, dur: 520, drift: 16 });
+            }
+        }
+
         this._atualizarLEDs(delta);
 
         const querBeam = this.isMobile
