@@ -4,81 +4,18 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
-## Sessão 2026-04-29 (noite) — Atmosphere system + tutorial overhaul + i18n + responsividade
+## Sessão 2026-04-28 (noite) — Batch v2 assets PixelLab + variações de cor + gallery
 
-**~25 commits, ~6h, das 18:00 às 00:00+**
-
-### Atmosphere system (novo `js/18_atmosphere.js`)
-- 6 TOD presets (dawn/day/dusk/sunset/night/midnight) com gradient vertical via Graphics.fillGradientStyle
-- Auto-cycle 60s/preset (ciclo 6min completo)
-- Weather: clear / rain / fog / snow / storm
-- Storm com flash de raio aleatório (5-15s, com eco)
-- Snow: flocos brancos r=1-3.5px, drift ±60px sinuoso, queda lenta (3-6s)
-- Tutorial sempre força day + clear
-
-### Tutorial overhaul
-- Splash multi-stage: PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD
-- Nova etapa BEAM_VISUAL (cone sem efeito, antes do GRAVITON_BAR)
-- GRAVITON_BAR com drain 2x didático
-- Bug fix: tutorial travava em GRAVITON_BAR (visualOnly bloqueava drain) — separadas flags `_tutBeamNoDrain` vs `_tutBeamNoPull`
-- ABDUCT spawna 50 vacas globais uniformes pelo mapa 8000×6000
-- Vacas imortais durante etapa ABDUCT
-- BURGER inicia combustível em 15% (dramático, restaura com burger)
-- HUD bars hide/show por etapa (combustível e graviton só aparecem nas etapas certas)
-
-### Curral upgrade
-- Mascote vaca chubby tamanho real (68px) com anim eat fixa
-- Hay bale ao lado direito (84×76px, 2x maior)
-- 3 slots fixos por curral (slot 0=classic, 1=cheese, 2=double)
-- Coleta via beam graviton (atrai burgers ready dentro do raioCone)
-- Pontos progressivos: 100/150/220 — fuel 22/28/36 por slot
-- Counter ×N maior (22px com stroke 5)
-- Mascote esconde se count=0
-- 4 variants random de curral
-
-### CONFIGS menu (renomeado de DEBUG MENU)
-- ESC funciona desde o splash pra configurar antes do jogo
-- Novo botão **PREVIEW** (👁): timeslice de 5s + esconde inimigos + reabre menu depois
-- Checkbox **Shuffle on PREVIEW** aleatoriza weather+TOD a cada click
-- Sliders viraram inputs editáveis (digita o valor direto, sync bidirecional)
-- Sensibilidade discreto: 1 / 1.25 / 1.5 (step 0.25)
-- Toggle **Input** WASD/Mouse na aba CONTROLS > SHIP
-- Toggle **Language** ENG/PTBR no topo da CONTROLS > SHIP
-- Sistema i18n via `MENU_I18N` dict + `data-i18n` attrs + `_applyMenuI18n()`
-- Aba LOOKS → VISUALS
-
-### Splash screen
-- Hit area expandida (HIT_PAD 40x20) compensa deslocamento visual do barrel post-fx
-- Splash fit-to-screen (Math.min, antes era cover)
-- Barrel ativo desde o splash (`_setupBarrel` aplica strength inicial)
-- Layout 2 botões com state machine de 3 estágios
-
-### Mobile
-- `<meta viewport>` adicionado (faltava — era a causa principal de tela torta)
-- Safe-area pra notch iPhone via `env(safe-area-inset-*)`
-- Media query (≤900px ou pointer:coarse): canvas vira 100%×100% sem border-radius
-- Botões mobile fade: silhueta 0.25 (idle) → invisível 0.0 (touched) com tween 150ms
-- Label FEIXE → BEAM
-
-### Outros bugs e melhorias
-- HUD subido pra depth 200 (era 100, atmosphere em 195 cobria)
-- Radar desce R/2 (35px) pra ficar acima das barras
-- Linha verde nos cantos eliminada (barrel out-of-bounds → preto puro + box-shadow removido)
-- Beam capacity rework: cap 5 vacas/bois OU 1 fazendeiro (mutex)
-- Velocidade nave: -10% por vaca/boi abduzido (max -50%); fazendeiros não desaceleram
-- Fazendeiro `setBounce(0.45)` (era 0.2) — bounce visível em vaca/boi/cacto
-
-### Skills & memória
-- Nova skill `pixellab-asset-download` (Backblaze CDN sem API + caminhos Chrome MCP / DevTools manual)
-- Memória `feedback_explicit_questions.md` (perguntas com caixa visual)
-- Memória `feedback_break_complex_prompts.md` (plano numerado antes de implementar)
-- Memória `feedback_heartbeat_5min.md` (ping em tasks longas)
-
-### Pendentes (próxima sessão)
-- **Tradução D+R2 Y** (refator identificadores PT→EN + comentários) — esperando JSON do localStorage do user pra preservar configs
-- **Configs do user como DBG_DEFAULTS** (mesma dependência do JSON)
-- **Etapas tutoriais 7-9** (TAKE_DAMAGE, FARMER, FARMER_KILL) — texto/glow refinements
-- **Tradução de labels de inputs** no menu (data-i18n nos `<span>` restantes)
+- **36 assets nature/objetos** gerados via PixelLab MCP em `assets/pixel_labs/chars/nature/v2/inbox/`: bromélias, palmeiras, pedras, gramado, cochos, fardos, baldes, moinho, crop circles, satélite, wrecked_truck, gas_can, radio tower, lanterna, barris, caixas, flores, crânio, igrejinha, mesa rock
+- **HUD bars regeneradas** com style transfer: crop PIL de `refs/huds.jpg` → resize 192×64 → base64 → PixelLab inpainting 55%
+  - `combustivel_v2.png` — gradiente red→orange
+  - `graviton_v2.png` — gradiente cyan→purple
+- **4 variações wrecked_truck**: red / blue / green / yellow (128×128, high top-down)
+- **4 variações gas_can**: red (existia) + blue / green / yellow (96×96, high top-down)
+- **`tools/asset_gallery.html`** criada — galeria single-page com arrow nav, auto-refresh 8s, grid thumbnails, fundo xadrez; serve via port 8081
+- **`.claude/launch.json`** atualizado com config "Chapada Escapade (gallery)" na porta 8081
+- Refs salvas: `slice_combustivel.png`, `slice_combustivel_192.png`, `slice_graviton.png`, `slice_graviton_192.png` + b64 txt
+- Git sync completo: 52 arquivos commitados → worktree ✅ → main ✅ → GitHub Pages ✅
 
 ---
 
