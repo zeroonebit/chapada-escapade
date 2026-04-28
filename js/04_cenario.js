@@ -216,12 +216,60 @@ Object.assign(Jogo.prototype, {
                 const cy = Phaser.Math.Between(300, H-300);
                 if (!isLand(cx, cy)) continue;
                 if (Math.random() > 0.5) {
-                    // Cluster de vegetação — 5 peças em ~90px de spread
                     for (let j = 0; j < 5; j++) tryPlace(cx, cy, 90, pickV() || 'moita', 'moita');
                 } else {
-                    // Cluster de pedras — 3 peças em ~70px de spread
                     for (let j = 0; j < 3; j++) tryPlace(cx, cy, 70, pickP() || 'rocha_organica', 'rocha');
                 }
+                break;
+            }
+        }
+
+        // ── 5b. LANDMARKS V3 (objects) — 1 cada, distantes entre si
+        // church, windmill, old_truck, satellite_dish_rusty
+        // Sem colisão (decorativos puros), depth 1.4 pra ficar abaixo de personagens
+        const landmarks = ['nat_obj_church', 'nat_obj_windmill', 'nat_obj_old_truck', 'nat_obj_satellite_dish_rusty'];
+        const LM_SCALE = { nat_obj_church: 2.6, nat_obj_windmill: 2.4, nat_obj_old_truck: 2.0, nat_obj_satellite_dish_rusty: 2.0 };
+        const lmPlaced = [];
+        for (const lm of landmarks) {
+            for (let tries = 0; tries < 20; tries++) {
+                const cx = Phaser.Math.Between(800, W-800);
+                const cy = Phaser.Math.Between(800, H-800);
+                if (!isLand(cx, cy)) continue;
+                const tooClose = lmPlaced.some(p => Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < 1500);
+                if (tooClose) continue;
+                lmPlaced.push({x: cx, y: cy});
+                this.add.image(cx, cy, lm).setScale(LM_SCALE[lm] || 2.0).setDepth(1.4);
+                break;
+            }
+        }
+
+        // ── 5c. PROPS INDUSTRIAIS (gas_can, barrel_rusty) em cluster pequeno
+        // 3-4 spots no mapa, cada um com 2-3 props
+        for (let i = 0; i < 4; i++) {
+            for (let tries = 0; tries < 8; tries++) {
+                const cx = Phaser.Math.Between(500, W-500);
+                const cy = Phaser.Math.Between(500, H-500);
+                if (!isLand(cx, cy)) continue;
+                const n = Phaser.Math.Between(2, 4);
+                for (let j = 0; j < n; j++) {
+                    const angj = Math.random() * Math.PI * 2;
+                    const rr   = Math.random() * 50;
+                    const px = cx + Math.cos(angj) * rr;
+                    const py = cy + Math.sin(angj) * rr;
+                    const k = Math.random() < 0.5 ? 'nat_obj_gas_can' : 'nat_obj_barrel_rusty';
+                    this.add.image(px, py, k).setScale(0.9 + Math.random()*0.3).setDepth(1.5);
+                }
+                break;
+            }
+        }
+
+        // ── 5d. DRY TURF patches (chão seco amarelado) — 8 spots aleatórios em terra
+        for (let i = 0; i < 8; i++) {
+            for (let tries = 0; tries < 5; tries++) {
+                const cx = Phaser.Math.Between(400, W-400);
+                const cy = Phaser.Math.Between(400, H-400);
+                if (!isLand(cx, cy)) continue;
+                this.add.image(cx, cy, 'nat_obj_dry_turf').setScale(1.5 + Math.random()*0.8).setDepth(0.65).setAlpha(0.85);
                 break;
             }
         }

@@ -85,6 +85,14 @@ Object.assign(Jogo.prototype, {
         // Outros itens decorativos (feno, pile de toras)
         const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
         NATURE_OUTROS.forEach(n => this.load.image(`nat_outro_${n}`, `assets/pixel_labs/chars/nature/outros/${n}.png`));
+        // Objects v3: landmarks (church, windmill, truck, satellite), props (gas, barrel, buckets), terreno (dry_turf)
+        const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
+                                'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
+        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        // Expor pra cenario
+        this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
+            .map(n => `nat_obj_${n}`);
+        this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
         // Expor pra outros módulos
         this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
         this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);

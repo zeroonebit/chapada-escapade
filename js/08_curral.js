@@ -39,6 +39,12 @@ Object.assign(Jogo.prototype, {
             feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_outro_hay_bale')
                 .setDisplaySize(84, 76).setDepth(1.9);
         }
+        // Balde de leite ao lado esquerdo da vaca (símbolo do produto que vira burger)
+        let balde = null;
+        if (this.textures.exists('nat_obj_bucket_milk')) {
+            balde = this.add.image(curral.x - 44, curral.y + 14, 'nat_obj_bucket_milk')
+                .setDisplaySize(28, 32).setDepth(1.9);
+        }
 
         const txt = this.add.text(curral.x, curral.y - 48, 'x0', {
             fontSize: '22px', fill: '#ffee88', fontStyle: 'bold',
@@ -47,11 +53,13 @@ Object.assign(Jogo.prototype, {
 
         curral.mascote = m;
         curral.mascoteFeno = feno;
+        curral.mascoteBalde = balde;
         curral.mascoteCount = 0;
         curral.mascoteCountTxt = txt;
         m.setVisible(false);
         txt.setVisible(false);
         if (feno) feno.setVisible(false);
+        if (balde) balde.setVisible(false);
         return m;
     },
 
@@ -61,6 +69,7 @@ Object.assign(Jogo.prototype, {
         curral.mascote.setVisible(visible);
         if (curral.mascoteCountTxt) curral.mascoteCountTxt.setVisible(visible);
         if (curral.mascoteFeno) curral.mascoteFeno.setVisible(visible);
+        if (curral.mascoteBalde) curral.mascoteBalde.setVisible(visible);
     },
 
     // Posição do slot fixo (0/1/2) abaixo do gate sul do curral
