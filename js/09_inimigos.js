@@ -8,6 +8,7 @@ Object.assign(Jogo.prototype, {
         const POSTS = [[480,480],[2720,480],[480,1920],[2720,1920],[1600,280],[1600,2120]];
         for (const [ax,ay] of POSTS) {
             const spr = this.add.image(ax, ay, 'atirador').setDepth(2).setScale(1.4);
+            this._attachSombra(spr, { rx: 22, ry: 8, alpha: 0.40, offY: 16, offX: 4 });
             this.atiradores.push({ x:ax, y:ay, sprite:spr, cooldown: Phaser.Math.Between(800,3000) });
         }
     },
@@ -126,6 +127,9 @@ Object.assign(Jogo.prototype, {
                     f._wandering = true;
                 }
             });
+            // Sombra blur abaixo do fazendeiro
+            this._attachSombra(f, { rx: 24, ry: 9, alpha: 0.45, offY: 18, offX: 5 });
+
             this.fazendeiros.push(f);
         }
     },

@@ -126,6 +126,40 @@ Object.assign(Jogo.prototype, {
         );
     },
 
+    // Sombra com blur fake (3 elipses stackadas com alpha decrescente)
+    // Container atrelado à entidade — posição sincronizada no _atualizarSombras
+    _attachSombra(entity, opts = {}) {
+        const {
+            rx = 22, ry = 8, alpha = 0.35, color = 0x000000,
+            offY = 14, offX = 4
+        } = opts;
+        const c = this.add.container(entity.x + offX, entity.y + offY);
+        c.add(this.add.ellipse(0, 0, rx*2.6, ry*2.6, color, alpha*0.18));
+        c.add(this.add.ellipse(0, 0, rx*1.8, ry*1.8, color, alpha*0.40));
+        c.add(this.add.ellipse(0, 0, rx*1.0, ry*1.0, color, alpha));
+        c.setDepth(0.5);
+        entity.shadow = c;
+        entity.shadowOff = { x: offX, y: offY };
+        if (!this._allShadows) this._allShadows = [];
+        this._allShadows.push(entity);
+        return c;
+    },
+
+    _atualizarSombras() {
+        if (!this._allShadows) return;
+        // Filtra entidades destruídas e sincroniza posição
+        this._allShadows = this._allShadows.filter(e => {
+            if (!e.scene || !e.shadow || !e.shadow.scene) {
+                if (e.shadow && e.shadow.scene) e.shadow.destroy();
+                return false;
+            }
+            const o = e.shadowOff || { x: 0, y: 14 };
+            e.shadow.setPosition(e.x + o.x, e.y + o.y);
+            e.shadow.setVisible(e.visible !== false);
+            return true;
+        });
+    },
+
     _spawnSmoke(x, y, opts = {}) {
         const {
             color = 0xccddee, alpha = 0.45, size = 6, dur = 600, drift = 0,

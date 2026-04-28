@@ -79,7 +79,12 @@ class Jogo extends Phaser.Scene {
         }
 
         // ── NAVE ─────────────────────────────────────────────────────
-        this.sombraNave = this.add.image(0,0,'nave').setTint(0x000000).setAlpha(0.15).setDepth(1).setDisplaySize(72, 72);
+        // Sombra blur fake (3 elipses stacked) — substituiu o tinted nave clone
+        this.sombraNave = this.add.container(0, 0);
+        this.sombraNave.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
+        this.sombraNave.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
+        this.sombraNave.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
+        this.sombraNave.setDepth(1);
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
         this.raioCone = CONE_R;
@@ -258,7 +263,8 @@ class Jogo extends Phaser.Scene {
         this._moverNave(cursor);
         this._atualizarSeta();
 
-        this.sombraNave.setPosition(this.nave.x+12, this.nave.y+22);
+        this.sombraNave.setPosition(this.nave.x+8, this.nave.y+24);
+        this._atualizarSombras();
         this.coneLuz.setPosition(this.nave.x, this.nave.y);
 
         // Disco: rotação base (slider) + tilt baseado em mudança de velocidade lateral

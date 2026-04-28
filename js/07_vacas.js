@@ -40,6 +40,11 @@ Object.assign(Jogo.prototype, {
             }
         });
 
+        // Sombra blur abaixo
+        const shRx = tipo === 'boi' ? 28 : 22;
+        const shRy = tipo === 'boi' ? 10 : 8;
+        this._attachSombra(v, { rx: shRx, ry: shRy, alpha: 0.42, offY: shRy*1.6, offX: 4 });
+
         this.vacas.push(v);
         return v;
     },
@@ -87,6 +92,7 @@ Object.assign(Jogo.prototype, {
             v.gaiolaSprite.destroy();
             v.gaiolaSprite = null;
         }
+        if (v.shadow && v.shadow.scene) { v.shadow.destroy(); v.shadow = null; }
         this.tweens.killTweensOf(v);
         if (v.scene) v.destroy();
     },
