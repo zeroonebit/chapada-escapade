@@ -24,18 +24,31 @@ Object.assign(Jogo.prototype, {
         const xLeft  = SIDE_PAD + BTN_W/2;
         const xRight = w - SIDE_PAD - BTN_W/2;
 
+        // Hit area expandida pra compensar deslocamento visual do barrel post-fx
+        // (barrel distorce o pixel mas a hit area continua nas coords originais)
+        const HIT_PAD_X = 40, HIT_PAD_Y = 20;
+        const hitArea = new Phaser.Geom.Rectangle(
+            -HIT_PAD_X, -HIT_PAD_Y, BTN_W + HIT_PAD_X*2, BTN_H + HIT_PAD_Y*2
+        );
+
         // JOGAR (canto inferior esquerdo)
         const btnJogar = this.add.rectangle(xLeft, bY, BTN_W, BTN_H, 0x00cc44)
-            .setScrollFactor(0).setDepth(502).setInteractive({ useHandCursor: true });
+            .setScrollFactor(0).setDepth(502)
+            .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+        btnJogar.input.cursor = 'pointer';
         const lblJogar = this.add.text(xLeft, bY, 'JOGAR', {
             fontSize: '18px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
         // TUTORIAL (canto inferior direito)
+        const hitArea2 = new Phaser.Geom.Rectangle(
+            -HIT_PAD_X, -HIT_PAD_Y, BTN_W + HIT_PAD_X*2, BTN_H + HIT_PAD_Y*2
+        );
         const btnTut = this.add.rectangle(xRight, bY, BTN_W, BTN_H, 0x224433)
             .setScrollFactor(0).setDepth(502)
             .setStrokeStyle(2, 0x00ff55, 0.8)
-            .setInteractive({ useHandCursor: true });
+            .setInteractive(hitArea2, Phaser.Geom.Rectangle.Contains);
+        btnTut.input.cursor = 'pointer';
         const lblTut = this.add.text(xRight, bY, 'TUTORIAL', {
             fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);

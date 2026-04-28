@@ -125,7 +125,7 @@ Object.assign(Jogo.prototype, {
                     <fieldset>
                         <legend>NAVE</legend>
                         <label><span>Input</span>
-                            <select data-cfg="behavior.inputMode" style="background:#001a08;color:#aaffcc;border:1px solid #224433;padding:2px 6px;font-family:inherit;font-size:11px;">
+                            <select data-cfg="behavior.inputMode" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="mouse">Mouse</option>
                                 <option value="wasd">WASD + Space</option>
                             </select></label>
