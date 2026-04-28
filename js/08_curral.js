@@ -36,8 +36,8 @@ Object.assign(Jogo.prototype, {
         // Fardo de feno ao lado direito (vaca olha pra ele e come)
         let feno = null;
         if (this.textures.exists('nat_outro_hay_bale')) {
-            feno = this.add.image(curral.x + 30, curral.y + 6, 'nat_outro_hay_bale')
-                .setDisplaySize(42, 38).setDepth(1.9);
+            feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_outro_hay_bale')
+                .setDisplaySize(84, 76).setDepth(1.9);
         }
 
         const txt = this.add.text(curral.x, curral.y - 48, 'x0', {
