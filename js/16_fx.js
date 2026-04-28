@@ -102,11 +102,11 @@ Object.assign(Jogo.prototype, {
     },
 
     _setupBarrel() {
-        if (!window.BarrelPipeline) return;
-        const cam = this.cameras.main;
+        if (!window.BarrelPipeline || !this.renderer?.pipelines) return;
         try {
-            cam.setPostPipeline(window.BarrelPipeline);
-            this._barrelPipeline = cam.getPostPipeline(window.BarrelPipeline);
+            this.renderer.pipelines.addPostPipeline('BarrelPipeline', window.BarrelPipeline);
+            this.cameras.main.setPostPipeline('BarrelPipeline');
+            this._barrelPipeline = this.cameras.main.getPostPipeline('BarrelPipeline');
         } catch (e) { console.warn('BarrelPipeline failed:', e); }
     },
 
@@ -117,8 +117,25 @@ Object.assign(Jogo.prototype, {
 
     _applyFXVisibility() {
         const cfg = this.dbg?.fx || {};
-        if (this.fxRain) this.fxRain.setVisible(!!cfg.chuva);
-        if (this.fxFog)  this.fxFog.setVisible(!!cfg.neblina);
+        if (this.fxRain) {
+            const visible = !!cfg.chuva;
+            this.fxRain.setVisible(visible);
+            if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
+        }
+        if (this.fxFog) {
+            const visible = !!cfg.neblina;
+            this.fxFog.setVisible(visible);
+            if (visible) {
+                const intensity = cfg.neblinaIntensidade ?? 0.5;
+                // Kill pulsation tween e reaplica com faixa proporcional à intensidade
+                this.tweens.killTweensOf(this.fxFog);
+                this.tweens.add({
+                    targets: this.fxFog,
+                    alpha: { from: intensity * 0.85, to: intensity * 1.0 },
+                    duration: 4500, yoyo: true, repeat: -1
+                });
+            }
+        }
     },
 
     // ── ATALHOS DE EFEITO ─────────────────────────────────────────────
@@ -160,6 +177,29 @@ Object.assign(Jogo.prototype, {
         const flash = this.add.circle(x, y, 14 * intensity, 0xffffff, 0.85).setDepth(51);
         this.tweens.add({ targets: flash, alpha: 0, scale: 2.2,
             duration: 260, onComplete: () => flash.destroy() });
+    },
+
+    // 3 anéis verdes que partem do alvo e sobem até a nave (efeito de captura)
+    _spawnCaptureRings(target) {
+        if (!target || !target.scene || !this.nave) return;
+        const sx = target.x, sy = target.y;
+        const baseR = Math.max(20, (target.displayWidth || 60) * 0.5);
+        for (let i = 0; i < 3; i++) {
+            this.time.delayedCall(i * 120, () => {
+                if (!this.nave || !this.nave.scene) return;
+                const ring = this.add.circle(sx, sy, baseR, 0, 0)
+                    .setStrokeStyle(2.5, 0xaaffcc, 0.9).setDepth(11);
+                this.tweens.add({
+                    targets: ring,
+                    x: this.nave.x, y: this.nave.y,
+                    alpha: 0,
+                    duration: 620,
+                    ease: 'Cubic.easeIn',
+                    onUpdate: (t) => ring.setRadius(Phaser.Math.Linear(baseR, baseR * 0.25, t.progress)),
+                    onComplete: () => ring.destroy()
+                });
+            });
+        }
     },
 
     // Sparkles orbitando dentro do beam quando ativo (chamado a cada N frames)

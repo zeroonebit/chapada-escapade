@@ -32,12 +32,14 @@ const DBG_DEFAULTS = {
         fazendeiros: 20,    // mapa 2.5x maior — era 8
     },
     fx: {
-        chuva:        false,
-        neblina:      false,
-        beamSparks:   true,
-        beamShake:    true,
-        explosaoBoa:  true,
-        wangtiles:    false,  // renderiza terreno com 16 tiles wang cr31 (debug)
+        chuva:             false,
+        chuvaIntensidade:  0.5,
+        neblina:           false,
+        neblinaIntensidade: 0.5,
+        beamSparks:        true,
+        beamShake:         true,
+        explosaoBoa:       true,
+        wangtiles:         false,
     },
 };
 
@@ -156,7 +158,13 @@ Object.assign(Jogo.prototype, {
                 <fieldset>
                     <legend>EFEITOS (live)</legend>
                     <label><span>Chuva</span><input type="checkbox" data-cfg="fx.chuva"></label>
+                    <label><span>Intensidade chuva</span>
+                        <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
+                        <span class="val" data-show="fx.chuvaIntensidade"></span></label>
                     <label><span>Neblina</span><input type="checkbox" data-cfg="fx.neblina"></label>
+                    <label><span>Intensidade neblina</span>
+                        <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
+                        <span class="val" data-show="fx.neblinaIntensidade"></span></label>
                     <label><span>Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                     <label><span>Shake/flash ao ligar beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                     <label><span>Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
@@ -195,7 +203,7 @@ Object.assign(Jogo.prototype, {
             }
             // Atualiza display de valor inicial
             const display = root.querySelector(`[data-show="${input.dataset.cfg}"]`);
-            if (display) display.textContent = (typeof v === 'number') ? v.toFixed(1) + 'x' : v;
+            if (display) display.textContent = (typeof v === 'number') ? v.toFixed(2) + 'x' : v;
 
             input.addEventListener('input', () => {
                 let val;
@@ -206,7 +214,7 @@ Object.assign(Jogo.prototype, {
                 this.dbg[section][key] = val;
                 this._saveDebugCfg();
 
-                if (display && typeof val === 'number') display.textContent = val.toFixed(1) + 'x';
+                if (display && typeof val === 'number') display.textContent = val.toFixed(2) + 'x';
 
                 // Live-apply: efeitos visuais (chuva/neblina) atualizam na hora
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
