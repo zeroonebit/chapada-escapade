@@ -15,7 +15,7 @@ Object.assign(Jogo.prototype, {
         this.splashImg = this.add.image(w/2, h/2, 'splash')
             .setScrollFactor(0).setDepth(501);
         const tex = this.splashImg.texture.getSourceImage();
-        this.splashImg.setScale(Math.max(w / tex.width, h / tex.height));
+        this.splashImg.setScale(Math.min(w / tex.width, h / tex.height));
 
         // ── Botões JOGAR / TUTORIAL ───────────────────────────────────
         const BTN_W = 180, BTN_H = 46, GAP = 18;

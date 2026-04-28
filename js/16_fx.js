@@ -150,6 +150,11 @@ Object.assign(Jogo.prototype, {
             this.renderer.pipelines.addPostPipeline('BarrelPipeline', window.BarrelPipeline);
             this.cameras.main.setPostPipeline('BarrelPipeline');
             this._barrelPipeline = this.cameras.main.getPostPipeline('BarrelPipeline');
+            // Aplica strength inicial JA pra efeito esferico aparecer no splash
+            // (sem isso fica zerado ate o gameStarted=true rodar _updateBody/_updateBarrel)
+            if (this._barrelPipeline) {
+                this._barrelPipeline._strength = this.dbg?.behavior?.barrel ?? 0.15;
+            }
         } catch (e) { console.warn('BarrelPipeline failed:', e); }
     },
 
