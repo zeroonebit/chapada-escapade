@@ -2,6 +2,55 @@
 // Aparece com a pausa (ESC). Salva em localStorage.
 // Behavior + barrel aplicam live; ENTIDADES/LOOKS/QUANTIDADES exigem reiniciar.
 const DBG_KEY = 'chapEscapadeDebug';
+
+// Dicionário de tradução do menu CONFIGS (en default, pt opcional)
+const MENU_I18N = {
+    en: {
+        configs:'CONFIGS', controles:'CONTROLS', looks:'VISUALS', vfx:'VFX', debug:'DEBUG',
+        nave:'SHIP', entidades:'ENTITIES', entidades_onoff:'ENTITIES (ON/OFF)',
+        quantidades:'AMOUNTS (restart)', escalas:'SCALES', camera:'CAMERA',
+        time_of_day:'TIME OF DAY', weather:'WEATHER', chuva:'RAIN', neblina:'FOG',
+        note_live:'Apply live without restart.', note_visual:'Scales apply on restart. Barrel applies live.',
+        note_vfx:'All apply live.', note_debug:'Toggles apply on restart.',
+        btn_apply:'APPLY + RESTART', btn_reset:'RESET', btn_preview:'👁 PREVIEW (live)',
+        input:'Input', sensibilidade:'Sensitivity', rot_disco:'Disc rotation', forca_beam:'Beam force (pull)',
+        vel_vacas:'Cows/oxen speed', vel_faz:'Farmers speed', dano_at:'Shooter damage',
+        vacas_spawn:'Cows spawn', faz_spawn:'Farmers spawn',
+        vaca:'Cow', boi:'Ox', fazendeiro:'Farmer', beam_radius:'Beam radius',
+        nave_ufo:'Ship (UFO)', burger:'Burger', dist_esf:'Spherical distortion',
+        time:'Time', auto_cycle:'Auto-cycle (60s/preset)', preset:'Preset', shuffle_prev:'Shuffle on PREVIEW',
+        ativar:'Active', intensidade:'Intensity', frequencia:'Frequency (drops)', angulo:'Angle (-1=L, +1=R)',
+        velocidade:'Speed', comp_traco:'Stroke length', flocos:'Flakes',
+        sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosao:'Fancy explosion',
+        wang:'Wang tiles (debug)', vacas_e:'Cows', bois_e:'Oxen', fazendeiros_e:'Farmers',
+        atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
+        language:'Language',
+        atmosfera:'ATMOSPHERE', efeitos:'EFFECTS', neve:'SNOW',
+    },
+    pt: {
+        configs:'CONFIGURAÇÕES', controles:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
+        nave:'NAVE', entidades:'ENTIDADES', entidades_onoff:'ENTIDADES (ON/OFF)',
+        quantidades:'QUANTIDADES (reiniciar)', escalas:'ESCALAS', camera:'CÂMERA',
+        time_of_day:'HORA DO DIA', weather:'CLIMA', chuva:'CHUVA', neblina:'NEBLINA',
+        note_live:'Aplicam ao vivo sem reiniciar.', note_visual:'Escalas aplicam ao reiniciar. Barrel aplica ao vivo.',
+        note_vfx:'Todos aplicam ao vivo.', note_debug:'Toggles aplicam ao reiniciar.',
+        btn_apply:'APLICAR + REINICIAR', btn_reset:'RESETAR', btn_preview:'👁 PRÉVIA (ao vivo)',
+        input:'Controle', sensibilidade:'Sensibilidade', rot_disco:'Rotação do disco', forca_beam:'Força do beam (atração)',
+        vel_vacas:'Velocidade vacas/bois', vel_faz:'Velocidade fazendeiros', dano_at:'Dano dos atiradores',
+        vacas_spawn:'Vacas spawn', faz_spawn:'Fazendeiros spawn',
+        vaca:'Vaca', boi:'Boi', fazendeiro:'Fazendeiro', beam_radius:'Raio do beam',
+        nave_ufo:'Nave (UFO)', burger:'Hambúrguer', dist_esf:'Distorção esférica',
+        time:'Hora', auto_cycle:'Ciclo automático (60s/preset)', preset:'Preset', shuffle_prev:'Aleatório na PRÉVIA',
+        ativar:'Ativar', intensidade:'Intensidade', frequencia:'Frequência (gotas)', angulo:'Ângulo (-1=esq, +1=dir)',
+        velocidade:'Velocidade', comp_traco:'Comprimento do traço', flocos:'Flocos',
+        sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosao:'Explosão fancy',
+        wang:'Wang tiles (debug)', vacas_e:'Vacas', bois_e:'Bois', fazendeiros_e:'Fazendeiros',
+        atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
+        language:'Idioma',
+        atmosfera:'ATMOSFERA', efeitos:'EFEITOS', neve:'NEVE',
+    },
+};
+
 const DBG_DEFAULTS = {
     enabled: {
         vacas:       true,
@@ -122,20 +171,25 @@ Object.assign(Jogo.prototype, {
 
         const html = `
             <div id="debug-menu">
-                <h2>⚙ CONFIGS</h2>
+                <h2>⚙ <span data-i18n="configs">CONFIGS</span></h2>
                 <div class="tab-bar">
-                    <button class="tab-btn active" data-tab="controles">CONTROLES</button>
-                    <button class="tab-btn" data-tab="looks">VISUALS</button>
-                    <button class="tab-btn" data-tab="vfx">VFX</button>
-                    <button class="tab-btn" data-tab="debug">DEBUG</button>
+                    <button class="tab-btn active" data-tab="controles" data-i18n="controles">CONTROLS</button>
+                    <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
+                    <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
+                    <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
                 </div>
 
                 <!-- ABA: CONTROLES -->
                 <div class="tab-panel" id="tab-controles">
-                    <div class="note">Aplicam live sem reiniciar.</div>
+                    <div class="note" data-i18n="note_live">Apply live without restart.</div>
                     <fieldset>
-                        <legend>NAVE</legend>
-                        <label><span>Input</span>
+                        <legend data-i18n="nave">SHIP</legend>
+                        <label><span data-i18n="language">Language</span>
+                            <select data-cfg="behavior.lang" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="en">ENG</option>
+                                <option value="pt">PTBR</option>
+                            </select></label>
+                        <label><span data-i18n="input">Input</span>
                             <select data-cfg="behavior.inputMode" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="mouse">Mouse</option>
                                 <option value="wasd">WASD + Space</option>
@@ -152,7 +206,7 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend>ENTIDADES</legend>
+                        <legend data-i18n="entidades">ENTIDADES</legend>
                         <label><span>Velocidade vacas/bois</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velVaca">
                             <input type="number" class="val" data-show="behavior.velVaca" /></label>
@@ -164,7 +218,7 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="behavior.danoAtirador" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend>QUANTIDADES (reiniciar)</legend>
+                        <legend data-i18n="quantidades">QUANTIDADES (reiniciar)</legend>
                         <label><span>Vacas spawn</span>
                             <input type="number" min="0" max="200" step="1" data-cfg="counts.vacas"></label>
                         <label><span>Fazendeiros spawn</span>
@@ -174,9 +228,9 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: LOOKS -->
                 <div class="tab-panel" id="tab-looks" style="display:none">
-                    <div class="note">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
+                    <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
                     <fieldset>
-                        <legend>ESCALAS</legend>
+                        <legend data-i18n="escalas">ESCALAS</legend>
                         <label><span>Vaca</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
                             <input type="number" class="val" data-show="scale.vaca" /></label>
@@ -197,7 +251,7 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="scale.burger" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend>CÂMERA</legend>
+                        <legend data-i18n="camera">CÂMERA</legend>
                         <label><span>Distorção esférica</span>
                             <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">
                             <input type="number" class="val" data-show="behavior.barrel" /></label>
@@ -206,9 +260,9 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: VFX -->
                 <div class="tab-panel" id="tab-vfx" style="display:none">
-                    <div class="note">Todos aplicam live.</div>
+                    <div class="note" data-i18n="note_vfx">Todos aplicam live.</div>
                     <fieldset>
-                        <legend>TIME OF DAY</legend>
+                        <legend data-i18n="time_of_day">TIME OF DAY</legend>
                         <label><span>Time</span>
                             <select data-cfg="fx.timeOfDay" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="dawn">Dawn</option>
@@ -221,7 +275,7 @@ Object.assign(Jogo.prototype, {
                         <label><span>Auto-cycle (60s/preset)</span><input type="checkbox" data-cfg="fx.timeAutoCycle"></label>
                     </fieldset>
                     <fieldset>
-                        <legend>WEATHER</legend>
+                        <legend data-i18n="weather">WEATHER</legend>
                         <label><span>Preset</span>
                             <select data-cfg="fx.weather" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="clear">Clear</option>
@@ -233,7 +287,7 @@ Object.assign(Jogo.prototype, {
                         <label><span>Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
                     <fieldset>
-                        <legend>CHUVA</legend>
+                        <legend data-i18n="chuva">CHUVA</legend>
                         <label><span>Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
                         <label><span>Intensidade (alpha)</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
@@ -252,14 +306,14 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="fx.chuvaTamanho" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend>NEBLINA</legend>
+                        <legend data-i18n="neblina">NEBLINA</legend>
                         <label><span>Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
                         <label><span>Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
                             <input type="number" class="val" data-show="fx.neblinaIntensidade" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend>EFEITOS</legend>
+                        <legend data-i18n="efeitos">EFEITOS</legend>
                         <label><span>Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                         <label><span>Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                         <label><span>Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
@@ -269,9 +323,9 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: DEBUG -->
                 <div class="tab-panel" id="tab-debug" style="display:none">
-                    <div class="note">Toggles aplicam ao reiniciar.</div>
+                    <div class="note" data-i18n="note_debug">Toggles aplicam ao reiniciar.</div>
                     <fieldset>
-                        <legend>ENTIDADES (ON/OFF)</legend>
+                        <legend data-i18n="entidades_onoff">ENTIDADES (ON/OFF)</legend>
                         <label><span>Vacas</span><input type="checkbox" data-cfg="enabled.vacas"></label>
                         <label><span>Bois</span><input type="checkbox" data-cfg="enabled.bois"></label>
                         <label><span>Fazendeiros</span><input type="checkbox" data-cfg="enabled.fazendeiros"></label>
@@ -282,11 +336,11 @@ Object.assign(Jogo.prototype, {
                 </div>
 
                 <div class="btn-row">
-                    <button id="dbg-preview" style="background:#003355;color:#aaffcc;">👁 PREVIEW (live)</button>
+                    <button id="dbg-preview" style="background:#003355;color:#aaffcc;" data-i18n="btn_preview">👁 PREVIEW (live)</button>
                 </div>
                 <div class="btn-row">
-                    <button id="dbg-apply">APPLY + RESTART</button>
-                    <button id="dbg-reset" class="secondary">RESET</button>
+                    <button id="dbg-apply" data-i18n="btn_apply">APPLY + RESTART</button>
+                    <button id="dbg-reset" class="secondary" data-i18n="btn_reset">RESET</button>
                 </div>
                 <div style="text-align:center; margin-top:6px; font-size:10px; color:#446655;">
                     ESC fecha • salvo em localStorage
@@ -367,19 +421,24 @@ Object.assign(Jogo.prototype, {
             numInp.addEventListener('blur', apply);
         });
 
-        // Bind <select> (input mode, timeOfDay, weather etc)
+        // Bind <select> (input mode, timeOfDay, weather, lang etc)
         root.querySelectorAll('select[data-cfg]').forEach(sel => {
             const [section, key] = sel.dataset.cfg.split('.');
             sel.value = this.dbg[section][key];
             sel.addEventListener('change', () => {
                 this.dbg[section][key] = sel.value;
                 this._saveDebugCfg();
-                // TOD ou weather mudou? aplica live
                 if (section === 'fx' && (key === 'timeOfDay' || key === 'weather')) {
                     if (this._applyAtmosphere) this._applyAtmosphere();
                 }
+                if (section === 'behavior' && key === 'lang') {
+                    if (this._applyMenuI18n) this._applyMenuI18n();
+                }
             });
         });
+
+        // Aplica i18n inicial baseado no lang salvo
+        if (this._applyMenuI18n) this._applyMenuI18n();
 
         // PREVIEW: 5s timeslice — esconde menu + inimigos pra você ver o mood escolhido
         // Shuffle ON: aleatoriza weather + TOD a cada click. Após 5s, restaura tudo e reabre menu.
@@ -449,6 +508,18 @@ Object.assign(Jogo.prototype, {
             if (!confirm('Resetar todas as configs de debug?')) return;
             localStorage.removeItem(DBG_KEY);
             window.location.reload();
+        });
+    },
+
+    // Atualiza textos do menu pelo lang escolhido (data-i18n="key")
+    _applyMenuI18n() {
+        const lang = this.dbg?.behavior?.lang || 'en';
+        const dict = MENU_I18N[lang] || MENU_I18N.en;
+        const root = document.getElementById('debug-menu');
+        if (!root) return;
+        root.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.dataset.i18n;
+            if (dict[k]) el.textContent = dict[k];
         });
     },
 
