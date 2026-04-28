@@ -209,9 +209,9 @@ Object.assign(Jogo.prototype, {
                     const c = this.currais[0];
                     this._tutDrawArrow(c.x, c.y);
                 }
+                // Estrutura nova: slots tem state 'loading' ou 'ready'
                 const dropped = (this.currais || []).some(c =>
-                    (c.processing && c.processing.length > 0) ||
-                    (c.ready && c.ready.length > 0)
+                    (c.slots && c.slots.some(s => s && (s.state === 'loading' || s.state === 'ready')))
                 );
                 if (canAdvance && dropped) {
                     this._tutDelivered = true;

@@ -103,10 +103,12 @@ Object.assign(Jogo.prototype, {
                 const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }
-        } else if (this._anyCurralReady()) {
+        } else if (this._anyCurralReady && this._anyCurralReady()) {
             cor = 0xff8800;
             for (const c of this.currais) {
-                if (c.ready.length === 0) continue;
+                // Estrutura nova (slots fixos): checa se algum slot tem burger ready
+                const hasReady = c.slots && c.slots.some(s => s && s.state === 'ready' && !s._sendoColetado);
+                if (!hasReady) continue;
                 const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }

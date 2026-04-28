@@ -32,12 +32,7 @@ Object.assign(Jogo.prototype, {
         this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D2);
         this.barraEnergia = this.hud.eneFill;     // update redesenha
 
-        // ── Hint inicial ──────────────────────────────────────────────
-        const hintMsg = this.isMobile
-            ? 'Joystick on the left  •  Button on the right to abduct'
-            : 'CLICK AND HOLD to abduct';
-        this.hud.hintBg = this.add.rectangle(0,0,490,46,0x000000,0.7).setScrollFactor(0).setDepth(205);
-        this.hud.hint   = this.add.text(0,0,hintMsg,{fontSize:'13px',fill:'#dddddd',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(206);
+        // Hint inicial removido — tutorial cobre instruções de input.
 
         // ── Seta indicadora e rastro ──────────────────────────────────
         this.setaIndicadora = this.add.graphics().setScrollFactor(0).setDepth(D2);
