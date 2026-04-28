@@ -123,8 +123,8 @@ class Jogo extends Phaser.Scene {
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
         this.scoreAtual = 0;
-        this.pacienciaMax = 100;
-        this.pacienciaAtual = 100;
+        this.combustivelMax   = 100;
+        this.combustivelAtual = 100;
         this.dificuldade = 1;
         this.gameOver = false;
         this.energiaMax = 100;
@@ -190,7 +190,7 @@ class Jogo extends Phaser.Scene {
         // ── Em debug mode: esconde HUD e mostra badge "DEBUG"
         if (this.EXPERIMENT_MODE) {
             const hudKeys = ['scoreBg','scoreText','cowsBox','cowsText','burgersBox','burgersText',
-                             'pacImg','pacFill','eneImg','eneFill','hint','hintBg'];
+                             'combImg','combFill','eneImg','eneFill','hint','hintBg'];
             for (const k of hudKeys) if (this.hud[k]) this.hud[k].setVisible(false);
             // Badge debug
             const w = this.scale.width;
@@ -242,7 +242,7 @@ class Jogo extends Phaser.Scene {
 
         this.dificuldade += 0.000018 * delta;
 
-        if (!this._tutPacienciaCongelada) this._atualizarPaciencia(delta);
+        if (!this._tutCombustivelCongelado) this._atualizarCombustivel(delta);
         if (!this.EXPERIMENT_MODE) this._atualizarIAVacas();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 

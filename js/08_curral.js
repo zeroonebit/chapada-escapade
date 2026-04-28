@@ -76,7 +76,7 @@ Object.assign(Jogo.prototype, {
         const pontos = pontosBrutos * multi;
         this.scoreAtual += pontos;
         this.textoScore.setText(this.scoreAtual);
-        this.pacienciaAtual = Math.min(this.pacienciaMax, this.pacienciaAtual + 28*qtd);
+        this.combustivelAtual = Math.min(this.combustivelMax, this.combustivelAtual + 28*qtd);
         this.cameras.main.flash(300, 255, 220, 0);
         const lbl = '+' + pontos + (multi>1 ? ' ×'+multi : '');
         const popup = this.add.text(this.nave.x, this.nave.y-60, lbl, {fontSize:'20px',fill:'#ffcc00',fontStyle:'bold'}).setDepth(50).setOrigin(0.5);

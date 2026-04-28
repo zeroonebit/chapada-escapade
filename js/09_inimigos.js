@@ -66,7 +66,7 @@ Object.assign(Jogo.prototype, {
             const dx = b.sprite.x - this.nave.x, dy = b.sprite.y - this.nave.y;
             // Bala "armada" só após 25px — evita hit instantâneo se atirador estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
-                this.pacienciaAtual = Math.max(0, this.pacienciaAtual - DANO);
+                this.combustivelAtual = Math.max(0, this.combustivelAtual - DANO);
                 this.cameras.main.shake(200, 0.013);
                 this.cameras.main.flash(160, 255, 80, 0);
                 b.sprite.destroy();

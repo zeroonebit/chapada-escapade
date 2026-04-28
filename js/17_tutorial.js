@@ -93,7 +93,7 @@ Object.assign(Jogo.prototype, {
         }
 
         // Combustível não drena durante tutorial (exceto na etapa BARS onde mostramos)
-        this._tutPacienciaCongelada = true;
+        this._tutCombustivelCongelado = true;
 
         this._tutShowStep(0);
     },
@@ -155,13 +155,13 @@ Object.assign(Jogo.prototype, {
 
             case 'BARS': {
                 // Descongela paciência pra mostrar as barras em ação
-                this._tutPacienciaCongelada = false;
+                this._tutCombustivelCongelado = false;
                 // Avança quando player ativar e desativar o beam (monitora energia)
                 const beamOn2 = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
                 if (beamOn2) this._tutBarsGravitonWatched = true;
                 if (this._tutBarsGravitonWatched && !beamOn2 && this.energiaLed >= this.energiaMax * 0.8) {
                     // Regenerou bastante — player entendeu o ciclo
-                    this._tutPacienciaCongelada = true;
+                    this._tutCombustivelCongelado = true;
                     this._tutAdvance();
                 }
                 break;
@@ -317,7 +317,7 @@ Object.assign(Jogo.prototype, {
         btn.on('pointerout',  () => btn.setFillStyle(0x00dd44));
         btn.on('pointerdown', () => {
             this.tutorialMode = false;
-            this._tutPacienciaCongelada = false;
+            this._tutCombustivelCongelado = false;
             [bg, txt, sub, btn, btnTxt].forEach(o => o.destroy());
             // Spawna inimigos normais agora
             if (this._criarFazendeiro) {

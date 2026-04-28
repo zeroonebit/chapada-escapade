@@ -179,18 +179,18 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    _atualizarPaciencia(delta) {
-        this.pacienciaAtual -= 2.2 * this.dificuldade * (delta/1000);
-        if (this.pacienciaAtual <= 0) { this.pacienciaAtual = 0; this._gameOver(); }
-        const pct = this.pacienciaAtual / this.pacienciaMax;
+    _atualizarCombustivel(delta) {
+        this.combustivelAtual -= 2.2 * this.dificuldade * (delta/1000);
+        if (this.combustivelAtual <= 0) { this.combustivelAtual = 0; this._gameOver(); }
+        const pct = this.combustivelAtual / this.combustivelMax;
 
         // Redesenha gradiente amarelo→vermelho na largura proporcional
-        const b = this._pacBar || { x: 0, y: 0, w: 0, h: 0 };
+        const b = this._combBar || { x: 0, y: 0, w: 0, h: 0 };
         const filledW = Math.max(0, b.w * pct);
-        this.hud.pacFill.clear();
+        this.hud.combFill.clear();
         if (filledW > 0) {
-            this.hud.pacFill.fillGradientStyle(0xffdd44, 0xff3322, 0xffaa22, 0xcc1100, 1);
-            this.hud.pacFill.fillRect(b.x, b.y, filledW, b.h);
+            this.hud.combFill.fillGradientStyle(0xffdd44, 0xff3322, 0xffaa22, 0xcc1100, 1);
+            this.hud.combFill.fillRect(b.x, b.y, filledW, b.h);
         }
     }
 
