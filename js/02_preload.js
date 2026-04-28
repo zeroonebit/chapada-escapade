@@ -3,7 +3,8 @@ Object.assign(Jogo.prototype, {
 
     preload() {
         // ── HERO ASSETS 200×200 (single sprite usado em algumas situações) ──
-        this.load.image('nave',      'assets/pixel_labs/nave.png');
+        // Nave aponta pra UFO south (versão dome opaca, sem alien visível dentro)
+        this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
         this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
 
         // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
