@@ -167,6 +167,7 @@ class Jogo extends Phaser.Scene {
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
         this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
+        this._setupDebugOverlay();          // 19_debug_overlay.js — F3 overlay (FPS, heap, counts)
         this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
         this._setupColisoes();              // 10_colisao.js
@@ -237,6 +238,9 @@ class Jogo extends Phaser.Scene {
     }
 
     update(time, delta) {
+        // F3 + debug overlay funcionam desde o splash
+        if (this._updateDebugOverlay) this._updateDebugOverlay();
+
         // ESC funciona desde o splash pra abrir CONFIGS antes do jogo iniciar
         if (!this.gameStarted) {
             if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
@@ -246,17 +250,12 @@ class Jogo extends Phaser.Scene {
             return;
         }
         if (this.gameOver) return;
-        // Diagnostic: wrap update body so erros aparecem em tela em vez de travar silencioso
         try { this._updateBody(time, delta); }
         catch (e) {
-            if (!this._errShown) {
-                this._errShown = true;
-                const msg = (e?.stack || e?.message || String(e)).substring(0, 600);
-                this.add.text(20, 100, 'UPDATE ERR:\n' + msg, {
-                    fontSize: '12px', fill: '#ff6666', backgroundColor:'#000', padding:{x:6,y:6}, wordWrap:{width:600}
-                }).setScrollFactor(0).setDepth(9999);
-                console.error('[UPDATE ERR]', e);
-            }
+            // Captura no debug overlay (sem suprimir após o primeiro)
+            const msg = (e?.message || String(e)).substring(0, 200);
+            if (this._captureErr) this._captureErr(msg, 'update');
+            console.error('[UPDATE ERR]', e);
         }
     }
 
