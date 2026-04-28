@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Chapada Escapade — Asset Gallery</title>
+<style>
+  body{margin:0;background:#1a1410;color:#e8d9b8;font-family:monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+  h1{margin:18px 0 6px;font-size:18px;color:#f4c95d;}
+  .meta{font-size:12px;opacity:.7;margin-bottom:14px;}
+  .stage{position:relative;width:520px;height:520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
+  .stage img{max-width:90%;max-height:90%;image-rendering:pixelated;}
+  .pending{color:#f4c95d;font-size:14px;text-align:center;padding:20px;}
+  .nav{display:flex;gap:18px;margin:18px 0 8px;align-items:center;}
+  button{background:#3a2d1e;color:#f4c95d;border:2px solid #6b5234;padding:10px 18px;font-family:monospace;font-size:18px;cursor:pointer;border-radius:4px;}
+  button:hover{background:#4a3826;}
+  button:disabled{opacity:.3;cursor:not-allowed;}
+  .info{font-size:14px;text-align:center;line-height:1.6;margin-bottom:8px;}
+  .name{color:#f4c95d;font-size:16px;font-weight:bold;}
+  .id{font-size:10px;opacity:.5;}
+  .status{font-size:12px;padding:3px 8px;border-radius:3px;display:inline-block;margin-top:4px;}
+  .status.ready{background:#2d5a2d;color:#9fe89f;}
+  .status.pending{background:#5a4a2d;color:#f4c95d;}
+  .counter{font-size:14px;color:#a89368;}
+  .grid{display:grid;grid-template-columns:repeat(8,48px);gap:4px;margin:18px 0;}
+  .thumb{width:48px;height:48px;background:#2a2218;border:2px solid #4a3826;cursor:pointer;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
+  .thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;}
+  .thumb.active{border-color:#f4c95d;}
+  .thumb.pending{opacity:.4;}
+  .refresh{font-size:11px;opacity:.6;margin-top:4px;}
+</style>
+</head>
+<body>
+
+<h1>CHAPADA ESCAPADE — ASSET GALLERY</h1>
+<div class="meta">setinhas ← → pra navegar · auto-refresh 8s · só pendentes</div>
+
+<div class="info">
+  <div class="name" id="name">—</div>
+  <div class="id" id="id">—</div>
+  <div><span class="status" id="status">—</span></div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="pending" id="pending" style="display:none;">⏳ aguardando geração…</div>
+  <img id="img" style="display:none;" alt="">
+</div>
+
+<div class="nav">
+  <button id="prev">←</button>
+  <span class="counter" id="counter">0 / 0</span>
+  <button id="next">→</button>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="refresh" id="refreshInfo">próximo refresh em 8s</div>
+
+<script>
+// MANIFEST: edita aqui conforme novas gerações entram
+// status: "ready" = baixado em /assets/.../inbox/  |  "pending" = ainda sendo gerado, fetch via API
+const MANIFEST = [
+  {name:"[HUD] combustivel_v2", id:"17aa311f-84e6-45ac-afbc-3b08b5bd6e1c", status:"ready", path:"../assets/pixel_labs/hud/combustivel_v2.png"},
+  {name:"[HUD] graviton_v2", id:"464ceee6-179d-43d2-a87f-fbd216c0ca9c", status:"ready", path:"../assets/pixel_labs/hud/graviton_v2.png"},
+  {name:"bromelia_red", id:"9f2e5c63-dc78-45dd-869d-d08485b5cdc8", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/bromelia_red.png"},
+  {name:"palm_licuri_small", id:"5af8e2f8-0bc5-4739-8451-daae312e69bf", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/palm_licuri_small.png"},
+  {name:"tree_umbuzeiro", id:"c6d57fae-3d47-4c7e-a06d-b67d7abce675", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/tree_umbuzeiro.png"},
+  {name:"rock_quartzite_pink", id:"ea149954-619e-45e7-8998-df952bc3c93c", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/rock_quartzite_pink.png"},
+  {name:"milk_bucket_full", id:"1fa190a2-e2a9-42f3-9af4-8fc83c8c33ba", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/milk_bucket_full.png"},
+  {name:"alien_artifact_glowing", id:"32386db5-6296-4185-9f87-37528a5e65ed", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/alien_artifact_glowing.png"},
+  // --- batch 2 ---
+  {name:"bromelia_yellow", id:"db2e0ab4-ae07-4093-80d6-a134d596d295", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/bromelia_yellow.png"},
+  {name:"palm_licuri_tall", id:"983f04c2-e937-4db6-b0f5-ca4f972e8f2d", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/palm_licuri_tall.png"},
+  {name:"grass_tuft_dry", id:"fecd422f-b48f-4f4e-847d-3f4976da763c", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/grass_tuft_dry.png"},
+  {name:"rock_dark_basalt", id:"5edfd9c5-a811-469c-8ebc-60995a1bc1b9", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/rock_dark_basalt.png"},
+  {name:"rock_flat_chapada", id:"094591e4-6f2f-40fe-bd99-2f2f6497b05f", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/rock_flat_chapada.png"},
+  // --- batch 3 ---
+  {name:"water_trough_full", id:"e18bf1ca-a8ac-4f7f-ab6d-4bb311acf82f", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/water_trough_full.png"},
+  {name:"water_trough_empty", id:"782314ea-b9c5-4a28-9980-d38bef5000ce", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/water_trough_empty.png"},
+  {name:"hay_bale_square", id:"d2a745e6-5cb1-432c-b98c-8892cc739eb5", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/hay_bale_square.png"},
+  {name:"hay_pile_loose", id:"73fd9e84-7604-41ce-9c56-09b8bb689663", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/hay_pile_loose.png"},
+  {name:"feed_bucket", id:"17fdfaf6-b17f-4cbb-b254-4e2eb15534de", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/feed_bucket.png"},
+  // --- batch 4 ---
+  {name:"milk_bucket_empty", id:"f2704fef-4e29-4045-a087-6899a6684004", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/milk_bucket_empty.png"},
+  {name:"windmill_small", id:"5eb12020-982a-4a43-a2a5-0e5cb79a2dca", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/windmill_small.png"},
+  {name:"crop_circle_small", id:"47b5a78f-03d4-4a1c-b28a-5b8459cea11f", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/crop_circle_small.png"},
+  {name:"crop_circle_complex", id:"e5cbb276-4b7f-43d1-bfa6-9f727a08b9f8", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/crop_circle_complex.png"},
+  {name:"burned_grass_patch", id:"96326331-180d-4fdd-b81d-463712694d03", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/burned_grass_patch.png"},
+  // --- batch 5 ---
+  {name:"satellite_dish_rusty", id:"25484df0-9adb-4773-85e3-b3ffefd07a08", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/satellite_dish_rusty.png"},
+  {name:"wrecked_truck", id:"7495e7f0-6eb3-40bc-9fa9-3f78108cc9df", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/wrecked_truck.png"},
+  {name:"wrecked_truck_red", id:"768228fe-4842-4d95-8b21-5068a74b2c77", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/wrecked_truck_red.png"},
+  {name:"wrecked_truck_blue", id:"81e8f2e6-2ae0-4f04-86d5-1d798fe9f44d", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/wrecked_truck_blue.png"},
+  {name:"wrecked_truck_green", id:"e4bfbf89-6453-4afb-9f0e-a904b8744cbe", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/wrecked_truck_green.png"},
+  {name:"wrecked_truck_yellow", id:"d662a078-f693-48a9-8998-4b5f17fb6022", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/wrecked_truck_yellow.png"},
+  {name:"gas_can_red", id:"b7be67ef-5242-4b97-8cbb-91c05c7cefd1", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/gas_can_red.png"},
+  {name:"gas_can_blue", id:"3ed17784-64ff-4b02-9761-a1be472837e6", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/gas_can_blue.png"},
+  {name:"gas_can_green", id:"bc3b3645-ff05-4103-ae11-76a4ec0c58b6", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/gas_can_green.png"},
+  {name:"gas_can_yellow", id:"150aa3a5-5858-4cf1-890c-b93e4b1e98da", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/gas_can_yellow.png"},
+  {name:"meat_grinder_alien", id:"72294b90-4d18-4667-864e-9d2ca3ed5ecd", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/meat_grinder_alien.png"},
+  {name:"radio_tower_small", id:"e03d02be-b84c-44ed-bc9d-af4392fdb28d", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/radio_tower_small.png"},
+  // --- batch 6 ---
+  {name:"lantern_post_off", id:"443908a9-e37d-43f1-9b88-6ed7717fcf08", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/lantern_post_off.png"},
+  {name:"barrel_wood", id:"40b05634-3279-46c6-8303-e7103c834acd", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/barrel_wood.png"},
+  {name:"barrel_metal_rusty", id:"285318dd-339e-488b-94e6-259f4080ec70", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/barrel_metal_rusty.png"},
+  {name:"crate_wood_closed", id:"86b4ae1d-6886-4766-9774-cbd399657916", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/crate_wood_closed.png"},
+  {name:"crate_wood_broken", id:"d68eeeb5-67a2-4138-a008-58bb6a488da2", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/crate_wood_broken.png"},
+  // --- batch 7 FINAL ---
+  {name:"flower_patch_purple", id:"70008e22-cb63-4ba4-94b5-574805f48f4a", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/flower_patch_purple.png"},
+  {name:"flower_patch_white", id:"648275bc-f1f0-4df3-8daa-20ab9c3bcbe5", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/flower_patch_white.png"},
+  {name:"bone_skull_cow", id:"88d07672-88ab-4a17-a506-b72f5e5dc956", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/bone_skull_cow.png"},
+  {name:"church_small_white", id:"f63dbdb7-3238-4af9-b48e-4fc61879cc59", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/church_small_white.png"},
+  {name:"mesa_rock_chapada", id:"a27ae87b-6a4a-4402-9e7b-c1f1a8497b8d", status:"ready", path:"../assets/pixel_labs/chars/nature/v2/inbox/mesa_rock_chapada.png"},
+];
+
+const API_URL = id => `https://api.pixellab.ai/mcp/map-objects/${id}/download`;
+let idx = 0;
+let refreshTimer = 8;
+
+const $ = id => document.getElementById(id);
+
+function render(){
+  const a = MANIFEST[idx];
+  if(!a){return;}
+  $("name").textContent = a.name;
+  $("id").textContent = a.id;
+  $("status").textContent = a.status;
+  $("status").className = "status " + a.status;
+  $("counter").textContent = (idx+1) + " / " + MANIFEST.length;
+
+  if(a.status === "ready"){
+    $("img").src = a.path || API_URL(a.id);
+    $("img").style.display = "block";
+    $("pending").style.display = "none";
+  }else{
+    // tenta carregar direto da API mesmo assim — se já saiu, aparece
+    $("img").src = API_URL(a.id) + "?t=" + Date.now();
+    $("img").style.display = "block";
+    $("pending").style.display = "block";
+    $("img").onerror = ()=>{ $("img").style.display = "none"; };
+    $("img").onload = ()=>{ $("pending").style.display = "none"; };
+  }
+
+  // grid
+  $("grid").innerHTML = "";
+  MANIFEST.forEach((m,i)=>{
+    const t = document.createElement("div");
+    t.className = "thumb" + (i===idx?" active":"") + (m.status==="pending"?" pending":"");
+    if(m.status === "ready"){
+      const img = document.createElement("img");
+      img.src = m.path || API_URL(m.id);
+      t.appendChild(img);
+    }else{
+      t.textContent = "…";
+    }
+    t.onclick = ()=>{ idx = i; render(); };
+    $("grid").appendChild(t);
+  });
+}
+
+$("prev").onclick = ()=>{ idx = (idx - 1 + MANIFEST.length) % MANIFEST.length; render(); };
+$("next").onclick = ()=>{ idx = (idx + 1) % MANIFEST.length; render(); };
+
+document.addEventListener("keydown", e => {
+  if(e.key === "ArrowLeft") $("prev").click();
+  if(e.key === "ArrowRight") $("next").click();
+});
+
+setInterval(()=>{
+  refreshTimer--;
+  if(refreshTimer <= 0){
+    refreshTimer = 8;
+    render(); // re-tenta carregar pendentes
+  }
+  $("refreshInfo").textContent = "próximo refresh em " + refreshTimer + "s";
+}, 1000);
+
+render();
+</script>
+
+</body>
+</html>
