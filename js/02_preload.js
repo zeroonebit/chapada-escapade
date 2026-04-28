@@ -74,8 +74,9 @@ Object.assign(Jogo.prototype, {
         this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');
         this.load.image('burger_double',  'assets/pixel_labs/items/burger_double.png');
 
-        // ── SPLASH ───────────────────────────────────────────────────
-        this.load.image('splash', 'splash.png');
+        // ── SPLASH + ICON ────────────────────────────────────────────
+        this.load.image('splash', 'splashv3.png');
+        this.load.image('game_icon', 'icon.png');
 
         // (Wang tileset PNGs removidos — terreno agora é renderizado pelo
         //  fragment shader cell-shaded em js/13_terrain_shader.js)
