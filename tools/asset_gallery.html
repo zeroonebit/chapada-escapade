@@ -776,6 +776,25 @@ document.querySelectorAll('.tab').forEach(t => {
 // ============ TAB GALLERY (sumário) ============
 let summaryData = null;
 let promotedFilter = 'folders'; // folders | files | type | tags
+// Tags state: { [assetPath]: ['tag1', 'tag2'] }
+let assetTags = {};
+try { assetTags = JSON.parse(localStorage.getItem('chapEscapadeAssetTags') || '{}'); } catch(e){}
+function saveAssetTags(){
+  localStorage.setItem('chapEscapadeAssetTags', JSON.stringify(assetTags));
+  fetch(API_BASE + '/save_asset_tags', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify(assetTags)}).catch(()=>{});
+}
+function collectAssetTags(){
+  const set = new Set();
+  Object.values(assetTags).forEach(tags => tags.forEach(t => set.add(t)));
+  return [...set].sort();
+}
+// Carrega registry do disk se existir
+fetch(API_BASE + '/tools/saves/asset_tags.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(data => {
+  if(data && typeof data === 'object'){
+    assetTags = {...data, ...assetTags}; // merge: localStorage wins (mais recente)
+    saveAssetTags();
+  }
+}).catch(()=>{});
 async function fetchSummary(){
   try {
     const res = await fetch(API_BASE + '/list_assets');
@@ -817,6 +836,34 @@ function renderGallery(){
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderGallery(); });
   }
 }
+
+// Type detector baseado no path (auto, sem metadata)
+function getAssetType(path){
+  const m = path.match(/pixel_labs\/(.+)$/);
+  if(!m) return 'unknown';
+  const parts = m[1].split('/');
+  if(parts[0] === 'hud') return 'hud';
+  if(parts[0] === 'chars'){
+    if(parts[1] === 'nature'){
+      const cat = parts[2] || '';
+      if(/^cercas/.test(cat)) return 'fences';
+      if(/vegeta/i.test(cat)) return 'vegetation';
+      if(cat === 'objects') return 'objects';
+      if(/pedra|rock/i.test(cat)) return 'rocks';
+      if(/plac|sign/i.test(cat)) return 'signs';
+      if(cat === 'v2') return 'inbox';
+      if(cat === 'outros' || cat === 'misc') return 'misc';
+      return cat || 'nature';
+    }
+    return 'characters';
+  }
+  return parts[0] || 'unknown';
+}
+
+const TYPE_ICONS = {
+  characters: '🧍', objects: '📦', vegetation: '🌳', fences: '🪵',
+  rocks: '🪨', signs: '🪧', hud: '📺', inbox: '📥', misc: '🔮', unknown: '❓'
+};
 
 // Pega chave de grupo "natural": personagem inteiro (chars/boi) ou categoria (chars/nature/objects)
 function groupKeyForPath(path){
@@ -981,7 +1028,7 @@ function buildGroupPopupHTML(folder, classified, opts={}){
   return html;
 }
 
-// mode: 'folders' (default) | 'files' (flat individual)
+// mode: 'folders' (default) | 'files' (flat individual) | 'type' (group by asset type) | 'tags'
 function fillSumGrid(id, items, mode='folders'){
   const el = $(id);
   el.innerHTML = '';
@@ -993,6 +1040,60 @@ function fillSumGrid(id, items, mode='folders'){
       const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
       t.title = it.path.split('/').pop();
       el.appendChild(t);
+    });
+    return;
+  }
+  if(mode === 'type'){
+    const byType = {};
+    items.forEach(it => { const t = getAssetType(it.path); (byType[t] = byType[t] || []).push(it); });
+    const sorted = Object.entries(byType).sort((a,b) => b[1].length - a[1].length);
+    sorted.forEach(([type, list]) => {
+      const sec = document.createElement('div');
+      sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
+      sec.innerHTML = `<div style="font-size:11px;color:#a89368;letter-spacing:2px;margin-bottom:4px;">${TYPE_ICONS[type]||'•'} ${type.toUpperCase()} <span style="opacity:.5;font-size:10px;">${list.length}</span></div>`;
+      const sub = document.createElement('div');
+      sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
+      list.slice(0, 100).forEach(it => {
+        const t = document.createElement('div'); t.className = 'thumb';
+        t.style.width = '42px'; t.style.height = '42px';
+        const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
+        t.title = it.path.split('/').pop();
+        sub.appendChild(t);
+      });
+      sec.appendChild(sub);
+      el.appendChild(sec);
+    });
+    return;
+  }
+  if(mode === 'tags'){
+    const allTags = collectAssetTags();
+    const tagsByName = {};
+    items.forEach(it => {
+      const tags = assetTags[it.path] || [];
+      if(tags.length === 0){ (tagsByName['(untagged)'] = tagsByName['(untagged)'] || []).push(it); return; }
+      tags.forEach(t => { (tagsByName[t] = tagsByName[t] || []).push(it); });
+    });
+    const sorted = Object.entries(tagsByName).sort((a,b) => b[1].length - a[1].length);
+    if(sorted.length === 1 && sorted[0][0] === '(untagged)'){
+      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.6;font-size:11px;">Nenhum asset taggeado ainda.<br>Vá no Editor → asset selecionado → adicione tags.</div>';
+      return;
+    }
+    sorted.forEach(([tag, list]) => {
+      const sec = document.createElement('div');
+      sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
+      const isUntagged = tag === '(untagged)';
+      sec.innerHTML = `<div style="font-size:11px;color:${isUntagged?'#666':'#9fcfe8'};letter-spacing:2px;margin-bottom:4px;">🔖 ${tag} <span style="opacity:.5;font-size:10px;">${list.length}</span></div>`;
+      const sub = document.createElement('div');
+      sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
+      list.slice(0, 100).forEach(it => {
+        const t = document.createElement('div'); t.className = 'thumb';
+        t.style.width = '42px'; t.style.height = '42px';
+        const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
+        t.title = it.path.split('/').pop();
+        sub.appendChild(t);
+      });
+      sec.appendChild(sub);
+      el.appendChild(sec);
     });
     return;
   }
@@ -1040,10 +1141,6 @@ document.querySelectorAll('#promotedFilterBar button').forEach(b => {
   b.onclick = () => {
     promotedFilter = b.dataset.filter;
     document.querySelectorAll('#promotedFilterBar button').forEach(x => x.classList.toggle('active', x === b));
-    if(promotedFilter === 'type' || promotedFilter === 'tags'){
-      $("sumPromotedGrid").innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.5;">filtro <strong>${promotedFilter}</strong> ainda não implementado</div>`;
-      return;
-    }
     if(window._promotedItems) fillSumGrid('sumPromotedGrid', window._promotedItems, promotedFilter);
   };
 });
@@ -1312,6 +1409,11 @@ function renderDetailMain(){
       <div class="meta">
         <div>path: ${a.path}</div>
         <div>id: ${a.id||'(unknown)'} · target: ${a.target||'-'}</div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;">
+          <span style="font-size:10px;color:#a89368;">🔖 TAGS:</span>
+          <div id="tagChips" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+          <input id="tagInput" type="text" placeholder="add tag…" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:3px 8px;font-size:11px;font-family:monospace;width:100px;">
+        </div>
         <div style="margin-top:6px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Hover slot com sprite → preview grande abaixo. Click <strong>+</strong> em slots vazios pra gerar via MCP.</div>
       </div>
     </div>`;
@@ -1377,11 +1479,39 @@ function renderDetailMain(){
     });
   }, 0);
   bodyEl.innerHTML = html;
-  // qbtn handlers — pesquisa em ambos editorBody e editorToolsRow
+  // qbtn handlers
   const containers = [bodyEl, $("editorToolsRow")].filter(Boolean);
   containers.forEach(c => c.querySelectorAll('.qbtn').forEach(b => {
     b.onclick = () => queueTool(b.dataset.queue);
   }));
+  // Tag editor wireup
+  function rerenderTagChips(){
+    const chipsEl = $("tagChips");
+    if(!chipsEl) return;
+    const tags = assetTags[a.path] || [];
+    chipsEl.innerHTML = tags.map(t =>
+      `<span style="background:#1d3a4a;color:#9fcfe8;padding:2px 8px;border-radius:10px;font-size:10px;display:inline-flex;align-items:center;gap:4px;">${t}<span style="cursor:pointer;opacity:.6;font-weight:bold;" data-rm-tag="${t}">×</span></span>`
+    ).join('');
+    chipsEl.querySelectorAll('[data-rm-tag]').forEach(x => x.onclick = () => {
+      assetTags[a.path] = (assetTags[a.path] || []).filter(t => t !== x.dataset.rmTag);
+      if(assetTags[a.path].length === 0) delete assetTags[a.path];
+      saveAssetTags(); rerenderTagChips();
+    });
+  }
+  rerenderTagChips();
+  const tagInput = $("tagInput");
+  if(tagInput){
+    tagInput.onkeydown = (e) => {
+      if(e.key === 'Enter'){
+        const v = tagInput.value.trim().toLowerCase();
+        if(!v) return;
+        assetTags[a.path] = [...(assetTags[a.path] || [])];
+        if(!assetTags[a.path].includes(v)) assetTags[a.path].push(v);
+        saveAssetTags(); rerenderTagChips();
+        tagInput.value = '';
+      }
+    };
+  }
   // Wire hover nos dir-slots existentes pra preview grande abaixo
   bodyEl.querySelectorAll('.dir-slot.exists').forEach(slot => {
     slot.onmouseenter = () => {

@@ -39,6 +39,7 @@ class Handler(SimpleHTTPRequestHandler):
         "/save_configs": "configs",
         "/save_mcp_queue": "mcp_queue",
         "/save_wang_corrections": "wang_corrections",
+        "/save_asset_tags": "asset_tags",
     }
 
     def do_GET(self):
