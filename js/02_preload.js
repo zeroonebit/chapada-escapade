@@ -111,10 +111,10 @@ Object.assign(Jogo.prototype, {
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);
         this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
-        // Expor to outros módulos
-        this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
-        this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_veg_${n}`);
-        this._natureCercasKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
+        // Expor pra outros módulos (D+R2: renomeado de _naturePedras/Vege/Cercas)
+        this._natureRocksKeys  = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
+        this._natureVegKeys    = NATURE_VEGE.map(n   => `nat_veg_${n}`);
+        this._natureFencesKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');

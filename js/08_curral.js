@@ -238,8 +238,9 @@ Object.assign(Jogo.prototype, {
                     targets: popup, y: popup.y - 60, alpha: 0,
                     duration: 700, onComplete: () => popup.destroy()
                 });
-                // Libera o slot
-                curral.slots[slotIdx] = null;
+                // M3: libera slot via _cleanSlot (null-safe + para tweens órfãos
+                // se algo travar entre o stop manual acima e o complete callback)
+                this._cleanSlot(curral, slotIdx);
             }
         });
     },
