@@ -299,6 +299,7 @@
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
         <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
+        <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper se classificou errado">🔄 Flip L/U</button>
         <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
         <label style="font-size:11px;color:#a89368;">VIEW:</label>
         <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
@@ -1251,9 +1252,12 @@ async function regenCellImage(cellState){
 }
 
 // Auto-sort: classifica cada tile pelos 4 cantos e reordena automaticamente
-async function autoSortTiles(){
+let _lastAutoSortFlipped = false;
+async function autoSortTiles(forceFlip){
   if(!tileEditState) return;
   $("editorHint").textContent = '🔍 Analisando…';
+  const flipped = forceFlip !== undefined ? forceFlip : false;
+  _lastAutoSortFlipped = flipped;
   // Carrega imagens com pixel data
   const tiles = await Promise.all(tileEditState.cells.map(c => c?.current ? new Promise(res => {
     const i = new Image();
@@ -1300,21 +1304,32 @@ async function autoSortTiles(){
   };
   const scored = tiles.map((s, idx) => s ? {idx, ...variance(s), s} : null).filter(Boolean);
 
-  // Pega o mais uniforme = ref1
-  scored.sort((a,b) => a.v - b.v);
-  const ref1 = scored[0];
-  // Pega o próximo mais uniforme cuja cor é DIFERENTE da ref1
-  let ref2 = null;
-  for(let i=1; i<scored.length; i++){
-    const dist = (scored[i].avg[0]-ref1.avg[0])**2 + (scored[i].avg[1]-ref1.avg[1])**2 + (scored[i].avg[2]-ref1.avg[2])**2;
-    if(dist > 3000){ ref2 = scored[i]; break; }
+  // Heurística primária: posições 0 e 15 (ground truth pós permutação default) são all-lower e all-upper
+  // Usa avg color delas como ref. Se não existir/inconsistente, fallback pra detecção por uniformidade.
+  let lowerRef, upperRef;
+  if(tiles[0] && tiles[15]){
+    const avg0 = [0,0,0], avg15 = [0,0,0];
+    for(const k of ['NW','NE','SE','SW']){
+      for(let i=0;i<3;i++){ avg0[i] += tiles[0][k][i]; avg15[i] += tiles[15][k][i]; }
+    }
+    avg0.forEach((v,i)=>avg0[i]=v/4); avg15.forEach((v,i)=>avg15[i]=v/4);
+    lowerRef = avg0; upperRef = avg15;
+  } else {
+    // fallback: 2 mais uniformes, lower = lum menor (heurística antiga)
+    scored.sort((a,b) => a.v - b.v);
+    const ref1 = scored[0];
+    let ref2 = null;
+    for(let i=1; i<scored.length; i++){
+      const dist = (scored[i].avg[0]-ref1.avg[0])**2 + (scored[i].avg[1]-ref1.avg[1])**2 + (scored[i].avg[2]-ref1.avg[2])**2;
+      if(dist > 3000){ ref2 = scored[i]; break; }
+    }
+    if(!ref2){ $("editorHint").textContent = '⚠ não detectou 2 cores distintas'; return; }
+    const lum = (rgb) => 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2];
+    lowerRef = lum(ref1.avg) < lum(ref2.avg) ? ref1.avg : ref2.avg;
+    upperRef = lowerRef === ref1.avg ? ref2.avg : ref1.avg;
   }
-  if(!ref2){ $("editorHint").textContent = '⚠ não detectou 2 cores distintas'; return; }
-
-  // Quem é lower? Heuristica: o de luminância mais escura (sand/dirt vs grass/water tipicamente)
-  const lum = (rgb) => 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2];
-  const lowerRef = lum(ref1.avg) < lum(ref2.avg) ? ref1.avg : ref2.avg;
-  const upperRef = lowerRef === ref1.avg ? ref2.avg : ref1.avg;
+  // se user pediu flip explícito, troca
+  if(flipped){ const tmp = lowerRef; lowerRef = upperRef; upperRef = tmp; }
 
   // Classifica cada tile
   const classifyCorner = (rgb) => {
@@ -1820,6 +1835,7 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnViewReduced'){ viewMode = 'reduced-r'; renderTiles(); }
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
   if(e.target.id === 'btnAutoSort') autoSortTiles();
+  if(e.target.id === 'btnFlipLU') autoSortTiles(!_lastAutoSortFlipped);
   if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
   if(e.target.id === 'btnSaveCorrected'){
     if(!tileEditState) return;
