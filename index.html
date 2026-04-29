@@ -8,6 +8,10 @@
     <title>Chapada Escapade</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
+    <!-- Font matrix/terminal pra titulo do mobile teaser (VT323 chunky pixel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
     <style>
         html, body {
@@ -77,6 +81,15 @@
             font-size: 12px; opacity: 0.7;
             margin-top: 12px;
         }
+        /* Blink lento depressivo (mobile teaser title) */
+        @keyframes warn-blink {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.32; }
+        }
+        .mobile-warn-title {
+            font-family: "VT323", "Courier New", monospace !important;
+            animation: warn-blink 3.2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -93,7 +106,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429s';
+    const V = '20260429t';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -106,11 +119,12 @@
         // pra UFO passar por baixo). Ver 02_preload.js complete callback.
         const t = document.getElementById('pre-loader-title');
         t.innerHTML = 'CHAPADA<br/>ESCAPADE';
-        t.style.fontSize = '36px';
-        t.style.letterSpacing = '6px';
-        t.style.lineHeight = '1.2';
+        t.classList.add('mobile-warn-title');     // VT323 + slow blink
+        t.style.fontSize = '54px';                // VT323 mais magra -> maior
+        t.style.letterSpacing = '4px';
+        t.style.lineHeight = '0.95';
         t.style.color = '#ff5566';
-        t.style.textShadow = '0 0 16px rgba(255,80,80,0.7)';
+        t.style.textShadow = '0 0 18px rgba(255,80,80,0.75), 0 0 4px rgba(255,80,80,0.95)';
         t.style.marginBottom = '20px';
 
         const preLoader = document.getElementById('pre-loader');
