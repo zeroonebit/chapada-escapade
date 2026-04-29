@@ -60,17 +60,21 @@ Object.assign(Jogo.prototype, {
         }
     },
 
+    // Cursor laser vermelho — ponto teleguiado seguindo o mouse/joystick
     _atualizarRastro(c) {
-        this.rastroMouse.unshift({x:c.x, y:c.y});
-        if (this.rastroMouse.length>18) this.rastroMouse.pop();
         this.graficoRastro.clear();
-        for (let i=0; i<this.rastroMouse.length; i+=2) {
-            let f = 1-(i/18);
-            this.graficoRastro.fillStyle(0x001a00, f*0.6);
-            this.graficoRastro.fillRect(this.rastroMouse[i].x-3, this.rastroMouse[i].y-3, 6, 6);
-        }
-        this.graficoRastro.lineStyle(1.5, 0x001a00, 0.8);
-        this.graficoRastro.strokeRect(c.x-5, c.y-5, 10, 10);
+        // Halo externo (sutil)
+        this.graficoRastro.fillStyle(0xff2222, 0.18);
+        this.graficoRastro.fillCircle(c.x, c.y, 9);
+        // Halo médio
+        this.graficoRastro.fillStyle(0xff4444, 0.4);
+        this.graficoRastro.fillCircle(c.x, c.y, 5);
+        // Núcleo vermelho intenso
+        this.graficoRastro.fillStyle(0xff1111, 1);
+        this.graficoRastro.fillCircle(c.x, c.y, 2.5);
+        // Pequeno reflexo branco no centro (efeito laser)
+        this.graficoRastro.fillStyle(0xffffff, 0.85);
+        this.graficoRastro.fillCircle(c.x, c.y, 1);
     },
 
     _moverNave(c) {
