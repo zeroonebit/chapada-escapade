@@ -5,65 +5,74 @@
 const TUT_STEPS = [
     {
         key: 'MOVE',
-        title: '① MOVER A NAVE',
+        shortLabel: 'MOVER',
+        title: '01. MOVER A NAVE',
         text: 'Use o mouse (clique e arraste) ou joystick para mover a nave pela tela.',
-        note: 'Mova pelo menos 200 pixels para avançar.',
+        note: 'Mova pelo menos 200 pixels.',
         highlight: ['nave'],
     },
     {
         key: 'BEAM_VISUAL',
-        title: '② BEAM (visual only)',
-        text: 'Hold the button to activate the gravity beam visually. Right now it does NOT pull anything yet — just feel the activation.',
-        note: 'Activate the beam at least once to advance.',
+        shortLabel: 'FEIXE (visual)',
+        title: '02. ATIVAR O FEIXE',
+        text: 'Segure o botão pra ativar o feixe gravitacional. Por enquanto ele NÃO puxa nada — só sente a ativação.',
+        note: 'Ative o feixe ao menos uma vez.',
         highlight: ['nave'],
     },
     {
         key: 'GRAVITON_BAR',
-        title: '③ GRAVITON BAR',
-        text: 'The blue bar at the bottom is your GRAVITON energy. Holding the beam drains it (2x speed in this tutorial). Releasing recharges it.\n\nRun it below 50% then let it recharge fully.',
-        note: 'Drain below 50% then release to recharge to 100%.',
+        shortLabel: 'GRAVITON',
+        title: '03. ENERGIA GRAVITON',
+        text: 'A barra azul no rodapé é o GRAVITON. Segurar o feixe drena (2x neste tutorial). Soltar recarrega.',
+        note: 'Drene <50%, solte e espere 100%.',
         highlight: ['graviton'],
     },
     {
         key: 'ABDUCT',
-        title: '④ ABDUCT A COW',
-        text: 'Beam now works for real! Position the ship over a cow and activate the beam to lift it up.',
-        note: 'Abduct at least 1 cow to advance.',
+        shortLabel: 'ABDUZIR VACA',
+        title: '04. ABDUZIR UMA VACA',
+        text: 'O feixe agora puxa de verdade! Posicione a nave sobre uma vaca e ative o feixe.',
+        note: 'Abduza pelo menos 1 vaca.',
         highlight: ['cows'],
     },
     {
         key: 'DELIVER',
-        title: '⑤ LEVAR AO CURRAL',
-        text: 'Com a vaca no feixe, leve-a até o curral. A seta verde indica o caminho.',
-        note: 'Entregue a vaca no curral para avançar.',
+        shortLabel: 'ENTREGAR',
+        title: '05. LEVAR AO CURRAL',
+        text: 'Com a vaca no feixe, leve até o curral. A seta verde indica o caminho.',
+        note: 'Entregue a vaca no curral.',
         highlight: ['curral'],
     },
     {
         key: 'BURGER',
-        title: '⑥ COLLECT THE BURGER',
-        text: 'Wait for the cow to become a burger (3 seconds), then activate the beam near it to absorb it.\n\nLook at the YELLOW bar — your FUEL is critically low (15%). Each burger restores fuel.',
-        note: 'Collect a burger to refill your fuel.',
+        shortLabel: 'COLETAR BURGER',
+        title: '06. COLETAR O HAMBÚRGUER',
+        text: 'Aguarde a vaca virar burger (3s), depois ative o feixe perto dele pra absorver. Sua barra de COMBUSTÍVEL está em 15% — cada burger reabastece.',
+        note: 'Colete um burger pra reabastecer.',
         highlight: ['burger_pronto', 'combustivel'],
     },
     {
         key: 'TAKE_DAMAGE',
-        title: '⑧ TOMAR DANO',
-        text: 'A farmer appeared and will shoot at you! Your ship is FROZEN until you take a hit — so you see fuel decrease in practice.',
-        note: 'Wait for a hit to be released.',
+        shortLabel: 'TOMAR DANO',
+        title: '07. TOMAR DANO',
+        text: 'Um fazendeiro apareceu e vai atirar! Sua nave está CONGELADA até tomar um hit — pra você ver o combustível cair em ação.',
+        note: 'Aguarde levar um tiro.',
         highlight: ['farmer', 'combustivel'],
     },
     {
         key: 'FARMER',
-        title: '⑨ FAZENDEIROS',
-        text: 'Fazendeiros são inimigos que patrulham o mapa.\n\nUse o FEIXE GRAVITON sobre eles igual abduz uma vaca — o feixe os arrasta junto.',
-        note: 'Capture um fazendeiro com o feixe para avançar.',
+        shortLabel: 'CAPTURAR FAZENDEIRO',
+        title: '08. CAPTURAR FAZENDEIROS',
+        text: 'Fazendeiros patrulham o mapa. Use o FEIXE GRAVITON sobre eles igual numa vaca — o feixe os arrasta.',
+        note: 'Capture um fazendeiro no feixe.',
         highlight: ['farmer'],
     },
     {
         key: 'FARMER_KILL',
-        title: '⑩ ARREMESSAR NAS ROCHAS',
-        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA mantendo o feixe ativo.\n\nA colisão em alta speed elimina o fazendeiro!',
-        note: 'Mate um fazendeiro batendo em uma pedra para concluir.',
+        shortLabel: 'ARREMESSAR NA PEDRA',
+        title: '09. ARREMESSAR NAS ROCHAS',
+        text: 'Com o fazendeiro preso, voe em alta velocidade em direção a uma PEDRA mantendo o feixe ativo. O impacto elimina o fazendeiro!',
+        note: 'Mate um fazendeiro batendo numa pedra.',
         highlight: ['farmer', 'rock'],
     },
 ];
@@ -151,6 +160,9 @@ Object.assign(Jogo.prototype, {
         // Glow amarelo nos elementos relevantes da etapa atual
         if (step.highlight) this._tutDrawHighlights(step.highlight);
 
+        // Pulse no ◉ da etapa atual no quest log
+        this._tutPulseQuestIcon();
+
         // Time mínimo de leitura — não avança before do usuário ler
         const elapsed = (this.time?.now ?? 0) - (this._tutStepShownAt || 0);
         const canAdvance = elapsed >= (this._tutMinReadMs || 5000);
@@ -229,7 +241,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'TAKE_DAMAGE': {
-                // Trava ship + spawns 1 farmer perto que atira
+                // Trava ship + spawn 1 farmer atirando logo (cooldown 400ms)
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
                     this._tutSpawnFazendeiroAtirando();
@@ -237,29 +249,17 @@ Object.assign(Jogo.prototype, {
                     this._tutCombustivelAntes = this.fuelCurrent;
                     this._tutCombustivelCongelado = true;
                 }
-                if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5)) {
+                // Hit detectado -> descongela nave + mensagem de sucesso + auto-avanca em 1.5s
+                if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5) && !this._tutDamageTaken) {
+                    this._tutDamageTaken = true;
                     this._tutFreezeNave = false;
-                    if (canAdvance) this._tutAdvance();
+                    this._tutShowSuccess('TIRO RECEBIDO');
+                    this.time.delayedCall(1500, () => {
+                        if (this._tutStepIdx !== null && TUT_STEPS[this._tutStepIdx]?.key === 'TAKE_DAMAGE') {
+                            this._tutAdvance();
+                        }
+                    });
                 }
-                break;
-            }
-
-            case 'GRAVITON_BAR': {
-                // Player precisa: 1) usar o beam ate cair < 50%; 2) soltar e ver recarregar 100%
-                const beamG = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
-                if (this.energiaLed <= this.energiaMax * 0.5) this._tutGravitonDrained = true;
-                if (canAdvance &&
-                    this._tutGravitonDrained &&
-                    !beamG &&
-                    this.energiaLed >= this.energiaMax * 0.99) {
-                    this._tutAdvance();
-                }
-                break;
-            }
-
-            case 'COMBUSTIVEL_BAR': {
-                // Apenas shows a barra with glow — avança após canAdvance (5s mínimo)
-                if (canAdvance) this._tutAdvance();
                 break;
             }
 
@@ -267,7 +267,7 @@ Object.assign(Jogo.prototype, {
                 if (!this.farmers || this.farmers.length === 0) {
                     this._tutSpawnFazendeiro();
                 }
-                // Seta apontando pro farmer vivo more near
+                // Seta apontando pro farmer vivo mais perto
                 const target = this.farmers.find(f => f.scene && !f._dying && !f._destroyed);
                 if (target) this._tutDrawArrow(target.x, target.y);
                 const inBeam = this.abductedCows.some(e => e.isEnemy);
@@ -279,7 +279,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
-                // Seta to rock more near do farmer abduzido
+                // Seta pra rocha mais perto do farmer abduzido
                 const farmer = this.abductedCows.find(e => e.isEnemy);
                 if (farmer) {
                     const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
@@ -294,6 +294,22 @@ Object.assign(Jogo.prototype, {
                 break;
             }
         }
+    },
+
+    // Toast verde rapido no centro da tela ("✓ TIRO RECEBIDO" etc) — feedback
+    // de objetivo cumprido antes do _tutAdvance disparar
+    _tutShowSuccess(text) {
+        const w = this.scale.width, h = this.scale.height;
+        const bg = this.add.rectangle(w/2, h/2, 280, 50, 0x002211, 0.92)
+            .setScrollFactor(0).setDepth(515).setStrokeStyle(2, 0x00ff55, 1);
+        const txt = this.add.text(w/2, h/2, '✓ ' + text, {
+            fontSize: '16px', fill: '#aaffcc', fontStyle: 'bold', letterSpacing: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(516);
+        this.tweens.add({
+            targets: [bg, txt], alpha: { from: 1, to: 0 },
+            duration: 1300, delay: 800,
+            onComplete: () => { bg.destroy(); txt.destroy(); }
+        });
     },
 
     _tutSpawnFazendeiro() {
@@ -480,66 +496,124 @@ Object.assign(Jogo.prototype, {
             this._tutVacasImortais = true;
             this._tutVacasGlobalSpawned = false;
         }
-        // BURGER: fuel starts em 15%, barra fuel aparece
+        // BURGER: fuel starts em 15%, barra fuel aparece, fuel DESCONGELA
+        // (player precisa ver drain pra entender que precisa coletar burger)
         if (nextKey === 'BURGER') {
             this.fuelCurrent = this.fuelMax * 0.15;
             this._setBarsVisibility(true, true);
+            this._tutCombustivelCongelado = false;
             this._tutScoreBurgerAntes = this.score || 0;
         }
         if (nextKey === 'TAKE_DAMAGE') {
             this._tutAtiradorSpawned = false;
-            this._tutVacasImortais = false;  // dano normal volta
+            this._tutVacasImortais = false;     // dano normal volta
+            this._tutDamageTaken    = false;    // reset toast trigger
+            this._tutCombustivelCongelado = true;  // congela durante freeze pra hit ser unico decremento visivel
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
     },
 
+    // Quest log no canto superior direito — estetica de radar/console (verde
+    // fosforico, monospace, brackets). Lista todas as etapas; current expandida
+    // com texto + note; concluidas ●; pendentes ○; current ◉ pulsante.
     _tutShowStep(idx) {
-        // Destrói hint anterior
+        // Destroi quest log anterior
         if (this._tutBox) {
             this._tutBox.forEach(o => { if (o && o.scene) o.destroy(); });
         }
-
         const step = TUT_STEPS[idx];
         if (!step) return;
 
-        // Reset do timer de leitura mínima (5s to each nova etapa)
+        // Reset do timer de leitura minima (5s pra cada nova etapa)
         this._tutStepShownAt = this.time?.now ?? 0;
 
-        const w = this.scale.width, h = this.scale.height;
-        const BOX_W  = Math.min(480, w - 40);
-        const isLong = step.text.includes('\n');
-        const BOX_H  = isLong ? 148 : 96;
-        const bx = w / 2;
-        // Subido to ficar above das barras de combustivel/graviton (que ocupam ~80px no rodapé)
-        const by = h - BOX_H / 2 - 110;
+        const w = this.scale.width;
+        const BOX_W  = 280;
+        const PAD_X  = 16;
+        const PAD_Y  = 60;  // 60px do topo (acima do score)
+        const bx = w - BOX_W - 16;  // alinha right edge
 
-        const bg = this.add.rectangle(bx, by, BOX_W, BOX_H, 0x000a04, 0.92)
-            .setScrollFactor(0).setDepth(508);
-        const border = this.add.rectangle(bx, by, BOX_W, BOX_H, 0, 0)
-            .setStrokeStyle(2, 0x00ff55, 0.85)
+        // Calcula altura dinamica: header + N etapas + bloco expandido current
+        const LINE_H = 14;
+        const HEADER_H = 22;
+        const EXPANDED_LINES = Math.ceil(step.text.length / 36) + 2;  // text + note
+        const totalH = HEADER_H + (TUT_STEPS.length * LINE_H) + (EXPANDED_LINES * 12) + 18;
+        const by = PAD_Y;
+
+        const FONT = '"Courier New", monospace';
+
+        // Background semi-transparente verde-escuro
+        const bg = this.add.rectangle(bx, by, BOX_W, totalH, 0x001a08, 0.85)
+            .setOrigin(0, 0).setScrollFactor(0).setDepth(508);
+        // Border verde fosforico
+        const border = this.add.rectangle(bx, by, BOX_W, totalH, 0, 0)
+            .setOrigin(0, 0).setStrokeStyle(1.5, 0x00ff55, 0.9)
             .setScrollFactor(0).setDepth(509);
+        // Header com brackets
+        const header = this.add.text(bx + PAD_X, by + 6, '[ MISSION LOG ]', {
+            fontSize: '11px', fill: '#66ff99', fontStyle: 'bold',
+            fontFamily: FONT, letterSpacing: 2
+        }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
+        // Linha divisoria
+        const sep = this.add.rectangle(bx + 8, by + HEADER_H, BOX_W - 16, 1, 0x00ff55, 0.4)
+            .setOrigin(0, 0).setScrollFactor(0).setDepth(510);
 
-        // Barra de progresso (points)
-        const totalSteps = TUT_STEPS.length;
-        const dots = TUT_STEPS.map((_, i) => (i <= idx ? '●' : '○')).join(' ');
-        const progress = this.add.text(bx, by - BOX_H / 2 + 10, dots, {
-            fontSize: '10px', fill: '#446655', letterSpacing: 4
-        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(510);
+        const items = [bg, border, header, sep];
 
-        const title = this.add.text(bx, by - BOX_H / 2 + 22, step.title, {
-            fontSize: '12px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
-        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(510);
+        // Lista de etapas
+        let cursorY = by + HEADER_H + 6;
+        for (let i = 0; i < TUT_STEPS.length; i++) {
+            const s = TUT_STEPS[i];
+            const isCurrent = i === idx;
+            const isDone    = i < idx;
+            const icon = isDone ? '●' : (isCurrent ? '◉' : '○');
+            const color = isDone ? '#446655' : (isCurrent ? '#aaffcc' : '#447766');
+            const num   = String(i + 1).padStart(2, '0');
+            const label = `${icon} ${num}. ${s.shortLabel}`;
+            const t = this.add.text(bx + PAD_X, cursorY, label, {
+                fontSize: '11px', fill: color,
+                fontStyle: isCurrent ? 'bold' : 'normal',
+                fontFamily: FONT
+            }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
+            items.push(t);
+            cursorY += LINE_H;
 
-        const body = this.add.text(bx, by - BOX_H / 2 + 40, step.text, {
-            fontSize: '11px', fill: '#cceecc', wordWrap: { width: BOX_W - 28 }
-        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(510);
+            // Etapa atual: expande com texto + note
+            if (isCurrent) {
+                const tBody = this.add.text(bx + PAD_X + 14, cursorY + 2, step.text, {
+                    fontSize: '10px', fill: '#88ddaa',
+                    fontFamily: FONT,
+                    wordWrap: { width: BOX_W - PAD_X*2 - 14 }
+                }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
+                items.push(tBody);
+                cursorY += tBody.height + 4;
 
-        const note = this.add.text(bx, by + BOX_H / 2 - 14, '▸ ' + step.note, {
-            fontSize: '10px', fill: '#558866', fontStyle: 'italic'
-        }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(510);
+                const tNote = this.add.text(bx + PAD_X + 14, cursorY, '▸ ' + step.note, {
+                    fontSize: '10px', fill: '#66aa88', fontStyle: 'italic',
+                    fontFamily: FONT,
+                    wordWrap: { width: BOX_W - PAD_X*2 - 14 }
+                }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
+                items.push(tNote);
+                cursorY += tNote.height + 8;
+                // Guarda ref pra pulse anim do icon current
+                this._tutCurrentIconText = t;
+            }
+        }
 
-        this._tutBox = [bg, border, progress, title, body, note];
+        // Recalcula altura real do bg/border (textos podem ter wrap maior que estimado)
+        const realH = cursorY - by + 8;
+        bg.height = realH;
+        border.height = realH;
+
+        this._tutBox = items;
+    },
+
+    // Pulse no icon ◉ da etapa atual — chamado do _updateTutorial loop
+    _tutPulseQuestIcon() {
+        if (!this._tutCurrentIconText || !this._tutCurrentIconText.scene) return;
+        const pulse = 0.7 + 0.3 * Math.sin((this._tutAngle || 0) * 2.5);
+        this._tutCurrentIconText.setAlpha(pulse);
     },
 
     _tutDrawArrow(worldX, worldY) {
