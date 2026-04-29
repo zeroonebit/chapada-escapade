@@ -20,26 +20,36 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.textoContador   = this.hud.burgersText;  // alias mantido pra _virarBurger
 
-        // ── Barra Combustível ─────────────────────────────────────────
-        // Frame com label baked → pinta preto sobre label + escreve com Phaser text (i18n dinâmico)
-        const combFrameKey = this.textures.exists('hud_combustivel_frame')
-            ? 'hud_combustivel_frame' : 'hud_frame_combustivel';
-        this.hud.combImg     = this.add.image(0,0,combFrameKey).setDisplaySize(380,68).setScrollFactor(0).setDepth(D);
-        this.hud.combFill    = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+        // ── Barra Combustível (v2: empty base + full com setCrop dinâmico) ─
+        const COMB_W = 380, COMB_H = 68;
+        const useV2Comb = this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2');
+        if (useV2Comb) {
+            this.hud.combImg     = this.add.image(0,0,'hud_comb_empty_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+            this.hud.combFillImg = this.add.image(0,0,'hud_comb_full_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+        } else {
+            // Fallback pro frame antigo + Graphics fill
+            this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+            this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+            this.barraCombustivel = this.hud.combFill;
+        }
         this.hud.combLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
-        this.barraCombustivel = this.hud.combFill;
 
-        // ── Barra Graviton ────────────────────────────────────────────
-        const eneFrameKey = this.textures.exists('hud_graviton_frame')
-            ? 'hud_graviton_frame' : 'hud_frame_graviton';
-        this.hud.eneImg     = this.add.image(0,0,eneFrameKey).setDisplaySize(290,72).setScrollFactor(0).setDepth(D);
-        this.hud.eneFill    = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+        // ── Barra Graviton (v2 mesma lógica) ─────────────────────────
+        const ENE_W = 290, ENE_H = 72;
+        const useV2Ene = this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2');
+        if (useV2Ene) {
+            this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+            this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+        } else {
+            this.hud.eneImg  = this.add.image(0,0,'hud_frame_graviton').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+            this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+            this.barraEnergia = this.hud.eneFill;
+        }
         this.hud.eneLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
         this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
-        this.barraEnergia = this.hud.eneFill;
 
         // Hint inicial removido — tutorial cobre instruções de input.
 
@@ -79,6 +89,8 @@ Object.assign(Jogo.prototype, {
         const PAC_Y = h - 18;
         this.hud.eneImg.setPosition(w/2, ENE_Y);
         this.hud.combImg.setPosition(w/2, PAC_Y);
+        if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, ENE_Y);
+        if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, PAC_Y);
 
         this._eneBar  = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
         this._combBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
@@ -124,12 +136,25 @@ Object.assign(Jogo.prototype, {
     _setBarrasVisibility(combVisible, gravVisible) {
         if (this.hud.combImg)     this.hud.combImg.setVisible(combVisible);
         if (this.hud.combFill)    this.hud.combFill.setVisible(combVisible);
+        if (this.hud.combFillImg) this.hud.combFillImg.setVisible(combVisible);
         if (this.hud.combLabelBg) this.hud.combLabelBg.setVisible(combVisible);
         if (this.hud.combLabel)   this.hud.combLabel.setVisible(combVisible);
         if (this.hud.eneImg)      this.hud.eneImg.setVisible(gravVisible);
         if (this.hud.eneFill)     this.hud.eneFill.setVisible(gravVisible);
+        if (this.hud.eneFillImg)  this.hud.eneFillImg.setVisible(gravVisible);
         if (this.hud.eneLabelBg)  this.hud.eneLabelBg.setVisible(gravVisible);
         if (this.hud.eneLabel)    this.hud.eneLabel.setVisible(gravVisible);
+    },
+
+    // Atualiza fill v2 via setCrop — chamado pelos updaters de combustivel/graviton
+    // pct: 0..1 (proporção atual da barra)
+    _updateFillCrop(fillImg, pct) {
+        if (!fillImg || !fillImg.scene) return;
+        const tex = fillImg.texture;
+        const w = tex.source[0].width;
+        const h = tex.source[0].height;
+        // Crop revela só a parte esquerda proporcional (resto fica preto = empty)
+        fillImg.setCrop(0, 0, Math.max(0, w * pct), h);
     },
 
     // Aplica i18n aos labels das barras (chamado quando lang muda)

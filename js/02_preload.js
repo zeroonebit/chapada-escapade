@@ -106,6 +106,11 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
+        // v2: full + empty pra setCrop dinâmico (fill bakeded, miolo preto)
+        this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v2.png');
+        this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v2.png');
+        this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v2.png');
+        this.load.image('hud_grav_empty_v2', 'assets/pixel_labs/hud/graviton_empty_v2.png');
         // ── BURGERS (3 variantes) ────────────────────────────────────
         this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
         this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');

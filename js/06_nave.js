@@ -197,13 +197,19 @@ Object.assign(Jogo.prototype, {
         if (this.combustivelAtual <= 0) { this.combustivelAtual = 0; this._gameOver(); }
         const pct = this.combustivelAtual / this.combustivelMax;
 
-        // Redesenha gradiente amarelo→vermelho na largura proporcional
-        const b = this._combBar || { x: 0, y: 0, w: 0, h: 0 };
-        const filledW = Math.max(0, b.w * pct);
-        this.hud.combFill.clear();
-        if (filledW > 0) {
-            this.hud.combFill.fillGradientStyle(0xffdd44, 0xff3322, 0xffaa22, 0xcc1100, 1);
-            this.hud.combFill.fillRect(b.x, b.y, filledW, b.h);
+        // V2: setCrop no fillImg (preferido)
+        if (this.hud.combFillImg && this._updateFillCrop) {
+            this._updateFillCrop(this.hud.combFillImg, pct);
+        }
+        // Legacy: gradient via Graphics (fallback se v2 não carregou)
+        if (this.hud.combFill) {
+            const b = this._combBar || { x: 0, y: 0, w: 0, h: 0 };
+            const filledW = Math.max(0, b.w * pct);
+            this.hud.combFill.clear();
+            if (filledW > 0) {
+                this.hud.combFill.fillGradientStyle(0xffdd44, 0xff3322, 0xffaa22, 0xcc1100, 1);
+                this.hud.combFill.fillRect(b.x, b.y, filledW, b.h);
+            }
         }
     }
 
