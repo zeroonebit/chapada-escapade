@@ -87,30 +87,80 @@
 </div>
 <div id="wrap"><div id="game-host"></div></div>
 
-<!-- ── MÓDULOS DO JOGO ────────────────────────────────────────────── -->
-<!-- Ordem importa: 00_constants antes de tudo; 01_scene define classe; demais estendem prototype; 99_main instancia -->
-<!-- Cache-buster ?v= invalidado a cada deploy pra garantir que clientes peguem JS atualizado -->
-<script>const _V='20260429g';</script>
-<script src="js/00_constants.js?v=20260429g"></script>
-<script src="js/01_scene.js?v=20260429g"></script>
-<script src="js/02_preload.js?v=20260429g"></script>
-<script src="js/03_textures.js?v=20260429g"></script>
-<script src="js/04_cenario.js?v=20260429g"></script>
-<script src="js/05_hud.js?v=20260429g"></script>
-<script src="js/06_nave.js?v=20260429g"></script>
-<script src="js/07_vacas.js?v=20260429g"></script>
-<script src="js/08_curral.js?v=20260429g"></script>
-<script src="js/09_inimigos.js?v=20260429g"></script>
-<script src="js/10_colisao.js?v=20260429g"></script>
-<script src="js/11_gameflow.js?v=20260429g"></script>
-<script src="js/12_mobile.js?v=20260429g"></script>
-<script src="js/13_terrain_shader.js?v=20260429g"></script>
-<script src="js/14_grass_patch.js?v=20260429g"></script>
-<script src="js/15_debug_menu.js?v=20260429g"></script>
-<script src="js/16_fx.js?v=20260429g"></script>
-<script src="js/17_tutorial.js?v=20260429g"></script>
-<script src="js/18_atmosphere.js?v=20260429g"></script>
-<script src="js/19_debug_overlay.js?v=20260429g"></script>
-<script src="js/99_main.js?v=20260429g"></script>
+<!-- ── FAILSAFE MOBILE ─────────────────────────────────────────────── -->
+<!-- Tela pequena/touch: bloqueia load dos modulos do jogo, pinta preloader
+     vermelho com icones (proibido celular / permitido PC). Desktop: load
+     dinamico dos modulos na ordem correta. -->
+<script>
+(function() {
+    const V = '20260429h';
+    // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
+    // OU pointer:coarse (touch screens) com viewport menor que 1024
+    const smallScreen = window.matchMedia('(max-width: 900px)').matches;
+    const touchSmall  = window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024;
+    const blockMobile = smallScreen || touchSmall;
+
+    if (blockMobile) {
+        // PALETA VERMELHA + icones no titulo
+        const t = document.getElementById('pre-loader-title');
+        t.innerHTML = '<span style="font-size:42px;letter-spacing:14px;">📱🚫💻✅</span>';
+        t.style.fontSize = '14px';
+        t.style.letterSpacing = '0';
+        t.style.marginBottom = '22px';
+        t.style.textShadow = '0 0 12px rgba(255,80,80,0.4)';
+
+        const preLoader = document.getElementById('pre-loader');
+        preLoader.style.color = '#ff5566';
+        preLoader.style.background = '#0a0404';
+
+        const bg = document.getElementById('pre-loader-bar-bg');
+        bg.style.borderColor = '#cc2222';
+        bg.style.background = 'rgba(40,8,8,0.7)';
+        bg.style.boxShadow = '0 0 18px rgba(255,80,80,0.3)';
+
+        const bar = document.getElementById('pre-loader-bar');
+        bar.style.background = 'linear-gradient(90deg, #cc1122, #ff5566)';
+
+        // Anima a barra ate 100% em ~2.5s sem carregar nada (failsafe puro)
+        let pct = 0;
+        const tick = setInterval(() => {
+            pct = Math.min(100, pct + 4);
+            bar.style.width = pct + '%';
+            document.getElementById('pre-loader-pct').textContent = pct + '%';
+            if (pct >= 100) {
+                clearInterval(tick);
+                setTimeout(() => {
+                    document.getElementById('pre-loader-pct').innerHTML =
+                        '<div style="margin-top:20px;font-size:13px;line-height:1.7;letter-spacing:1px;max-width:300px;text-align:center;">' +
+                        'TELA MUITO PEQUENA<br/>' +
+                        '<span style="opacity:0.7;font-size:11px;">jogue em desktop ou notebook</span>' +
+                        '</div>';
+                }, 250);
+            }
+        }, 80);
+        return;  // NAO carrega nenhum js/* — failsafe efetivo
+    }
+
+    // Desktop: load dinamico dos modulos na ordem correta
+    // 00_constants antes de tudo; 01_scene define classe; demais estendem prototype; 99_main instancia
+    const modules = [
+        '00_constants', '01_scene', '02_preload', '03_textures', '04_cenario',
+        '05_hud', '06_nave', '07_vacas', '08_curral', '09_inimigos', '10_colisao',
+        '11_gameflow', '12_mobile', '13_terrain_shader', '14_grass_patch',
+        '15_debug_menu', '16_fx', '17_tutorial', '18_atmosphere', '19_debug_overlay',
+        '99_main'
+    ];
+    let i = 0;
+    function loadNext() {
+        if (i >= modules.length) return;
+        const s = document.createElement('script');
+        s.src = `js/${modules[i]}.js?v=${V}`;
+        s.onload = () => { i++; loadNext(); };
+        s.onerror = () => console.error('Falhou:', s.src);
+        document.body.appendChild(s);
+    }
+    loadNext();
+})();
+</script>
 </body>
 </html>
