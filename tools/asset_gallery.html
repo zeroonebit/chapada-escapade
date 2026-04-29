@@ -484,14 +484,17 @@
         <label style="font-size:11px;">Threshold:</label>
         <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
         <span id="testThresholdVal" style="font-size:11px;">50%</span>
-        <label style="font-size:11px;">Size:</label>
+        <label style="font-size:11px;">Grid:</label>
         <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
-          <option value="16">16×16 vertices</option>
-          <option value="24" selected>24×24</option>
-          <option value="32">32×32</option>
-          <option value="48">48×48</option>
+          <option value="16x12">16×12 (preview)</option>
+          <option value="24x18">24×18</option>
+          <option value="32x24" selected>32×24</option>
+          <option value="48x36">48×36</option>
+          <option value="64x48">64×48</option>
+          <option value="80x60">80×60 (game scale)</option>
         </select>
         <button id="btnRegenTest" style="padding:4px 12px;font-size:11px;">↻ Regen</button>
+        <span id="testGridInfo" style="font-size:10px;opacity:.5;margin-left:8px;"></span>
       </div>
       <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:0 0 14px;">
         <label style="font-size:11px;color:#a89368;">Bias:</label>
@@ -506,8 +509,8 @@
         </select>
         <span style="font-size:10px;opacity:.5;">CA = smoothing iterations · Value = block size pra interpolar</span>
       </div>
-      <canvas id="testCanvas" width="384" height="384" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;"></canvas>
-      <div style="font-size:10px;opacity:.6;text-align:center;margin-top:6px;">vertices terrain via PRNG · cada cell sample 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
+      <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:96vw;"></canvas>
+      <div style="font-size:10px;opacity:.6;text-align:center;margin-top:6px;">ratio 4:3 (8000×6000 game map) · vertices via PRNG · cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
     </div>
   </div>
 </div><!-- /tab-tiles -->
@@ -2065,13 +2068,15 @@ function mulberry32(seed){
 }
 
 // Gera grid binário (lower=0, upper=1) com diferentes biases
-function generateTerrainGrid(seed, threshold, N, bias){
+// NW×NH = colunas × linhas de cells (vertices = NW+1 × NH+1)
+function generateTerrainGrid(seed, threshold, NW, NH, bias){
+  if(!NH) NH = NW; // fallback quadrado
   const rand = mulberry32(seed);
   const vert = [];
   // 1. White noise base (todos os modos começam aqui)
-  for(let y=0; y<=N; y++){
+  for(let y=0; y<=NH; y++){
     vert[y] = [];
-    for(let x=0; x<=N; x++){
+    for(let x=0; x<=NW; x++){
       vert[y][x] = rand() < threshold ? 1 : 0;
     }
   }
@@ -2082,14 +2087,14 @@ function generateTerrainGrid(seed, threshold, N, bias){
     const iters = parseInt(bias.split('-')[1]) || 4;
     for(let it=0; it<iters; it++){
       const next = [];
-      for(let y=0; y<=N; y++){
+      for(let y=0; y<=NH; y++){
         next[y] = [];
-        for(let x=0; x<=N; x++){
+        for(let x=0; x<=NW; x++){
           let count = 0, total = 0;
           for(let dy=-1; dy<=1; dy++){
             for(let dx=-1; dx<=1; dx++){
               const ny = y+dy, nx = x+dx;
-              if(ny<0 || ny>N || nx<0 || nx>N){ count++; total++; continue; } // borda como upper
+              if(ny<0 || ny>NH || nx<0 || nx>NW){ count++; total++; continue; }
               count += vert[ny][nx];
               total++;
             }
@@ -2097,7 +2102,7 @@ function generateTerrainGrid(seed, threshold, N, bias){
           next[y][x] = count >= Math.ceil(total/2) ? 1 : 0;
         }
       }
-      for(let y=0; y<=N; y++) vert[y] = next[y];
+      for(let y=0; y<=NH; y++) vert[y] = next[y];
     }
     return vert;
   }
@@ -2105,20 +2110,21 @@ function generateTerrainGrid(seed, threshold, N, bias){
   // 3. Value noise: amostra grid grosso e interpola
   if(bias?.startsWith('value-')){
     const scale = parseInt(bias.split('-')[1]) || 4;
-    const coarseN = Math.ceil(N / scale);
+    const coarseW = Math.ceil(NW / scale);
+    const coarseH = Math.ceil(NH / scale);
     const coarse = [];
     const rand2 = mulberry32(seed * 7919);
-    for(let y=0; y<=coarseN; y++){
+    for(let y=0; y<=coarseH; y++){
       coarse[y] = [];
-      for(let x=0; x<=coarseN; x++){
+      for(let x=0; x<=coarseW; x++){
         coarse[y][x] = rand2(); // 0..1
       }
     }
-    for(let y=0; y<=N; y++){
-      for(let x=0; x<=N; x++){
+    for(let y=0; y<=NH; y++){
+      for(let x=0; x<=NW; x++){
         const fx = x / scale; const fy = y / scale;
         const x0 = Math.floor(fx), y0 = Math.floor(fy);
-        const x1 = Math.min(x0+1, coarseN), y1 = Math.min(y0+1, coarseN);
+        const x1 = Math.min(x0+1, coarseW), y1 = Math.min(y0+1, coarseH);
         const sx = fx - x0, sy = fy - y0;
         // smoothstep
         const u = sx*sx*(3-2*sx), v = sy*sy*(3-2*sy);
@@ -2153,10 +2159,22 @@ function renderTestMap(){
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const seed = parseInt($("testSeed").value) || 1;
   const threshold = (parseInt($("testThreshold").value) || 50) / 100;
-  const N = parseInt($("testSize").value) || 24;
+  // Parse grid size "WxH" ou fallback quadrado
+  const sizeVal = $("testSize")?.value || '32x24';
+  let NW, NH;
+  if(sizeVal.includes('x')){
+    const parts = sizeVal.split('x');
+    NW = parseInt(parts[0]) || 32;
+    NH = parseInt(parts[1]) || 24;
+  } else {
+    NW = NH = parseInt(sizeVal) || 24;
+  }
   const bias = $("testBias")?.value || 'white';
-  const vert = generateTerrainGrid(seed, threshold, N, bias);
-  const cellPx = Math.floor(canvas.width / N);
+  const vert = generateTerrainGrid(seed, threshold, NW, NH, bias);
+  // cellPx: preenche o canvas inteiro mantendo pixels quadrados
+  const cellPx = Math.min(Math.floor(canvas.width / NW), Math.floor(canvas.height / NH));
+  const offX = Math.floor((canvas.width - NW * cellPx) / 2);
+  const offY = Math.floor((canvas.height - NH * cellPx) / 2);
   // pré-carregar imgs. Em modo 'reduced-r' usa só os 6 canônicos; aplica rotação ao desenhar.
   const useReduced = (viewMode === 'reduced-r');
   const imgs = tileEditState.cells.map(c => {
@@ -2168,8 +2186,8 @@ function renderTestMap(){
   // depois que imgs carregarem (eles são dataURL síncronos via .onload), desenha
   let pendingLoad = imgs.filter(i => i && !i.complete).length;
   const draw = () => {
-    for(let y=0; y<N; y++){
-      for(let x=0; x<N; x++){
+    for(let y=0; y<NH; y++){
+      for(let x=0; x<NW; x++){
         const nw = vert[y][x];
         const ne = vert[y][x+1];
         const se = vert[y+1][x+1];
@@ -2178,24 +2196,25 @@ function renderTestMap(){
         let img = imgs[bits];
         let rotations = 0;
         if(useReduced){
-          // pega canonical + rotações pra derivar este tile
           const info = rotInfoFor(bits);
           img = imgs[info.canon];
           rotations = info.rotations;
         }
+        const px = offX + x*cellPx;
+        const py = offY + y*cellPx;
         if(img && img.complete){
           if(rotations === 0){
-            ctx.drawImage(img, x*cellPx, y*cellPx, cellPx, cellPx);
+            ctx.drawImage(img, px, py, cellPx, cellPx);
           } else {
             ctx.save();
-            ctx.translate(x*cellPx + cellPx/2, y*cellPx + cellPx/2);
+            ctx.translate(px + cellPx/2, py + cellPx/2);
             ctx.rotate(rotations * Math.PI/2);
             ctx.drawImage(img, -cellPx/2, -cellPx/2, cellPx, cellPx);
             ctx.restore();
           }
         } else {
           ctx.fillStyle = bits === 0 ? '#7a5a2d' : (bits === 15 ? '#a8d088' : '#888');
-          ctx.fillRect(x*cellPx, y*cellPx, cellPx, cellPx);
+          ctx.fillRect(px, py, cellPx, cellPx);
         }
       }
     }
@@ -2433,16 +2452,31 @@ async function renderTiles(){
 }
 
 // Test map controls
+function updateGridInfo(){
+  const info = $("testGridInfo");
+  if(!info) return;
+  const sizeVal = $("testSize")?.value || '32x24';
+  let nw, nh;
+  if(sizeVal.includes('x')){ const p = sizeVal.split('x'); nw = +p[0]; nh = +p[1]; }
+  else { nw = nh = +sizeVal; }
+  const tileSize = activePreset?.tileSize || 16;
+  const totalCells = nw * nh;
+  // Game map: 8000x6000 = NW×NH cells com tile_size px
+  const gameW = Math.ceil(8000 / tileSize);
+  const gameH = Math.ceil(6000 / tileSize);
+  info.textContent = `${nw}×${nh} = ${totalCells} cells · tile ${tileSize}px · game map: ${gameW}×${gameH} = ${(gameW*gameH).toLocaleString()} tiles (PixelLab max: 32px)`;
+}
 function bindTestControls(){
   const t = $("testThreshold"); const tv = $("testThresholdVal");
   if(t){ t.oninput = () => { tv.textContent = t.value + '%'; renderTestMap(); }; }
   const s = $("testSeed"); if(s) s.onchange = () => renderTestMap();
-  const sz = $("testSize"); if(sz) sz.onchange = () => renderTestMap();
+  const sz = $("testSize"); if(sz) sz.onchange = () => { updateGridInfo(); renderTestMap(); };
   const r = $("btnRandomSeed"); if(r) r.onclick = () => { $("testSeed").value = Math.floor(Math.random()*1e6); renderTestMap(); };
   const re = $("btnRegenTest"); if(re) re.onclick = renderTestMap;
   const b = $("testBias"); if(b) b.onchange = renderTestMap;
 }
 bindTestControls();
+updateGridInfo();
 
 // botões do editor
 document.addEventListener('click', (e) => {
