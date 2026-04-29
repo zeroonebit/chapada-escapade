@@ -190,10 +190,47 @@ Object.assign(Jogo.prototype, {
     _setupQuips() {
         this._lastQuipT = 0;          // timestamp do ultimo quip global
         this._quipProxTimer = 0;      // throttle de proximity check (a cada 500ms)
+        this._activeQuips = [];       // quips ativos: rastreiam target a cada frame
         // MOBILE_MODE: schedule recursivo de quip do disco a cada 10-15s.
         // Quips normais (proximity, abduct, etc.) ficam silenciados.
         if (window.__MOBILE_MODE) {
             this._scheduleMobileQuip();
+        }
+    },
+
+    // Registra um quip ativo: txt segue target.x/y + offsetY decrescente,
+    // alpha decai linear ate sumir. Chamado por _showQuip e _scheduleMobileQuip.
+    _registerQuip(txt, target, baseOffsetY, floatDist, duration) {
+        if (!this._activeQuips) this._activeQuips = [];
+        const startT = this.time?.now ?? 0;
+        this._activeQuips.push({
+            txt, target, baseOffsetY, floatDist, duration, startT,
+        });
+    },
+
+    // Atualiza todos quips ativos a cada frame: reposiciona em target.x/y +
+    // offset que sobe ao longo da duracao + alpha decai. Remove os finalizados.
+    _updateActiveQuips() {
+        const list = this._activeQuips;
+        if (!list || !list.length) return;
+        const now = this.time?.now ?? 0;
+        for (let i = list.length - 1; i >= 0; i--) {
+            const q = list[i];
+            const elapsed = now - q.startT;
+            const t = elapsed / q.duration;
+            // Target sumiu (entidade morta) -> destroi quip junto
+            if (!q.txt || !q.txt.scene) { list.splice(i, 1); continue; }
+            if (!q.target || (q.target.scene === undefined && q.target !== this.ship)) {
+                q.txt.destroy(); list.splice(i, 1); continue;
+            }
+            if (t >= 1) { q.txt.destroy(); list.splice(i, 1); continue; }
+            // Ease cubic-out (1 - (1-t)^3)
+            const e = 1 - Math.pow(1 - t, 3);
+            const yOff = q.baseOffsetY - q.floatDist * e;
+            q.txt.x = q.target.x;
+            q.txt.y = q.target.y + yOff;
+            // Alpha: full ate 60%, depois fade linear
+            q.txt.alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
         }
     },
 
@@ -204,9 +241,7 @@ Object.assign(Jogo.prototype, {
             const lang = this.dbg?.behavior?.lang || 'en';
             const pool = MOBILE_QUIPS[lang] || MOBILE_QUIPS.en;
             const line = pool[Math.floor(Math.random() * pool.length)];
-            const x = this.ship.x;
-            const y = this.ship.y - 60;
-            const txt = this.add.text(x, y, line, {
+            const txt = this.add.text(this.ship.x, this.ship.y - 60, line, {
                 fontSize: '24px',
                 fill: '#ffaacc',
                 fontStyle: 'bold',
@@ -215,14 +250,8 @@ Object.assign(Jogo.prototype, {
                 fontFamily: '"VT323", "Courier New", monospace',
                 shadow: { color: '#ff5566', fill: false, blur: 10 },
             }).setOrigin(0.5).setDepth(195);
-            this.tweens.add({
-                targets: txt,
-                y: y - 80,
-                alpha: { from: 1, to: 0 },
-                duration: 5500,
-                ease: 'Cubic.easeOut',
-                onComplete: () => { if (txt.scene) txt.destroy(); },
-            });
+            // Segue a nave: baseOffset -60, sobe +80 ao longo de 5500ms
+            this._registerQuip(txt, this.ship, -60, 80, 5500);
             this._scheduleMobileQuip();  // re-schedule
         });
     },
@@ -259,14 +288,8 @@ Object.assign(Jogo.prototype, {
             shadow: { color: '#000', fill: true, blur: 6 },
         }).setOrigin(0.5).setDepth(60);
 
-        this.tweens.add({
-            targets: txt,
-            y: y - 80,
-            alpha: { from: 1, to: 0 },
-            duration: 4800,
-            ease: 'Cubic.easeOut',
-            onComplete: () => { if (txt.scene) txt.destroy(); },
-        });
+        // Segue o target: baseOffset -40, sobe +80 ao longo de 4800ms
+        this._registerQuip(txt, target, -40, 80, 4800);
 
         this._lastQuipT = now;
         return true;
