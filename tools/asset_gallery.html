@@ -108,6 +108,25 @@
   .detail-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
   .detail-main .preview{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
   .detail-main .preview img{width:140px;height:140px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;}
+  /* Visualizador com 8-dir overlay */
+  .visualizer{position:relative;width:220px;height:220px;border:2px solid #4a3826;background:#2a2218;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .visualizer .main-sprite{max-width:90%;max-height:90%;image-rendering:pixelated;}
+  .visualizer .dir-overlay{position:absolute;inset:0;display:none;pointer-events:none;}
+  .visualizer:hover .dir-overlay{display:block;}
+  .dir-slot{position:absolute;width:42px;height:42px;background:rgba(26,20,16,0.92);border:1.5px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:18px;color:#a89368;cursor:pointer;pointer-events:auto;border-radius:3px;}
+  .dir-slot:hover{background:rgba(58,45,30,0.98);border-color:#f4c95d;color:#f4c95d;}
+  .dir-slot img{width:38px;height:38px;image-rendering:pixelated;}
+  .dir-slot.exists{border-color:#3da53d;}
+  .dir-slot.missing{border-style:dashed;color:#9fcfe8;}
+  .dir-slot.queued{border-color:#a85ba8;color:#fff;background:#a85ba8;}
+  .dir-N{top:0;left:50%;transform:translate(-50%,-50%);}
+  .dir-NE{top:0;right:0;transform:translate(50%,-50%);}
+  .dir-E{top:50%;right:0;transform:translate(50%,-50%);}
+  .dir-SE{bottom:0;right:0;transform:translate(50%,50%);}
+  .dir-S{bottom:0;left:50%;transform:translate(-50%,50%);}
+  .dir-SW{bottom:0;left:0;transform:translate(-50%,50%);}
+  .dir-W{top:50%;left:0;transform:translate(-50%,-50%);}
+  .dir-NW{top:0;left:0;transform:translate(-50%,-50%);}
   .detail-main .meta{font-size:11px;line-height:1.6;}
   .tools-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;margin-top:16px;}
   .tool-card{border:1px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);}
@@ -181,17 +200,25 @@
   <button class="tab" data-tab="gallery">📊 Gallery</button>
   <button class="tab" data-tab="editor">✏️ Editor</button>
   <button class="tab active" data-tab="manager">🎨 Manager</button>
-  <button class="tab" data-tab="detail">🔧 Detail</button>
   <button class="tab" data-tab="tiles">🧩 Tiles</button>
+  <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
 </div>
 
-<!-- ====== TAB EDITOR (placeholder — em construção) ====== -->
+<!-- ====== TAB EDITOR (visualizador + módulos MCP) ====== -->
 <div class="tab-content" id="tab-editor" hidden>
-  <div style="text-align:center;padding:60px 20px;opacity:.7;">
-    <div style="font-size:48px;margin-bottom:14px;">✏️</div>
-    <h2 style="color:#f4c95d;margin:0 0 10px;">Editor</h2>
-    <div style="font-size:13px;line-height:1.6;max-width:420px;margin:0 auto;">
-      Em construção. Aguardando especificação de funcionalidades.
+  <div class="detail-wrap">
+    <div class="detail-list" id="editorAssetList">
+      <h3>✅ APPROVED ASSETS</h3>
+      <div id="editorAssetListBody">aguardando…</div>
+    </div>
+    <div class="detail-main" id="editorMain">
+      <h3 id="editorTitle">Selecione um asset à esquerda</h3>
+      <div id="editorBody">
+        <div style="opacity:.6;font-size:12px;line-height:1.6;">
+          Visualizador + módulos PixelLab MCP. Selecione um asset à esquerda pra abrir o painel.<br>
+          Hover no frame principal mostra slots das 8 direções — clique <strong>+</strong> nos vazios pra gerar via MCP.
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -269,22 +296,15 @@
 <div class="refresh" id="refreshInfo">próximo refresh em 8s</div>
 </div><!-- /tab-manager -->
 
-<!-- ====== TAB DETAIL (PixelLab MCP) ====== -->
+<!-- ====== TAB DETAIL (queue MCP raw) ====== -->
 <div class="tab-content" id="tab-detail" hidden>
-  <div class="detail-wrap">
-    <div class="detail-list" id="detailList">
-      <h3>✅ APPROVED ASSETS</h3>
-      <div id="detailListBody">aguardando…</div>
-    </div>
-    <div class="detail-main" id="detailMain">
-      <h3 id="detailTitle">Selecione um asset à esquerda</h3>
-      <div id="detailBody">
-        <div style="opacity:.6;font-size:12px;line-height:1.6;">
-          A partir de um asset aprovado, você pode disparar qualquer tool do PixelLab MCP.<br>
-          Cada submit adiciona uma entrada em <code>tools/saves/mcp_queue.json</code>.<br>
-          Depois cole no Claude: <code>"executa o mcp queue"</code> que eu rodo as tools.
-        </div>
-      </div>
+  <div style="max-width:900px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue</h3>
+    <div style="font-size:11px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra eu rodar.</div>
+    <pre id="detailQueueDump" style="background:#1a1410;color:#e8d9b8;padding:10px;border:1px solid #4a3826;border-radius:4px;max-height:60vh;overflow:auto;font-size:11px;">[]</pre>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
+      <button id="btnDetailRefreshQueue">↻ Refresh</button>
+      <button id="btnDetailClearQueue" style="background:#a53d3d;color:#fff;">Limpar tudo</button>
     </div>
   </div>
   <div class="queue-bar" id="queueBar" hidden>
@@ -673,7 +693,8 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-content').forEach(c => c.hidden = (c.id !== 'tab-' + name));
   if(name === 'gallery') renderGallery();
-  else if(name === 'detail') renderDetailList();
+  else if(name === 'editor') renderEditorList();
+  else if(name === 'detail') renderDetailDashboard();
   else if(name === 'tiles') renderTiles();
 }
 document.querySelectorAll('.tab').forEach(t => {
@@ -1062,11 +1083,61 @@ function approvedAssets(){
   return list.filter(a => { const k = a.path; if(seen.has(k)) return false; seen.add(k); return true; });
 }
 
+// Renomeado: renderEditorList substitui renderDetailList. Detail vira dashboard.
+function renderEditorList(){ return renderDetailList(); }
+function renderDetailDashboard(){
+  // Stats simples baseado no localStorage queue
+  const cooking = mcpQueue.filter(q => !q.done).length;
+  const done = mcpQueue.filter(q => q.done).length;
+  const total = mcpQueue.length;
+  const pct = total ? Math.round((done/total) * 100) : 0;
+  const dump = $("detailQueueDump");
+  if(dump){
+    dump.textContent = JSON.stringify(mcpQueue, null, 2);
+  }
+  // Atualiza header com sumário
+  const main = document.querySelector('#tab-detail > div');
+  if(main){
+    let summary = main.querySelector('.dash-summary');
+    if(!summary){
+      summary = document.createElement('div');
+      summary.className = 'dash-summary';
+      summary.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;';
+      main.insertBefore(summary, main.firstChild.nextSibling);
+    }
+    summary.innerHTML = `
+      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #6b5234;">
+        <div style="font-size:24px;color:#f4c95d;font-weight:bold;">${cooking}</div>
+        <div style="font-size:10px;opacity:.7;">🔥 cooking</div>
+      </div>
+      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #3da53d;">
+        <div style="font-size:24px;color:#9fe89f;font-weight:bold;">${done}</div>
+        <div style="font-size:10px;opacity:.7;">✅ done</div>
+      </div>
+      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;">
+        <div style="font-size:24px;color:#a89368;font-weight:bold;">${total}</div>
+        <div style="font-size:10px;opacity:.7;">📋 total</div>
+      </div>
+      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;">
+        <div style="font-size:24px;color:#9fcfe8;font-weight:bold;">${pct}%</div>
+        <div style="font-size:10px;opacity:.7;">⏱ progresso</div>
+      </div>`;
+  }
+}
+$("btnDetailRefreshQueue")?.addEventListener('click', () => renderDetailDashboard());
+$("btnDetailClearQueue")?.addEventListener('click', () => {
+  if(!confirm('Limpar todo o queue MCP?')) return;
+  mcpQueue = [];
+  saveQueue();
+  fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify([])}).catch(()=>{});
+  renderDetailDashboard();
+});
+
 function renderDetailList(){
   if(!summaryData){
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderDetailList(); });
   }
-  const body = $("detailListBody");
+  const body = $("editorAssetListBody") || $("detailListBody");
   body.innerHTML = '';
   body.className = 'detail-list-grid';
   const list = approvedAssets();
@@ -1110,14 +1181,56 @@ function renderDetailList(){
   }
 }
 
+// Detecta sprites em todas 8 direções pra um asset (chars/{name}/{dir}.png)
+function findDirectionVariants(asset){
+  if(!summaryData?.filesystem) return {};
+  // extrai folder do asset
+  const m = asset.path.match(/^(.*\/)([^\/]+\.png)$/);
+  if(!m) return {};
+  const folder = m[1];
+  const dirs = ['north','north-east','east','south-east','south','south-west','west','north-west'];
+  const found = {};
+  dirs.forEach(d => {
+    const candidate = folder + d + '.png';
+    const exists = summaryData.filesystem.some(f => f.path === candidate);
+    found[d] = exists ? candidate : null;
+  });
+  return found;
+}
+
 function renderDetailMain(){
   const a = detailSelected;
   if(!a){ return; }
-  $("detailTitle").textContent = a.name;
-  const body = $("detailBody");
+  const titleEl = $("editorTitle") || $("detailTitle");
+  const bodyEl = $("editorBody") || $("detailBody");
+  if(!titleEl || !bodyEl){ return; }
+  titleEl.textContent = a.name;
   const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 METADATA', delete:'🗑 DELETE'};
   const cats = ['create','modify','anim','meta','delete'];
-  let html = `<div class="preview"><img src="${a.path}"><div class="meta"><div><strong>${a.name}</strong></div><div>path: ${a.path}</div><div>id: ${a.id||'(unknown)'}</div><div>target: ${a.target||'-'}</div></div></div>`;
+
+  const dirVariants = findDirectionVariants(a);
+  const dirShort = {north:'N','north-east':'NE',east:'E','south-east':'SE',south:'S','south-west':'SW',west:'W','north-west':'NW'};
+  const dirSlots = Object.keys(dirVariants).map(d => {
+    const path = dirVariants[d];
+    const cls = path ? 'exists' : 'missing';
+    const inner = path ? `<img src="${path}" alt="${d}">` : `+`;
+    return `<div class="dir-slot dir-${dirShort[d]} ${cls}" data-dir="${d}" data-asset-path="${a.path}" title="${d}${path?' (existe)':' (gerar via MCP)'}">${inner}</div>`;
+  }).join('');
+
+  let html = `
+    <div class="preview">
+      <div class="visualizer">
+        <img class="main-sprite" src="${a.path}" alt="${a.name}">
+        <div class="dir-overlay">${dirSlots}</div>
+      </div>
+      <div class="meta">
+        <div><strong>${a.name}</strong></div>
+        <div>path: ${a.path}</div>
+        <div>id: ${a.id||'(unknown)'}</div>
+        <div>target: ${a.target||'-'}</div>
+        <div style="margin-top:8px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Click <strong>+</strong> nos slots vazios pra enfileirar geração via MCP.</div>
+      </div>
+    </div>`;
   cats.forEach(cat => {
     const tools = PIXELLAB_TOOLS.filter(t => t.cat === cat);
     if(!tools.length) return;
@@ -1142,9 +1255,37 @@ function renderDetailMain(){
     });
     html += `</div>`;
   });
-  body.innerHTML = html;
-  body.querySelectorAll('.qbtn').forEach(b => {
+  bodyEl.innerHTML = html;
+  bodyEl.querySelectorAll('.qbtn').forEach(b => {
     b.onclick = () => queueTool(b.dataset.queue);
+  });
+  // Wire click nos dir-slots (missing → queue gen, existing → seleciona aquele asset)
+  bodyEl.querySelectorAll('.dir-slot').forEach(slot => {
+    slot.onclick = () => {
+      const dir = slot.dataset.dir;
+      const basePath = slot.dataset.assetPath;
+      if(slot.classList.contains('exists')){
+        // troca pra esse asset direcional
+        const newPath = slot.querySelector('img').src;
+        // tenta achar nas approvedAssets
+        const all = approvedAssets();
+        const it = all.find(x => x.path === newPath || newPath.endsWith(x.path.replace(/^\.\.\//,'')));
+        if(it){ detailSelected = it; renderDetailList(); renderDetailMain(); }
+      } else {
+        // queue MCP gen baseada no asset original
+        mcpQueue.push({
+          tool: 'pixellab_generate_direction',
+          args: { base_asset_path: basePath, direction: dir, reference: 'use base_asset for visual consistency' },
+          asset: { path: basePath },
+          ts: Date.now()
+        });
+        saveQueue();
+        slot.classList.remove('missing');
+        slot.classList.add('queued');
+        slot.textContent = '⏳';
+        slot.title = `${dir} enfileirado pra geração`;
+      }
+    };
   });
 }
 
