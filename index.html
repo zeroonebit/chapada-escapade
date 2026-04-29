@@ -93,7 +93,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429o';
+    const V = '20260429p';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -101,16 +101,17 @@
     const blockMobile = smallScreen || touchSmall;
 
     if (blockMobile) {
-        // ── MOBILE: tela vermelha de flavor + UFO interativo (sem game) ──
-        // So mostra mensagem + UFO seguindo o dedo. Nao carrega js/* — a ideia
-        // eh agucar curiosidade pro player querer jogar no PC.
+        // ── MOBILE: tela vermelha de flavor + carrega game em modo "teaser" ──
+        // Carrega o jogo com weather macabro, sem inimigos/cows/HUD. UFO segue
+        // o dedo, beam acende com touch hold, solta = inercia + bounce edges.
+        // Icones acima da mensagem (ordem: icon -> text).
         const t = document.getElementById('pre-loader-title');
         t.innerHTML =
+            '<div style="font-size:31px;letter-spacing:12px;line-height:1;margin-bottom:10px;">📱🚫</div>' +
             '<div style="font-size:15px;letter-spacing:2px;font-weight:bold;color:#ff5566;' +
-            'text-shadow:0 0 12px rgba(255,80,80,0.55);margin-bottom:10px;">' +
+            'text-shadow:0 0 12px rgba(255,80,80,0.55);">' +
             'Aliens don\'t use phones' +
-            '</div>' +
-            '<div style="font-size:31px;letter-spacing:12px;line-height:1;">📱🚫</div>';
+            '</div>';
         t.style.fontSize = '14px';
         t.style.letterSpacing = '0';
         t.style.marginBottom = '18px';
@@ -127,6 +128,7 @@
         const bar = document.getElementById('pre-loader-bar');
         bar.style.background = 'linear-gradient(90deg, #cc1122, #ff5566)';
 
+        // Below: icones acima do texto (ordem ja correta — icon -> text)
         const pct = document.getElementById('pre-loader-pct');
         const below = document.createElement('div');
         below.id = 'pre-loader-below';
@@ -139,61 +141,9 @@
             '</div>';
         pct.parentNode.insertBefore(below, pct.nextSibling);
 
-        // ── UFO TOY: img que segue o dedo (puro DOM, sem Phaser) ──
-        const ufo = document.createElement('img');
-        ufo.src = 'assets/pixel_labs/chars/ufo/south.png';
-        ufo.draggable = false;
-        ufo.style.cssText = [
-            'position:fixed', 'left:0', 'top:0', 'width:90px', 'height:90px',
-            'image-rendering:pixelated', 'pointer-events:none',
-            'z-index:10001', 'user-select:none', '-webkit-user-drag:none',
-            'transform:translate(-9999px,-9999px)',
-            'filter:drop-shadow(0 0 14px rgba(170,255,200,0.7))'
-        ].join(';');
-        document.body.appendChild(ufo);
-
-        const hint = document.createElement('div');
-        hint.style.cssText = 'position:fixed;bottom:18px;left:0;right:0;text-align:center;' +
-            'color:rgba(170,255,200,0.45);font-size:10px;letter-spacing:3px;z-index:10001;' +
-            'font-family:"Courier New",monospace;pointer-events:none;';
-        hint.textContent = '◇  arraste o dedo  ◇';
-        document.body.appendChild(hint);
-
-        let ufoX = window.innerWidth / 2;
-        let ufoY = window.innerHeight * 0.78;
-        let targetX = ufoX, targetY = ufoY;
-        const lerp = (a, b, k) => a + (b - a) * k;
-        const moveTo = (x, y) => { targetX = x; targetY = y; };
-
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches[0]) moveTo(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: true });
-        document.addEventListener('touchmove', (e) => {
-            if (e.touches[0]) moveTo(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: true });
-        document.addEventListener('mousemove', (e) => moveTo(e.clientX, e.clientY));
-
-        (function loop() {
-            ufoX = lerp(ufoX, targetX, 0.16);
-            ufoY = lerp(ufoY, targetY, 0.16);
-            const tilt = Math.max(-12, Math.min(12, (targetX - ufoX) * 0.25));
-            ufo.style.transform =
-                `translate(${ufoX - 45}px, ${ufoY - 45}px) rotate(${tilt}deg)`;
-            requestAnimationFrame(loop);
-        })();
-
-        // Anima barra ate 100% em ~2.5s (failsafe puro, sem game)
-        let pctVal = 0;
-        const intv = setInterval(() => {
-            pctVal = Math.min(100, pctVal + 4);
-            bar.style.width = pctVal + '%';
-            pct.textContent = pctVal + '%';
-            if (pctVal >= 100) {
-                clearInterval(intv);
-                setTimeout(() => { pct.style.opacity = '0.4'; }, 300);
-            }
-        }, 80);
-        return;  // NAO carrega nenhum js/* — UFO toy is the entire experience
+        // Flag pro 01_scene + 11_gameflow + 12_mobile aplicarem teaser mode
+        window.__MOBILE_MODE = true;
+        // Continua execucao normal -> loader desktop carrega os modulos abaixo
     }
 
     // Desktop: load dinamico dos modulos na ordem correta
