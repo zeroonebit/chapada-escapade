@@ -32,9 +32,11 @@ Object.assign(Jogo.prototype, {
             this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
             this.fuelBar = this.hud.combFill;
         }
-        this.hud.combLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
+        // PNG v2 já tem label "COMBUSTÍVEL" baked → overlay Phaser hidden por padrão
+        // (i18n FUEL/EN só funcionará após re-slice das PNGs — ver docs/TODO_HUD.md)
+        this.hud.combLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
-            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
+            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5).setVisible(false);
 
         // ── Barra Graviton (v2 mesma lógica) ─────────────────────────
         const ENE_W = 290, ENE_H = 72;
@@ -47,9 +49,10 @@ Object.assign(Jogo.prototype, {
             this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
             this.energyBar = this.hud.eneFill;
         }
-        this.hud.eneLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
+        // Idem combustível — label "GRAVITON" baked no PNG v2, overlay hidden
+        this.hud.eneLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
-            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
+            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5).setVisible(false);
 
         // Hint inicial removido — tutorial cobre instruções de input.
 

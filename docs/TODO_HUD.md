@@ -1,27 +1,28 @@
 # TODO HUD — pendente desde sessão 2026-04-30
 
-## Bugs visíveis no jogo (ver print do user)
+## ✅ Resolvido em 2026-04-29 (sessão D+R2)
 
-### 1. Labels duplicados nas barras
-Os PNGs `combustivel_full_v2.png` e `graviton_full_v2.png` ainda têm "COMBUSTÍVEL" e "GRAVITON" **baked** no topo da barra. O overlay Phaser também escreve por cima → texto duplicado/sobreposto ("GRAVITON ON", "FUEL").
+### 1. Labels duplicados nas barras → opção C aplicada
+PNGs `combustivel_full_v2.png` e `graviton_full_v2.png` têm "COMBUSTÍVEL" e "GRAVITON" baked no topo. Optei por **esconder o overlay Phaser** (`combLabelBg`/`combLabel`/`eneLabelBg`/`eneLabel` agora `setVisible(false)`). Labels baked são únicos visíveis. Trade-off: i18n FUEL/EN só funciona depois de re-slice das PNGs.
 
-**Fix opção A:** Re-slicar com `tools/slice_huds_v2.py`, detectar área do label baked e tornar alpha 0 (transparent).
-**Fix opção B:** Aumentar `combLabelBg`/`eneLabelBg` (atual 90×18) pra cobrir totalmente o label baked. Talvez 130×26.
-**Fix opção C:** Remover o overlay Phaser, aceitar label baked PT-BR fixo (perde i18n).
+## 🚧 Pendente
 
-### 2. Barras posicionadas erradas
-No print: GRAVITON e FUEL aparecem desalinhadas, combFillImg parece estar offset em relação ao combImg base.
+### 2. Barras posicionadas (alinhamento fino)
+Se ainda houver offset visual entre `combImg` (empty) e `combFillImg` (full v2 com setCrop), revisar — pode ser que o source PNG tenha padding interno diferente entre as 2 versões. Não testado nesta sessão.
 
-**Investigar:** verificar se `setOrigin(0.5)` está consistente entre empty/full e se `setDisplaySize` bate.
+### 3. Re-slice dos PNGs v2 pra restaurar i18n
+Caminho definitivo pra ter FUEL/COMBUSTÍVEL dinâmico:
+1. Editar `combustivel_full_v2.png` e `graviton_full_v2.png` no GIMP/PS
+2. Apagar o label baked (deixar transparente naquela área)
+3. Re-mostrar `combLabel`/`eneLabel` em 05_hud.js (`setVisible(true)`) — i18n já funciona
 
-### 3. Implementar HUD do radar com sprite
-`assets/pixel_labs/hud/radar_frame.png` já está na pasta. Atualmente o radar usa Graphics-based (círculos). Pendente:
+### 4. Implementar HUD do radar com sprite
+`assets/pixel_labs/hud/radar_frame.png` já carregado. Hoje usa Graphics-based (círculos). Pendente:
 - Carregar sprite como image e posicionar
 - Manter decay-based blips dentro do interior do sprite
-- Desabilitar/esconder os círculos Graphics quando sprite estiver carregado
+- Desabilitar os círculos Graphics quando sprite estiver visível
 
 ## Arquivos relevantes
 - `js/05_hud.js`: criação e posicionamento das barras + radar
 - `js/02_preload.js`: carga dos sprites
-- `tools/slice_huds_v2.py`: slicer (re-rodar se for opção A)
 - `assets/pixel_labs/hud/`: sprites prontos

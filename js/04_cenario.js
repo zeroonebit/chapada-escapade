@@ -154,8 +154,8 @@ Object.assign(Jogo.prototype, {
             return grid[cy][cx] >= 1;  // sand ou above
         };
         // Pools de assets PixelLab carregados em preload (nat_vege_* e nat_pedra_*)
-        const vegeKeys   = this._natureVegeKeys   || [];
-        const rocksKeys = this._naturePedrasKeys || [];
+        const vegeKeys  = this._natureVegKeys   || [];
+        const rocksKeys = this._natureRocksKeys || [];
         const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
         const pickP = () => rocksKeys[Phaser.Math.Between(0, rocksKeys.length - 1)];
 
@@ -181,7 +181,8 @@ Object.assign(Jogo.prototype, {
             'patch_cluster':       1.6,
         };
         const scaleFor = (texKey) => {
-            const name = texKey.replace(/^nat_(pedra|vege)_/, '');
+            // D+R2: prefixo atualizado pos refator (nat_pedra_/nat_vege_ -> nat_rock_/nat_veg_)
+            const name = texKey.replace(/^nat_(rock|veg)_/, '');
             const base = SCALE_MAP[name] || 1.0;
             return base * Phaser.Math.FloatBetween(0.85, 1.15);
         };
