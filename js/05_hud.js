@@ -7,31 +7,41 @@ const RADAR_DOME_FRAG = `
 precision mediump float;
 uniform float time;
 uniform vec2 resolution;
+varying vec2 outTexCoord;
 
 void main(void) {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec2 uv = outTexCoord;
+    uv.y = 1.0 - uv.y;
     vec2 c = uv * 2.0 - 1.0;
     float d = length(c);
     if (d > 1.0) discard;
     float z = sqrt(1.0 - d*d);
     vec3 n = vec3(c.x, c.y, z);
 
-    vec3 base = vec3(0.04, 0.55, 0.45);
-    vec3 ld = normalize(vec3(0.45, -0.45, 0.7));
+    // Base verde-teal brilhante + Lambert
+    vec3 base = vec3(0.06, 0.7, 0.55);
+    vec3 ld = normalize(vec3(0.5, -0.5, 0.8));
     float lam = max(dot(n, ld), 0.0);
-    vec3 col = base * (0.22 + 0.78 * lam);
+    vec3 col = base * (0.18 + 0.82 * lam);
 
-    float spec = pow(max(dot(n, normalize(vec3(0.4, -0.4, 0.85))), 0.0), 32.0);
-    col += vec3(0.7, 1.0, 0.9) * spec * 0.75;
+    // Specular highlight forte (brilho do dome)
+    float spec = pow(max(dot(n, normalize(vec3(0.4, -0.4, 0.9))), 0.0), 24.0);
+    col += vec3(0.8, 1.0, 0.9) * spec * 1.1;
 
-    float scan = abs(sin((c.y * 14.0) + time * 0.45));
-    scan = smoothstep(0.7, 1.0, scan);
-    col += vec3(0.3, 1.0, 0.7) * scan * 0.18;
+    // Scanlines horizontais
+    float scan = abs(sin((c.y * 16.0) + time * 0.5));
+    scan = smoothstep(0.65, 1.0, scan);
+    col += vec3(0.3, 1.0, 0.7) * scan * 0.22;
 
-    float edge = smoothstep(0.86, 1.0, d);
-    col += vec3(0.2, 0.95, 0.6) * edge * 0.7;
+    // Edge glow (borda do hemisferio)
+    float edge = smoothstep(0.82, 1.0, d);
+    col += vec3(0.3, 1.0, 0.7) * edge * 0.9;
 
-    gl_FragColor = vec4(col, 0.62);
+    // Fresnel: bordas mais brilhantes (efeito vidro)
+    float fresnel = pow(1.0 - z, 2.5);
+    col += vec3(0.2, 0.8, 0.6) * fresnel * 0.5;
+
+    gl_FragColor = vec4(col, 0.82);
 }
 `;
 
@@ -165,7 +175,7 @@ Object.assign(Jogo.prototype, {
         const FRAME_W = 220, FRAME_H = Math.round(FRAME_W * 564 / 864);  // ~144
         const INNER_RX = Math.round(FRAME_W * 234 / 864);   // half-width inner
         const INNER_RY = Math.round(FRAME_H * 119 / 564);   // half-height inner
-        const PAD_X = 14, PAD_BOTTOM = 130;  // ENE bar top em h-138 -> ~8px gap
+        const PAD_X = 14, PAD_BOTTOM = 55;  // radar bem embaixo (nao colide com bars — eixos X distintos)
         const cx = PAD_X + FRAME_W/2;
         const cy = h - PAD_BOTTOM - FRAME_H/2;
         // _mini exposes rx/ry pra _updateMinimap projetar elipse + z dome
