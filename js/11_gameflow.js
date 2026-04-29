@@ -1,4 +1,4 @@
-// 11_gameflow.js — Fluxo de jogo: splash, pausa (ESC), game over, vitória
+// 11_gameflow.js — Fluxo de game: splash, pausa (ESC), game over, vitória
 Object.assign(Jogo.prototype, {
 
     // ── SPLASH ────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ Object.assign(Jogo.prototype, {
         setHoverPlay(); setHoverTut();
 
         const allBtns = [this.splashBg, this.splashImg, btnL, lblL, btnR, lblR];
-        // Expõe pra função PREVIEW poder esconder/mostrar temporariamente
+        // Expõe to função PREVIEW poder esconder/mostrar temporariamente
         this._splashElements = allBtns;
 
         const _startGame = (tutorial, inputMode) => {
@@ -144,7 +144,7 @@ Object.assign(Jogo.prototype, {
         this.pauseOverlay = this.add.rectangle(pw/2, ph/2, pw, ph, 0x000000, 0.72)
             .setScrollFactor(0).setDepth(300).setVisible(false);
 
-        // Símbolo ⏸ — duas barras desenhadas com Graphics
+        // Símbolo ⏸ — duas barras desenhadas with Graphics
         this.pauseGrafico = this.add.graphics()
             .setScrollFactor(0).setDepth(301).setVisible(false);
         this.pauseGrafico.fillStyle(0x00ff55, 1);

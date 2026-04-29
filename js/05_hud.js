@@ -2,25 +2,25 @@
 Object.assign(Jogo.prototype, {
 
     _createHUD() {
-        // HUD acima do atmosphere overlay (depth 195) e do storm flash (196)
+        // HUD above do atmosphere overlay (depth 195) e do storm flash (196)
         const D = 200, D2 = 201;
 
         // ── Score ─────────────────────────────────────────────────────
-        // frame limpo (sem dígitos baked-in); número sobreposto pelo código
+        // frame limpo (without dígitos baked-in); número sobreposto pelo código
         this.hud.scoreBg   = this.add.image(0,0,'hud_score_frame').setDisplaySize(200,52).setScrollFactor(0).setDepth(D);
         this.hud.scoreText = this.add.text(0,12,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.scoreText    = this.hud.scoreText;
 
-        // ── COWS box (vacas + bois abduzidos no feixe) ─────────────────
+        // ── COWS box (cows + oxen abduzidos no beam) ─────────────────
         this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 80).setScrollFactor(0).setDepth(D);
         this.hud.cowsText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
         // ── BURGERS box (total entregue) ───────────────────────────────
         this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(176, 80).setScrollFactor(0).setDepth(D);
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
+        this.counterText   = this.hud.burgersText;  // alias mantido to _turnIntoBurger
 
-        // ── Barra Combustível (v2: empty base + full com setCrop dinâmico) ─
+        // ── Barra Fuel (v2: empty base + full with setCrop dinâmico) ─
         const COMB_W = 380, COMB_H = 68;
         const useV2Comb = this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2');
         if (useV2Comb) {
@@ -59,15 +59,15 @@ Object.assign(Jogo.prototype, {
         this.trailGraphic  = this.add.graphics().setDepth(9);
 
         // ── Radar (canto inferior esquerdo) ───────────────────────────
-        // hud_radar_frame: sprite com NSWE marcados; conteúdo (sweep + blips) desenhado dentro
-        this.hud.miniBg  = this.add.graphics().setScrollFactor(0).setDepth(D - 0.5);  // fundo verde + sweep abaixo do frame
-        this.hud.radarFrame = null;  // criado em _positionHUD após sabermos posição
-        this.hud.miniGfx = this.add.graphics().setScrollFactor(0).setDepth(D);  // blips entre fundo e frame
+        // hud_radar_frame: sprite with NSWE marcados; conteúdo (sweep + blips) desenhado inside
+        this.hud.miniBg  = this.add.graphics().setScrollFactor(0).setDepth(D - 0.5);  // fundo verde + sweep below do frame
+        this.hud.radarFrame = null;  // criado em _positionHUD após sabermos position
+        this.hud.miniGfx = this.add.graphics().setScrollFactor(0).setDepth(D);  // blips between fundo e frame
         this._radarAngle = 0;
-        // Map de blip → lastSeenAt (timestamp em ms) pra fade
+        // Map de blip → lastSeenAt (timestamp em ms) to fade
         this._radarBlipFades = new Map();
 
-        // Aplica i18n inicial nos labels (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
+        // Applies i18n inicial nos labels (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
         if (this._applyHudI18n) this._applyHudI18n();
     },
 
@@ -80,11 +80,11 @@ Object.assign(Jogo.prototype, {
 
         // COWS + BURGERS boxes lado a lado no canto superior esquerdo
         this.hud.cowsBox.setPosition(90, 55);
-        this.hud.cowsText.setPosition(122, 62);   // ao lado direito do ícone vaca
+        this.hud.cowsText.setPosition(122, 62);   // ao lado direito do ícone cow
         this.hud.burgersBox.setPosition(265, 55);
         this.hud.burgersText.setPosition(300, 62);
 
-        // Barras empilhadas no centro-rodapé com gap visível
+        // Barras empilhadas no centro-rodapé with gap visível
         const ENE_Y = h - 60;
         const PAC_Y = h - 18;
         this.hud.eneImg.setPosition(w/2, ENE_Y);
@@ -95,7 +95,7 @@ Object.assign(Jogo.prototype, {
         this._eneBar  = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
         this._combBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
 
-        // Labels acima das barras (pintura preta cobre label baked, texto Phaser por cima)
+        // Labels above das barras (pintura preta cobre label baked, texto Phaser by cima)
         if (this.hud.eneLabel) {
             this.hud.eneLabelBg.setPosition(w/2, ENE_Y - 22);
             this.hud.eneLabel.setPosition(w/2, ENE_Y - 22);
@@ -109,15 +109,15 @@ Object.assign(Jogo.prototype, {
             this.hud.hint.setPosition(w/2, h/2 + 60);
         }
 
-        // Radar — Graphics-based (versão original) com decay system novo
+        // Radar — Graphics-based (versão original) with decay system novo
         const R = 70, PAD = 14;
         const rx = PAD + R, ry = h - R - PAD - 58 + R/2;
         this._mini = { cx: rx, cy: ry, r: R };
 
-        // Esconde o sprite frame se existir (não usado nessa versão)
+        // Hides o sprite frame se existir (não usado nessa versão)
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
-        // Redesenha o fundo (estático — só muda no resize)
+        // Redesenha o fundo (estático — only muda no resize)
         this.hud.miniBg.clear();
         this.hud.miniBg.fillStyle(0x000a04, 0.82);
         this.hud.miniBg.fillCircle(rx, ry, R);
@@ -132,7 +132,7 @@ Object.assign(Jogo.prototype, {
         this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
     },
 
-    // Mostra/esconde as barras de combustível e graviton (usado pelo tutorial)
+    // Shows/hides as barras de fuel e graviton (usado pelo tutorial)
     _setBarsVisibility(combVisible, gravVisible) {
         if (this.hud.combImg)     this.hud.combImg.setVisible(combVisible);
         if (this.hud.combFill)    this.hud.combFill.setVisible(combVisible);
@@ -146,18 +146,18 @@ Object.assign(Jogo.prototype, {
         if (this.hud.eneLabel)    this.hud.eneLabel.setVisible(gravVisible);
     },
 
-    // Atualiza fill v2 via setCrop — chamado pelos updaters de combustivel/graviton
+    // Updates fill v2 via setCrop — chamado pelos updaters de combustivel/graviton
     // pct: 0..1 (proporção atual da barra)
     _updateFillCrop(fillImg, pct) {
         if (!fillImg || !fillImg.scene) return;
         const tex = fillImg.texture;
         const w = tex.source[0].width;
         const h = tex.source[0].height;
-        // Crop revela só a parte esquerda proporcional (resto fica preto = empty)
+        // Crop revela only a parte esquerda proporcional (resto fica preto = empty)
         fillImg.setCrop(0, 0, Math.max(0, w * pct), h);
     },
 
-    // Aplica i18n aos labels das barras (chamado quando lang muda)
+    // Applies i18n aos labels das barras (chamado when lang muda)
     _applyHudI18n() {
         const lang = this.dbg?.behavior?.lang || 'en';
         const labels = {
@@ -186,7 +186,7 @@ Object.assign(Jogo.prototype, {
         this._radarAngle = (prevAngle + 0.018) % (Math.PI * 2);
         const sa = this._radarAngle;
 
-        // Fundo verde semi-transparente dentro do interior
+        // Fundo verde semi-transparente inside do interior
         g.fillStyle(0x002211, 0.45);
         g.fillCircle(cx, cy, r);
 
@@ -204,7 +204,7 @@ Object.assign(Jogo.prototype, {
         g.lineStyle(1.5, 0x55ff99, 0.95);
         g.lineBetween(cx, cy, cx + Math.cos(sa)*r, cy + Math.sin(sa)*r);
 
-        // Decay-based blips: cada entidade só "acende" quando a sweep line passa por ela.
+        // Decay-based blips: each entidade only "acende" when a sweep line passa by ela.
         // Depois fade gradual via lastSeenAt timestamp (decay ~2.5s).
         const now = this.time?.now ?? 0;
         const FADE_MS = 2500;
@@ -212,7 +212,7 @@ Object.assign(Jogo.prototype, {
 
         // Helper: testa se sweep line passou pelo angulo do blip nesse frame
         const sweptThis = (blipAng) => {
-            // Normaliza ambos pra [0, 2π)
+            // Normaliza ambos to [0, 2π)
             let prev = ((prevAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
             let curr = ((sa     % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
             let b    = ((blipAng% (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
@@ -221,7 +221,7 @@ Object.assign(Jogo.prototype, {
             return b >= prev || b <= curr;
         };
 
-        // Coleta blips e atualiza lastSeenAt se foram varridos agora
+        // Coleta blips e updates lastSeenAt se foram varridos now
         const blips = [];
         const collect = (entity, color, size = 2) => {
             const bx = wx(entity.x), by = wy(entity.y);
@@ -229,7 +229,7 @@ Object.assign(Jogo.prototype, {
             const ang = Math.atan2(by - cy, bx - cx);
             if (sweptThis(ang)) fades.set(entity, now);
             const last = fades.get(entity);
-            if (last == null) return;  // ainda não foi visto
+            if (last == null) return;  // still não was visto
             const age = now - last;
             if (age > FADE_MS) { fades.delete(entity); return; }
             const alpha = 1 - (age / FADE_MS);  // 1 → 0 ao longo de FADE_MS
@@ -246,14 +246,14 @@ Object.assign(Jogo.prototype, {
             collect(f, 0xffdd33, 2);
         }
 
-        // Desenha blips com alpha decay
+        // Draws blips with alpha decay
         for (const b of blips) {
             g.fillStyle(b.color, b.alpha);
             if (b.size === 2.5) g.fillRect(b.x - 2.5, b.y - 2.5, 5, 5);
             else                g.fillCircle(b.x, b.y, b.size);
         }
 
-        // Nave — ponto verde central fixo + pulso (sempre visível)
+        // Ship — ponto verde central fixo + pulso (always visível)
         g.fillStyle(0x66ff99, 1);
         g.fillCircle(cx, cy, 3);
         const pulse = 0.5 + 0.5 * Math.sin(this._radarAngle * 4);
@@ -261,7 +261,7 @@ Object.assign(Jogo.prototype, {
         g.strokeCircle(cx, cy, 6 + pulse * 3);
     },
 
-    // Cleanup do map de blip fades quando entidades morrem (evita leak)
+    // Cleanup do map de blip fades when entidades morrem (evita leak)
     _cleanRadarFades() {
         if (!this._radarBlipFades) return;
         for (const entity of this._radarBlipFades.keys()) {

@@ -1,13 +1,13 @@
-// 19_debug_overlay.js — Overlay de debug toggleable com F3
-// Mostra: FPS, heap (Chrome only), counts de entidades/tweens, últimos erros.
-// Console.log estruturado a cada 5s pra você anexar em bug report.
+// 19_debug_overlay.js — Overlay de debug toggleable with F3
+// Shows: FPS, heap (Chrome only), counts de entidades/tweens, últimos erros.
+// Console.log estruturado a each 5s to você anexar em bug report.
 Object.assign(Jogo.prototype, {
 
     _setupDebugOverlay() {
         // Tecla F3 toggle
         this._keyF3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F3);
 
-        // Container DOM (mais leve que Phaser text pra atualizar 60x/s)
+        // Container DOM (more leve que Phaser text to atualizar 60x/s)
         const el = document.createElement('div');
         el.id = 'debug-overlay';
         el.style.cssText = `
@@ -23,7 +23,7 @@ Object.assign(Jogo.prototype, {
         document.body.appendChild(el);
         this._dbgOverlayEl = el;
 
-        // Captura erros globais (pega coisas fora do try/catch do _updateBody)
+        // Captura erros globais (pega coisas outside do try/catch do _updateBody)
         this._errorLog = [];   // [{t, msg}]
         this._maxErrors = 6;
         const captureErr = (msg, src) => {
@@ -43,7 +43,7 @@ Object.assign(Jogo.prototype, {
         }
         this._captureErr = captureErr;
 
-        // Console.log estruturado a cada 5s
+        // Console.log estruturado a each 5s
         this._dbgLogTimer = this.time.addEvent({
             delay: 5000, loop: true,
             callback: () => this._dbgLogSnapshot(),
@@ -78,7 +78,7 @@ Object.assign(Jogo.prototype, {
             heap = `${mb.toFixed(1)}/${mbLimit.toFixed(0)} MB`;
         }
 
-        // Cor do FPS: verde >55, amarelo >30, vermelho abaixo
+        // Color do FPS: verde >55, amarelo >30, vermelho below
         const fpsNum = parseFloat(fps);
         const fpsColor = fpsNum > 55 ? '#0f0' : fpsNum > 30 ? '#fa0' : '#f44';
 

@@ -15,7 +15,7 @@ Object.assign(Jogo.prototype, {
 
     _environmentCollision(entity, otherLabel, otherEntity) {
         if (entity._dying || entity._destroyed) return;
-        // Tutorial: vacas/bois imortais (skip total)
+        // Tutorial: cows/oxen imortais (skip total)
         if (this._tutVacasImortais && (entity.body.label === 'vaca' || entity.body.label === 'boi')) return;
 
         const entityIsEnemy   = !!entity.isEnemy;
@@ -26,11 +26,11 @@ Object.assign(Jogo.prototype, {
         const HIGH_SPEED      = 4.0;
         const isHighImpact    = entityAbducted || otherAbducted || speed > HIGH_SPEED;
 
-        // Debounce: ignora hits no mesmo frame ou < 120ms
+        // Debounce: ignora hits no same frame ou < 120ms
         const now = this.time?.now ?? 0;
         if (entity._lastHitT && (now - entity._lastHitT) < 120) return;
 
-        // ROCHA: única forma de morte do fazendeiro. Vaca/boi tem hp 3-5
+        // ROCHA: única forma de morte do farmer. Cow/ox has hp 3-5
         if (otherLabel === 'rocha') {
             if (!isHighImpact) return;
             entity._lastHitT = now;
@@ -40,20 +40,20 @@ Object.assign(Jogo.prototype, {
                 this._explode(entity, entityIsEnemy ? 0xff8800 : 0xff2222);
             }
         }
-        // VACA-VACA / VACA-BOI / BOI-BOI: dano só com impacto de alta speed
+        // VACA-VACA / VACA-BOI / BOI-BOI: dano only with impacto de alta speed
         else if (otherLabel === 'vaca' || otherLabel === 'boi') {
-            if (entityIsEnemy) return;       // fazendeiro: bounce físico, sem dano
+            if (entityIsEnemy) return;       // farmer: bounce físico, without dano
             if (!isHighImpact) return;
             entity._lastHitT = now;
             entity._hp = (entity._hp ?? 1) - 1;
             this._hitFlash(entity, 0xffcc44);
             if (entity._hp <= 0) this._explode(entity, 0xff2222);
         }
-        // CACTO/MOITA: fazendeiro só quica, sem dano. Vaca/boi também não toma dano.
+        // CACTO/MOITA: farmer only quica, without dano. Cow/ox also não toma dano.
         else if (otherLabel === 'moita') {
             return;  // bounce já tratado pelo Matter (setBounce na entidade)
         }
-        // FAZENDEIRO: cow vs farmer — ninguém toma dano (físico só)
+        // FAZENDEIRO: cow vs farmer — ninguém toma dano (físico only)
         else if (otherLabel === 'fazendeiro') {
             return;
         }

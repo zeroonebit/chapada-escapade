@@ -2,18 +2,18 @@
 Object.assign(Jogo.prototype, {
 
     preload() {
-        // Error handler: avisa no console quando asset 404 (default Phaser falha silente)
+        // Error handler: avisa no console when asset 404 (default Phaser falha silente)
         this.load.on('loaderror', (file) => {
             console.warn('[ASSET 404]', file.src || file.url || file.key);
         });
 
         // ── HERO ASSETS 200×200 (single sprite usado em algumas situações) ──
-        // Nave aponta pra UFO south (versão dome opaca, sem alien visível dentro)
+        // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
         this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
         this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
 
         // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
-        // Vaca (chubby holstein, 8-dir), Boi, Fazendeiro, UFO: 8 direções
+        // Cow (chubby holstein, 8-dir), Ox, Farmer, UFO: 8 directions
         const dirs8 = {
             'south':'S','east':'E','north':'N','west':'W',
             'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
@@ -25,7 +25,7 @@ Object.assign(Jogo.prototype, {
             this.load.image(`ufo_${k}`,  `assets/pixel_labs/chars/ufo/${d}.png`);
         });
 
-        // ── LEGACY KEYS (pointam pra direcional sul, compat com código antigo) ──
+        // ── LEGACY KEYS (pointam to direcional sul, compat with código antigo) ──
         this.load.image('vaca_frente',     'assets/pixel_labs/chars/vaca/south.png');
         this.load.image('vaca_cima_sobe',  'assets/pixel_labs/chars/vaca/south.png');
         this.load.image('vaca_cima_desce', 'assets/pixel_labs/chars/vaca/south.png');
@@ -33,23 +33,23 @@ Object.assign(Jogo.prototype, {
         this.load.image('boi_cima_sobe',   'assets/pixel_labs/chars/boi/south.png');
         this.load.image('boi_cima_desce',  'assets/pixel_labs/chars/boi/south.png');
         this.load.image('fazendeiro',      'assets/pixel_labs/chars/fazendeiro/south.png');
-        // hambúrguer agora vem do PixelLab (substitui geometria antiga)
+        // burger now vem do PixelLab (substitui geometria antiga)
         this.load.image('hamburguer',      'assets/pixel_labs/items/burger_classic.png');
 
         // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
         // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
         const D8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
-            // Vaca chubby (8d) — walk + idle_head_shake (eat) + lie_down (angry-ish)
+            // Cow chubby (8d) — walk + idle_head_shake (eat) + lie_down (angry-ish)
             { char: 'vaca',       prefix: 'vaca_walk',  anim: 'walk',            frames: 4 },
             { char: 'vaca',       prefix: 'vaca_eat',   anim: 'idle_head_shake', frames: 11 },
             { char: 'vaca',       prefix: 'vaca_angry', anim: 'lie_down',        frames: 8 },
-            // Fazendeiro running, Boi walk
+            // Farmer running, Ox walk
             { char: 'fazendeiro', prefix: 'faz_run',    anim: 'running',         frames: 4 },
             { char: 'boi',        prefix: 'boi_walk',   anim: 'walk',            frames: 4 },
             // UFO hovering 8-dir (idle bob/light flicker)
             { char: 'ufo',        prefix: 'ufo_hover',  anim: 'hovering_idle',   frames: 4 },
-            // Boi idle_head_shake — sem N (7 dirs)
+            // Ox idle_head_shake — without N (7 dirs)
             { char: 'boi', prefix: 'boi_idle', anim: 'idle_head_shake', frames: 11,
               dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
@@ -63,7 +63,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // ── NATURE POOL (rocks + bushes/cactus pra cenário) ──────────
+        // ── NATURE POOL (rocks + bushes/cactus to scenery) ──────────
         const NATURE_PEDRAS = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];
         const NATURE_VEGE   = ['bush_round_dense','cactus_saguaro_tall','cactus_medium',
                                'cactus_dead_dry','cactus_branching','cactus_cluster_low',
@@ -89,11 +89,11 @@ Object.assign(Jogo.prototype, {
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
         NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
-        // Expor pra cenario
+        // Expor to cenario
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);
         this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
-        // Expor pra outros módulos
+        // Expor to outros módulos
         this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
         this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);
         this._natureCercasKeys = NATURE_CERCAS.map(n => `nat_cerca_${n}`);
@@ -106,7 +106,7 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
-        // v2: full + empty pra setCrop dinâmico (fill bakeded, miolo preto)
+        // v2: full + empty to setCrop dinâmico (fill bakeded, miolo preto)
         this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v2.png');
         this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v2.png');
         this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v2.png');
@@ -120,13 +120,13 @@ Object.assign(Jogo.prototype, {
         this.load.image('splash', 'splashv3.png');
         this.load.image('game_icon', 'icon.png');
 
-        // ── WANG TILES (16 tiles cr31 cores sólidas pra debug) ──────
+        // ── WANG TILES (16 tiles cr31 colors sólidas to debug) ──────
         for (let i = 0; i < 16; i++) {
             const f = String(i).padStart(2, '0');
             this.load.image(`wang_${f}`, `assets/terrain/test/wang_${f}.png`);
         }
 
-        // (Wang tileset PNGs removidos — terreno agora é renderizado pelo
+        // (Wang tileset PNGs removidos — terreno now is renderizado pelo
         //  fragment shader cell-shaded em js/13_terrain_shader.js)
     }
 

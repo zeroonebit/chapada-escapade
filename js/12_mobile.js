@@ -1,6 +1,6 @@
-// 12_mobile.js — Joystick virtual + botão de feixe pra touch screens
-// Só ativa em this.isMobile. Joystick à esquerda controla direção da nave;
-// botão à direita ativa o feixe enquanto segurado.
+// 12_mobile.js — Joystick virtual + botão de beam to touch screens
+// Só activates em this.isMobile. Joystick à esquerda controla direction da ship;
+// botão à direita activates o beam enquanto segurado.
 Object.assign(Jogo.prototype, {
 
     _setupMobileControls() {
@@ -17,7 +17,7 @@ Object.assign(Jogo.prototype, {
         const D = 150, D2 = 151;
         const COR_VERDE = 0x00ff55;
         const COR_VERMELHO = 0xff3366;
-        // Alpha defaults: silhueta discreta no canto, vai pra 0 ao tocar
+        // Alpha defaults: silhueta discreta no canto, vai to 0 ao tocar
         const IDLE_ALPHA = 0.25;
         const HIDE_ALPHA = 0.0;
 
@@ -28,14 +28,14 @@ Object.assign(Jogo.prototype, {
         this.joyKnob = this.add.circle(0, 0, 28, COR_VERDE, 0.55)
             .setScrollFactor(0).setDepth(D2);
 
-        // Botão de feixe (anel + label)
+        // Botão de beam (anel + label)
         this.beamBtn = this.add.circle(0, 0, 60, COR_VERMELHO, 0.30)
             .setStrokeStyle(3, COR_VERMELHO, 0.85).setScrollFactor(0).setDepth(D);
         this.beamBtnLabel = this.add.text(0, 0, 'BEAM', {
             fontSize: '13px', fill: '#ffffff', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
-        // Aplica alpha inicial idle (silhueta)
+        // Applies alpha inicial idle (silhueta)
         [this.joyBase, this.joyKnob].forEach(o => o.setAlpha(IDLE_ALPHA));
         [this.beamBtn, this.beamBtnLabel].forEach(o => o.setAlpha(IDLE_ALPHA));
 
@@ -107,7 +107,7 @@ Object.assign(Jogo.prototype, {
         const max = 60;
         if (dist > max) { dx = dx/dist * max; dy = dy/dist * max; }
         this.joyKnob.setPosition(this._joyCx + dx, this._joyCy + dy);
-        // Vetor normalizado -1..1
+        // Vector normalizado -1..1
         this._joyVec = { x: dx/max, y: dy/max, active: dist > 5 };
     },
 

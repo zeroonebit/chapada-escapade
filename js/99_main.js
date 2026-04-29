@@ -1,5 +1,5 @@
-// 99_main.js — Configuração do Phaser e instanciação do jogo
-// Carregado por último: depende de Jogo (definido em 01_scene.js + módulos)
+// 99_main.js — Configuration do Phaser e instanciação do game
+// Carregado by último: depende de Game (definido em 01_scene.js + módulos)
 
 const config = {
     type: Phaser.WEBGL,  // WEBGL necessário pro shader procedural de terreno (13_terrain_shader.js)

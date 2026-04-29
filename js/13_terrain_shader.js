@@ -1,7 +1,7 @@
 // 13_terrain_shader.js — Terreno cell-shaded ink+watercolor via fragment shader.
-// Recebe terrainGrid como textura RGBA (canal R = altitude * 85), blenda 4 terrenos
-// com noise jitter, detecta bordas pra desenhar linhas de "ink", posterize pra cell-shade,
-// água ondulando com sin(time).
+// Recebe terrainGrid as textura RGBA (canal R = altitude * 85), blenda 4 terrenos
+// with noise jitter, detecta bordas to desenhar linhas de "ink", posterize to cell-shade,
+// water ondulando with sin(time).
 Object.assign(Jogo.prototype, {
 
     _setupTerrainShader(W, H) {
@@ -27,7 +27,7 @@ Object.assign(Jogo.prototype, {
         }
         ctx.putImageData(imgData, 0, 0);
         canvas.refresh();
-        // NEAREST filter pra não interpolar altitudes (nós fazemos blend manual)
+        // NEAREST filter to não interpolar altitudes (nós fazemos blend manual)
         canvas.setFilter(Phaser.Textures.FilterMode.NEAREST);
 
         // ── 2. Fragment shader cell-shaded ink + watercolor
@@ -58,15 +58,15 @@ float fbm(vec2 p) {
 }
 
 float sampleAlt(vec2 uv) {
-    // textura tem R = altitude * 85; converte de volta pra 0..3
+    // textura has R = altitude * 85; converte de volta to 0..3
     return floor(texture2D(iChannel0, uv).r * 3.0 + 0.5);
 }
 
 vec3 colorFor(float t) {
-    if (t < 0.5) return vec3(45.0, 95.0, 130.0) / 255.0;   // 0 água
-    if (t < 1.5) return vec3(235.0, 218.0, 165.0) / 255.0; // 1 areia
-    if (t < 2.5) return vec3(105.0, 165.0, 80.0) / 255.0;  // 2 grama
-    return vec3(180.0, 95.0, 60.0) / 255.0;                // 3 terra
+    if (t < 0.5) return vec3(45.0, 95.0, 130.0) / 255.0;   // 0 water
+    if (t < 1.5) return vec3(235.0, 218.0, 165.0) / 255.0; // 1 sand
+    if (t < 2.5) return vec3(105.0, 165.0, 80.0) / 255.0;  // 2 grass
+    return vec3(180.0, 95.0, 60.0) / 255.0;                // 3 dirt
 }
 
 vec3 inkFor(float t) {
@@ -77,13 +77,13 @@ vec3 inkFor(float t) {
 }
 
 void main() {
-    // DEBUG MODE: lê textura crua + colore por altitude por cell (sem blend)
+    // DEBUG MODE: reads textura crua + colore by altitude by cell (without blend)
     vec2 uv = fragCoord;
     float alt = sampleAlt(uv);
     vec3 color = colorFor(alt);
     // Posterize sutil
     color = floor(color * 12.0) / 12.0;
-    // Animação de água
+    // Animation de water
     if (alt < 0.5) {
         float ripple = sin(uv.x * 40.0 + iTime * 0.8) * 0.025
                      + sin(uv.y * 30.0 + iTime * 0.6) * 0.025;
@@ -93,14 +93,14 @@ void main() {
 }
 `;
 
-        // ── 3. Cria BaseShader e adiciona como GameObject cobrindo o mapa
+        // ── 3. Creates BaseShader e adiciona as GameObject cobrindo o map
         const baseShader = new Phaser.Display.BaseShader(
             'terrain_cellshade',
             fragSrc
         );
 
         // add.shader(shader, x, y, width, height, textures[]) — passa texKey no
-        // array pra Phaser auto-bindar em iChannel0 (setSampler2D depois nem sempre pega)
+        // array to Phaser auto-bindar em iChannel0 (setSampler2D after nem always pega)
         this.terrainShader = this.add.shader(baseShader, W / 2, H / 2, W, H, [texKey]);
         this.terrainShader.setDepth(0);
     }

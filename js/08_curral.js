@@ -1,14 +1,14 @@
-// 08_curral.js — Curral com slots fixos: 3 vacas max, 3 burgers max
+// 08_curral.js — Corral with slots fixos: 3 cows max, 3 burgers max
 // Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
 // Constantes BURGER_TEXTURES, SLOT_VALOR, SLOT_FUEL vêm de 00_constants.js
-// (alias local pra manter o código antigo lendo BURGER_SLOTS)
+// (alias local to manter o código antigo lendo BURGER_SLOTS)
 const BURGER_SLOTS = BURGER_TEXTURES;
 
 Object.assign(Jogo.prototype, {
 
     _checkDelivery() {
         for (const c of this.corrals) {
-            // Drop por proximidade do curral
+            // Drop by proximidade do corral
             const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
             if (d < 110) this._dropCowsAtCorral(c);
             // Coleta via beam (atrai burgers ready)
@@ -16,7 +16,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Vaca chubby representativa com anims rotativas + counter "xN"
+    // Cow chubby representativa with anims rotativas + counter "xN"
     _ensureCowMascot(curral) {
         if (curral.mascot && curral.mascot.scene) {
             curral.mascot.setVisible(true);
@@ -24,22 +24,22 @@ Object.assign(Jogo.prototype, {
             if (curral.mascotHay) curral.mascotHay.setVisible(true);
             return curral.mascot;
         }
-        // Tamanho REAL da vaca (igual _createCow: baseSize 68 * scale.vaca)
+        // Size REAL da cow (igual _createCow: baseSize 68 * scale.cow)
         const SIZE = 68 * (this.dbg?.scale?.vaca ?? 1.0);
 
-        // Vaca chubby comendo virada pra sul (anim fixa eat_S)
+        // Cow chubby comendo virada to sul (anim fixa eat_S)
         const initTex = this.textures.exists('vaca_eat_S_0') ? 'vaca_eat_S_0' : 'vaca_S';
         const m = this.add.sprite(curral.x - 14, curral.y, initTex)
             .setDisplaySize(SIZE, SIZE).setDepth(2);
         if (this.anims.exists('vaca_eat_S')) m.play('vaca_eat_S', true);
 
-        // Fardo de feno ao lado direito (vaca olha pra ele e come)
+        // Fardo de feno ao lado direito (cow olha to ele e come)
         let feno = null;
         if (this.textures.exists('nat_outro_hay_bale')) {
             feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_outro_hay_bale')
                 .setDisplaySize(84, 76).setDepth(1.9);
         }
-        // Balde ao lado esquerdo da vaca — random entre cheio (leite) e vazio
+        // Balde ao lado esquerdo da cow — random between full (leite) e empty
         let balde = null;
         const baldeKey = Math.random() < 0.5 ? 'nat_obj_bucket_milk' : 'nat_obj_bucket_empty';
         if (this.textures.exists(baldeKey)) {
@@ -73,10 +73,10 @@ Object.assign(Jogo.prototype, {
         if (curral.mascotBucket) curral.mascotBucket.setVisible(visible);
     },
 
-    // Posição do slot fixo (0/1/2) abaixo do gate sul do curral
+    // Position do slot fixo (0/1/2) below do gate sul do corral
     _slotPos(curral, slotIdx) {
         const SLOT_W = 32;
-        const baseY = curral.y + 110;  // abaixo da entrada
+        const baseY = curral.y + 110;  // below da entrada
         const startX = curral.x - SLOT_W;
         return { x: startX + slotIdx * SLOT_W, y: baseY };
     },
@@ -85,7 +85,7 @@ Object.assign(Jogo.prototype, {
         if (!curral.slots) curral.slots = [null, null, null];
     },
 
-    // Conta slots free (null) — limita aceitação de vacas
+    // Conta slots free (null) — limita aceitação de cows
     _freeSlots(curral) {
         this._ensureSlots(curral);
         return curral.slots.filter(s => s === null).length;
@@ -97,10 +97,10 @@ Object.assign(Jogo.prototype, {
         if (candidates.length === 0) return;
 
         const free = this._freeSlots(curral);
-        if (free === 0) return;  // curral cheio — vacas continuam abduzidas
+        if (free === 0) return;  // corral full — cows continuam abduzidas
 
         const accepted = candidates.slice(0, free);
-        // Remove só as accepted das abduzidas; restantes continuam no beam
+        // Removes only as accepted das abduzidas; restantes continuam no beam
         this.abductedCows = this.abductedCows.filter(v => !accepted.includes(v));
         if (this._updateBeamCounters) this._updateBeamCounters();
 
@@ -123,7 +123,7 @@ Object.assign(Jogo.prototype, {
                 duration: 320, ease: 'Back.easeOut'
             });
 
-            // Spawna burger LOADING já com a textura final do slot (não cicla mais)
+            // Spawns burger LOADING já with a textura final do slot (não cicla more)
             const tex = BURGER_SLOTS[slotIdx];
             const pos = this._slotPos(curral, slotIdx);
             const icon = this.add.image(pos.x, pos.y, tex)
@@ -133,7 +133,7 @@ Object.assign(Jogo.prototype, {
             });
             curral.slots[slotIdx] = { state: 'loading', icon, pisca, vaca: v, slotIdx };
 
-            // Remove a vaca real do mundo (mascot representa)
+            // Removes a cow real do world (mascot representa)
             this.cows = this.cows.filter(x => x !== v);
             this._destroyCow(v);
 
@@ -144,7 +144,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // M3: cleanup completo de um slot (tweens + icon)
-    // Usado no _collectSlot e em qualquer destrução prematura do curral
+    // Usado no _collectSlot e em qualquer destrução prematura do corral
     _cleanSlot(curral, slotIdx) {
         const slot = curral?.slots?.[slotIdx];
         if (!slot) return;
@@ -161,19 +161,19 @@ Object.assign(Jogo.prototype, {
         this._ensureSlots(curral);
         const slot = curral.slots[slotIdx];
         if (!slot || slot.state !== 'loading' || !slot.icon || !slot.icon.scene) {
-            // Slot inválido (curral destruído mid-process?) → limpa pra evitar leak
+            // Slot inválido (corral destruído mid-process?) → limpa to evitar leak
             if (curral && curral.slots) this._cleanSlot(curral, slotIdx);
             return;
         }
 
-        // Decrementa counter (vaca "saiu" do estoque)
+        // Decrementa counter (cow "saiu" do estoque)
         curral.mascotCount = Math.max(0, curral.mascotCount - 1);
         if (curral.mascotCountTxt) {
             curral.mascotCountTxt.setText('x' + curral.mascotCount);
         }
         this._updateMascoteVisibilidade(curral);
 
-        // Para piscar e fixa burger pronto com bounce sutil
+        // Stops piscar e fixa burger pronto with bounce sutil
         if (slot.pisca) slot.pisca.stop();
         slot.icon.setAlpha(1);
         slot.bounce = this.tweens.add({
@@ -184,7 +184,7 @@ Object.assign(Jogo.prototype, {
         slot.state = 'ready';
     },
 
-    // Atrai burgers ready em direção à nave quando o beam está ativo e burger no coneRadius
+    // Atrai burgers ready em direction à ship when o beam is ativo e burger no coneRadius
     _attractBurgersBeam(curral) {
         this._ensureSlots(curral);
         const beamOn = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
@@ -211,21 +211,21 @@ Object.assign(Jogo.prototype, {
         const fuel   = SLOT_FUEL[slotIdx] || 28;
         if (slot.bounce) slot.bounce.stop();
         this.tweens.killTweensOf(icon);
-        // Tween de atração pra nave (efeito beam)
+        // Tween de atração to ship (efeito beam)
         this.tweens.add({
             targets: icon,
             x: this.ship.x, y: this.ship.y,
             scale: 0.25, alpha: 0,
             duration: 380, ease: 'Cubic.easeIn',
             onUpdate: () => {
-                // Atualiza pra acompanhar movimento da nave
+                // Updates to acompanhar movimento da ship
                 if (icon.scene && this.ship) {
                     // segue dinamicamente o destino
                 }
             },
             onComplete: () => {
                 if (icon.scene) icon.destroy();
-                // Aplica recompensa ao chegar
+                // Applies recompensa ao chegar
                 this.score += points;
                 this.scoreText.setText(this.score);
                 this.fuelCurrent = Math.min(this.fuelMax, this.fuelCurrent + fuel);
@@ -244,7 +244,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    // Compat com tutorial e radar (verifica se tem burger pronto pra coletar)
+    // Compat with tutorial e radar (checks se has burger pronto to coletar)
     _anyCorralReady() {
         for (const c of this.corrals) {
             if (!c.slots) continue;

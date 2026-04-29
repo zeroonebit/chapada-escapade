@@ -1,6 +1,6 @@
-// 04_cenario.js — Cenário: terreno procedural via Cellular Automata + obstáculos + currais
-// Layered overlap: 4 camadas de altitude (água/areia/grama/terra) renderizadas como
-// polígonos orgânicos oversize. Cells adjacentes do mesmo nível fundem visualmente.
+// 04_cenario.js — Scenery: terreno procedural via Cellular Automata + obstáculos + corrals
+// Layered overlap: 4 camadas de altitude (water/sand/grass/dirt) renderizadas as
+// polígonos orgânicos oversize. Cells adjacentes do same nível fundem visualmente.
 Object.assign(Jogo.prototype, {
 
     _setupScenery(W, H) {
@@ -8,16 +8,16 @@ Object.assign(Jogo.prototype, {
         const COLS = Math.ceil(W / CELL);
         const ROWS = Math.ceil(H / CELL);
 
-        // ── 1. SEED RANDOM com pesos: 6% água, 14% areia, 50% grama, 30% terra
+        // ── 1. SEED RANDOM with pesos: 6% water, 14% sand, 50% grass, 30% dirt
         let grid = [];
         for (let y = 0; y < ROWS; y++) {
             grid[y] = [];
             for (let x = 0; x < COLS; x++) {
                 const r = Math.random();
-                if (r < 0.06)      grid[y][x] = 0;  // água
-                else if (r < 0.20) grid[y][x] = 1;  // areia
-                else if (r < 0.70) grid[y][x] = 2;  // grama
-                else               grid[y][x] = 3;  // terra
+                if (r < 0.06)      grid[y][x] = 0;  // water
+                else if (r < 0.20) grid[y][x] = 1;  // sand
+                else if (r < 0.70) grid[y][x] = 2;  // grass
+                else               grid[y][x] = 3;  // dirt
             }
         }
 
@@ -42,7 +42,7 @@ Object.assign(Jogo.prototype, {
             grid = next;
         }
 
-        // Salva grid pra detecção de grama nas vacas
+        // Saves grid to detecção de grass nas cows
         this.terrainGrid = grid;
         this.terrainCell = CELL;
 
@@ -51,14 +51,14 @@ Object.assign(Jogo.prototype, {
         if (useWang) {
             // Wang tiles cr31 corner convention.
             // Convenção tools/wang_test_palette.py: NE=1, SE=2, SW=4, NW=8.
-            // Cada CELL é renderizada com 4 cantos compartilhados com vizinhos.
-            // Construímos um corner grid (COLS+1)×(ROWS+1) — não é o cell grid,
-            // são os cantos entre cells. Fica robusto: cantos compartilhados sempre
-            // batem entre cells vizinhas (sem costura).
+            // Cada CELL is renderizada with 4 cantos compartilhados with vizinhos.
+            // Construímos um corner grid (COLS+1)×(ROWS+1) — não is o cell grid,
+            // são os cantos between cells. Fica robusto: cantos compartilhados always
+            // batem between cells vizinhas (without costura).
             const CW = COLS + 1, CH = ROWS + 1;
-            // Canto = 1 (UPPER, grama verde) só se a maioria dos 4 cells ao redor é
-            // PURO grass (===2). Sand/water/terra todos contam como 0 (LOWER, areia).
-            // Isso evita o bug "tudo idx=15" quando grass+terra dominavam o grid.
+            // Canto = 1 (UPPER, grass verde) only se a maioria dos 4 cells ao redor is
+            // PURO grass (===2). Sand/water/dirt all contam as 0 (LOWER, sand).
+            // Isso evita o bug "tudo idx=15" when grass+dirt dominavam o grid.
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
@@ -72,11 +72,11 @@ Object.assign(Jogo.prototype, {
                             if (grid[cy][cx] === 2) hi++;
                         }
                     }
-                    // 50%+ de pureza pra ser upper
+                    // 50%+ de pureza to ser upper
                     corners[y][x] = (total > 0 && hi * 2 >= total) ? 1 : 0;
                 }
             }
-            // Pass extra de smoothing nos cantos pra fechar manchas isoladas
+            // Pass extra de smoothing nos cantos to fechar manchas isoladas
             for (let pass = 0; pass < 2; pass++) {
                 const next = [];
                 for (let y = 0; y < CH; y++) {
@@ -94,7 +94,7 @@ Object.assign(Jogo.prototype, {
                 }
                 corners.length = 0; corners.push(...next);
             }
-            // Cell (x,y) lê seus 4 cantos:
+            // Cell (x,y) reads seus 4 cantos:
             //   NW = corners[y][x],  NE = corners[y][x+1]
             //   SW = corners[y+1][x], SE = corners[y+1][x+1]
             // Bits cr31: NE=1, SE=2, SW=4, NW=8
@@ -109,7 +109,7 @@ Object.assign(Jogo.prototype, {
                 }
             }
         } else {
-            // Fallback: solid color verde + manchas de terra
+            // Fallback: solid color verde + manchas de dirt
             this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(0);
             const terraGfx = this.add.graphics().setDepth(0.1);
             terraGfx.fillStyle(0xa06848, 1);
@@ -121,15 +121,15 @@ Object.assign(Jogo.prototype, {
                 }
             }
         }
-        // this._setupTerrainShader(W, H);  // re-habilitar quando confirmar não trava
+        // this._setupTerrainShader(W, H);  // re-habilitar when confirmar não trava
 
-        // Mantém função de noise pra compat (algumas funções consultam this._noiseR)
+        // Mantém função de noise to compat (algumas funções consultam this._noiseR)
         const noise = (a, seed) =>
               Math.sin(a*3 + seed)        * 0.10
             + Math.sin(a*5 + seed*1.7)    * 0.06
             + Math.sin(a*7 + seed*2.3)    * 0.04;
 
-        // ── 4. GRASS PATCHES — gera points de grama pra IA de fuga das vacas
+        // ── 4. GRASS PATCHES — gera points de grass to IA de fuga das cows
         // (substitui o sistema antigo de blobs explícitos)
         this.grassPatches = [];
         for (let attempts = 0; attempts < 100 && this.grassPatches.length < 12; attempts++) {
@@ -146,12 +146,12 @@ Object.assign(Jogo.prototype, {
         }
         this._noiseR = noise; // mantém compat (algumas funções consultam)
 
-        // ── 5. OBSTÁCULOS (preferem terra/grama, evitam água)
+        // ── 5. OBSTÁCULOS (preferem dirt/grass, evitam water)
         const isLand = (px, py) => {
             const cx = Math.floor(px / CELL);
             const cy = Math.floor(py / CELL);
             if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
-            return grid[cy][cx] >= 1;  // areia ou acima
+            return grid[cy][cx] >= 1;  // sand ou above
         };
         // Pools de assets PixelLab carregados em preload (nat_vege_* e nat_pedra_*)
         const vegeKeys   = this._natureVegeKeys   || [];
@@ -159,8 +159,8 @@ Object.assign(Jogo.prototype, {
         const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
         const pickP = () => rocksKeys[Phaser.Math.Between(0, rocksKeys.length - 1)];
 
-        // Scale BASE por asset — sources são 64×64 mas conteúdo varia muito
-        // (saguaro alto preenche todo, agave preenche pouco). Map manual + jitter ±15%.
+        // Scale BASE by asset — sources são 64×64 mas conteúdo varia muito
+        // (saguaro high preenche todo, agave preenche pouco). Map manual + jitter ±15%.
         const SCALE_MAP = {
             // pedras
             'boulder_red_cluster': 1.6,   // cluster largo
@@ -195,7 +195,7 @@ Object.assign(Jogo.prototype, {
                 const rr = Math.random() * spread, aa = Math.random() * Math.PI * 2;
                 const ox = cx0 + Math.cos(aa) * rr, oy = cy0 + Math.sin(aa) * rr;
                 if (!isLand(ox, oy)) continue;
-                // Checa contra TODAS as peças já colocadas (não só do cluster atual)
+                // Checa contra TODAS as peças já colocadas (não only do cluster atual)
                 let collides = false;
                 for (const p of placed) {
                     const dx = p.x - ox, dy = p.y - oy;
@@ -224,9 +224,9 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 5b. LANDMARKS V3 (objects) — 1 cada, distantes entre si
+        // ── 5b. LANDMARKS V3 (objects) — 1 each, distantes between si
         // church, windmill, old_truck, satellite_dish_rusty
-        // Sem colisão (decorativos puros), depth 1.4 pra ficar abaixo de personagens
+        // Sem colisão (decorativos puros), depth 1.4 to ficar below de personagens
         const landmarks = ['nat_obj_church', 'nat_obj_windmill', 'nat_obj_old_truck', 'nat_obj_satellite_dish_rusty'];
         const LM_SCALE = { nat_obj_church: 2.6, nat_obj_windmill: 2.4, nat_obj_old_truck: 2.0, nat_obj_satellite_dish_rusty: 2.0 };
         const lmPlaced = [];
@@ -243,8 +243,8 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 5c. PROPS INDUSTRIAIS (gas_can, barrel_rusty) em cluster pequeno
-        // 3-4 spots no mapa, cada um com 2-3 props
+        // ── 5c. PROPS INDUSTRIAIS (gas_can, barrel_rusty) em cluster small
+        // 3-4 spots no map, each um with 2-3 props
         for (let i = 0; i < 4; i++) {
             for (let tries = 0; tries < 8; tries++) {
                 const cx = Phaser.Math.Between(500, W-500);
@@ -263,7 +263,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 5d. DRY TURF patches (chão seco amarelado) — 8 spots aleatórios em terra
+        // ── 5d. DRY TURF patches (chão seco amarelado) — 8 spots aleatórios em dirt
         for (let i = 0; i < 8; i++) {
             for (let tries = 0; tries < 5; tries++) {
                 const cx = Phaser.Math.Between(400, W-400);
@@ -274,11 +274,11 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 6. CURRAIS (em terra firme)
+        // ── 6. CURRAIS (em dirt firme)
         this.corrals = [];
         this.driveThrus = this.corrals;
-        // Currais — qualquer posição válida (terra ou grama), longe das bordas
-        // e com distância mínima entre si pra não sobrepor
+        // Corrals — qualquer position válida (dirt ou grass), far das bordas
+        // e with distance mínima between si to não sobrepor
         const corralPositions = [];
         const MIN_DIST = 800;
         for (let i = 0; i < 5; i++) {
@@ -296,19 +296,19 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // 4 variantes de curral aleatorias por spawn
+    // 4 variantes de corral aleatorias by spawn
     _buildCorral(cx, cy) {
         const VARIANTS = [
-            // V1: padrao chapada (fence curved + tower ornamental + lanterna baixa, gate aberto)
+            // V1: padrao chapada (fence curved + tower ornamental + lanterna baixa, gate open)
             { side:'fence_curved_long', gate:'gate_open_double', corner:'tower_ornamental_thin',
               lantern:'post_lantern_low', size:'medio', gateOpen:true },
-            // V2: rustico fechado (fence curva curta + posts esculpidos + lanterna alta)
+            // V2: rustico closed (fence curva curta + posts esculpidos + lanterna alta)
             { side:'fence_curved_short', gate:'gate_closed_solid', corner:'post_carved',
               lantern:'post_lantern_thin', size:'medio', gateOpen:false },
-            // V3: grande aberto duplo (fence curved long + cantos com posts duplos + lanterna baixa)
+            // V3: large open duplo (fence curved long + cantos with posts duplos + lanterna baixa)
             { side:'fence_curved_long', gate:'gate_thin_double', corner:'post_double_rope',
               lantern:'post_lantern_low', size:'grande', gateOpen:true },
-            // V4: pequeno reto (fence dupla curta horizontal + posts simples + sem lanterna)
+            // V4: small reto (fence dupla curta horizontal + posts simples + without lanterna)
             { side:'fence_double_short_h', gate:'gate_open_double', corner:'post_thin_simple',
               lantern:null, size:'pequeno', gateOpen:true },
         ];
@@ -318,7 +318,7 @@ Object.assign(Jogo.prototype, {
         const SEG = 56;
         const SCALE = 0.9;
 
-        // Chão de terra
+        // Chão de dirt
         this.add.rectangle(cx, cy, W2*2, H2*2, 0x7a5230, 0.38).setDepth(0.6);
         this.add.rectangle(cx, cy, W2*1.6, H2*1.5, 0x8b6535, 0.22).setDepth(0.61);
 
@@ -330,7 +330,7 @@ Object.assign(Jogo.prototype, {
         for (let x = -W2 + SEG/2; x < W2; x += SEG)
             place(cx + x, cy - H2, v.side);
 
-        // Sul (gate sempre no centro, aberto ou fechado)
+        // Sul (gate always no centro, open ou closed)
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
             if (Math.abs(x) < SEG * 0.6) {
                 place(cx + x, cy + H2, v.gate, SCALE * 1.2);

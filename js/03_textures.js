@@ -1,17 +1,17 @@
 // 03_textures.js — Geração de sprites geométricos via Phaser.Graphics
-// (nave, hambúrguer, curral, gaiola, rocha, moita, atirador, fazendeiro)
-// Vaca/boi vêm de PNGs carregados em 02_preload.js
+// (ship, burger, corral, gaiola, rock, bush, shooter, farmer)
+// Cow/ox vêm de PNGs carregados em 02_preload.js
 Object.assign(Jogo.prototype, {
 
     _setupGeometricTextures() {
         let g = this.add.graphics();
 
-        // NAVE — agora vem de assets/pixel_labs/nave.png (carregado no preload)
-        // Geometria antiga removida pra não sobrescrever o PNG.
+        // NAVE — now vem de assets/pixel_labs/ship.png (carregado no preload)
+        // Geometria antiga removida to não sobrescrever o PNG.
 
-        // HAMBÚRGUER — agora vem de assets/pixel_labs/items/burger_classic.png
+        // HAMBÚRGUER — now vem de assets/pixel_labs/items/burger_classic.png
 
-        // CURRAL — chão de terra com cerca de madeira
+        // CURRAL — chão de dirt with fence de madeira
         g.clear();
         g.fillStyle(0x8b6839, 1); g.fillCircle(50, 50, 46);
         g.fillStyle(0xa07840, 0.55); g.fillCircle(50, 50, 32);
@@ -54,7 +54,7 @@ Object.assign(Jogo.prototype, {
         g.lineStyle(2, 0x440000, 1); g.strokeRect(2, 2, 28, 28);
         g.generateTexture('atirador', 32, 32);
 
-        // FAZENDEIRO — agora vem de assets/pixel_labs/chars/fazendeiro/*.png (8 dir)
+        // FAZENDEIRO — now vem de assets/pixel_labs/chars/farmer/*.png (8 dir)
 
         g.destroy();
     }

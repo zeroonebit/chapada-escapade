@@ -1,6 +1,6 @@
 // 17_tutorial.js — Tutorial guiado passo a passo
-// Ativado quando tutorialMode=true (botão TUTORIAL na splash).
-// 8 etapas sequenciais com hint overlay + setas + condições de avanço.
+// Ativado when tutorialMode=true (botão TUTORIAL na splash).
+// 8 etapas sequenciais with hint overlay + setas + condições de avanço.
 
 const TUT_STEPS = [
     {
@@ -75,7 +75,7 @@ Object.assign(Jogo.prototype, {
         this._tutStepIdx   = 0;
         this._tutStartPos  = { x: this.ship.x, y: this.ship.y };
         this._tutStepShownAt = this.time?.now ?? 0;
-        this._tutMinReadMs   = 5000;  // tempo mínimo de leitura por etapa
+        this._tutMinReadMs   = 5000;  // time mínimo de leitura by etapa
         this._tutHadAbductees = false;
         this._tutDelivered = false;
         this._tutScoreAntes = this.score || 0;
@@ -86,7 +86,7 @@ Object.assign(Jogo.prototype, {
         this._tutBox   = null;
         this._tutBarsGravitonWatched = false;
 
-        // Limpa entidades inimigas — modo tutorial começa limpo
+        // Clears entidades inimigas — modo tutorial começa limpo
         (this.farmers || []).slice().forEach(f => {
             if (f && f.scene) { f._destroyed = true; f.destroy(); }
         });
@@ -94,21 +94,21 @@ Object.assign(Jogo.prototype, {
         (this.shooters || []).slice().forEach(t => { if (t && t.scene) t.destroy(); });
         this.shooters = [];
 
-        // Remove vacas existentes — só spawna na etapa ABDUCT (com 50 globais)
+        // Removes cows existentes — only spawns na etapa ABDUCT (with 50 globais)
         (this.cows || []).slice().forEach(v => {
             if (v && v.scene && !v.isBurger) { v._destroyed = true; v.destroy(); }
         });
         this.cows = [];
 
         const cx = this.ship.x, cy = this.ship.y;
-        // Garante 1 curral próximo
+        // Ensures 1 corral near
         if (!this.corrals || this.corrals.length === 0) {
             this._buildCorral(cx + 480, cy + 300);
         }
 
         // Estado inicial: barras escondidas, beam visual only desligado, drains normal
         this._tutCombustivelCongelado = true;
-        this._tutBeamVisualOnly = false;          // só liga em BEAM_VISUAL
+        this._tutBeamVisualOnly = false;          // only liga em BEAM_VISUAL
         this._tutGravitonDrain2x  = false;
         this._tutVacasImortais    = false;
         this._setBarsVisibility(false, false);  // ambas escondidas
@@ -116,11 +116,11 @@ Object.assign(Jogo.prototype, {
         this._tutShowStep(0);
     },
 
-    // Spawn de 50 vacas espalhadas uniformemente pelo mapa global (8000x6000)
+    // Spawn de 50 cows espalhadas uniformemente pelo map global (8000x6000)
     _tutSpawnVacasGlobal(n) {
         const W = 8000, H = 6000;
         const PAD = 300;
-        // Grid pseudo-uniforme: divide mapa em cells e spawna 1 por cell + jitter
+        // Grid pseudo-uniforme: divide map em cells e spawns 1 by cell + jitter
         const cols = Math.ceil(Math.sqrt(n * (W/H)));
         const rows = Math.ceil(n / cols);
         const cw = (W - PAD*2) / cols;
@@ -151,7 +151,7 @@ Object.assign(Jogo.prototype, {
         // Glow amarelo nos elementos relevantes da etapa atual
         if (step.highlight) this._tutDrawHighlights(step.highlight);
 
-        // Tempo mínimo de leitura — não avança antes do usuário ler
+        // Time mínimo de leitura — não avança before do usuário ler
         const elapsed = (this.time?.now ?? 0) - (this._tutStepShownAt || 0);
         const canAdvance = elapsed >= (this._tutMinReadMs || 5000);
 
@@ -167,7 +167,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BEAM_VISUAL': {
-                // Cone aparece, sem pull e sem drain (flag em scene update)
+                // Cone aparece, without pull e without drain (flag em scene update)
                 const beamOn = (this.dbg?.behavior?.inputMode === 'wasd' || this.isMobile)
                     ? !!this._beamHeld
                     : this.input.activePointer.isDown;
@@ -190,7 +190,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'ABDUCT': {
-                // Spawn 50 vacas globais uma vez ao entrar na etapa
+                // Spawn 50 cows globais uma vez ao entrar na etapa
                 if (!this._tutVacasGlobalSpawned) {
                     this._tutSpawnVacasGlobal(50);
                     this._tutVacasGlobalSpawned = true;
@@ -203,13 +203,13 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'DELIVER': {
-                // Mantém vacas disponíveis caso player perca a abduzida
+                // Mantém cows disponíveis caso player perca a abduzida
                 if (this._tutVacasVivas() + this.abductedCows.length < 2) this._tutSpawnVacas(3);
                 if (this.corrals?.length > 0) {
                     const c = this.corrals[0];
                     this._tutDrawArrow(c.x, c.y);
                 }
-                // Estrutura nova: slots tem state 'loading' ou 'ready'
+                // Estrutura nova: slots has state 'loading' ou 'ready'
                 const dropped = (this.corrals || []).some(c =>
                     (c.slots && c.slots.some(s => s && (s.state === 'loading' || s.state === 'ready')))
                 );
@@ -221,7 +221,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BURGER': {
-                // Avança quando score sobe (coleta do curral incrementa score)
+                // Avança when score sobe (coleta do corral incrementa score)
                 if (canAdvance && (this.score || 0) > (this._tutScoreBurgerAntes || 0)) {
                     this._tutAdvance();
                 }
@@ -229,7 +229,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'TAKE_DAMAGE': {
-                // Trava nave + spawna 1 fazendeiro perto que atira
+                // Trava ship + spawns 1 farmer perto que atira
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
                     this._tutSpawnFazendeiroAtirando();
@@ -258,7 +258,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'COMBUSTIVEL_BAR': {
-                // Apenas mostra a barra com glow — avança após canAdvance (5s mínimo)
+                // Apenas shows a barra with glow — avança após canAdvance (5s mínimo)
                 if (canAdvance) this._tutAdvance();
                 break;
             }
@@ -267,7 +267,7 @@ Object.assign(Jogo.prototype, {
                 if (!this.farmers || this.farmers.length === 0) {
                     this._tutSpawnFazendeiro();
                 }
-                // Seta apontando pro fazendeiro vivo mais próximo
+                // Seta apontando pro farmer vivo more near
                 const target = this.farmers.find(f => f.scene && !f._dying && !f._destroyed);
                 if (target) this._tutDrawArrow(target.x, target.y);
                 const inBeam = this.abductedCows.some(e => e.isEnemy);
@@ -279,7 +279,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
-                // Seta pra rocha mais próxima do fazendeiro abduzido
+                // Seta to rock more near do farmer abduzido
                 const farmer = this.abductedCows.find(e => e.isEnemy);
                 if (farmer) {
                     const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
@@ -302,7 +302,7 @@ Object.assign(Jogo.prototype, {
         this._createFarmer(cx + 350, cy - 150);
     },
 
-    // Spawna N vacas em circulo ao redor da nave (raios variados)
+    // Spawns N cows em circulo ao redor da ship (raios variados)
     _tutSpawnVacas(n) {
         const cx = this.ship.x, cy = this.ship.y;
         for (let i = 0; i < n; i++) {
@@ -314,7 +314,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Conta vacas "úteis" (vivas, fora do curral, não inimigas, não burger)
+    // Conta cows "úteis" (vivas, outside do corral, não inimigas, não burger)
     _tutVacasVivas() {
         return (this.cows || []).filter(v =>
             v && v.scene && !v._dying && !v._destroyed &&
@@ -322,12 +322,12 @@ Object.assign(Jogo.prototype, {
         ).length;
     },
 
-    // Fazendeiro próximo da nave que atira (TAKE_DAMAGE step)
+    // Farmer near da ship que atira (TAKE_DAMAGE step)
     _tutSpawnFazendeiroAtirando() {
         if (!this._createFarmer) return;
         const cx = this.ship.x + 280, cy = this.ship.y - 60;
         this._createFarmer(cx, cy);
-        // Pega ref do fazendeiro recém-criado e força cooldown curto pra atacar logo
+        // Pega ref do farmer recém-criado e força cooldown curto to atacar logo
         const f = this.farmers[this.farmers.length - 1];
         if (f) {
             f._cooldown = 400;  // dispara em ~400ms
@@ -335,13 +335,13 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Glow amarelo pulsante ao redor de coords (mundo ou tela)
+    // Glow amarelo pulsante ao redor de coords (world ou screen)
     _tutGlowAt(x, y, radius, opts = {}) {
         const { color = 0xffcc33, screen = false } = opts;
         const g = screen ? this._tutGfx : (this._tutGlowWorld || (this._tutGlowWorld = this.add.graphics().setDepth(7)));
-        if (!screen) g.clear === undefined ? null : null;  // mundo é limpo no início
+        if (!screen) g.clear === undefined ? null : null;  // world is limpo no início
         const pulse = 0.6 + 0.4 * Math.sin(this._tutAngle * 2.5);
-        // 3 anéis com alpha decrescente pra simular blur/glow
+        // 3 anéis with alpha decrescente to simular blur/glow
         for (let i = 0; i < 3; i++) {
             const r = radius * (1 + i * 0.35) * pulse;
             const a = 0.55 / (i + 1);
@@ -351,7 +351,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _tutDrawHighlights(targets) {
-        // Inicializa/limpa graphics de glow no mundo (não-scrollFactor)
+        // Inicializa/limpa graphics de glow no world (não-scrollFactor)
         if (!this._tutGlowWorld) {
             this._tutGlowWorld = this.add.graphics().setDepth(7);
         }
@@ -410,7 +410,7 @@ Object.assign(Jogo.prototype, {
                     break;
                 }
                 case 'burger_pronto': {
-                    // Glow em todo slot ready de qualquer curral
+                    // Glow em todo slot ready de qualquer corral
                     (this.corrals || []).forEach(c => {
                         (c.slots || []).forEach(s => {
                             if (s && s.state === 'ready' && s.icon && s.icon.scene) {
@@ -424,7 +424,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Glow retangular pra elementos do HUD (em tela, scrollFactor 0)
+    // Glow retangular to elementos do HUD (em screen, scrollFactor 0)
     _tutGlowAtScreenRect(x, y, w, h) {
         const g = this._tutGfx;
         const pulse = 0.6 + 0.4 * Math.sin(this._tutAngle * 2.5);
@@ -436,7 +436,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Procura no matter.world todos os corpos com label='rocha' e retorna o mais perto
+    // Procura no matter.world all os corpos with label='rock' e retorna o more perto
     _tutAcharRochaPerto(x, y) {
         const bodies = this.matter?.world?.localWorld?.bodies || [];
         let best = null, bestD = Infinity;
@@ -457,7 +457,7 @@ Object.assign(Jogo.prototype, {
         }
         const nextKey = TUT_STEPS[nextIdx].key;
 
-        // Reset de flags por etapa (separadas: NoDrain != NoPull)
+        // Reset de flags by etapa (separadas: NoDrain != NoPull)
         // BEAM_VISUAL: cone aparece, SEM pull, SEM drain
         if (nextKey === 'BEAM_VISUAL') {
             this._tutBeamNoDrain = true;
@@ -467,12 +467,12 @@ Object.assign(Jogo.prototype, {
         // GRAVITON_BAR: barra aparece, drain ATIVO (2x), pull AINDA OFF
         if (nextKey === 'GRAVITON_BAR') {
             this._tutBeamNoDrain = false;          // drain liga pro player ver consumo
-            this._tutBeamNoPull  = true;           // ainda sem abduzir
+            this._tutBeamNoPull  = true;           // still without abduzir
             this._tutGravitonDrain2x = true;       // 2x didático
             this._setBarsVisibility(false, true);
             this._tutGravitonDrained = false;
         }
-        // ABDUCT: pull liga, drain volta normal, vacas imortais, spawna 50 globais
+        // ABDUCT: pull liga, drain volta normal, cows imortais, spawns 50 globais
         if (nextKey === 'ABDUCT') {
             this._tutBeamNoDrain = false;
             this._tutBeamNoPull  = false;
@@ -480,7 +480,7 @@ Object.assign(Jogo.prototype, {
             this._tutVacasImortais = true;
             this._tutVacasGlobalSpawned = false;
         }
-        // BURGER: combustível inicia em 15%, barra combustível aparece
+        // BURGER: fuel starts em 15%, barra fuel aparece
         if (nextKey === 'BURGER') {
             this.fuelCurrent = this.fuelMax * 0.15;
             this._setBarsVisibility(true, true);
@@ -503,7 +503,7 @@ Object.assign(Jogo.prototype, {
         const step = TUT_STEPS[idx];
         if (!step) return;
 
-        // Reset do timer de leitura mínima (5s pra cada nova etapa)
+        // Reset do timer de leitura mínima (5s to each nova etapa)
         this._tutStepShownAt = this.time?.now ?? 0;
 
         const w = this.scale.width, h = this.scale.height;
@@ -511,7 +511,7 @@ Object.assign(Jogo.prototype, {
         const isLong = step.text.includes('\n');
         const BOX_H  = isLong ? 148 : 96;
         const bx = w / 2;
-        // Subido pra ficar acima das barras de combustivel/graviton (que ocupam ~80px no rodapé)
+        // Subido to ficar above das barras de combustivel/graviton (que ocupam ~80px no rodapé)
         const by = h - BOX_H / 2 - 110;
 
         const bg = this.add.rectangle(bx, by, BOX_W, BOX_H, 0x000a04, 0.92)
@@ -583,7 +583,7 @@ Object.assign(Jogo.prototype, {
         this._tutGravitonDrain2x = false;
         this._tutVacasImortais = false;
         this._tutCombustivelCongelado = false;
-        // Reseta visibilidade das barras (jogo normal sempre mostra)
+        // Resets visibilidade das barras (game normal always shows)
         if (this._setBarsVisibility) this._setBarsVisibility(true, true);
 
         const w = this.scale.width, h = this.scale.height;
@@ -608,7 +608,7 @@ Object.assign(Jogo.prototype, {
             this.tutorialMode = false;
             this._tutCombustivelCongelado = false;
             [bg, txt, sub, btn, btnTxt].forEach(o => o.destroy());
-            // Spawna inimigos normais agora
+            // Spawns enemies normais now
             if (this._createFarmer) {
                 for (let i = 0; i < 3; i++) {
                     const x = Phaser.Math.Between(500, 7500);
