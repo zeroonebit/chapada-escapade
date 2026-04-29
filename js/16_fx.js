@@ -81,6 +81,63 @@ Object.assign(Jogo.prototype, {
 
         // Resize: recompõe os tamanhos
         this.scale.on('resize', () => this._fxResize());
+
+        // ── VENTO ──────────────────────────────────────────────────────
+        // Particulas de swirl horizontal (curtas, semi-transparentes, drift
+        // lateral). _windAngle eh o valor atual usado pela chuva (lerp suave
+        // de fx.ventoForca). Wind so eh "lateral" — Y nao eh afetado.
+        this.fxWind = this.add.container(0, 0).setScrollFactor(0).setDepth(179).setVisible(false);
+        this._windParticles = [];
+        this._windAngle = 0;
+        this._windOscPhase = 0;
+        this._buildWindParticles();
+    },
+
+    _buildWindParticles() {
+        const N = 18;  // qtd de swirls visiveis
+        const w = this.scale.width, h = this.scale.height;
+        for (let i = 0; i < N; i++) {
+            // Swirl = curva de 3 pequenos arcos; aproximado por linha curta
+            // com leve rotacao + alpha bem baixo (efeito atmosferico sutil)
+            const p = this.add.line(0, 0, 0, 0, 28, 0, 0xddeeff, 0.18).setLineWidth(1.0);
+            p._speedScale = Phaser.Math.FloatBetween(0.7, 1.5);
+            p._yBob       = Phaser.Math.FloatBetween(-12, 12);
+            p._yOff       = Phaser.Math.Between(0, h);
+            p._xPhase     = Math.random() * Math.PI * 2;
+            this.fxWind.add(p);
+            this._windParticles.push(p);
+        }
+    },
+
+    // Update por frame — chamado via 01_scene._updateBody.
+    // Lerp _windAngle pra fx.ventoForca + anima as swirl particles.
+    _updateWind(delta) {
+        const cfg = this.dbg?.fx;
+        if (!cfg) return;
+        if (!cfg.vento) {
+            this.fxWind?.setVisible(false);
+            this._windAngle = 0;
+            return;
+        }
+        this.fxWind?.setVisible(true);
+        // Lerp suave do angle atual ate ventoForca
+        const target = Phaser.Math.Clamp(cfg.ventoForca ?? 0.03, -0.05, 0.05);
+        this._windAngle = (this._windAngle ?? 0) + (target - (this._windAngle ?? 0)) * 0.04;
+        // Anima swirls horizontalmente segundo windAngle (escalado)
+        const w = this.scale.width;
+        const h = this.scale.height;
+        const speed = this._windAngle * 800;  // px/s lateral
+        const dt = delta / 1000;
+        this._windOscPhase = (this._windOscPhase + dt * 1.4) % (Math.PI * 2);
+        for (const p of this._windParticles) {
+            if (!p.scene) continue;
+            p.x += speed * dt * p._speedScale;
+            // Wrap horizontal
+            if (speed > 0 && p.x > w + 40)  p.x = -40;
+            if (speed < 0 && p.x < -40)     p.x = w + 40;
+            // Bob vertical sutil (sin ondas)
+            p.y = p._yOff + Math.sin(this._windOscPhase + p._xPhase) * p._yBob;
+        }
     },
 
     // Recria as gotas with base em dbg.fx.chuvaCount.
@@ -98,9 +155,12 @@ Object.assign(Jogo.prototype, {
             const d = this._rainDrops.pop();
             if (d && d.scene) d.destroy();
         }
-        // Creates diferença
+        // Creates diferença — cada drop tem variacao propria (depth fake)
         while (this._rainDrops.length < target) {
             const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
+            // Variacao de comprimento ±25% do base + alpha aleatorio pra profundidade
+            drop._lenScale   = Phaser.Math.FloatBetween(0.75, 1.25);
+            drop._alphaScale = Phaser.Math.FloatBetween(0.45, 1.0);
             this.fxRain.add(drop);
             this._rainDrops.push(drop);
         }
@@ -119,18 +179,20 @@ Object.assign(Jogo.prototype, {
         const fall = () => {
             if (!drop || !drop.scene) return;
             const c = this.dbg?.fx || {};
-            const ang     = c.chuvaAngulo  ?? 0.3;   // -1..1 (incl. horiz by unidade vert)
-            const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento)
+            // Vento override: se ativo, angulo da chuva eh _windAngle (driven
+            // pelo sistema de vento). Senao usa slider chuvaAngulo direto.
+            const ang     = (c.vento && this._windAngle !== undefined) ? this._windAngle : (c.chuvaAngulo ?? 0.0);
+            const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento global)
             const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. speed)
-            const baseLen = 18 * lenMul;
-            const dx      = -ang * baseLen;
-            // Updates geometria da linha (direction visual)
+            // Per-drop variacao: comprimento ±25% individual + alpha 0.45-1.0
+            const baseLen = 18 * lenMul * (drop._lenScale || 1.0);
+            const dx      = -ang * baseLen * 8;  // amplifica visualmente o tilt (ang max 0.05)
             drop.setTo(0, 0, dx, baseLen);
             drop.setLineWidth(1.4 * Math.max(0.5, Math.min(2, lenMul)));
-            // Duração base 700ms — velMul maior = duração menor (cai more fast)
+            drop.setAlpha((drop._alphaScale || 1.0) * 0.7);
             const dur = Phaser.Math.Between(550, 850) / Math.max(0.2, velMul);
-            // Drift horizontal proporcional ao angulo e height percorrida
-            const driftX = ang * (h + 60) * 0.45;
+            // Drift horizontal proporcional ao angulo (com mesmo amplifier)
+            const driftX = ang * (h + 60) * 8 * 0.45;
             this.tweens.add({
                 targets: drop,
                 y: h + 40, x: drop.x + driftX,
@@ -235,6 +297,9 @@ Object.assign(Jogo.prototype, {
 
     _applyFXVisibility() {
         const cfg = this.dbg?.fx || {};
+        if (this.fxWind) {
+            this.fxWind.setVisible(!!cfg.vento);
+        }
         if (this.fxRain) {
             const visible = !!cfg.chuva;
             this.fxRain.setVisible(visible);

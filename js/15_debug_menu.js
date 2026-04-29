@@ -28,6 +28,7 @@ const MENU_I18N = {
         atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
         language:'Language',
         atmosfera:'ATMOSPHERE', efeitos:'EFFECTS', neve:'SNOW',
+        vento:'WIND', vento_forca:'Force (-0.05=L, +0.05=R)',
     },
     pt: {
         configs:'CONFIGURAÇÕES', controles:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
@@ -52,6 +53,7 @@ const MENU_I18N = {
         atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
         language:'Idioma',
         atmosfera:'ATMOSFERA', efeitos:'EFEITOS', neve:'NEVE',
+        vento:'VENTO', vento_forca:'Força (-0.05=esq, +0.05=dir)',
     },
 };
 
@@ -107,6 +109,8 @@ const DBG_DEFAULTS = {
         snow:               false,
         snowCount:          100,       // 0..400 flocos
         snowIntensidade:    0.85,      // 0..1 alpha
+        vento:              false,     // swirl particles + driver do angulo da chuva
+        ventoForca:         0.03,      // -0.05..0.05 (positivo = direita, negativo = esq)
         quips:              true,      // floating one-liners ao abduzir/matar/entregar
     },
 };
@@ -304,8 +308,8 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="frequencia">Frequência (gotas)</span>
                             <input type="range" min="0" max="400" step="5" data-cfg="fx.chuvaCount">
                             <input type="number" class="val" data-show="fx.chuvaCount" /></label>
-                        <label><span data-i18n="angulo">Ângulo (-1=esq, +1=dir)</span>
-                            <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
+                        <label><span data-i18n="angulo">Ângulo (-0.05=esq, +0.05=dir)</span>
+                            <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.chuvaAngulo">
                             <input type="number" class="val" data-show="fx.chuvaAngulo" /></label>
                         <label><span data-i18n="speed">Velocidade</span>
                             <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
@@ -320,6 +324,13 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="intensidade">Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
                             <input type="number" class="val" data-show="fx.neblinaIntensidade" /></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend data-i18n="vento">VENTO</legend>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.vento"></label>
+                        <label><span data-i18n="vento_forca">Força (-0.05=esq, +0.05=dir)</span>
+                            <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.ventoForca">
+                            <input type="number" class="val" data-show="fx.ventoForca" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="efeitos">EFEITOS</legend>
