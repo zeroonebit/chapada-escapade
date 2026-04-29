@@ -27,6 +27,22 @@
   .thumb.active{border-color:#f4c95d;}
   .thumb.pending{opacity:.4;}
   .refresh{font-size:11px;opacity:.6;margin-top:4px;}
+  .actions{display:flex;gap:10px;margin:14px 0 4px;}
+  .actions button{padding:10px 16px;font-size:14px;font-weight:bold;}
+  .btn-promote{background:#1d4a1d!important;color:#9fe89f!important;border-color:#3da53d!important;}
+  .btn-promote:hover{background:#2d6a2d!important;}
+  .btn-discard{background:#4a1d1d!important;color:#e89f9f!important;border-color:#a53d3d!important;}
+  .btn-discard:hover{background:#6a2d2d!important;}
+  .btn-rename{background:#1d3a4a!important;color:#9fcfe8!important;border-color:#3d7da5!important;}
+  .btn-rename:hover{background:#2d4d6a!important;}
+  .btn-export{background:#4a3826!important;color:#f4c95d!important;border-color:#6b5234!important;margin-top:8px;}
+  .decision{position:absolute;top:8px;right:8px;font-size:11px;font-weight:bold;padding:3px 6px;border-radius:3px;}
+  .decision.promoted{background:#1d4a1d;color:#9fe89f;}
+  .decision.discarded{background:#4a1d1d;color:#e89f9f;}
+  .decision.renamed{background:#1d3a4a;color:#9fcfe8;}
+  .thumb-wrap{position:relative;}
+  .thumb-decision{position:absolute;bottom:0;right:0;width:14px;height:14px;font-size:10px;display:flex;align-items:center;justify-content:center;border-radius:0 0 4px 0;}
+  .stats{font-size:11px;opacity:.7;margin:4px 0;}
 </style>
 </head>
 <body>
@@ -43,12 +59,24 @@
 <div class="stage" id="stage">
   <div class="pending" id="pending" style="display:none;">⏳ aguardando geração…</div>
   <img id="img" style="display:none;" alt="">
+  <div class="decision" id="decisionBadge" style="display:none;"></div>
 </div>
 
 <div class="nav">
   <button id="prev">←</button>
   <span class="counter" id="counter">0 / 0</span>
   <button id="next">→</button>
+</div>
+
+<div class="actions">
+  <button class="btn-promote" id="btnPromote">✅ Promote</button>
+  <button class="btn-discard"  id="btnDiscard">❌ Discard</button>
+  <button class="btn-rename"   id="btnRename">✏️ Rename</button>
+  <button id="btnClear" title="Limpa decisão deste asset">↺ Clear</button>
+</div>
+<div class="stats" id="stats">—</div>
+<div class="actions">
+  <button class="btn-export" id="btnExport">📥 Export decisions.json</button>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -139,10 +167,27 @@ const MANIFEST = [
 ];
 
 const API_URL = id => `https://api.pixellab.ai/mcp/map-objects/${id}/download`;
+const DECISIONS_KEY = 'chapEscapadeAssetDecisions';
 let idx = 0;
 let refreshTimer = 8;
 
+// Decisões: { [assetId]: { action: 'promote'|'discard'|'rename', target?: string, newName?: string } }
+let decisions = {};
+try { decisions = JSON.parse(localStorage.getItem(DECISIONS_KEY) || '{}'); } catch(e){}
+const saveDecisions = () => localStorage.setItem(DECISIONS_KEY, JSON.stringify(decisions));
+
 const $ = id => document.getElementById(id);
+
+// Sugere pasta destino baseado no prefixo do nome (pra Promote)
+function suggestTargetFolder(name) {
+    if (/^bucket_|^milk_|^feed_|^water_trough/.test(name)) return 'objects';
+    if (/^gas_can_|^barrel_|^crate_|^radio_tower|^meat_grinder|^windmill|^wrecked_truck|^satellite/.test(name)) return 'objects';
+    if (/^palm_|^tree_|^flower_|^bromelia_|^grass_|^burned_|^mesa_/.test(name)) return 'vegetation';
+    if (/^rock_|^crop_circle_|^bone_|^alien_|^lantern_|^church_|^hay_/.test(name)) return 'objects';
+    if (/^scarecrow/.test(name)) return 'enemies';
+    if (/^\[HUD\]/.test(name)) return 'hud';
+    return 'objects';
+}
 
 function render(){
   const a = MANIFEST[idx];
