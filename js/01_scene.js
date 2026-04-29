@@ -40,11 +40,12 @@ class Jogo extends Phaser.Scene {
             this.dbg.fx.timeOfDay        = 'midnight';
             this.dbg.fx.chuva            = true;
             this.dbg.fx.chuvaIntensidade = 1.0;
-            this.dbg.fx.chuvaCount       = 300;
-            this.dbg.fx.chuvaVelocidade  = 1.8;
+            this.dbg.fx.chuvaCount       = 450;   // mais densidade
+            this.dbg.fx.chuvaVelocidade  = 1.4;   // um pouco mais lenta -> visivel mais tempo
+            this.dbg.fx.chuvaTamanho     = 2.2;   // gotas maiores
             this.dbg.fx.chuvaAngulo      = 0.04;
             this.dbg.fx.neblina          = true;
-            this.dbg.fx.neblinaIntensidade = 0.92;
+            this.dbg.fx.neblinaIntensidade = 1.0;
             this.dbg.fx.vento            = true;
             this.dbg.fx.ventoForca       = 0.04;
             // Sem game over no teaser — fuel congelado, sem drain
@@ -210,6 +211,32 @@ class Jogo extends Phaser.Scene {
         this._applyFXVisibility();
         this._setupCollisions();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (only mobile)
+
+        // MOBILE_MODE: dark vignette overlay (canvas radial preto) — mais
+        // forte que o vignette branco do fog. Depth 190 -> acima das FX
+        // mas abaixo do HUD (que ja esta escondido em mobile).
+        if (window.__MOBILE_MODE) {
+            const SZ = 512;
+            const c = document.createElement('canvas'); c.width = c.height = SZ;
+            const ctx = c.getContext('2d');
+            const grad = ctx.createRadialGradient(SZ/2, SZ/2, SZ*0.18, SZ/2, SZ/2, SZ*0.55);
+            grad.addColorStop(0.0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.6, 'rgba(0,0,0,0.55)');
+            grad.addColorStop(1.0, 'rgba(0,0,0,0.95)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, SZ, SZ);
+            if (this.textures.exists('mobile_vignette')) this.textures.remove('mobile_vignette');
+            this.textures.addCanvas('mobile_vignette', c);
+            this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
+                .setScrollFactor(0).setDepth(190);
+            this.fxMobileVignette.setDisplaySize(this.scale.width * 1.15, this.scale.height * 1.15);
+            this.scale.on('resize', () => {
+                if (this.fxMobileVignette?.scene) {
+                    this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
+                    this.fxMobileVignette.setDisplaySize(this.scale.width * 1.15, this.scale.height * 1.15);
+                }
+            });
+        }
 
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
         // Phaser key listener + fallback nativo no window (caso Phaser perca foco)

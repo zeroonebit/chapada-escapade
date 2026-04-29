@@ -93,7 +93,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429p';
+    const V = '20260429q';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -101,20 +101,17 @@
     const blockMobile = smallScreen || touchSmall;
 
     if (blockMobile) {
-        // ── MOBILE: tela vermelha de flavor + carrega game em modo "teaser" ──
-        // Carrega o jogo com weather macabro, sem inimigos/cows/HUD. UFO segue
-        // o dedo, beam acende com touch hold, solta = inercia + bounce edges.
-        // Icones acima da mensagem (ordem: icon -> text).
+        // ── MOBILE: titulo CHAPADA ESCAPADE persistente sobre o jogo ──
+        // O preloader vira overlay permanente apos carga (pointer-events none
+        // pra UFO passar por baixo). Ver 02_preload.js complete callback.
         const t = document.getElementById('pre-loader-title');
-        t.innerHTML =
-            '<div style="font-size:31px;letter-spacing:12px;line-height:1;margin-bottom:10px;">📱🚫</div>' +
-            '<div style="font-size:15px;letter-spacing:2px;font-weight:bold;color:#ff5566;' +
-            'text-shadow:0 0 12px rgba(255,80,80,0.55);">' +
-            'Aliens don\'t use phones' +
-            '</div>';
-        t.style.fontSize = '14px';
-        t.style.letterSpacing = '0';
-        t.style.marginBottom = '18px';
+        t.innerHTML = 'CHAPADA<br/>ESCAPADE';
+        t.style.fontSize = '36px';
+        t.style.letterSpacing = '6px';
+        t.style.lineHeight = '1.2';
+        t.style.color = '#ff5566';
+        t.style.textShadow = '0 0 16px rgba(255,80,80,0.7)';
+        t.style.marginBottom = '20px';
 
         const preLoader = document.getElementById('pre-loader');
         preLoader.style.color = '#ff5566';
@@ -128,20 +125,7 @@
         const bar = document.getElementById('pre-loader-bar');
         bar.style.background = 'linear-gradient(90deg, #cc1122, #ff5566)';
 
-        // Below: icones acima do texto (ordem ja correta — icon -> text)
-        const pct = document.getElementById('pre-loader-pct');
-        const below = document.createElement('div');
-        below.id = 'pre-loader-below';
-        below.style.cssText = 'margin-top:18px;text-align:center;';
-        below.innerHTML =
-            '<div style="font-size:31px;letter-spacing:12px;line-height:1;margin-bottom:10px;">💻✅</div>' +
-            '<div style="font-size:15px;letter-spacing:2px;font-weight:bold;color:#aaffcc;' +
-            'text-shadow:0 0 12px rgba(170,255,200,0.45);">' +
-            'Aliens use cyberdecks' +
-            '</div>';
-        pct.parentNode.insertBefore(below, pct.nextSibling);
-
-        // Flag pro 01_scene + 11_gameflow + 12_mobile aplicarem teaser mode
+        // Flag pro game aplicar teaser mode (terreno + storm + vignette)
         window.__MOBILE_MODE = true;
         // Continua execucao normal -> loader desktop carrega os modulos abaixo
     }

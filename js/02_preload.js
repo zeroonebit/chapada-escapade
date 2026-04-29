@@ -20,8 +20,19 @@ Object.assign(Jogo.prototype, {
         }
         if (preLoader) {
             this.load.on('complete', () => {
-                preLoader.classList.add('fade');
-                setTimeout(() => preLoader.remove(), 500);
+                if (window.__MOBILE_MODE) {
+                    // Mantem titulo CHAPADA ESCAPADE persistente sobre o jogo:
+                    // bg transparente + pointer-events none (UFO passa por baixo)
+                    preLoader.style.background = 'transparent';
+                    preLoader.style.pointerEvents = 'none';
+                    const barBg = document.getElementById('pre-loader-bar-bg');
+                    const pctEl = document.getElementById('pre-loader-pct');
+                    if (barBg) barBg.style.display = 'none';
+                    if (pctEl) pctEl.style.display = 'none';
+                } else {
+                    preLoader.classList.add('fade');
+                    setTimeout(() => preLoader.remove(), 500);
+                }
             });
         }
 

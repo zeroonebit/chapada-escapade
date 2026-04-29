@@ -92,7 +92,9 @@ Object.assign(Jogo.prototype, {
                 .filter(v => !v.isBurger && !v.isEnemy).length;
             const carryingMul = Math.max(0.5, 1 - 0.10 * carryingCows);
             const ang = Phaser.Math.Angle.Between(this.ship.x, this.ship.y, c.x, c.y);
-            const mag = Math.min(dist*0.0001, 0.0035) * sens * carryingMul;
+            // MOBILE_MODE teaser: half speed (terminal velocity baixa)
+            const modeMul = window.__MOBILE_MODE ? 0.5 : 1.0;
+            const mag = Math.min(dist*0.0001, 0.0035) * sens * carryingMul * modeMul;
             this.ship.applyForce({
                 x: Math.cos(ang) * mag,
                 y: Math.sin(ang) * mag,

@@ -146,6 +146,14 @@ Object.assign(Jogo.prototype, {
         }
         this._noiseR = noise; // mantém compat (algumas funções consultam)
 
+        // MOBILE_MODE teaser: pula TUDO de obstaculos/landmarks/props/curral.
+        // Terreno + dry_turf patches ja estao desenhados. Nada mais.
+        if (window.__MOBILE_MODE) {
+            this.corrals = [];
+            this.driveThrus = this.corrals;
+            return;
+        }
+
         // ── 5. OBSTÁCULOS (preferem dirt/grass, evitam water)
         const isLand = (px, py) => {
             const cx = Math.floor(px / CELL);
