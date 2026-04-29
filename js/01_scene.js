@@ -168,6 +168,7 @@ class Jogo extends Phaser.Scene {
         this._setupFX();                    // 16_fx.js — rain, fog, helpers
         this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
         this._setupDebugOverlay();          // 19_debug_overlay.js — F3 overlay (FPS, heap, counts)
+        this._setupQuips();                 // 20_quips.js — random funny one-liners
         this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
         this._setupCollisions();              // 10_colisao.js
@@ -390,6 +391,7 @@ class Jogo extends Phaser.Scene {
         this._updateBarrel();
         this._atmoUpdate(delta);
         this._updateLEDs(delta);
+        if (this._quipProximityCheck) this._quipProximityCheck(delta);
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
