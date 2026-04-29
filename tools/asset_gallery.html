@@ -106,27 +106,32 @@
   .detail-list-grid .thumb.active{border-color:#f4c95d;outline:1px solid #f4c95d;}
   .detail-main{flex:1;border:2px solid #4a3826;border-radius:6px;padding:16px;background:rgba(0,0,0,0.2);}
   .detail-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
-  .detail-main .preview{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
-  .detail-main .preview img{width:140px;height:140px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;}
-  /* Visualizador com 8-dir overlay */
-  .visualizer{position:relative;width:220px;height:220px;border:2px solid #4a3826;background:#2a2218;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .detail-main .preview{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:14px;}
+  /* Visualizador grande estilo Manager stage com 8-dir slots externos */
+  .visualizer{position:relative;width:480px;height:480px;margin:64px 64px 0;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;flex-shrink:0;image-rendering:pixelated;}
   .visualizer .main-sprite{max-width:90%;max-height:90%;image-rendering:pixelated;}
-  .visualizer .dir-overlay{position:absolute;inset:0;display:none;pointer-events:none;}
-  .visualizer:hover .dir-overlay{display:block;}
-  .dir-slot{position:absolute;width:42px;height:42px;background:rgba(26,20,16,0.92);border:1.5px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:18px;color:#a89368;cursor:pointer;pointer-events:auto;border-radius:3px;}
-  .dir-slot:hover{background:rgba(58,45,30,0.98);border-color:#f4c95d;color:#f4c95d;}
-  .dir-slot img{width:38px;height:38px;image-rendering:pixelated;}
+  .visualizer .dir-overlay{position:absolute;inset:-64px;pointer-events:none;}
+  .visualizer .dir-overlay .dir-slot{opacity:0;transition:opacity .15s;pointer-events:auto;}
+  .visualizer:hover .dir-overlay .dir-slot{opacity:1;}
+  .dir-slot{position:absolute;width:48px;height:48px;background:rgba(26,20,16,0.92);border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#a89368;cursor:pointer;border-radius:3px;}
+  .dir-slot:hover{background:rgba(58,45,30,0.98);border-color:#f4c95d;color:#f4c95d;transform:scale(1.08);}
+  .dir-slot img{width:44px;height:44px;image-rendering:pixelated;}
   .dir-slot.exists{border-color:#3da53d;}
   .dir-slot.missing{border-style:dashed;color:#9fcfe8;}
   .dir-slot.queued{border-color:#a85ba8;color:#fff;background:#a85ba8;}
-  .dir-N{top:0;left:50%;transform:translate(-50%,-50%);}
-  .dir-NE{top:0;right:0;transform:translate(50%,-50%);}
-  .dir-E{top:50%;right:0;transform:translate(50%,-50%);}
-  .dir-SE{bottom:0;right:0;transform:translate(50%,50%);}
-  .dir-S{bottom:0;left:50%;transform:translate(-50%,50%);}
-  .dir-SW{bottom:0;left:0;transform:translate(-50%,50%);}
-  .dir-W{top:50%;left:0;transform:translate(-50%,-50%);}
-  .dir-NW{top:0;left:0;transform:translate(-50%,-50%);}
+  /* Posições compass — slots ficam FORA do frame */
+  .dir-NW{top:8px;left:8px;}
+  .dir-N{top:8px;left:50%;transform:translateX(-50%);}
+  .dir-NE{top:8px;right:8px;}
+  .dir-W{top:50%;left:8px;transform:translateY(-50%);}
+  .dir-E{top:50%;right:8px;transform:translateY(-50%);}
+  .dir-SW{bottom:8px;left:8px;}
+  .dir-S{bottom:8px;left:50%;transform:translateX(-50%);}
+  .dir-SE{bottom:8px;right:8px;}
+  .dir-N:hover, .dir-S:hover{transform:translateX(-50%) scale(1.08);}
+  .dir-W:hover, .dir-E:hover{transform:translateY(-50%) scale(1.08);}
+  .meta{font-size:11px;line-height:1.6;text-align:center;max-width:480px;}
+  .meta strong{color:#f4c95d;font-size:13px;}
   .detail-main .meta{font-size:11px;line-height:1.6;}
   .tools-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;margin-top:16px;}
   .tool-card{border:1px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);}
