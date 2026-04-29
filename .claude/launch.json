@@ -10,6 +10,14 @@
         "8080"
       ],
       "port": 8080
+    },
+    {
+      "name": "PixaPro Gallery",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "tools/gallery_server.py"
+      ],
+      "port": 8090
     }
   ]
 }

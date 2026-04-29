@@ -235,6 +235,37 @@
   .view-mode-btn.active{background:#3a2d1e!important;color:#f4c95d!important;border-color:#f4c95d!important;}
   .view-mode-btn:hover{background:#3a2d1e!important;}
   .orbit-info{display:block;font-size:9px;opacity:.6;margin-top:2px;}
+  /* Detail dashboard cards */
+  .dash-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:8px;}
+  .dash-stat{background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;}
+  .dash-stat .ds-val{font-size:24px;font-weight:bold;}
+  .dash-stat .ds-label{font-size:10px;opacity:.7;}
+  .dash-stat.cooking{border-color:#6b5234;} .dash-stat.cooking .ds-val{color:#f4c95d;}
+  .dash-stat.done{border-color:#3da53d;} .dash-stat.done .ds-val{color:#9fe89f;}
+  .dash-stat.failed{border-color:#a53d3d;} .dash-stat.failed .ds-val{color:#e89f9f;}
+  .dash-stat.total .ds-val{color:#a89368;}
+  .dash-stat.pct{border-color:#1d3a4a;} .dash-stat.pct .ds-val{color:#9fcfe8;}
+  .dash-progress{width:100%;height:6px;background:#2a2218;border-radius:3px;overflow:hidden;margin:8px 0 14px;}
+  .dash-progress-fill{height:100%;background:linear-gradient(90deg,#3da53d,#9fe89f);border-radius:3px;transition:width .3s;}
+  .dash-category-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;}
+  .dash-cat-chip{padding:4px 10px;font-size:10px;border-radius:10px;border:1px solid #4a3826;background:#2a2218;}
+  .dash-queue-cards{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;padding:4px;}
+  .qcard{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #4a3826;border-radius:4px;background:#1a1410;font-size:11px;transition:border-color .15s;}
+  .qcard.st-pending{border-left:3px solid #f4c95d;}
+  .qcard.st-running{border-left:3px solid #9fcfe8;animation:pulse-border 1.5s infinite;}
+  .qcard.st-done{border-left:3px solid #3da53d;opacity:.7;}
+  .qcard.st-failed{border-left:3px solid #a53d3d;opacity:.8;}
+  .qcard .qc-tool{color:#f4c95d;font-weight:bold;min-width:140px;}
+  .qcard .qc-asset{color:#a89368;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .qcard .qc-status{font-size:10px;padding:2px 8px;border-radius:8px;}
+  .qcard .qc-status.pending{background:#5a4a2d;color:#f4c95d;}
+  .qcard .qc-status.running{background:#1d3a4a;color:#9fcfe8;}
+  .qcard .qc-status.done{background:#2d5a2d;color:#9fe89f;}
+  .qcard .qc-status.failed{background:#5a2d2d;color:#e89f9f;}
+  .qcard .qc-actions{display:flex;gap:4px;}
+  .qcard .qc-actions button{padding:2px 8px;font-size:10px;border:1px solid #4a3826;background:#2a2218;color:#a89368;cursor:pointer;border-radius:3px;}
+  .qcard .qc-actions button:hover{background:#3a2d1e;color:#f4c95d;}
+  @keyframes pulse-border{0%,100%{border-color:#9fcfe8}50%{border-color:#4a3826}}
 </style>
 </head>
 <body>
@@ -345,19 +376,39 @@
 
 <!-- ====== TAB DETAIL (queue MCP + tileset info/refs) ====== -->
 <div class="tab-content" id="tab-detail" hidden>
-  <div style="max-width:900px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
-    <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue</h3>
-    <div style="font-size:11px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra eu rodar.</div>
-    <pre id="detailQueueDump" style="background:#1a1410;color:#e8d9b8;padding:10px;border:1px solid #4a3826;border-radius:4px;max-height:50vh;overflow:auto;font-size:11px;">[]</pre>
-    <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue Dashboard</h3>
+    <div style="font-size:11px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra rodar.</div>
+    <!-- Stats cards -->
+    <div class="dash-stats" id="dashStats"></div>
+    <!-- Progress bar -->
+    <div class="dash-progress"><div class="dash-progress-fill" id="dashProgressFill" style="width:0%"></div></div>
+    <!-- Category breakdown -->
+    <div class="dash-category-bar" id="dashCategoryBar"></div>
+    <!-- Queue cards -->
+    <div class="dash-queue-cards" id="dashQueueCards"></div>
+    <!-- Actions -->
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
       <button id="btnDetailRefreshQueue">↻ Refresh</button>
       <button id="btnDetailClearQueue" style="background:#a53d3d;color:#fff;">Limpar tudo</button>
+      <button id="btnDetailClearDone" style="background:#3a2d1e;color:#a89368;">Limpar done</button>
+      <button id="btnDetailExportJSON" style="background:#2a2218;color:#9fcfe8;border:1px solid #1d3a4a;">📋 Copy JSON</button>
     </div>
   </div>
   <!-- Info sobre tileset ativo (movido da Tiles tab) -->
-  <div style="max-width:900px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
     <h3 style="color:#f4c95d;margin:0 0 10px;">🧩 Active Tileset Info</h3>
     <div id="tilesetInfo" style="font-size:11px;line-height:1.5;">selecione um tileset na Tab Tiles</div>
+  </div>
+  <!-- Refs & explanações -->
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">📚 Quick Reference</h3>
+    <div style="font-size:11px;line-height:1.8;opacity:.8;">
+      <strong>MCP tool naming:</strong> <code>mcp__pixellab__&lt;tool&gt;</code><br>
+      <strong>Categories:</strong> 🆕 create (objects, characters, tilesets) · 🎨 modify (vary, select frames, dismiss) · 🎬 anim (animate object/character) · 📖 meta (get/list) · 🗑 delete<br>
+      <strong>Workflow:</strong> Editor tab → preenche form → "Add to queue" → aqui no Dashboard → cola "executa o mcp queue" no chat<br>
+      <strong>Status:</strong> <span style="color:#f4c95d;">pending</span> = aguardando execução · <span style="color:#9fcfe8;">running</span> = em progresso · <span style="color:#9fe89f;">done</span> = concluído · <span style="color:#e89f9f;">failed</span> = erro
+    </div>
   </div>
   <div class="queue-bar" id="queueBar" hidden>
     <span id="queueBarText">📋 0 ações na fila</span>
@@ -762,6 +813,7 @@ document.addEventListener("keydown", e => {
 let activeTab = 'manager';
 function switchTab(name){
   activeTab = name;
+  hideFloatingPopup(); // Bug fix: fecha popup ao trocar tab
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-content').forEach(c => c.hidden = (c.id !== 'tab-' + name));
   if(name === 'gallery') renderGallery();
@@ -769,6 +821,9 @@ function switchTab(name){
   else if(name === 'detail') renderDetailDashboard();
   else if(name === 'tiles') renderTiles();
 }
+// Bug fix: fecha popup ao scrollar qualquer painel
+window.addEventListener('scroll', () => hideFloatingPopup(), {passive:true});
+document.addEventListener('scroll', () => hideFloatingPopup(), {capture:true, passive:true});
 document.querySelectorAll('.tab').forEach(t => {
   t.onclick = () => switchTab(t.dataset.tab);
 });
@@ -1145,12 +1200,19 @@ document.querySelectorAll('#promotedFilterBar button').forEach(b => {
   };
 });
 
+let _galleryRefreshing = false;
 $("btnRefreshSummary")?.addEventListener('click', async () => {
+  if(_galleryRefreshing) return; // Bug fix: debounce double-click
+  _galleryRefreshing = true;
+  const btn = $("btnRefreshSummary");
+  btn.textContent = '⏳ Scanning…';
+  btn.disabled = true;
   summaryData = null;
-  $("btnRefreshSummary").textContent = '⏳ Scanning…';
   summaryData = await fetchSummary() || {filesystem:[], orphans:[]};
   renderGallery();
-  $("btnRefreshSummary").textContent = '↻ Refresh';
+  btn.textContent = '↻ Refresh';
+  btn.disabled = false;
+  _galleryRefreshing = false;
 });
 
 // ============ TAB DETAIL (PixelLab MCP) ============
@@ -1255,42 +1317,92 @@ function approvedAssets(){
 // Renomeado: renderEditorList substitui renderDetailList. Detail vira dashboard.
 function renderEditorList(){ return renderDetailList(); }
 function renderDetailDashboard(){
-  // Stats simples baseado no localStorage queue
-  const cooking = mcpQueue.filter(q => !q.done).length;
-  const done = mcpQueue.filter(q => q.done).length;
+  // Reload from localStorage pra pegar updates de outras tabs
+  try { mcpQueue = JSON.parse(localStorage.getItem('chapEscapadeMcpQueue') || '[]'); } catch(e){}
+
+  const pending = mcpQueue.filter(q => !q.done && !q.failed && !q.running);
+  const running = mcpQueue.filter(q => q.running);
+  const done = mcpQueue.filter(q => q.done);
+  const failed = mcpQueue.filter(q => q.failed);
   const total = mcpQueue.length;
-  const pct = total ? Math.round((done/total) * 100) : 0;
-  const dump = $("detailQueueDump");
-  if(dump){
-    dump.textContent = JSON.stringify(mcpQueue, null, 2);
+  const pct = total ? Math.round(done.length / total * 100) : 0;
+
+  // Stats cards
+  const statsEl = $("dashStats");
+  if(statsEl) statsEl.innerHTML = `
+    <div class="dash-stat cooking"><div class="ds-val">${pending.length}</div><div class="ds-label">⏳ pending</div></div>
+    <div class="dash-stat" style="border-color:#1d3a4a;"><div class="ds-val" style="color:#9fcfe8;">${running.length}</div><div class="ds-label">🔄 running</div></div>
+    <div class="dash-stat done"><div class="ds-val">${done.length}</div><div class="ds-label">✅ done</div></div>
+    <div class="dash-stat failed"><div class="ds-val">${failed.length}</div><div class="ds-label">❌ failed</div></div>
+    <div class="dash-stat total"><div class="ds-val">${total}</div><div class="ds-label">📋 total</div></div>
+    <div class="dash-stat pct"><div class="ds-val">${pct}%</div><div class="ds-label">⏱ progress</div></div>`;
+
+  // Progress bar
+  const fill = $("dashProgressFill");
+  if(fill) fill.style.width = pct + '%';
+
+  // Category breakdown
+  const catBar = $("dashCategoryBar");
+  if(catBar){
+    const cats = {};
+    mcpQueue.forEach(q => {
+      const toolName = (q.tool || '').replace(/^mcp__pixellab__/, '');
+      const def = PIXELLAB_TOOLS.find(t => t.name === toolName);
+      const cat = def?.cat || 'unknown';
+      cats[cat] = (cats[cat] || 0) + 1;
+    });
+    const catColors = {create:'#9fe89f', modify:'#9fcfe8', anim:'#dfa6df', meta:'#f4c95d', delete:'#e89f9f', unknown:'#a89368'};
+    const catIcons = {create:'🆕', modify:'🎨', anim:'🎬', meta:'📖', delete:'🗑', unknown:'❓'};
+    catBar.innerHTML = Object.entries(cats)
+      .sort((a,b) => b[1] - a[1])
+      .map(([c, n]) => `<span class="dash-cat-chip" style="color:${catColors[c]||'#a89368'};border-color:${catColors[c]||'#4a3826'};">${catIcons[c]||'•'} ${c} <strong>${n}</strong></span>`)
+      .join('');
+    if(total === 0) catBar.innerHTML = '<span style="opacity:.5;font-size:10px;">nenhuma ação na fila</span>';
   }
-  // Atualiza header com sumário
-  const main = document.querySelector('#tab-detail > div');
-  if(main){
-    let summary = main.querySelector('.dash-summary');
-    if(!summary){
-      summary = document.createElement('div');
-      summary.className = 'dash-summary';
-      summary.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;';
-      main.insertBefore(summary, main.firstChild.nextSibling);
+
+  // Queue cards
+  const cardsEl = $("dashQueueCards");
+  if(cardsEl){
+    if(total === 0){
+      cardsEl.innerHTML = '<div style="text-align:center;padding:30px;opacity:.5;font-size:11px;">Queue vazia. Vá no Editor → preencha um tool → "Add to queue".</div>';
+    } else {
+      cardsEl.innerHTML = mcpQueue.map((q, idx) => {
+        const st = q.done ? 'done' : q.failed ? 'failed' : q.running ? 'running' : 'pending';
+        const stLabel = q.done ? 'done' : q.failed ? 'failed' : q.running ? 'running' : 'pending';
+        const toolShort = (q.tool || '').replace(/^mcp__pixellab__/, '');
+        const assetName = q.asset?.name || q.args?.description?.substring(0,40) || '—';
+        const tsStr = q.ts ? new Date(q.ts).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+        const resultStr = q.result ? `<span style="opacity:.6;font-size:9px;margin-left:8px;">${typeof q.result === 'string' ? q.result.substring(0,60) : 'result saved'}</span>` : '';
+        return `<div class="qcard st-${st}" data-qidx="${idx}">
+          <span class="qc-tool">${toolShort}</span>
+          <span class="qc-asset" title="${assetName}">${assetName}${resultStr}</span>
+          <span style="font-size:9px;opacity:.4;min-width:40px;">${tsStr}</span>
+          <span class="qc-status ${st}">${stLabel}</span>
+          <div class="qc-actions">
+            ${st === 'pending' ? `<button data-qaction="done" data-qi="${idx}" title="Marcar como concluído">✅</button>` : ''}
+            ${st === 'pending' ? `<button data-qaction="fail" data-qi="${idx}" title="Marcar como falho">❌</button>` : ''}
+            ${st === 'done' || st === 'failed' ? `<button data-qaction="reset" data-qi="${idx}" title="Voltar pra pending">↺</button>` : ''}
+            <button data-qaction="remove" data-qi="${idx}" title="Remover da fila">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+      // Wire card action buttons
+      cardsEl.querySelectorAll('[data-qaction]').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.qi);
+          const action = btn.dataset.qaction;
+          if(idx < 0 || idx >= mcpQueue.length) return;
+          if(action === 'done'){ mcpQueue[idx].done = true; delete mcpQueue[idx].failed; delete mcpQueue[idx].running; }
+          else if(action === 'fail'){ mcpQueue[idx].failed = true; delete mcpQueue[idx].done; delete mcpQueue[idx].running; }
+          else if(action === 'reset'){ delete mcpQueue[idx].done; delete mcpQueue[idx].failed; delete mcpQueue[idx].running; }
+          else if(action === 'remove'){ mcpQueue.splice(idx, 1); }
+          saveQueue();
+          fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue)}).catch(()=>{});
+          renderDetailDashboard();
+        };
+      });
     }
-    summary.innerHTML = `
-      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #6b5234;">
-        <div style="font-size:24px;color:#f4c95d;font-weight:bold;">${cooking}</div>
-        <div style="font-size:10px;opacity:.7;">🔥 cooking</div>
-      </div>
-      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #3da53d;">
-        <div style="font-size:24px;color:#9fe89f;font-weight:bold;">${done}</div>
-        <div style="font-size:10px;opacity:.7;">✅ done</div>
-      </div>
-      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;">
-        <div style="font-size:24px;color:#a89368;font-weight:bold;">${total}</div>
-        <div style="font-size:10px;opacity:.7;">📋 total</div>
-      </div>
-      <div style="background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;">
-        <div style="font-size:24px;color:#9fcfe8;font-weight:bold;">${pct}%</div>
-        <div style="font-size:10px;opacity:.7;">⏱ progresso</div>
-      </div>`;
   }
 }
 $("btnDetailRefreshQueue")?.addEventListener('click', () => renderDetailDashboard());
@@ -1301,6 +1413,22 @@ $("btnDetailClearQueue")?.addEventListener('click', () => {
   fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify([])}).catch(()=>{});
   renderDetailDashboard();
 });
+$("btnDetailClearDone")?.addEventListener('click', () => {
+  mcpQueue = mcpQueue.filter(q => !q.done);
+  saveQueue();
+  fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue)}).catch(()=>{});
+  renderDetailDashboard();
+});
+$("btnDetailExportJSON")?.addEventListener('click', () => {
+  const json = JSON.stringify(mcpQueue, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    const btn = $("btnDetailExportJSON");
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy JSON'; }, 1500);
+  }).catch(() => {
+    prompt('Copy JSON:', json);
+  });
+});
 
 function renderDetailList(){
   if(!summaryData){
@@ -1308,9 +1436,16 @@ function renderDetailList(){
   }
   const body = $("editorAssetListBody") || $("detailListBody");
   const countEl = $("editorApprovedCount");
+  // Bug fix: preservar tagInput value via _savedTagInputVal (global)
+  if($("tagInput")) window._savedTagInputVal = $("tagInput").value || '';
   body.innerHTML = '';
   body.className = 'detail-list-grid';
   const list = approvedAssets();
+  // Bug fix: estabilizar detailSelected por path (evita ref stale)
+  if(detailSelected){
+    const fresh = list.find(x => x.path === detailSelected.path);
+    if(fresh) detailSelected = fresh;
+  }
   if(countEl) countEl.textContent = list.length;
   if(list.length === 0){
     body.innerHTML = '<div style="opacity:.6;font-size:11px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
@@ -1501,6 +1636,9 @@ function renderDetailMain(){
   rerenderTagChips();
   const tagInput = $("tagInput");
   if(tagInput){
+    // Bug fix: restaurar valor que user estava digitando antes do re-render
+    if(window._savedTagInputVal){ tagInput.value = window._savedTagInputVal; window._savedTagInputVal = ''; }
+    tagInput.oninput = () => { window._savedTagInputVal = tagInput.value; };
     tagInput.onkeydown = (e) => {
       if(e.key === 'Enter'){
         const v = tagInput.value.trim().toLowerCase();
@@ -1997,8 +2135,19 @@ function generateTerrainGrid(seed, threshold, N, bias){
 
 function renderTestMap(){
   const canvas = $("testCanvas");
-  if(!canvas || !tileEditState) return;
+  if(!canvas) return;
   const ctx = canvas.getContext('2d');
+  if(!tileEditState){
+    // Bug fix: mostra mensagem em vez de canvas cinza
+    ctx.fillStyle = '#2a2218';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#a89368';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Selecione um tileset acima', canvas.width/2, canvas.height/2 - 8);
+    ctx.fillText('pra ver o test render', canvas.width/2, canvas.height/2 + 12);
+    return;
+  }
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = '#2a2218';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2171,6 +2320,8 @@ async function renderTiles(){
   $("btnViewFull").classList.toggle('active', viewMode === 'full');
   $("btnViewReduced").classList.toggle('active', viewMode === 'reduced-r');
   renderRefGuide();
+  // Bug fix: mostra placeholder no canvas enquanto tiles carregam
+  if(!tileEditState || tileEditState.presetId !== p.id) renderTestMap();
   const grid = $("wangGrid");
   grid.innerHTML = '';
   if(editorMode && tileEditState && tileEditState.presetId === p.id){
