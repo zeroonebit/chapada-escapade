@@ -167,6 +167,10 @@
   .editor-bar button{padding:6px 14px;font-size:11px;}
   .save-corrected{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
   .reset-corrections{background:#a53d3d!important;color:#fff!important;}
+  .view-mode-btn{background:#2a2218!important;color:#a89368!important;border:1px solid #4a3826!important;font-size:11px!important;padding:5px 10px!important;}
+  .view-mode-btn.active{background:#3a2d1e!important;color:#f4c95d!important;border-color:#f4c95d!important;}
+  .view-mode-btn:hover{background:#3a2d1e!important;}
+  .orbit-info{display:block;font-size:9px;opacity:.6;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -294,6 +298,11 @@
       <div class="editor-bar" id="editorBar" hidden>
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
+        <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
+        <label style="font-size:11px;color:#a89368;">VIEW:</label>
+        <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
+        <button id="btnViewReduced" class="view-mode-btn">🔁 Reduced via R (6)</button>
+        <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
         <button class="save-corrected" id="btnSaveCorrected" hidden>💾 Save corrections</button>
         <button class="reset-corrections" id="btnResetCorrections" hidden>↺ Reset</button>
         <span style="font-size:11px;opacity:.7;" id="editorHint"></span>
@@ -1230,6 +1239,25 @@ async function regenCellImage(cellState){
 let activePreset = WANG_PRESETS[0];
 let presetMetadata = {};
 
+// rotação CW dos 4 cantos: NW→NE→SE→SW→NW (bit positions cyclical shift)
+function rotCW(b){ return ((b << 1) & 0xF) | ((b >> 3) & 1); }
+function rotOrbit(b){
+  const seen = new Set(); let cur = b;
+  while(!seen.has(cur)){ seen.add(cur); cur = rotCW(cur); }
+  return [...seen].sort((a,b)=>a-b);
+}
+function canonicalRot(b){ return Math.min(...rotOrbit(b)); }
+// retorna {canon, rotations} onde rotations = nº de rot CW do canon pra chegar em b
+function rotInfoFor(b){
+  let cur = canonicalRot(b);
+  for(let i=0; i<4; i++){
+    if(cur === b) return {canon: canonicalRot(b), rotations: i};
+    cur = rotCW(cur);
+  }
+  return {canon: b, rotations: 0};
+}
+const ROT_CANONS = [0, 1, 3, 5, 7, 15]; // 6 representantes únicos
+
 function bitsToCorners(bits){
   return {
     NW: (bits & 1) ? 'upper' : 'lower',
@@ -1288,7 +1316,8 @@ function renderTestMap(){
     }
   }
   const cellPx = Math.floor(canvas.width / N);
-  // pré-carregar todas as 16 imagens dataURL
+  // pré-carregar imgs. Em modo 'reduced-r' usa só os 6 canônicos; aplica rotação ao desenhar.
+  const useReduced = (viewMode === 'reduced-r');
   const imgs = tileEditState.cells.map(c => {
     if(!c || !c.current) return null;
     const i = new Image();
@@ -1300,17 +1329,30 @@ function renderTestMap(){
   const draw = () => {
     for(let y=0; y<N; y++){
       for(let x=0; x<N; x++){
-        // cantos: NW=(x,y), NE=(x+1,y), SE=(x+1,y+1), SW=(x,y+1)
         const nw = vert[y][x];
         const ne = vert[y][x+1];
         const se = vert[y+1][x+1];
         const sw = vert[y+1][x];
         const bits = nw + ne*2 + se*4 + sw*8;
-        const img = imgs[bits];
+        let img = imgs[bits];
+        let rotations = 0;
+        if(useReduced){
+          // pega canonical + rotações pra derivar este tile
+          const info = rotInfoFor(bits);
+          img = imgs[info.canon];
+          rotations = info.rotations;
+        }
         if(img && img.complete){
-          ctx.drawImage(img, x*cellPx, y*cellPx, cellPx, cellPx);
+          if(rotations === 0){
+            ctx.drawImage(img, x*cellPx, y*cellPx, cellPx, cellPx);
+          } else {
+            ctx.save();
+            ctx.translate(x*cellPx + cellPx/2, y*cellPx + cellPx/2);
+            ctx.rotate(rotations * Math.PI/2);
+            ctx.drawImage(img, -cellPx/2, -cellPx/2, cellPx, cellPx);
+            ctx.restore();
+          }
         } else {
-          // fallback: cor sólida
           ctx.fillStyle = bits === 0 ? '#7a5a2d' : (bits === 15 ? '#a8d088' : '#888');
           ctx.fillRect(x*cellPx, y*cellPx, cellPx, cellPx);
         }
@@ -1359,6 +1401,7 @@ function renderRefGuide(){
 }
 
 let editorMode = false;
+let viewMode = 'full'; // 'full' | 'reduced-r'
 
 function toggleEditorMode(){
   editorMode = !editorMode;
@@ -1433,6 +1476,8 @@ async function renderTiles(){
   const p = activePreset;
   $("tilesetTitle").textContent = p.name;
   $("editorBar").hidden = false;
+  $("btnViewFull").classList.toggle('active', viewMode === 'full');
+  $("btnViewReduced").classList.toggle('active', viewMode === 'reduced-r');
   renderRefGuide();
   const grid = $("wangGrid");
   grid.innerHTML = '';
@@ -1441,18 +1486,22 @@ async function renderTiles(){
     return;
   }
   const cells = [];
-  for(let bits=0; bits<16; bits++){
+  const bitsList = (viewMode === 'reduced-r') ? ROT_CANONS : Array.from({length:16}, (_,i)=>i);
+  bitsList.forEach(bits => {
     const corners = bitsToCorners(bits);
     const cell = document.createElement('div');
     cell.className = 'wang-cell';
+    const orbitMembers = rotOrbit(bits);
+    const orbitLabel = (viewMode === 'reduced-r' && orbitMembers.length > 1)
+      ? `<div class="orbit-info">orbit: {${orbitMembers.join(', ')}} via R</div>` : '';
     cell.innerHTML = `
       <div class="wtile" data-bits="${bits}"></div>
       <div class="wlabel">${bits} (0x${bits.toString(16).toUpperCase()})</div>
       <div class="wcorners">NW:${corners.NW[0].toUpperCase()} NE:${corners.NE[0].toUpperCase()} SE:${corners.SE[0].toUpperCase()} SW:${corners.SW[0].toUpperCase()}</div>
-      ${cornerSquare(corners)}`;
+      ${cornerSquare(corners)}${orbitLabel}`;
     grid.appendChild(cell);
-    cells.push(cell);
-  }
+    cells.push({el: cell, bits});
+  });
   let infoHTML = `Tileset <code>${p.id}</code> · ${p.meta}`;
   if(p.info) infoHTML += `<br><br>${p.info}`;
   if(p.docLink) infoHTML += `<br>📖 <a href="${p.docLink}" target="_blank" style="color:#9fcfe8;">${p.docTitle || p.docLink}</a>`;
@@ -1463,25 +1512,26 @@ async function renderTiles(){
   }
   $("tilesetInfo").innerHTML = infoHTML;
   if(p.sliced){
+    // Sempre carrega os 16 pra alimentar tileEditState/renderTestMap. Renderiza só os visíveis (filtrados por viewMode).
     const slicedURLs = [];
     let pending = 16;
-    cells.forEach((cell, bits) => {
-      const wtile = cell.querySelector('.wtile');
+    const onAll = () => { initEditState(p, slicedURLs); renderTestMap(); };
+    for(let bits=0; bits<16; bits++){
+      const visibleCell = cells.find(c => c.bits === bits);
+      const wtile = visibleCell ? visibleCell.el.querySelector('.wtile') : null;
       const img = new Image();
       img.src = p.sliceFn(bits);
       img.style.width = '96px'; img.style.height = '96px'; img.style.imageRendering = 'pixelated';
       img.onload = () => {
-        // converte pra dataURL pra editor
         const cv = document.createElement('canvas');
         cv.width = img.naturalWidth; cv.height = img.naturalHeight;
         cv.getContext('2d').drawImage(img, 0, 0);
         try { slicedURLs[bits] = cv.toDataURL(); } catch(e){ slicedURLs[bits] = null; }
-        if(--pending === 0){ initEditState(p, slicedURLs); renderTestMap(); }
+        if(wtile){ wtile.innerHTML = ''; wtile.appendChild(img); }
+        if(--pending === 0) onAll();
       };
-      img.onerror = () => { wtile.style.background = '#3a2d1e'; wtile.textContent = '?'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; if(--pending === 0) initEditState(p, slicedURLs); };
-      wtile.innerHTML = '';
-      wtile.appendChild(img);
-    });
+      img.onerror = () => { if(wtile){ wtile.style.background = '#3a2d1e'; wtile.textContent = '?'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; } if(--pending === 0) onAll(); };
+    }
     return;
   }
   const meta = await fetchTilesetMetadata(p);
@@ -1501,18 +1551,19 @@ async function renderTiles(){
       for(let i=0;i<16;i++) mapping[i] = i;
     }
     const orderedTiles = [];
-    cells.forEach((cell, bits) => {
-      const wtile = cell.querySelector('.wtile');
-      wtile.innerHTML = '';
+    for(let bits=0; bits<16; bits++){
       const ti = mapping[bits];
-      if(ti === undefined){
+      orderedTiles[bits] = (ti !== undefined) ? tiles[ti] : null;
+    }
+    cells.forEach(({el, bits}) => {
+      const wtile = el.querySelector('.wtile');
+      wtile.innerHTML = '';
+      if(!orderedTiles[bits]){
         wtile.textContent = '—'; wtile.style.color='#666'; wtile.style.lineHeight='96px';
-        orderedTiles[bits] = null;
         return;
       }
-      orderedTiles[bits] = tiles[ti];
       const tileImg = new Image();
-      tileImg.src = tiles[ti];
+      tileImg.src = orderedTiles[bits];
       tileImg.style.width = '96px'; tileImg.style.height = '96px'; tileImg.style.imageRendering = 'pixelated';
       wtile.appendChild(tileImg);
     });
@@ -1524,8 +1575,8 @@ async function renderTiles(){
   };
   img.onerror = () => {
     $("tilesetInfo").innerHTML += `<br>⚠ erro ao carregar imagem (tileset talvez ainda em geração no PixelLab)`;
-    cells.forEach(cell => {
-      const wtile = cell.querySelector('.wtile');
+    cells.forEach(({el}) => {
+      const wtile = el.querySelector('.wtile');
       wtile.style.background = '#4a1d1d';
       wtile.style.color = '#e89f9f';
       wtile.style.lineHeight = '96px';
@@ -1548,6 +1599,8 @@ bindTestControls();
 
 // botões do editor
 document.addEventListener('click', (e) => {
+  if(e.target.id === 'btnViewFull'){ viewMode = 'full'; renderTiles(); }
+  if(e.target.id === 'btnViewReduced'){ viewMode = 'reduced-r'; renderTiles(); }
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
   if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
   if(e.target.id === 'btnSaveCorrected'){

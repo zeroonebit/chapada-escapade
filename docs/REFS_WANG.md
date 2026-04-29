@@ -58,6 +58,50 @@ Base tile IDs disponíveis pra chain (handoff `HANDOFF_WANG.md`):
 - `2a7b28cc-4663-43c2-95dd-0055b2f03c55` — ocean lower
 - `343965f3-fa23-4e42-99ca-edd909e04a07` — sand upper
 
+## 🔬 Boris Classification Findings (síntese 2026-04-29)
+
+Fetched from https://www.boristhebrave.com/2021/11/14/classification-of-tilesets/
+
+### Taxonomia (4 dimensões)
+1. **Cell Type:** S (square), C (cube), H (hexagon), T (triangle)
+2. **Tile Identification:** V (vertices/corners), E (edges), F (faces), C (cell center) — "minimal information needed to uniquely identify a tile". Sufixo numérico = qtd de valores possíveis. V2 = bicolor vertices.
+3. **Symmetry:** R (rotation) e/ou M (mirror)
+4. **Restrictions:** regras pra eliminar combinações inválidas (ex: blob)
+
+### Onde nosso scheme atual cai
+- Hoje usamos **S-V2** (square cells, 2-color vertices) = **16 tiles**
+- Boris: aplicar simetria de rotação reduz a **S-V2-R = 6 tiles**, mesma cobertura visual
+- *"S-V2 compared with S-V2-R, which allows any rotation... there are much fewer tiles in the latter, only 6 vs 16."*
+
+### Orbits de rotação (CW: bit_pos rotaciona NW→NE→SE→SW→NW)
+
+| Orbit | Membros | Descrição |
+|---|---|---|
+| 0  | {0} | tudo lower |
+| 1  | {1, 2, 4, 8} | 1 corner upper |
+| 3  | {3, 6, 9, 12} | 2 corners adjacentes upper |
+| 5  | {5, 10} | 2 corners diagonais upper |
+| 7  | {7, 11, 13, 14} | 3 corners upper |
+| 15 | {15} | tudo upper |
+
+**Total: 6 representantes únicos.** Ao gerar PixelLab, só precisamos de 6 tiles (em vez de 16). Os outros 10 são derivados via rotação CW.
+
+### Schemes alternativos com menos tiles ainda
+- **T-V2-RM** (triangle cells + R + M) = **4 tiles** — visualmente diferente, abandona quad grid
+- **S-V2-RM** = 6 tiles também (mirror não reduz mais nesse caso porque rotação já cobre)
+- **Blob (S-V2E2-Blob)** = 47 tiles — *adiciona* edges sobre corners pra mais variedade visual; vale a pena se quiser textura mais rica
+
+### Recomendações pro nosso pipeline
+1. **Não regerar PixelLab até usar o set reduzido** — economia de 10/16 = 62.5% no compute/credit
+2. Editor precisa de toggle: ver os 16 (full) ou só 6 (reduced via rotação)
+3. Test render sempre usa 16 lookups, mas em modo reduced aplica rotação ao desenhar
+4. PixelLab generation pipeline futuro: pedir só os 6 reps + rotacionar localmente
+
+### Pitfalls
+- *"the tile classification does not fully specify how to autotile them"* — implementation rules importam tanto quanto a estrutura
+- Tiles com simetria C2 (5, 10 — diagonal) só dão 2 variantes via rotação, não 4
+- Tiles invariantes (0, 15) não rotacionam — são únicos
+
 ## Convention check (NW NE SE SW)
 
 | bits | NW | NE | SE | SW | descrição |
