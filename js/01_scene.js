@@ -229,11 +229,11 @@ class Jogo extends Phaser.Scene {
             this.textures.addCanvas('mobile_vignette', c);
             this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
                 .setScrollFactor(0).setDepth(190);
-            this.fxMobileVignette.setDisplaySize(this.scale.width * 1.15, this.scale.height * 1.15);
+            // 150% pra cobrir mesmo quando ship leva o spotlight pra borda
+            this.fxMobileVignette.setDisplaySize(this.scale.width * 1.5, this.scale.height * 1.5);
             this.scale.on('resize', () => {
                 if (this.fxMobileVignette?.scene) {
-                    this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
-                    this.fxMobileVignette.setDisplaySize(this.scale.width * 1.15, this.scale.height * 1.15);
+                    this.fxMobileVignette.setDisplaySize(this.scale.width * 1.5, this.scale.height * 1.5);
                 }
             });
         }
@@ -457,6 +457,14 @@ class Jogo extends Phaser.Scene {
         this._updateLEDs(delta);
         if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
+
+        // MOBILE_MODE: dark vignette segue posicao da nave na tela
+        // (efeito de "luz de cima" acompanhando o disco)
+        if (this.fxMobileVignette && this.ship) {
+            const cam2 = this.cameras.main;
+            this.fxMobileVignette.x = this.ship.x - cam2.scrollX;
+            this.fxMobileVignette.y = this.ship.y - cam2.scrollY;
+        }
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
