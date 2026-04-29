@@ -93,7 +93,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429k';
+    const V = '20260429l';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -141,8 +141,10 @@
             '</div>';
         pct.parentNode.insertBefore(below, pct.nextSibling);
 
-        // Flag pro 11_gameflow pular a splash e entrar direto em PLAY
-        window.__AUTO_PLAY = true;
+        // Flag pro jogo: pula splash + carrega so movimentacao + atmosfera
+        // pesada (storm + midnight + neblina). Sem inimigos, sem objetivos —
+        // experiencia frustrante intencional.
+        window.__MOBILE_MODE = true;
 
         // Continua execucao normal -> loader desktop carrega os modulos abaixo
     }

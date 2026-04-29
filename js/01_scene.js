@@ -29,6 +29,24 @@ class Jogo extends Phaser.Scene {
         // Loads config de debug ANTES de qualquer spawn (afeta scales/counts)
         this._loadDebugCfg();
 
+        // MOBILE_MODE: override pra experiencia "frustrante" — so movimentacao
+        // da nave + atmosfera pesada. Sem inimigos, sem cows, sem objetivos.
+        if (window.__MOBILE_MODE && this.dbg) {
+            this.dbg.enabled.fazendeiros = false;
+            this.dbg.enabled.atiradores  = false;
+            this.dbg.enabled.vacas       = false;
+            this.dbg.enabled.bois        = false;
+            this.dbg.fx.weather          = 'storm';
+            this.dbg.fx.timeOfDay        = 'midnight';
+            this.dbg.fx.chuva            = true;
+            this.dbg.fx.chuvaIntensidade = 1.0;
+            this.dbg.fx.chuvaCount       = 300;
+            this.dbg.fx.chuvaVelocidade  = 1.8;
+            this.dbg.fx.chuvaAngulo      = 0.5;
+            this.dbg.fx.neblina          = true;
+            this.dbg.fx.neblinaIntensidade = 0.92;
+        }
+
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' usada below)
 
         // ── REGISTRA ANIMS 8-DIR (cow chubby, faz, ox) ─────────────
