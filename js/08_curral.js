@@ -143,10 +143,28 @@ Object.assign(Jogo.prototype, {
         this.cameras.main.flash(150, 100, 200, 100);
     },
 
+    // M3: cleanup completo de um slot (tweens + icon)
+    // Usado no _coletarSlot e em qualquer destrução prematura do curral
+    _cleanSlot(curral, slotIdx) {
+        const slot = curral?.slots?.[slotIdx];
+        if (!slot) return;
+        if (slot.pisca && slot.pisca.stop) slot.pisca.stop();
+        if (slot.bounce && slot.bounce.stop) slot.bounce.stop();
+        if (slot.icon) {
+            this.tweens.killTweensOf(slot.icon);
+            if (slot.icon.scene) slot.icon.destroy();
+        }
+        curral.slots[slotIdx] = null;
+    },
+
     _processarSlot(curral, slotIdx) {
         this._ensureSlots(curral);
         const slot = curral.slots[slotIdx];
-        if (!slot || slot.state !== 'loading' || !slot.icon || !slot.icon.scene) return;
+        if (!slot || slot.state !== 'loading' || !slot.icon || !slot.icon.scene) {
+            // Slot inválido (curral destruído mid-process?) → limpa pra evitar leak
+            if (curral && curral.slots) this._cleanSlot(curral, slotIdx);
+            return;
+        }
 
         // Decrementa counter (vaca "saiu" do estoque)
         curral.mascoteCount = Math.max(0, curral.mascoteCount - 1);

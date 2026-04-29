@@ -201,31 +201,31 @@ Object.assign(Jogo.prototype, {
                                 <option value="mouse">Mouse</option>
                                 <option value="wasd">WASD + Space</option>
                             </select></label>
-                        <label><span>Sensibilidade</span>
+                        <label><span data-i18n="sensibilidade">Sensibilidade</span>
                             <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensibilidade" list="sens-ticks">
                             <datalist id="sens-ticks"><option value="1"></option><option value="1.25"></option><option value="1.5"></option></datalist>
                             <input type="number" class="val" data-show="behavior.sensibilidade" /></label>
-                        <label><span>Força beam (pull)</span>
+                        <label><span data-i18n="forca_beam">Força beam (pull)</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="entidades">ENTIDADES</legend>
-                        <label><span>Velocidade vacas/bois</span>
+                        <label><span data-i18n="vel_vacas">Velocidade vacas/bois</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velVaca">
                             <input type="number" class="val" data-show="behavior.velVaca" /></label>
-                        <label><span>Velocidade fazendeiros</span>
+                        <label><span data-i18n="vel_faz">Velocidade fazendeiros</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velFaz">
                             <input type="number" class="val" data-show="behavior.velFaz" /></label>
-                        <label><span>Dano atiradores</span>
+                        <label><span data-i18n="dano_at">Dano atiradores</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.danoAtirador">
                             <input type="number" class="val" data-show="behavior.danoAtirador" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="quantidades">QUANTIDADES (reiniciar)</legend>
-                        <label><span>Vacas spawn</span>
+                        <label><span data-i18n="vacas_spawn">Vacas spawn</span>
                             <input type="number" min="0" max="200" step="1" data-cfg="counts.vacas"></label>
-                        <label><span>Fazendeiros spawn</span>
+                        <label><span data-i18n="faz_spawn">Fazendeiros spawn</span>
                             <input type="number" min="0" max="50" step="1" data-cfg="counts.fazendeiros"></label>
                     </fieldset>
                 </div>
@@ -235,28 +235,28 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
                     <fieldset>
                         <legend data-i18n="escalas">ESCALAS</legend>
-                        <label><span>Vaca</span>
+                        <label><span data-i18n="vaca">Vaca</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
                             <input type="number" class="val" data-show="scale.vaca" /></label>
-                        <label><span>Boi</span>
+                        <label><span data-i18n="boi">Boi</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
                             <input type="number" class="val" data-show="scale.boi" /></label>
-                        <label><span>Fazendeiro</span>
+                        <label><span data-i18n="fazendeiro">Fazendeiro</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
                             <input type="number" class="val" data-show="scale.faz" /></label>
-                        <label><span>Beam radius</span>
+                        <label><span data-i18n="beam_radius">Beam radius</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.beam">
                             <input type="number" class="val" data-show="scale.beam" /></label>
-                        <label><span>Nave (UFO)</span>
+                        <label><span data-i18n="nave_ufo">Nave (UFO)</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.nave">
                             <input type="number" class="val" data-show="scale.nave" /></label>
-                        <label><span>Hambúrguer</span>
+                        <label><span data-i18n="burger">Hambúrguer</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.burger">
                             <input type="number" class="val" data-show="scale.burger" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="camera">CÂMERA</legend>
-                        <label><span>Distorção esférica</span>
+                        <label><span data-i18n="dist_esf">Distorção esférica</span>
                             <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">
                             <input type="number" class="val" data-show="behavior.barrel" /></label>
                     </fieldset>
@@ -267,7 +267,7 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_vfx">Todos aplicam live.</div>
                     <fieldset>
                         <legend data-i18n="time_of_day">TIME OF DAY</legend>
-                        <label><span>Time</span>
+                        <label><span data-i18n="time">Time</span>
                             <select data-cfg="fx.timeOfDay" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="dawn">Dawn</option>
                                 <option value="day">Day</option>
@@ -276,11 +276,11 @@ Object.assign(Jogo.prototype, {
                                 <option value="night">Night</option>
                                 <option value="midnight">Midnight</option>
                             </select></label>
-                        <label><span>Auto-cycle (60s/preset)</span><input type="checkbox" data-cfg="fx.timeAutoCycle"></label>
+                        <label><span data-i18n="auto_cycle">Auto-cycle (60s/preset)</span><input type="checkbox" data-cfg="fx.timeAutoCycle"></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="weather">WEATHER</legend>
-                        <label><span>Preset</span>
+                        <label><span data-i18n="preset">Preset</span>
                             <select data-cfg="fx.weather" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="clear">Clear</option>
                                 <option value="rain">Rain</option>
@@ -288,40 +288,40 @@ Object.assign(Jogo.prototype, {
                                 <option value="fog">Fog</option>
                                 <option value="storm">Storm (rain+fog+lightning)</option>
                             </select></label>
-                        <label><span>Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
+                        <label><span data-i18n="shuffle_prev">Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="chuva">CHUVA</legend>
-                        <label><span>Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
-                        <label><span>Intensidade (alpha)</span>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
+                        <label><span data-i18n="intensidade">Intensidade (alpha)</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
                             <input type="number" class="val" data-show="fx.chuvaIntensidade" /></label>
-                        <label><span>Frequência (gotas)</span>
+                        <label><span data-i18n="frequencia">Frequência (gotas)</span>
                             <input type="range" min="0" max="400" step="5" data-cfg="fx.chuvaCount">
                             <input type="number" class="val" data-show="fx.chuvaCount" /></label>
-                        <label><span>Ângulo (-1=esq, +1=dir)</span>
+                        <label><span data-i18n="angulo">Ângulo (-1=esq, +1=dir)</span>
                             <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
                             <input type="number" class="val" data-show="fx.chuvaAngulo" /></label>
-                        <label><span>Velocidade</span>
+                        <label><span data-i18n="velocidade">Velocidade</span>
                             <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
                             <input type="number" class="val" data-show="fx.chuvaVelocidade" /></label>
-                        <label><span>Comprimento traço</span>
+                        <label><span data-i18n="comp_traco">Comprimento traço</span>
                             <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.chuvaTamanho">
                             <input type="number" class="val" data-show="fx.chuvaTamanho" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="neblina">NEBLINA</legend>
-                        <label><span>Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
-                        <label><span>Intensidade</span>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
+                        <label><span data-i18n="intensidade">Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
                             <input type="number" class="val" data-show="fx.neblinaIntensidade" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="efeitos">EFEITOS</legend>
-                        <label><span>Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
-                        <label><span>Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
-                        <label><span>Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
-                        <label><span>Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span data-i18n="sparkles_beam">Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
+                        <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
+                        <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
+                        <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                     </fieldset>
                 </div>
 
@@ -330,12 +330,12 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_debug">Toggles aplicam ao reiniciar.</div>
                     <fieldset>
                         <legend data-i18n="entidades_onoff">ENTIDADES (ON/OFF)</legend>
-                        <label><span>Vacas</span><input type="checkbox" data-cfg="enabled.vacas"></label>
-                        <label><span>Bois</span><input type="checkbox" data-cfg="enabled.bois"></label>
-                        <label><span>Fazendeiros</span><input type="checkbox" data-cfg="enabled.fazendeiros"></label>
-                        <label><span>Atiradores (torres)</span><input type="checkbox" data-cfg="enabled.atiradores"></label>
-                        <label><span>Beam visual</span><input type="checkbox" data-cfg="enabled.beam"></label>
-                        <label><span>Cenário (cercas/moitas)</span><input type="checkbox" data-cfg="enabled.cenario"></label>
+                        <label><span data-i18n="vacas_e">Vacas</span><input type="checkbox" data-cfg="enabled.vacas"></label>
+                        <label><span data-i18n="bois_e">Bois</span><input type="checkbox" data-cfg="enabled.bois"></label>
+                        <label><span data-i18n="fazendeiros_e">Fazendeiros</span><input type="checkbox" data-cfg="enabled.fazendeiros"></label>
+                        <label><span data-i18n="atiradores_e">Atiradores (torres)</span><input type="checkbox" data-cfg="enabled.atiradores"></label>
+                        <label><span data-i18n="beam_e">Beam visual</span><input type="checkbox" data-cfg="enabled.beam"></label>
+                        <label><span data-i18n="cenario">Cenário (cercas/moitas)</span><input type="checkbox" data-cfg="enabled.cenario"></label>
                     </fieldset>
                 </div>
 
