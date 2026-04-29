@@ -205,9 +205,6 @@ Object.assign(Jogo.prototype, {
                             <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensibilidade" list="sens-ticks">
                             <datalist id="sens-ticks"><option value="1"></option><option value="1.25"></option><option value="1.5"></option></datalist>
                             <input type="number" class="val" data-show="behavior.sensibilidade" /></label>
-                        <label><span>Rotação disco</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.discoRot">
-                            <input type="number" class="val" data-show="behavior.discoRot" /></label>
                         <label><span>Força beam (pull)</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>

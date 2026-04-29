@@ -48,9 +48,9 @@ const TUT_STEPS = [
     {
         key: 'TAKE_DAMAGE',
         title: '⑧ TOMAR DANO',
-        text: 'Um atirador apareceu! Ele vai disparar contra você. Sua nave está PRESA até você tomar um tiro — assim você vê o combustível diminuir na prática.',
-        note: 'Aguarde tomar um tiro para a nave ser liberada.',
-        highlight: ['atirador', 'combustivel'],
+        text: 'A farmer appeared and will shoot at you! Your ship is FROZEN until you take a hit — so you see fuel decrease in practice.',
+        note: 'Wait for a hit to be released.',
+        highlight: ['fazendeiro', 'combustivel'],
     },
     {
         key: 'FARMER',
@@ -229,15 +229,14 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'TAKE_DAMAGE': {
-                // Trava nave + spawna 1 atirador perto (uma vez)
+                // Trava nave + spawna 1 fazendeiro perto que atira
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
-                    this._tutSpawnAtiradorPerto();
+                    this._tutSpawnFazendeiroAtirando();
                     this._tutAtiradorSpawned = true;
                     this._tutCombustivelAntes = this.combustivelAtual;
-                    this._tutCombustivelCongelado = true;  // sem drain passivo
+                    this._tutCombustivelCongelado = true;
                 }
-                // Aguarda tomar dano (combustivel desce abaixo do registrado)
                 if (this.combustivelAtual < (this._tutCombustivelAntes - 0.5)) {
                     this._tutFreezeNave = false;
                     if (canAdvance) this._tutAdvance();
@@ -323,15 +322,17 @@ Object.assign(Jogo.prototype, {
         ).length;
     },
 
-    // Atirador (torre) próximo da nave pra forçar tomar dano
-    _tutSpawnAtiradorPerto() {
-        const cx = this.nave.x + 320, cy = this.nave.y - 80;
-        const spr = this.add.image(cx, cy, 'atirador').setDepth(2).setScale(1.4);
-        if (this._attachSombra) this._attachSombra(spr, { rx: 22, ry: 8, alpha: 0.40, offY: 16, offX: 4 });
-        if (!this.atiradores) this.atiradores = [];
-        const at = { x: cx, y: cy, sprite: spr, cooldown: 600 };
-        this.atiradores.push(at);
-        this._tutAtiradorRef = at;
+    // Fazendeiro próximo da nave que atira (TAKE_DAMAGE step)
+    _tutSpawnFazendeiroAtirando() {
+        if (!this._criarFazendeiro) return;
+        const cx = this.nave.x + 280, cy = this.nave.y - 60;
+        this._criarFazendeiro(cx, cy);
+        // Pega ref do fazendeiro recém-criado e força cooldown curto pra atacar logo
+        const f = this.fazendeiros[this.fazendeiros.length - 1];
+        if (f) {
+            f._cooldown = 400;  // dispara em ~400ms
+            this._tutFarmerRef = f;
+        }
     },
 
     // Glow amarelo pulsante ao redor de coords (mundo ou tela)
