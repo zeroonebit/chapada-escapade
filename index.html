@@ -43,9 +43,48 @@
             }
             canvas { border-radius: 0; }
         }
+        /* Pre-Phaser loading screen */
+        #pre-loader {
+            position: fixed; inset: 0;
+            background: #050a04;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.4s ease;
+            font-family: 'Courier New', monospace;
+            color: #00ff55;
+        }
+        #pre-loader.fade { opacity: 0; pointer-events: none; }
+        #pre-loader-title {
+            font-size: 22px; font-weight: bold;
+            letter-spacing: 4px; margin-bottom: 26px;
+            text-shadow: 0 0 12px rgba(0,255,85,0.4);
+        }
+        #pre-loader-bar-bg {
+            width: 320px; height: 18px;
+            background: rgba(0,32,16,0.7);
+            border: 1.5px solid #00aa44;
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: 0 0 18px rgba(0,255,85,0.18);
+        }
+        #pre-loader-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #00cc44, #66ff99);
+            transition: width 0.18s ease-out;
+        }
+        #pre-loader-pct {
+            font-size: 12px; opacity: 0.7;
+            margin-top: 12px;
+        }
     </style>
 </head>
 <body>
+<div id="pre-loader">
+    <div id="pre-loader-title">CHAPADA ESCAPADE</div>
+    <div id="pre-loader-bar-bg"><div id="pre-loader-bar"></div></div>
+    <div id="pre-loader-pct">0%</div>
+</div>
 <div id="wrap"><div id="game-host"></div></div>
 
 <!-- ── MÓDULOS DO JOGO ────────────────────────────────────────────── -->
