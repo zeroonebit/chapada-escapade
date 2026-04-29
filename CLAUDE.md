@@ -33,6 +33,18 @@
 - **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
 - **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
+### 💾 Servidor de tools (`tools/gallery_server.py`) — porta 8090
+**8080 é reservada pro game.** Tools (gallery, persistência) rodam em **8090** por default. O server bloqueia se tentar 8080.
+
+Endpoints POST que gravam JSON em disco:
+- `POST /save_decisions` → `tools/saves/decisions.json` (+ history). Botão **Export** do `tools/asset_gallery.html` posta same-origin (gallery aberto em 8090).
+- `POST /save_configs` → `tools/saves/configs.json` (+ history). Auto-salvo pelo `_saveDebugCfg()` no `js/15_debug_menu.js` via cross-origin fetch pra `http://localhost:8090` (CORS habilitado, fire-and-forget, debounce 500ms — silencioso se 8090 não estiver rodando).
+- Histórico timestamped em `tools/saves/history/`.
+
+**Rodar 2 servers em paralelo:**
+- `python -m http.server 8080` (raiz) → game em http://localhost:8080
+- `python tools/gallery_server.py` (raiz, default 8090) → gallery em http://localhost:8090/tools/asset_gallery.html + endpoints
+
 ### ⚡ No INÍCIO de toda sessão, rodar:
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
 2. Não esperar o usuário pedir — fazer automático na primeira mensagem
