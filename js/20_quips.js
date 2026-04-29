@@ -83,15 +83,60 @@ const QUIP_COOLDOWN_SOURCE = {
 };
 const QUIP_GLOBAL_COOLDOWN = 3000;
 
+// Quips exclusivos do mobile teaser (saem do disco voador, PT-BR, vibe gamer)
+const MOBILE_QUIPS = [
+    'aliens não usam celular...',
+    'aliens preferem computadores, gamer!',
+    'WASD foi feito pra isso, parça',
+    'tela pequena, abdução pequena',
+    'mouse > swipe, sempre',
+    'nossa nave não cabe no seu bolso',
+    'no Marte, todo mundo joga no PC',
+];
+
 Object.assign(Jogo.prototype, {
 
     _setupQuips() {
         this._lastQuipT = 0;          // timestamp do ultimo quip global
         this._quipProxTimer = 0;      // throttle de proximity check (a cada 500ms)
+        // MOBILE_MODE: schedule recursivo de quip do disco a cada 10-15s.
+        // Quips normais (proximity, abduct, etc.) ficam silenciados.
+        if (window.__MOBILE_MODE) {
+            this._scheduleMobileQuip();
+        }
+    },
+
+    _scheduleMobileQuip() {
+        const delay = Phaser.Math.Between(10000, 15000);
+        this.time.delayedCall(delay, () => {
+            if (!this.ship || !this.ship.scene) return;
+            const line = MOBILE_QUIPS[Math.floor(Math.random() * MOBILE_QUIPS.length)];
+            const x = this.ship.x;
+            const y = this.ship.y - 60;
+            const txt = this.add.text(x, y, line, {
+                fontSize: '24px',
+                fill: '#ffaacc',
+                fontStyle: 'bold',
+                stroke: '#220011',
+                strokeThickness: 4,
+                fontFamily: '"VT323", "Courier New", monospace',
+                shadow: { color: '#ff5566', fill: false, blur: 10 },
+            }).setOrigin(0.5).setDepth(195);
+            this.tweens.add({
+                targets: txt,
+                y: y - 80,
+                alpha: { from: 1, to: 0 },
+                duration: 5500,
+                ease: 'Cubic.easeOut',
+                onComplete: () => { if (txt.scene) txt.destroy(); },
+            });
+            this._scheduleMobileQuip();  // re-schedule
+        });
     },
 
     // Mostra quip flutuante acima do target. Retorna true se conseguiu.
     _showQuip(target, category) {
+        if (window.__MOBILE_MODE) return false;  // mobile usa MOBILE_QUIPS dedicado
         if (!this.dbg?.fx?.quips) return false;
         const pool = QUIP_POOLS[category];
         if (!pool || !pool.length) return false;
@@ -136,6 +181,7 @@ Object.assign(Jogo.prototype, {
     // Proximity check (chamado do _updateBody throttled a 500ms).
     // Dispara quips de church/cactus quando player passa perto.
     _quipProximityCheck(delta) {
+        if (window.__MOBILE_MODE) return;  // mobile usa MOBILE_QUIPS dedicado
         if (!this.dbg?.fx?.quips) return;
         this._quipProxTimer = (this._quipProxTimer ?? 0) + delta;
         if (this._quipProxTimer < 500) return;
