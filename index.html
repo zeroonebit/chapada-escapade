@@ -60,10 +60,18 @@
         }
         #pre-loader.fade { opacity: 0; pointer-events: none; }
         #pre-loader-title {
-            font-size: 22px; font-weight: bold;
-            letter-spacing: 4px; margin-bottom: 26px;
-            text-shadow: 0 0 12px rgba(0,255,85,0.4);
+            text-align: center;
+            font-family: "VT323", "Courier New", monospace;
+            line-height: 0.92;
+            letter-spacing: 3px;
+            margin-bottom: 26px;
+            color: #00ff55;
+            text-shadow: 0 0 14px rgba(0,255,85,0.5);
+            animation: warn-blink 3.2s ease-in-out infinite;
         }
+        /* CHAPADA 20% menor que ESCAPADE (mantem dinamica visual) */
+        .title-chapada  { font-size: 30px; }
+        .title-escapade { font-size: 38px; }
         #pre-loader-bar-bg {
             width: 320px; height: 18px;
             background: rgba(0,32,16,0.7);
@@ -81,20 +89,19 @@
             font-size: 12px; opacity: 0.7;
             margin-top: 12px;
         }
-        /* Blink lento depressivo (mobile teaser title) */
+        /* Blink lento depressivo (aplicado em #pre-loader-title sempre) */
         @keyframes warn-blink {
             0%, 100% { opacity: 1; }
-            50%      { opacity: 0.32; }
-        }
-        .mobile-warn-title {
-            font-family: "VT323", "Courier New", monospace !important;
-            animation: warn-blink 3.2s ease-in-out infinite;
+            50%      { opacity: 0.42; }
         }
     </style>
 </head>
 <body>
 <div id="pre-loader">
-    <div id="pre-loader-title">CHAPADA ESCAPADE</div>
+    <div id="pre-loader-title">
+        <div class="title-chapada">CHAPADA</div>
+        <div class="title-escapade">ESCAPADE</div>
+    </div>
     <div id="pre-loader-bar-bg"><div id="pre-loader-bar"></div></div>
     <div id="pre-loader-pct">0%</div>
 </div>
@@ -106,7 +113,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429x';
+    const V = '20260429y';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -114,18 +121,17 @@
     const blockMobile = smallScreen || touchSmall;
 
     if (blockMobile) {
-        // ── MOBILE: titulo CHAPADA ESCAPADE persistente sobre o jogo ──
-        // O preloader vira overlay permanente apos carga (pointer-events none
-        // pra UFO passar por baixo). Ver 02_preload.js complete callback.
+        // ── MOBILE: titulo persistente sobre o jogo, paleta vermelha ──
+        // Layout vem do CSS (text-align center, VT323, blink). Aqui so
+        // troca cores e bumpa tamanhos pra mobile (mantem ratio 80%).
         const t = document.getElementById('pre-loader-title');
-        t.innerHTML = 'CHAPADA<br/>ESCAPADE';
-        t.classList.add('mobile-warn-title');     // VT323 + slow blink
-        t.style.fontSize = '54px';                // VT323 mais magra -> maior
-        t.style.letterSpacing = '4px';
-        t.style.lineHeight = '0.95';
         t.style.color = '#ff5566';
         t.style.textShadow = '0 0 18px rgba(255,80,80,0.75), 0 0 4px rgba(255,80,80,0.95)';
         t.style.marginBottom = '20px';
+        const tCha = t.querySelector('.title-chapada');
+        const tEsc = t.querySelector('.title-escapade');
+        if (tCha) tCha.style.fontSize = '44px';   // 80% de ESCAPADE
+        if (tEsc) tEsc.style.fontSize = '55px';
 
         const preLoader = document.getElementById('pre-loader');
         preLoader.style.color = '#ff5566';
