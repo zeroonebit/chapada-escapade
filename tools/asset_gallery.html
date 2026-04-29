@@ -119,17 +119,25 @@
   .dir-slot.exists{border-color:#3da53d;}
   .dir-slot.missing{border-style:dashed;color:#9fcfe8;}
   .dir-slot.queued{border-color:#a85ba8;color:#fff;background:#a85ba8;}
-  /* Posições compass — slots ficam FORA do frame */
-  .dir-NW{top:8px;left:8px;}
-  .dir-N{top:8px;left:50%;transform:translateX(-50%);}
-  .dir-NE{top:8px;right:8px;}
-  .dir-W{top:50%;left:8px;transform:translateY(-50%);}
-  .dir-E{top:50%;right:8px;transform:translateY(-50%);}
-  .dir-SW{bottom:8px;left:8px;}
-  .dir-S{bottom:8px;left:50%;transform:translateX(-50%);}
-  .dir-SE{bottom:8px;right:8px;}
-  .dir-N:hover, .dir-S:hover{transform:translateX(-50%) scale(1.08);}
-  .dir-W:hover, .dir-E:hover{transform:translateY(-50%) scale(1.08);}
+  /* Slots DENTRO da viewport, indentados em direção ao centro */
+  .visualizer .dir-overlay{position:absolute;inset:0;pointer-events:none;}
+  .dir-NW{top:32px;left:32px;}
+  .dir-N{top:14px;left:50%;transform:translateX(-50%);}
+  .dir-NE{top:32px;right:32px;}
+  .dir-W{top:50%;left:14px;transform:translateY(-50%);}
+  .dir-E{top:50%;right:14px;transform:translateY(-50%);}
+  .dir-SW{bottom:32px;left:32px;}
+  .dir-S{bottom:14px;left:50%;transform:translateX(-50%);}
+  .dir-SE{bottom:32px;right:32px;}
+  .dir-N:hover, .dir-S:hover{transform:translateX(-50%) scale(1.12);}
+  .dir-W:hover, .dir-E:hover{transform:translateY(-50%) scale(1.12);}
+  /* Name overlay no canto superior esquerdo da visualizer */
+  .visualizer .name-overlay{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.78);padding:4px 10px;border-radius:3px;font-size:12px;color:#f4c95d;font-weight:bold;z-index:8;pointer-events:none;}
+  /* Preview area abaixo da visualizer — mostra direção ao hover de slot existente */
+  .dir-preview{position:relative;width:480px;height:480px;margin:14px auto 0;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:none;align-items:center;justify-content:center;image-rendering:pixelated;}
+  .dir-preview.show{display:flex;}
+  .dir-preview img{max-width:90%;max-height:90%;image-rendering:pixelated;}
+  .dir-preview .preview-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.78);padding:4px 10px;border-radius:3px;font-size:12px;color:#9fcfe8;font-weight:bold;}
   .meta{font-size:11px;line-height:1.6;text-align:center;max-width:480px;}
   .meta strong{color:#f4c95d;font-size:13px;}
   .detail-main .meta{font-size:11px;line-height:1.6;}
@@ -1264,15 +1272,18 @@ function renderDetailMain(){
   let html = `
     <div class="preview">
       <div class="visualizer">
+        <div class="name-overlay">${a.name}</div>
         <img class="main-sprite" src="${a.path}" alt="${a.name}">
         <div class="dir-overlay">${dirSlots}</div>
       </div>
+      <div class="dir-preview" id="dirPreview">
+        <div class="preview-label" id="dirPreviewLabel"></div>
+        <img id="dirPreviewImg" alt="">
+      </div>
       <div class="meta">
-        <div><strong>${a.name}</strong></div>
         <div>path: ${a.path}</div>
-        <div>id: ${a.id||'(unknown)'}</div>
-        <div>target: ${a.target||'-'}</div>
-        <div style="margin-top:8px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Click <strong>+</strong> nos slots vazios pra enfileirar geração via MCP.</div>
+        <div>id: ${a.id||'(unknown)'} · target: ${a.target||'-'}</div>
+        <div style="margin-top:6px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Hover slot com sprite → preview grande abaixo. Click <strong>+</strong> em slots vazios pra gerar via MCP.</div>
       </div>
     </div>`;
   // 4 sections de tools serão geradas em sectionsHtml separadamente
@@ -1342,6 +1353,25 @@ function renderDetailMain(){
   containers.forEach(c => c.querySelectorAll('.qbtn').forEach(b => {
     b.onclick = () => queueTool(b.dataset.queue);
   }));
+  // Wire hover nos dir-slots existentes pra preview grande abaixo
+  bodyEl.querySelectorAll('.dir-slot.exists').forEach(slot => {
+    slot.onmouseenter = () => {
+      const img = slot.querySelector('img');
+      if(!img) return;
+      const preview = $("dirPreview");
+      const previewImg = $("dirPreviewImg");
+      const previewLabel = $("dirPreviewLabel");
+      if(preview && previewImg){
+        previewImg.src = img.src;
+        if(previewLabel) previewLabel.textContent = slot.dataset.dir;
+        preview.classList.add('show');
+      }
+    };
+    slot.onmouseleave = () => {
+      const preview = $("dirPreview");
+      if(preview) preview.classList.remove('show');
+    };
+  });
   // Wire click nos dir-slots (missing → queue gen, existing → seleciona aquele asset)
   bodyEl.querySelectorAll('.dir-slot').forEach(slot => {
     slot.onclick = () => {
