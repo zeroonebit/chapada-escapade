@@ -2,78 +2,154 @@
 // quando player abduz/mata/passa perto de coisas. Toggle em dbg.fx.quips.
 
 const QUIP_POOLS = {
-    farmer: [
-        'One beam away from bankruptcy.',
-        'We had cows. Now we have questions.',
-        'This escalated quickly.',
-        'Your cattle are not insured.',
-        'Keep calm and watch the sky.',
-    ],
-    ufo: [
-        'They came in peace. They left with livestock.',
-        'First contact, worst timing.',
-        'Aliens don\'t tip.',
-        'Intergalactic hunger management.',
-        'The sky is hungry.',
-        'Abduction zone.',
-        'Stand here for problems.',
-        'No refunds.',
-        'Look up.',
-        'You\'re next.',
-    ],
-    cow: [
-        'Cows up. Burgers down.',
-        'You can\'t grill what you can\'t keep.',
-        'From pasture to platter… via outer space.',
-        'Milk today, gone tomorrow.',
-        'Not on the menu.',
-    ],
-    dairy: [
-        'Milk today, gone tomorrow.',
-        'Fresh supply interrupted.',
-        'Dairy situation unstable.',
-        'Contents may vanish.',
-        'Not pasteurized. Not safe.',
-    ],
-    fence: [
-        'This is why you fence your cows.',
-        'Boundary not respected.',
-        'Do not cross. Seriously.',
-        'We tried.',
-        'Next upgrade: roof.',
-    ],
-    burger: [
-        'Not on the menu.',
-        'Fresh beef, questionable origin.',
-        'You can\'t grill what you can\'t keep.',
-        'Now serving: confusion.',
-        'Order canceled.',
-    ],
-    church: [
-        'Pray for the cattle.',
-        'Something\'s not right.',
-        'Even God saw that.',
-        'We need help.',
-        'This wasn\'t in the Bible.',
-    ],
-    cactus: [
-        'Seen worse.',
-        'Not my problem.',
-        'Still standing.',
-        'Happens every week.',
-        'Tourists…',
-    ],
-    generic: [
-        'No one ordered this.',
-        'Keep calm and watch the sky.',
-        'Welcome to the food chain.',
-        'Locally raised. Globally stolen.',
-        'Fresh beef, questionable origin.',
-        'They saw cows. They saw potential.',
-        'Abduct first. Cook later.',
-        'Beam it. Grill it. Regret it.',
-        'The harvest got hijacked.',
-    ],
+    en: {
+        farmer: [
+            'One beam away from bankruptcy.',
+            'We had cows. Now we have questions.',
+            'This escalated quickly.',
+            'Your cattle are not insured.',
+            'Keep calm and watch the sky.',
+        ],
+        ufo: [
+            'They came in peace. They left with livestock.',
+            'First contact, worst timing.',
+            'Aliens don\'t tip.',
+            'Intergalactic hunger management.',
+            'The sky is hungry.',
+            'Abduction zone.',
+            'Stand here for problems.',
+            'No refunds.',
+            'Look up.',
+            'You\'re next.',
+        ],
+        cow: [
+            'Cows up. Burgers down.',
+            'You can\'t grill what you can\'t keep.',
+            'From pasture to platter… via outer space.',
+            'Milk today, gone tomorrow.',
+            'Not on the menu.',
+        ],
+        dairy: [
+            'Milk today, gone tomorrow.',
+            'Fresh supply interrupted.',
+            'Dairy situation unstable.',
+            'Contents may vanish.',
+            'Not pasteurized. Not safe.',
+        ],
+        fence: [
+            'This is why you fence your cows.',
+            'Boundary not respected.',
+            'Do not cross. Seriously.',
+            'We tried.',
+            'Next upgrade: roof.',
+        ],
+        burger: [
+            'Not on the menu.',
+            'Fresh beef, questionable origin.',
+            'You can\'t grill what you can\'t keep.',
+            'Now serving: confusion.',
+            'Order canceled.',
+        ],
+        church: [
+            'Pray for the cattle.',
+            'Something\'s not right.',
+            'Even God saw that.',
+            'We need help.',
+            'This wasn\'t in the Bible.',
+        ],
+        cactus: [
+            'Seen worse.',
+            'Not my problem.',
+            'Still standing.',
+            'Happens every week.',
+            'Tourists…',
+        ],
+        generic: [
+            'No one ordered this.',
+            'Keep calm and watch the sky.',
+            'Welcome to the food chain.',
+            'Locally raised. Globally stolen.',
+            'Fresh beef, questionable origin.',
+            'They saw cows. They saw potential.',
+            'Abduct first. Cook later.',
+            'Beam it. Grill it. Regret it.',
+            'The harvest got hijacked.',
+        ],
+    },
+    pt: {
+        farmer: [
+            'Mais um feixe e tô falido.',
+            'Tinha vaca. Agora só pergunta.',
+            'Isso escalou rápido.',
+            'Seu gado não tá no seguro.',
+            'Mantenha a calma e olhe pra cima.',
+        ],
+        ufo: [
+            'Vieram em paz. Saíram com o gado.',
+            'Primeiro contato, pior hora.',
+            'Alien não dá gorjeta.',
+            'Gestão intergaláctica da fome.',
+            'O céu tá com fome.',
+            'Zona de abdução.',
+            'Fique aqui pra ter problemas.',
+            'Sem reembolso.',
+            'Olha pra cima.',
+            'Você é o próximo.',
+        ],
+        cow: [
+            'Vacas pra cima. Hambúrguer pra baixo.',
+            'Não dá pra grelhar o que você não segura.',
+            'Do pasto pro prato… via espaço sideral.',
+            'Leite hoje, sumido amanhã.',
+            'Não tá no cardápio.',
+        ],
+        dairy: [
+            'Leite hoje, sumido amanhã.',
+            'Suprimento fresco interrompido.',
+            'Situação láctea instável.',
+            'Conteúdo pode sumir.',
+            'Não pasteurizado. Não seguro.',
+        ],
+        fence: [
+            'É por isso que você cerca o gado.',
+            'Limite não respeitado.',
+            'Não atravesse. Sério.',
+            'A gente tentou.',
+            'Próximo upgrade: teto.',
+        ],
+        burger: [
+            'Não tá no cardápio.',
+            'Carne fresca, origem duvidosa.',
+            'Não dá pra grelhar o que você não segura.',
+            'Servindo agora: confusão.',
+            'Pedido cancelado.',
+        ],
+        church: [
+            'Reze pelo gado.',
+            'Tem algo errado.',
+            'Até Deus viu isso.',
+            'Precisamos de ajuda.',
+            'Isso não tava na Bíblia.',
+        ],
+        cactus: [
+            'Já vi pior.',
+            'Não é meu problema.',
+            'Ainda de pé.',
+            'Acontece toda semana.',
+            'Turistas…',
+        ],
+        generic: [
+            'Ninguém pediu isso.',
+            'Mantenha a calma e olhe pra cima.',
+            'Bem-vindo à cadeia alimentar.',
+            'Criado local. Roubado global.',
+            'Carne fresca, origem duvidosa.',
+            'Viram vacas. Viram potencial.',
+            'Abduz primeiro. Cozinha depois.',
+            'Feixa. Grelha. Se arrepende.',
+            'A colheita foi sequestrada.',
+        ],
+    },
 };
 
 // Cooldowns (ms): por categoria de source + global
@@ -84,17 +160,30 @@ const QUIP_COOLDOWN_SOURCE = {
 const QUIP_GLOBAL_COOLDOWN = 3000;
 
 // Quips exclusivos do mobile teaser (saem do disco voador)
-const MOBILE_QUIPS = [
-    'Martians don\'t have phones. Only PCs',
-    'Venusians tried mobile. It didn\'t work.',
-    'No signal on Mercury.',
-    'Aliens don\'t text. They click.',
-    'PC only. Even off-world.',
-    'Mobile users were abducted first.',
-    'The Aliens from Jupiter prefer ultra settings.',
-    'Touchscreens don\'t survive reentry.',
-    'They crossed galaxies. Not platforms.',
-];
+const MOBILE_QUIPS = {
+    en: [
+        'Martians don\'t have phones. Only PCs',
+        'Venusians tried mobile. It didn\'t work.',
+        'No signal on Mercury.',
+        'Aliens don\'t text. They click.',
+        'PC only. Even off-world.',
+        'Mobile users were abducted first.',
+        'The Aliens from Jupiter prefer ultra settings.',
+        'Touchscreens don\'t survive reentry.',
+        'They crossed galaxies. Not platforms.',
+    ],
+    pt: [
+        'Marciano não tem celular. Só PC.',
+        'Venusiano tentou mobile. Não rolou.',
+        'Sem sinal em Mercúrio.',
+        'Alien não digita. Clica.',
+        'Só PC. Até fora do planeta.',
+        'Os do celular foram abduzidos primeiro.',
+        'Os de Júpiter jogam no ultra.',
+        'Touchscreen não sobrevive reentrada.',
+        'Cruzaram galáxias. Não plataformas.',
+    ],
+};
 
 Object.assign(Jogo.prototype, {
 
@@ -112,7 +201,9 @@ Object.assign(Jogo.prototype, {
         const delay = Phaser.Math.Between(10000, 15000);
         this.time.delayedCall(delay, () => {
             if (!this.ship || !this.ship.scene) return;
-            const line = MOBILE_QUIPS[Math.floor(Math.random() * MOBILE_QUIPS.length)];
+            const lang = this.dbg?.behavior?.lang || 'en';
+            const pool = MOBILE_QUIPS[lang] || MOBILE_QUIPS.en;
+            const line = pool[Math.floor(Math.random() * pool.length)];
             const x = this.ship.x;
             const y = this.ship.y - 60;
             const txt = this.add.text(x, y, line, {
@@ -140,7 +231,8 @@ Object.assign(Jogo.prototype, {
     _showQuip(target, category) {
         if (window.__MOBILE_MODE) return false;  // mobile usa MOBILE_QUIPS dedicado
         if (!this.dbg?.fx?.quips) return false;
-        const pool = QUIP_POOLS[category];
+        const lang = this.dbg?.behavior?.lang || 'en';
+        const pool = (QUIP_POOLS[lang] || QUIP_POOLS.en)[category];
         if (!pool || !pool.length) return false;
         const now = this.time?.now ?? 0;
 
