@@ -298,6 +298,7 @@
       <div class="editor-bar" id="editorBar" hidden>
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
+        <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
         <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
         <label style="font-size:11px;color:#a89368;">VIEW:</label>
         <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
@@ -1249,6 +1250,106 @@ async function regenCellImage(cellState){
   return cellState.current;
 }
 
+// Auto-sort: classifica cada tile pelos 4 cantos e reordena automaticamente
+async function autoSortTiles(){
+  if(!tileEditState) return;
+  $("editorHint").textContent = '🔍 Analisando…';
+  // Carrega imagens com pixel data
+  const tiles = await Promise.all(tileEditState.cells.map(c => c?.current ? new Promise(res => {
+    const i = new Image();
+    i.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = i.naturalWidth; cv.height = i.naturalHeight;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(i, 0, 0);
+      const w = i.naturalWidth, h = i.naturalHeight;
+      // amostra região 3x3 perto do canto exato (mais robusto que single pixel)
+      const sampleRegion = (cx, cy) => {
+        let r=0, g=0, b=0, n=0;
+        for(let dx=-1; dx<=1; dx++){
+          for(let dy=-1; dy<=1; dy++){
+            const x = Math.max(0, Math.min(w-1, cx+dx));
+            const y = Math.max(0, Math.min(h-1, cy+dy));
+            const d = ctx.getImageData(x, y, 1, 1).data;
+            r += d[0]; g += d[1]; b += d[2]; n++;
+          }
+        }
+        return [r/n, g/n, b/n];
+      };
+      const margin = Math.max(1, Math.floor(w * 0.08)); // 8% do canto absoluto
+      res({
+        ref: c,
+        NW: sampleRegion(margin, margin),
+        NE: sampleRegion(w - 1 - margin, margin),
+        SE: sampleRegion(w - 1 - margin, h - 1 - margin),
+        SW: sampleRegion(margin, h - 1 - margin),
+      });
+    };
+    i.onerror = () => res(null);
+    i.src = c.current;
+  }) : null));
+
+  // Variance score por tile (uniformidade entre 4 cantos)
+  const variance = (s) => {
+    const ks = ['NW','NE','SE','SW'];
+    const avg = [0,0,0]; ks.forEach(k => { for(let i=0;i<3;i++) avg[i] += s[k][i]; });
+    avg.forEach((v,i) => avg[i] = v/4);
+    let v = 0;
+    ks.forEach(k => { for(let i=0;i<3;i++) v += (s[k][i] - avg[i])**2; });
+    return {v, avg};
+  };
+  const scored = tiles.map((s, idx) => s ? {idx, ...variance(s), s} : null).filter(Boolean);
+
+  // Pega o mais uniforme = ref1
+  scored.sort((a,b) => a.v - b.v);
+  const ref1 = scored[0];
+  // Pega o próximo mais uniforme cuja cor é DIFERENTE da ref1
+  let ref2 = null;
+  for(let i=1; i<scored.length; i++){
+    const dist = (scored[i].avg[0]-ref1.avg[0])**2 + (scored[i].avg[1]-ref1.avg[1])**2 + (scored[i].avg[2]-ref1.avg[2])**2;
+    if(dist > 3000){ ref2 = scored[i]; break; }
+  }
+  if(!ref2){ $("editorHint").textContent = '⚠ não detectou 2 cores distintas'; return; }
+
+  // Quem é lower? Heuristica: o de luminância mais escura (sand/dirt vs grass/water tipicamente)
+  const lum = (rgb) => 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2];
+  const lowerRef = lum(ref1.avg) < lum(ref2.avg) ? ref1.avg : ref2.avg;
+  const upperRef = lowerRef === ref1.avg ? ref2.avg : ref1.avg;
+
+  // Classifica cada tile
+  const classifyCorner = (rgb) => {
+    const dL = (rgb[0]-lowerRef[0])**2 + (rgb[1]-lowerRef[1])**2 + (rgb[2]-lowerRef[2])**2;
+    const dU = (rgb[0]-upperRef[0])**2 + (rgb[1]-upperRef[1])**2 + (rgb[2]-upperRef[2])**2;
+    return dU < dL ? 1 : 0;
+  };
+
+  const placed = new Array(16).fill(null);
+  const conflicts = [];
+  tiles.forEach((s, idx) => {
+    if(!s) return;
+    const nw = classifyCorner(s.NW);
+    const ne = classifyCorner(s.NE);
+    const se = classifyCorner(s.SE);
+    const sw = classifyCorner(s.SW);
+    const bits = nw + ne*2 + se*4 + sw*8;
+    if(placed[bits] === null){
+      placed[bits] = s.ref;
+    } else {
+      conflicts.push({bits, idx});
+    }
+  });
+
+  const filled = placed.filter(x => x !== null).length;
+  // Slots vazios mantem o tile que estava lá antes
+  for(let i=0; i<16; i++){
+    if(placed[i] === null) placed[i] = tileEditState.cells[i];
+  }
+  tileEditState.cells = placed;
+  if(editorMode) await rerenderEditorGrid();
+  renderTestMap();
+  $("editorHint").textContent = `🔍 Auto-sorted · ${filled}/16 classified · ${conflicts.length} conflicts · lower=rgb(${lowerRef.map(v=>Math.round(v)).join(',')})`;
+}
+
 // Aplica correções salvas em tools/saves/wang_corrections.json (se houver pra esse preset)
 async function applyStoredCorrections(presetId){
   if(!tileEditState || tileEditState.presetId !== presetId) return;
@@ -1718,6 +1819,7 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnViewFull'){ viewMode = 'full'; renderTiles(); }
   if(e.target.id === 'btnViewReduced'){ viewMode = 'reduced-r'; renderTiles(); }
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
+  if(e.target.id === 'btnAutoSort') autoSortTiles();
   if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
   if(e.target.id === 'btnSaveCorrected'){
     if(!tileEditState) return;
