@@ -32,11 +32,11 @@ Object.assign(Jogo.prototype, {
             this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
             this.fuelBar = this.hud.combFill;
         }
-        // PNG v2 já tem label "COMBUSTÍVEL" baked → overlay Phaser hidden por padrão
-        // (i18n FUEL/EN só funcionará após re-slice das PNGs — ver docs/TODO_HUD.md)
-        this.hud.combLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2).setVisible(false);
-        this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
-            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5).setVisible(false);
+        // PNG v3 tem area do label limpa (solid black) → overlay Phaser desenha
+        // FUEL/COMBUSTIVEL dinamico (i18n via _applyHudI18n)
+        this.hud.combLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
+        this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
+            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
 
         // ── Barra Graviton (v2 mesma lógica) ─────────────────────────
         const ENE_W = 290, ENE_H = 72;
@@ -49,10 +49,10 @@ Object.assign(Jogo.prototype, {
             this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
             this.energyBar = this.hud.eneFill;
         }
-        // Idem combustível — label "GRAVITON" baked no PNG v2, overlay hidden
-        this.hud.eneLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2).setVisible(false);
-        this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
-            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5).setVisible(false);
+        // Idem combustivel — PNG v3 com area limpa, overlay Phaser visivel
+        this.hud.eneLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
+        this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
+            .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
 
         // Hint inicial removido — tutorial cobre instruções de input.
 
@@ -98,12 +98,13 @@ Object.assign(Jogo.prototype, {
         this._eneBar  = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
         this._combBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
 
-        // Labels above das barras (pintura preta cobre label baked, texto Phaser by cima)
+        // Labels sobre area limpa do PNG v3 (offset -20 do centro do bar
+        // bate com bbox do label no source @ scale 1.24-1.33)
         if (this.hud.eneLabel) {
-            this.hud.eneLabelBg.setPosition(w/2, ENE_Y - 22);
-            this.hud.eneLabel.setPosition(w/2, ENE_Y - 22);
-            this.hud.combLabelBg.setPosition(w/2, PAC_Y - 22);
-            this.hud.combLabel.setPosition(w/2, PAC_Y - 22);
+            this.hud.eneLabelBg.setPosition(w/2, ENE_Y - 20);
+            this.hud.eneLabel.setPosition(w/2, ENE_Y - 20);
+            this.hud.combLabelBg.setPosition(w/2, PAC_Y - 20);
+            this.hud.combLabel.setPosition(w/2, PAC_Y - 20);
         }
 
         // Hint inicial
@@ -112,27 +113,41 @@ Object.assign(Jogo.prototype, {
             this.hud.hint.setPosition(w/2, h/2 + 60);
         }
 
-        // Radar — Graphics-based (versão original) with decay system novo
-        const R = 70, PAD = 14;
-        const rx = PAD + R, ry = h - R - PAD - 58 + R/2;
+        // Radar v2 — sprite steampunk (radar_frame_v2.png) + sweep/blips por cima
+        // Source 254x254, inner dial r=73, frame ring 73-108. Display 240x240
+        // → inner ~69px → uso R=68 pra blips ficarem dentro com folga.
+        const R = 68, FRAME_DISPLAY = 240, PAD = 14;
+        const rx = PAD + FRAME_DISPLAY/2, ry = h - FRAME_DISPLAY/2 - PAD - 58 + FRAME_DISPLAY/4;
         this._mini = { cx: rx, cy: ry, r: R };
 
-        // Hides o sprite frame se existir (não usado nessa versão)
+        // Cria sprite do radar v2 (lazy — primeira vez ou apos resize)
+        if (!this.hud.radarFrameV2 && this.textures.exists('hud_radar_frame_v2')) {
+            this.hud.radarFrameV2 = this.add.image(rx, ry, 'hud_radar_frame_v2')
+                .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_DISPLAY, FRAME_DISPLAY);
+        } else if (this.hud.radarFrameV2) {
+            this.hud.radarFrameV2.setPosition(rx, ry).setDisplaySize(FRAME_DISPLAY, FRAME_DISPLAY);
+        }
+
+        // Hide o sprite radar antigo se existir (radar_frame.png v1)
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
-        // Redesenha o fundo (estático — only muda no resize)
+        // Fundo (depth 199 — abaixo do sprite que tem semi-transparencia no centro):
+        // fica como manchinha escura interna pra contrastar blips claros
         this.hud.miniBg.clear();
-        this.hud.miniBg.fillStyle(0x000a04, 0.82);
-        this.hud.miniBg.fillCircle(rx, ry, R);
-        // Círculos concêntricos
-        [0.33, 0.66, 1.0].forEach(f => {
-            this.hud.miniBg.lineStyle(f === 1.0 ? 1.5 : 0.8, 0x00ff55, f === 1.0 ? 0.8 : 0.25);
-            this.hud.miniBg.strokeCircle(rx, ry, R * f);
-        });
-        // Cruz central
-        this.hud.miniBg.lineStyle(0.8, 0x00ff55, 0.2);
-        this.hud.miniBg.lineBetween(rx - R, ry, rx + R, ry);
-        this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
+        if (!this.hud.radarFrameV2) {
+            // Fallback: sem sprite, desenha graphics original (concentric circles)
+            this.hud.miniBg.fillStyle(0x000a04, 0.82);
+            this.hud.miniBg.fillCircle(rx, ry, R);
+            [0.33, 0.66, 1.0].forEach(f => {
+                this.hud.miniBg.lineStyle(f === 1.0 ? 1.5 : 0.8, 0x00ff55, f === 1.0 ? 0.8 : 0.25);
+                this.hud.miniBg.strokeCircle(rx, ry, R * f);
+            });
+            this.hud.miniBg.lineStyle(0.8, 0x00ff55, 0.2);
+            this.hud.miniBg.lineBetween(rx - R, ry, rx + R, ry);
+            this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
+        }
+        // miniGfx (sweep + blips) — depth 200 acima do sprite
+        if (this.hud.miniGfx) this.hud.miniGfx.setDepth(200);
     },
 
     // Shows/hides as barras de fuel e graviton (usado pelo tutorial)
