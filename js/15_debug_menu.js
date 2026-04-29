@@ -1,5 +1,5 @@
-// 15_debug_menu.js — Painel DOM com abas: CONTROLES / LOOKS / VFX / DEBUG
-// Aparece com a pausa (ESC). Salva em localStorage.
+// 15_debug_menu.js — Painel DOM with abas: CONTROLES / LOOKS / VFX / DEBUG
+// Aparece with a pausa (ESC). Saves em localStorage.
 // Behavior + barrel aplicam live; ENTIDADES/LOOKS/QUANTIDADES exigem reiniciar.
 const DBG_KEY = 'chapEscapadeDebug';
 
@@ -69,7 +69,7 @@ const DBG_DEFAULTS = {
         burger: 1.0,
     },
     behavior: {
-        sensibilidade: 1.0,  // multiplicador da força da nave (live)
+        sensibilidade: 1.0,  // multiplicador da força da ship (live)
         pullBeam:      0.5,
         velVaca:       1.0,
         velFaz:        1.0,
@@ -86,7 +86,7 @@ const DBG_DEFAULTS = {
     fx: {
         chuva:              false,
         chuvaIntensidade:   0.5,
-        chuvaAngulo:        0.3,   // -1..1 (negativo = pra esquerda)
+        chuvaAngulo:        0.3,   // -1..1 (negativo = to esquerda)
         chuvaVelocidade:    1.0,   // 0.2..3 multiplicador
         chuvaTamanho:       1.0,   // 0.3..3 mult. do comprimento da gota
         chuvaCount:         80,    // 0..400 frequência (qty de gotas)
@@ -97,9 +97,9 @@ const DBG_DEFAULTS = {
         explosaoBoa:        true,
         wangtiles:          false,
         timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
-        timeAutoCycle:      false,     // ciclo auto a cada 60s
+        timeAutoCycle:      false,     // ciclo auto a each 60s
         weather:            'clear',   // clear|rain|snow|fog|storm
-        weatherShuffle:     false,     // PREVIEW aleatoriza weather+TOD a cada click
+        weatherShuffle:     false,     // PREVIEW aleatoriza weather+TOD a each click
         snow:               false,
         snowCount:          100,       // 0..400 flocos
         snowIntensidade:    0.85,      // 0..1 alpha
@@ -123,7 +123,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // M7: debounce 500ms — slider drag dispara setItem ~10x/s sem isso
+    // M7: debounce 500ms — slider drag dispara setItem ~10x/s without isso
     _saveDebugCfg() {
         if (!this.dbg) return;
         if (this._saveDbgTimer) clearTimeout(this._saveDbgTimer);
@@ -365,7 +365,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Bind inputs (range / checkbox / number sem .val)
+        // Bind inputs (range / checkbox / number without .val)
         root.querySelectorAll('input[data-cfg]').forEach(input => {
             const [section, key] = input.dataset.cfg.split('.');
             const v = this.dbg[section][key];
@@ -378,7 +378,7 @@ Object.assign(Jogo.prototype, {
             const display = root.querySelector(`input.val[data-show="${input.dataset.cfg}"]`);
             if (display) {
                 display.value = (typeof v === 'number') ? v.toFixed(2) : v;
-                // Copia step/min/max do slider pro number input pra UX consistente
+                // Copia step/min/max do slider pro number input to UX consistente
                 if (input.type === 'range') {
                     display.step = input.step;
                     display.min  = input.min;
@@ -401,7 +401,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Bind dos number inputs editaveis (.val) — usuario digita -> atualiza slider + dbg
+        // Bind dos number inputs editaveis (.val) — usuario digita -> updates slider + dbg
         root.querySelectorAll('input.val[data-show]').forEach(numInp => {
             const cfg = numInp.dataset.show;
             const [section, key] = cfg.split('.');
@@ -421,7 +421,7 @@ Object.assign(Jogo.prototype, {
                 numInp.value = val.toFixed(2);
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
             };
-            numInp.addEventListener('change', apply);  // confirma com Enter ou blur
+            numInp.addEventListener('change', apply);  // confirma with Enter ou blur
             numInp.addEventListener('blur', apply);
         });
 
@@ -442,14 +442,14 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Aplica i18n inicial baseado no lang salvo
+        // Applies i18n inicial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
 
-        // PREVIEW: 5s timeslice — esconde menu + inimigos pra você ver o mood escolhido
-        // Shuffle ON: aleatoriza weather + TOD a cada click. Após 5s, restaura tudo e reabre menu.
+        // PREVIEW: 5s timeslice — hides menu + enemies to você ver o mood escolhido
+        // Shuffle ON: aleatoriza weather + TOD a each click. Após 5s, restaura tudo e reabre menu.
         document.getElementById('dbg-preview').addEventListener('click', () => {
             this._tutPreviewActive = true;
-            // Safety: reset flag depois de 6s mesmo que algo falhe
+            // Safety: reset flag after de 6s same que algo falhe
             this.time.delayedCall(6000, () => { this._tutPreviewActive = false; });
 
             // Shuffle: random weather + TOD
@@ -463,7 +463,7 @@ Object.assign(Jogo.prototype, {
                 if (this._applyAtmosphere) this._applyAtmosphere();
             }
 
-            // Snapshot do estado atual pra restaurar depois
+            // Snapshot do estado atual to restaurar after
             const inSplash = !this.gameStarted;
             const snap = {
                 inSplash,
@@ -481,7 +481,7 @@ Object.assign(Jogo.prototype, {
             snap.farmers.forEach(f => f && f.scene && f.setVisible(false));
             snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(false));
             snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(false));
-            // Despausa pra atmosfera/chuva animarem
+            // Despausa to atmosfera/rain animarem
             this.paused = false;
             this.matter.world.enabled = true;
             if (this.pauseOverlay) this.pauseOverlay.setVisible(false);
@@ -489,7 +489,7 @@ Object.assign(Jogo.prototype, {
             if (this.pauseLabel)   this.pauseLabel.setVisible(false);
             if (this.pauseHint)    this.pauseHint.setVisible(false);
 
-            // 5s depois: restaura
+            // 5s after: restaura
             this.time.delayedCall(5000, () => {
                 this._tutPreviewActive = false;
                 snap.splash.forEach(o  => o && o.scene && o.setVisible(true));
@@ -519,7 +519,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    // Atualiza textos do menu pelo lang escolhido (data-i18n="key")
+    // Updates textos do menu pelo lang escolhido (data-i18n="key")
     _applyMenuI18n() {
         const lang = this.dbg?.behavior?.lang || 'en';
         const dict = MENU_I18N[lang] || MENU_I18N.en;

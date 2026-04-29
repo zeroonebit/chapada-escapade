@@ -1,6 +1,6 @@
-// 14_grass_patch.js — Patch de grama interativo via Verlet integration (cloth sim).
-// Cada blade é uma string vertical de points conectados por constraints rígidas.
-// Mouse aplica força com falloff por distância. Vento global oscila no tempo.
+// 14_grass_patch.js — Patch de grass interativo via Verlet integration (cloth sim).
+// Cada blade is uma string vertical de points conectados by constraints rígidas.
+// Mouse applies força with falloff by distance. Vento global oscila no time.
 // Roda em JS puro (CPU) — performance ok até ~400 blades em 60fps.
 
 class GrassBlade {
@@ -14,9 +14,9 @@ class GrassBlade {
             this.points.push({ x, y, pinned: i === 0 });
             this.prev.push({ x, y });
         }
-        // Variação por blade pra não ficar uniforme
+        // Variação by blade to não ficar uniforme
         this.stiffness = 0.85 + Math.random() * 0.10;
-        this.colorTint = Math.random() * 0.25;  // 0..0.25 lerp pra cor mais clara
+        this.colorTint = Math.random() * 0.25;  // 0..0.25 lerp to color more clara
         this.thickness = 1.5 + Math.random() * 0.5;
     }
 
@@ -30,7 +30,7 @@ class GrassBlade {
             const vx = (p.x - pr.x) * damping;
             const vy = (p.y - pr.y) * damping;
             this.prev[i] = { x: p.x, y: p.y };
-            // Wind cresce com a height do ponto (top sente mais)
+            // Wind cresce with a height do ponto (top sente more)
             const heightFactor = i / (this.points.length - 1);
             p.x += vx + windX * dt * heightFactor;
             p.y += vy + gravity * dt * heightFactor;
@@ -121,9 +121,9 @@ Object.assign(Jogo.prototype, {
         // Vento global (mistura 2 frequências)
         const t = this._grassWindTime;
         const windX = Math.sin(t * 1.4) * 22 + Math.sin(t * 0.6 + 1.7) * 14;
-        const gravity = 8;  // suave — blades não caem, só pesam
+        const gravity = 8;  // suave — blades não caem, only pesam
 
-        // Atualiza física
+        // Updates física
         for (let i = 0; i < this.grassBlades.length; i++) {
             this.grassBlades[i].update(dt, gravity, windX, mouse);
         }
@@ -144,7 +144,7 @@ Object.assign(Jogo.prototype, {
         this.grassGfxLight.clear();
         for (const blade of this.grassBlades) {
             const pts = blade.points;
-            // Cor lerp entre verde médio e claro
+            // Color lerp between verde médio e claro
             const r = Math.round(0x82 * (1 - blade.colorTint) + 0xb5 * blade.colorTint);
             const g = Math.round(0xb0 * (1 - blade.colorTint) + 0xd4 * blade.colorTint);
             const b = Math.round(0x48 * (1 - blade.colorTint) + 0x72 * blade.colorTint);

@@ -1,8 +1,8 @@
-// 09_inimigos.js — Atiradores fixos (torres) e fazendeiros móveis
+// 09_inimigos.js — Shooters fixos (torres) e farmers móveis
 Object.assign(Jogo.prototype, {
 
     _setupShooters() {
-        // 6 torres fixas em posições estratégicas
+        // 6 torres fixas em positions estratégicas
         this.bullets = [];
         this.shooters = [];
         const POSTS = [[480,480],[2720,480],[480,1920],[2720,1920],[1600,280],[1600,2120]];
@@ -25,7 +25,7 @@ Object.assign(Jogo.prototype, {
             duration: 360,
             onComplete: () => at.sprite.destroy()
         });
-        // Sacrifica o projétil (vaca/boi/fazendeiro arremessado)
+        // Sacrifica o projétil (cow/ox/farmer arremessado)
         if (hitter) this._explode(hitter, 0xff8800);
         this._checkVictory();
     },
@@ -47,7 +47,7 @@ Object.assign(Jogo.prototype, {
             if (!emRange || at.cooldown > 0) continue;
 
             at.cooldown = Phaser.Math.Between(2000, 3500);
-            // M5: cap rígido de 100 balas — descarta a mais antiga se cheio
+            // M5: cap rígido de 100 balas — descarta a more antiga se full
             if (this.bullets.length >= 100) {
                 const oldest = this.bullets.shift();
                 if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
@@ -60,7 +60,7 @@ Object.assign(Jogo.prototype, {
             this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
         }
 
-        // Limites do mundo + margem pra detectar saída de tela
+        // Limites do world + margem to detectar saída de screen
         const W = 8000, H = 6000;
         this.bullets = this.bullets.filter(b => {
             if (!b.sprite || !b.sprite.active) return false;
@@ -69,7 +69,7 @@ Object.assign(Jogo.prototype, {
             b.dist += VEL;
 
             const dx = b.sprite.x - this.ship.x, dy = b.sprite.y - this.ship.y;
-            // Bala "armada" só após 25px — evita hit instantâneo se atirador estiver colado
+            // Bala "armada" only após 25px — evita hit instantâneo se shooter estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
                 this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
                 this.cameras.main.shake(200, 0.013);
@@ -77,7 +77,7 @@ Object.assign(Jogo.prototype, {
                 b.sprite.destroy();
                 return false;
             }
-            // Bala segue até sair dos limites do mundo (não fade após MAX_DIST)
+            // Bala segue até sair dos limites do world (não fade após MAX_DIST)
             if (b.sprite.x < -50 || b.sprite.x > W+50 || b.sprite.y < -50 || b.sprite.y > H+50) {
                 b.sprite.destroy();
                 return false;
@@ -104,24 +104,24 @@ Object.assign(Jogo.prototype, {
         for (let i = 0; i < n; i++) {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
-            // matter.add.SPRITE (não image) — sprite suporta .anims pra running
+            // matter.add.SPRITE (not image) — sprite suporta .anims to running
             const farmerScale = (this.dbg?.scale?.faz) ?? 2.0;
             const farmerSize  = 81 * farmerScale;
             const f = this.matter.add.sprite(x, y, 'faz_S');
-            // setBody EXPLÍCITO depois — o options no sprite parece ser ignorado em algumas
+            // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
             // versões do Phaser, deixando body do size da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
             f.setDisplaySize(farmerSize, farmerSize);
-            // Lock rotação física: sem isso, colisões com vacas (que vêm pelo beam)
-            // viravam o sprite de lado e ele aparecia "deitado" como humano de perfil
+            // Lock rotação física: without isso, colisões with cows (que vêm pelo beam)
+            // viravam o sprite de lado e ele aparecia "deitado" as humano de perfil
             f.setFixedRotation();
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
             f.body.label = 'fazendeiro';
             f.isEnemy = true;
-            // HP=1: fazendeiro só morre em pedra com impacto alto
+            // HP=1: farmer only morre em pedra with impacto high
             f._hp = 1;
-            f.setBounce(0.45);  // bounce mais visível ao bater em vaca/boi/cacto
+            f.setBounce(0.45);  // bounce more visível ao bater em cow/ox/cacto
             f.wanderAngle = Math.random() * Math.PI * 2;
             f._wandering = true;
             f._cooldown = Phaser.Math.Between(1000, 3500);
@@ -135,7 +135,7 @@ Object.assign(Jogo.prototype, {
                     f._wandering = true;
                 }
             });
-            // Sombra blur abaixo do fazendeiro
+            // Sombra blur below do farmer
             this._attachSombra(f, { rx: 24, ry: 9, alpha: 0.45, offY: 18, offX: 5 });
 
             this.farmers.push(f);
@@ -145,7 +145,7 @@ Object.assign(Jogo.prototype, {
     _updateFarmers(delta) {
         const velMul = this.dbg?.behavior?.velFaz ?? 1.0;
         const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
-        const IDLE_F   = 0.0008 * velMul; // mesmo ritmo do idle das vacas brancas
+        const IDLE_F   = 0.0008 * velMul; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
 
@@ -168,7 +168,7 @@ Object.assign(Jogo.prototype, {
                     const deg = (Math.atan2(vy, vx) * 180 / Math.PI + 360) % 360;
                     const i = Math.round(deg / 45) % 8;
                     dir = ['E','SE','S','SW','W','NW','N','NE'][i];
-                    // Chapéu de palha cobre o corpo na vista N pura — reroteia pra NE/NW
+                    // Chapéu de palha cobre o corpo na vista N pura — reroteia to NE/NW
                     if (dir === 'N') dir = (vx >= 0) ? 'NE' : 'NW';
                     f._lastDir = dir;
                 }
@@ -183,7 +183,7 @@ Object.assign(Jogo.prototype, {
             }
             if (isAbducted) continue;
 
-            // Disparo quando nave está perto (mas com distância mínima de engajamento)
+            // Disparo when ship is perto (mas with distance mínima de engajamento)
             const dx = this.ship.x - f.x, dy = this.ship.y - f.y;
             const distSq = dx*dx + dy*dy;
             f._cooldown -= delta;
@@ -199,7 +199,7 @@ Object.assign(Jogo.prototype, {
                 this.bullets.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
                 const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);
                 this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
-                // Puff de fumaça do disparo (3 nuvenzinhas com offset aleatório)
+                // Puff de fumaça do disparo (3 nuvenzinhas with offset aleatório)
                 const muzzleX = f.x + Math.cos(ang) * 18;
                 const muzzleY = f.y + Math.sin(ang) * 18;
                 for (let p = 0; p < 3; p++) {

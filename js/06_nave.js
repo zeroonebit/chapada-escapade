@@ -1,9 +1,9 @@
-// 06_nave.js — Nave: cone do feixe, LEDs, rastro do cursor, movimento, paciência
+// 06_nave.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
 Object.assign(Jogo.prototype, {
 
     _setupLEDs() {
-        // LEDs desativados (giroflex era distrativo) — efeito agora vem de partículas
-        // coloridas saindo no escapamento. Mantém arrays vazios pra compat com o picker.
+        // LEDs desativados (giroflex was distrativo) — efeito now vem de partículas
+        // coloridas saindo no escapamento. Mantém arrays vazios to compat with o picker.
         this.leds = [];
         this.ledHalos = [];
         this._ledHead = 0;
@@ -22,8 +22,8 @@ Object.assign(Jogo.prototype, {
 
     _updateLEDs(delta) {
         const N = this.leds.length;
-        // Raio do anel = ~48% do displayWidth da nave (borda visual exterior)
-        // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se nave escalar.
+        // Raio do anel = ~48% do displayWidth da ship (borda visual exterior)
+        // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se ship escalar.
         const LED_R = (this.ship?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
         const fullRevs = Math.floor(this._ledHead / N);
@@ -82,8 +82,8 @@ Object.assign(Jogo.prototype, {
         let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
-            // Carga: -10% speed por vaca/boi abduzido (max -50% com 5 animais)
-            // Fazendeiros NÃO desaceleram a nave
+            // Carga: -10% speed by cow/ox abduzido (max -50% with 5 animais)
+            // Farmers NÃO desaceleram a ship
             const carryingCows = (this.abductedCows || [])
                 .filter(v => !v.isBurger && !v.isEnemy).length;
             const carryingMul = Math.max(0.5, 1 - 0.10 * carryingCows);
@@ -110,7 +110,7 @@ Object.assign(Jogo.prototype, {
         } else if (this._anyCorralReady && this._anyCorralReady()) {
             cor = 0xff8800;
             for (const c of this.corrals) {
-                // Estrutura nova (slots fixos): checa se algum slot tem burger ready
+                // Estrutura nova (slots fixos): checa se algum slot has burger ready
                 const hasReady = c.slots && c.slots.some(s => s && s.state === 'ready' && !s._sendoColetado);
                 if (!hasReady) continue;
                 const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
@@ -133,11 +133,11 @@ Object.assign(Jogo.prototype, {
         );
     },
 
-    // Sombra com blur fake (3 elipses stackadas com alpha decrescente)
-    // Container atrelado à entidade — posição sincronizada no _updateShadows
+    // Sombra with blur fake (3 elipses stackadas with alpha decrescente)
+    // Container atrelado à entidade — position sincronizada no _updateShadows
     _attachSombra(entity, opts = {}) {
-        // Tamanho proporcional ao displayWidth da entidade (pega no momento da criação).
-        // Se a entidade escalar depois, sombra fica fixa no size inicial — ok pra MVP.
+        // Size proporcional ao displayWidth da entidade (pega no momento da criação).
+        // Se a entidade escalar after, sombra fica fixa no size inicial — ok to MVP.
         const dw = entity.displayWidth || 60;
         const dh = entity.displayHeight || 60;
         const {
@@ -159,7 +159,7 @@ Object.assign(Jogo.prototype, {
 
     _updateShadows() {
         if (!this._allShadows) return;
-        // Filtra entidades destruídas e sincroniza posição
+        // Filtra entidades destruídas e sincroniza position
         this._allShadows = this._allShadows.filter(e => {
             if (!e.scene || !e.shadow || !e.shadow.scene) {
                 if (e.shadow && e.shadow.scene) e.shadow.destroy();

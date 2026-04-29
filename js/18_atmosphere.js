@@ -1,10 +1,10 @@
 // 18_atmosphere.js — Time of day overlay (gradient vertical) + weather presets
 // 6 TOD presets (dawn/day/dusk/sunset/night/midnight) + auto-cycle opcional
-// Weather: clear / rain / fog / storm (storm tem flash de raio aleatório)
-// Tutorial sempre em "day" + "clear" (não confunde o player)
+// Weather: clear / rain / fog / storm (storm has flash de raio aleatório)
+// Tutorial always em "day" + "clear" (não confunde o player)
 
 const TOD_PRESETS = {
-    // alpha 0 = sem overlay (Day brilhante)
+    // alpha 0 = without overlay (Day brilhante)
     day:      { top: [0,   0,   0  ], bot: [0,   0,   0  ], alpha: 0.0  },
     // Rosa/lilás top → laranja claro bottom (manhã suave)
     dawn:     { top: [255, 180, 200], bot: [255, 220, 180], alpha: 0.18 },
@@ -22,12 +22,12 @@ const TOD_ORDER = ['dawn', 'day', 'dusk', 'sunset', 'night', 'midnight'];
 Object.assign(Jogo.prototype, {
 
     _setupAtmosphere() {
-        // Gradient overlay (depth 195 = abaixo do HUD em 100+ mas acima de chuva 180)
+        // Gradient overlay (depth 195 = below do HUD em 100+ mas above de rain 180)
         this._atmoGfx = this.add.graphics().setScrollFactor(0).setDepth(195);
         // Flash de raio (storm)
         this._atmoFlashGfx = this.add.graphics().setScrollFactor(0).setDepth(196).setVisible(false);
         this._atmoCycleTimer = 0;
-        this._atmoCycleDuration = 60000;  // 60s por preset → ciclo de 6min
+        this._atmoCycleDuration = 60000;  // 60s by preset → ciclo de 6min
         this._atmoCurrent = 'day';
         this._scheduleStormFlash();
         // Resize: redesenha gradient cobrindo nova area
@@ -47,9 +47,9 @@ Object.assign(Jogo.prototype, {
         g.fillRect(0, 0, w, h);
     },
 
-    // Aplica time of day + weather (chamado quando muda preset ou no setup)
+    // Applies time of day + weather (chamado when muda preset ou no setup)
     _applyAtmosphere() {
-        // Tutorial sempre em day + clear
+        // Tutorial always em day + clear
         const presetKey = this.tutorialMode ? 'day' : (this.dbg?.fx?.timeOfDay ?? 'day');
         const p = TOD_PRESETS[presetKey] || TOD_PRESETS.day;
         this._drawAtmoGradient(p);
@@ -120,7 +120,7 @@ Object.assign(Jogo.prototype, {
     _scheduleStormFlash() {
         const next = Phaser.Math.Between(5000, 15000);
         this.time.delayedCall(next, () => {
-            // Cena ainda ativa? (this.sys existe enquanto a scene não foi destroyed)
+            // Cena still activates? (this.sys existe enquanto a scene não was destroyed)
             if (!this.sys || !this.sys.isActive()) return;
             if (this.dbg?.fx?.weather === 'storm' && !this.tutorialMode) {
                 this._stormFlash();

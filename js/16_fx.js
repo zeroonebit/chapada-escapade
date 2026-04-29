@@ -1,8 +1,8 @@
-// 16_fx.js — Efeitos visuais: chuva, neblina, sparks, shockwaves, beam halo dust
-// Usa Graphics + tweens (sem textura) pra ficar leve e sem dependências.
+// 16_fx.js — Efeitos visuais: rain, fog, sparks, shockwaves, beam halo dust
+// Usa Graphics + tweens (without textura) to ficar leve e without dependências.
 
 // ── BARREL POST-FX (distorção esférica sutil — efeito "superfície curva") ──
-// PostFX pipeline GLSL aplicado na câmera principal. Strength 0=sem efeito,
+// PostFX pipeline GLSL aplicado na camera principal. Strength 0=without efeito,
 // 0.3=sutil, 0.6=forte. Controlado via dbg.behavior.barrel slider.
 const BARREL_FRAG = `
 precision mediump float;
@@ -37,23 +37,23 @@ Object.assign(Jogo.prototype, {
         const w = this.scale.width, h = this.scale.height;
 
         // ── CHUVA ──────────────────────────────────────────────────────
-        // Gotas com angulo/comprimento/speed controlados live via dbg.fx.
-        // Container guarda referência das gotas pra recriar quando frequencia muda.
+        // Gotas with angulo/comprimento/speed controlados live via dbg.fx.
+        // Container guarda referência das gotas to recriar when frequencia muda.
         this.fxRain = this.add.container(0, 0).setScrollFactor(0).setDepth(180).setVisible(false);
         this._rainDrops = [];
         this._rainCountAtual = 0;
         this._rebuildRain();
 
         // ── NEVE ───────────────────────────────────────────────────────
-        // Flocos com tamanhos variados (1-4px), queda lenta, drift horizontal
+        // Flocos with tamanhos variados (1-4px), queda lenta, drift horizontal
         this.fxSnow = this.add.container(0, 0).setScrollFactor(0).setDepth(181).setVisible(false);
         this._snowFlakes = [];
         this._snowCountAtual = 0;
         this._rebuildSnow();
 
-        // ── NEBLINA (vinheta com gradiente radial) ────────────────────
-        // Gera uma textura canvas com radial gradient: centro transparente,
-        // bordas brancas com alpha médio. Mesmo conceito da fumaça (camadas
+        // ── NEBLINA (vinheta with gradiente radial) ────────────────────
+        // Gera uma textura canvas with radial gradient: centro transparente,
+        // bordas brancas with alpha médio. Mesmo conceito da fumaça (camadas
         // alpha) mas em formato de vinheta full-screen.
         if (!this.textures.exists('vignette_neblina')) {
             const SZ = 512;
@@ -72,7 +72,7 @@ Object.assign(Jogo.prototype, {
         this.fxFog = this.add.image(w/2, h/2, 'vignette_neblina')
             .setScrollFactor(0).setDepth(170).setVisible(false);
         this.fxFog.setDisplaySize(w * 1.05, h * 1.05);
-        // Pulsação suave de alpha pra dar vida sem distrair
+        // Pulsação suave de alpha to dar vida without distrair
         this.tweens.add({
             targets: this.fxFog,
             alpha: { from: 0.85, to: 1.0 },
@@ -83,22 +83,22 @@ Object.assign(Jogo.prototype, {
         this.scale.on('resize', () => this._fxResize());
     },
 
-    // Recria as gotas com base em dbg.fx.chuvaCount.
-    // Cada gota lê angulo/comprimento/speed dinamicamente em cada ciclo.
+    // Recria as gotas with base em dbg.fx.chuvaCount.
+    // Cada gota reads angulo/comprimento/speed dinamicamente em each ciclo.
     _rebuildRain() {
         if (!this.fxRain) return;
         const w = this.scale.width, h = this.scale.height;
         const cfg = this.dbg?.fx || {};
         const target = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
 
-        // Para tweens das gotas existentes
+        // Stops tweens das gotas existentes
         this._rainDrops.forEach(d => this.tweens.killTweensOf(d));
         // Destrói excesso
         while (this._rainDrops.length > target) {
             const d = this._rainDrops.pop();
             if (d && d.scene) d.destroy();
         }
-        // Cria diferença
+        // Creates diferença
         while (this._rainDrops.length < target) {
             const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
             this.fxRain.add(drop);
@@ -106,7 +106,7 @@ Object.assign(Jogo.prototype, {
         }
         this._rainCountAtual = target;
 
-        // (Re)inicia ciclo de cada gota
+        // (Re)starts ciclo de each gota
         this._rainDrops.forEach(drop => this._startRainDrop(drop));
     },
 
@@ -119,15 +119,15 @@ Object.assign(Jogo.prototype, {
         const fall = () => {
             if (!drop || !drop.scene) return;
             const c = this.dbg?.fx || {};
-            const ang     = c.chuvaAngulo  ?? 0.3;   // -1..1 (incl. horiz por unidade vert)
+            const ang     = c.chuvaAngulo  ?? 0.3;   // -1..1 (incl. horiz by unidade vert)
             const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento)
             const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. speed)
             const baseLen = 18 * lenMul;
             const dx      = -ang * baseLen;
-            // Atualiza geometria da linha (direção visual)
+            // Updates geometria da linha (direction visual)
             drop.setTo(0, 0, dx, baseLen);
             drop.setLineWidth(1.4 * Math.max(0.5, Math.min(2, lenMul)));
-            // Duração base 700ms — velMul maior = duração menor (cai mais rápido)
+            // Duração base 700ms — velMul maior = duração menor (cai more fast)
             const dur = Phaser.Math.Between(550, 850) / Math.max(0.2, velMul);
             // Drift horizontal proporcional ao angulo e height percorrida
             const driftX = ang * (h + 60) * 0.45;
@@ -139,7 +139,7 @@ Object.assign(Jogo.prototype, {
             });
         };
         reset();
-        // Start desincronizado por delay aleatório
+        // Start desincronizado by delay aleatório
         this.time.delayedCall(Phaser.Math.Between(0, 800), fall);
     },
 
@@ -153,7 +153,7 @@ Object.assign(Jogo.prototype, {
             if (f && f.scene) f.destroy();
         }
         while (this._snowFlakes.length < target) {
-            // Tamanho variado: 1-4px de raio
+            // Size variado: 1-4px de raio
             const r = Phaser.Math.FloatBetween(1.0, 3.5);
             const flake = this.add.circle(0, 0, r, 0xffffff, 0.85);
             flake._radius = r;
@@ -172,7 +172,7 @@ Object.assign(Jogo.prototype, {
         };
         const fall = () => {
             if (!flake || !flake.scene) return;
-            // Velocidade: flocos maiores caem mais rápido (peso visual)
+            // Speed: flocos maiores caem more fast (peso visual)
             const baseDur = Phaser.Math.Between(3000, 6000);
             const sizeFactor = 1.0 / Math.max(0.5, flake._radius * 0.6);
             const dur = baseDur * sizeFactor;
@@ -220,8 +220,8 @@ Object.assign(Jogo.prototype, {
             this.renderer.pipelines.addPostPipeline('BarrelPipeline', window.BarrelPipeline);
             this.cameras.main.setPostPipeline('BarrelPipeline');
             this._barrelPipeline = this.cameras.main.getPostPipeline('BarrelPipeline');
-            // Aplica strength inicial JA pra efeito esferico aparecer no splash
-            // (sem isso fica zerado ate o gameStarted=true rodar _updateBody/_updateBarrel)
+            // Applies strength inicial JA to efeito esferico aparecer no splash
+            // (without isso fica zerado ate o gameStarted=true rodar _updateBody/_updateBarrel)
             if (this._barrelPipeline) {
                 this._barrelPipeline._strength = this.dbg?.behavior?.barrel ?? 0.15;
             }
@@ -239,7 +239,7 @@ Object.assign(Jogo.prototype, {
             const visible = !!cfg.chuva;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
-            // H3: debounce 200ms pra evitar churn em slider drag
+            // H3: debounce 200ms to evitar churn em slider drag
             const targetCount = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
             if (targetCount !== this._rainCountAtual) this._scheduleRebuildRain();
         }
@@ -255,7 +255,7 @@ Object.assign(Jogo.prototype, {
             this.fxFog.setVisible(visible);
             if (visible) {
                 const intensity = cfg.neblinaIntensidade ?? 0.5;
-                // Kill pulsation tween e reaplica com faixa proporcional à intensidade
+                // Kill pulsation tween e reaplica with faixa proporcional à intensidade
                 this.tweens.killTweensOf(this.fxFog);
                 this.tweens.add({
                     targets: this.fxFog,
@@ -307,7 +307,7 @@ Object.assign(Jogo.prototype, {
             duration: 260, onComplete: () => flash.destroy() });
     },
 
-    // 3 anéis verdes que partem do alvo e sobem até a nave (efeito de captura)
+    // 3 anéis verdes que partem do alvo e sobem até a ship (efeito de captura)
     _spawnCaptureRings(target) {
         if (!target || !target.scene || !this.ship) return;
         const sx = target.x, sy = target.y;
@@ -330,7 +330,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Sparkles orbitando dentro do beam quando ativo (chamado a cada N frames)
+    // Sparkles orbitando inside do beam when ativo (chamado a each N frames)
     _emitBeamSparkle() {
         if (!this.ship) return;
         const r = (this.coneRadius || 100) * Phaser.Math.FloatBetween(0.3, 0.95);
@@ -338,7 +338,7 @@ Object.assign(Jogo.prototype, {
         const x = this.ship.x + Math.cos(ang) * r;
         const y = this.ship.y + Math.sin(ang) * r;
         const dot = this.add.circle(x, y, 2.5, 0xaaffcc, 0.95).setDepth(8);
-        // Move em direção ao centro da nave (efeito de absorção)
+        // Move em direction ao centro da ship (efeito de absorção)
         this.tweens.add({
             targets: dot,
             x: this.ship.x, y: this.ship.y,
