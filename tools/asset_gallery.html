@@ -1152,9 +1152,12 @@ const WANG_PRESETS = [
     meta: 'cr31 corner-2-edge convention · 16 solid blocks',
     sliced: true,
     sliceFn: (i) => `../assets/terrain/test/wang_${String(i).padStart(2,'0')}.png`,
-    docLink: 'http://www.cr31.co.uk/stagecast/wang/2corn.html',
-    docTitle: "cr31 — Corner Wang Tiles (2-edge)",
     info: "Canonical reference de Wang tiles 2-edge corner-based. Cada tile = bitmask 4 bits dos 4 cantos (NW=1, NE=2, SE=4, SW=8). 16 tiles total cobrem todas as combinações lower/upper. Originalmente publicado por <strong>cr31</strong> (Charles Rector) em ~2009 no contexto de Stagecast Creator. Hoje é a convenção padrão usada em Tiled, Godot, e várias engines.",
+    refs: [
+      { url: 'http://www.cr31.co.uk/stagecast/wang/2corn.html', title: 'cr31 — Corner Wang Tiles (2-edge)' },
+      { url: 'https://www.boristhebrave.com/permanent/23/03/tileset-creator/?autotile=Corner&cellType=Square&rotation=None&terrainCount=2&overlay=False&skipCornerTiles=False&drawStyle=Circle', title: 'Boris the Brave — Tileset Creator (interactive, Corner/Square/2-terrain config)' },
+      { url: 'https://www.boristhebrave.com/2021/11/14/classification-of-tilesets/', title: 'Boris the Brave — Classification of Tilesets (theory, 2021)' },
+    ],
   },
   {
     id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
@@ -1453,6 +1456,11 @@ async function renderTiles(){
   let infoHTML = `Tileset <code>${p.id}</code> · ${p.meta}`;
   if(p.info) infoHTML += `<br><br>${p.info}`;
   if(p.docLink) infoHTML += `<br>📖 <a href="${p.docLink}" target="_blank" style="color:#9fcfe8;">${p.docTitle || p.docLink}</a>`;
+  if(p.refs?.length){
+    infoHTML += `<br><br><strong style="font-size:10px;letter-spacing:1px;">📚 REFS:</strong><ul style="margin:4px 0 0 18px;padding:0;">`;
+    p.refs.forEach(r => { infoHTML += `<li style="font-size:10px;"><a href="${r.url}" target="_blank" style="color:#9fcfe8;">${r.title}</a></li>`; });
+    infoHTML += `</ul>`;
+  }
   $("tilesetInfo").innerHTML = infoHTML;
   if(p.sliced){
     const slicedURLs = [];
