@@ -7,6 +7,17 @@ Object.assign(Jogo.prototype, {
         this.tutorialMode = false;
         this.matter.world.enabled = false;
 
+        // Mobile auto-play: pula splash e entra direto em PLAY (mouse default).
+        // O DOM preloader ja eh fechado pelo 'complete' do this.load no preload.
+        if (window.__AUTO_PLAY) {
+            this.gameStarted = true;
+            this.matter.world.enabled = true;
+            if (this.dbg?.behavior) {
+                this.dbg.behavior.inputMode = 'mouse';
+            }
+            return;
+        }
+
         const w = this.scale.width, h = this.scale.height;
 
         this.splashBg = this.add.rectangle(w/2, h/2, w, h, 0x000a03, 1)

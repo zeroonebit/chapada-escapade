@@ -112,19 +112,19 @@ Object.assign(Jogo.prototype, {
         const y = (target?.y ?? this.ship?.y ?? 0) - 40;
 
         const txt = this.add.text(x, y, line, {
-            fontSize: '13px',
+            fontSize: '26px',
             fill: '#ffffff',
             fontStyle: 'bold',
             stroke: '#000000',
-            strokeThickness: 3,
-            shadow: { color: '#000', fill: true, blur: 4 },
+            strokeThickness: 5,
+            shadow: { color: '#000', fill: true, blur: 6 },
         }).setOrigin(0.5).setDepth(60);
 
         this.tweens.add({
             targets: txt,
-            y: y - 40,
+            y: y - 80,
             alpha: { from: 1, to: 0 },
-            duration: 2400,
+            duration: 4800,
             ease: 'Cubic.easeOut',
             onComplete: () => { if (txt.scene) txt.destroy(); },
         });
