@@ -105,13 +105,13 @@ Object.assign(Jogo.prototype, {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
             // matter.add.SPRITE (não image) — sprite suporta .anims pra running
-            const fazScale = (this.dbg?.scale?.faz) ?? 2.0;
-            const fazSize  = 81 * fazScale;
+            const farmerScale = (this.dbg?.scale?.faz) ?? 2.0;
+            const farmerSize  = 81 * farmerScale;
             const f = this.matter.add.sprite(x, y, 'faz_S');
             // setBody EXPLÍCITO depois — o options no sprite parece ser ignorado em algumas
-            // versões do Phaser, deixando body do tamanho da textura (180×180 = bug)
+            // versões do Phaser, deixando body do size da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
-            f.setDisplaySize(fazSize, fazSize);
+            f.setDisplaySize(farmerSize, farmerSize);
             // Lock rotação física: sem isso, colisões com vacas (que vêm pelo beam)
             // viravam o sprite de lado e ele aparecia "deitado" como humano de perfil
             f.setFixedRotation();
@@ -158,7 +158,7 @@ Object.assign(Jogo.prototype, {
             if (f._wandering && !isAbducted) {
                 f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
             }
-            // Sprite direcional 8-dir baseado em velocidade
+            // Sprite direcional 8-dir baseado em speed
             if (!isAbducted) {
                 const vx = f.body.velocity.x, vy = f.body.velocity.y;
                 const sp = Math.sqrt(vx*vx + vy*vy);

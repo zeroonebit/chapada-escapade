@@ -129,7 +129,7 @@ Object.assign(Jogo.prototype, {
             + Math.sin(a*5 + seed*1.7)    * 0.06
             + Math.sin(a*7 + seed*2.3)    * 0.04;
 
-        // ── 4. GRASS PATCHES — gera pontos de grama pra IA de fuga das vacas
+        // ── 4. GRASS PATCHES — gera points de grama pra IA de fuga das vacas
         // (substitui o sistema antigo de blobs explícitos)
         this.grassPatches = [];
         for (let attempts = 0; attempts < 100 && this.grassPatches.length < 12; attempts++) {
@@ -155,9 +155,9 @@ Object.assign(Jogo.prototype, {
         };
         // Pools de assets PixelLab carregados em preload (nat_vege_* e nat_pedra_*)
         const vegeKeys   = this._natureVegeKeys   || [];
-        const pedrasKeys = this._naturePedrasKeys || [];
+        const rocksKeys = this._naturePedrasKeys || [];
         const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
-        const pickP = () => pedrasKeys[Phaser.Math.Between(0, pedrasKeys.length - 1)];
+        const pickP = () => rocksKeys[Phaser.Math.Between(0, rocksKeys.length - 1)];
 
         // Scale BASE por asset — sources são 64×64 mas conteúdo varia muito
         // (saguaro alto preenche todo, agave preenche pouco). Map manual + jitter ±15%.
@@ -279,17 +279,17 @@ Object.assign(Jogo.prototype, {
         this.driveThrus = this.corrals;
         // Currais — qualquer posição válida (terra ou grama), longe das bordas
         // e com distância mínima entre si pra não sobrepor
-        const curralPositions = [];
+        const corralPositions = [];
         const MIN_DIST = 800;
         for (let i = 0; i < 5; i++) {
             for (let tries = 0; tries < 50; tries++) {
                 const cx = Phaser.Math.Between(600, W-600);
                 const cy = Phaser.Math.Between(600, H-600);
-                const tooClose = curralPositions.some(p =>
+                const tooClose = corralPositions.some(p =>
                     Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < MIN_DIST
                 );
                 if (tooClose) continue;
-                curralPositions.push({x: cx, y: cy});
+                corralPositions.push({x: cx, y: cy});
                 this._buildCorral(cx, cy);
                 break;
             }
