@@ -19,38 +19,38 @@ Object.assign(Jogo.prototype, {
             'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
         };
         Object.entries(dirs8).forEach(([d, k]) => {
-            this.load.image(`vaca_${k}`, `assets/pixel_labs/chars/vaca/${d}.png`);
-            this.load.image(`boi_${k}`,  `assets/pixel_labs/chars/boi/${d}.png`);
-            this.load.image(`faz_${k}`,  `assets/pixel_labs/chars/fazendeiro/${d}.png`);
+            this.load.image(`cow_${k}`, `assets/pixel_labs/chars/cow/${d}.png`);
+            this.load.image(`ox_${k}`,  `assets/pixel_labs/chars/ox/${d}.png`);
+            this.load.image(`farmer_${k}`,  `assets/pixel_labs/chars/farmer/${d}.png`);
             this.load.image(`ufo_${k}`,  `assets/pixel_labs/chars/ufo/${d}.png`);
         });
 
         // ── LEGACY KEYS (pointam to direcional sul, compat with código antigo) ──
-        this.load.image('vaca_frente',     'assets/pixel_labs/chars/vaca/south.png');
-        this.load.image('vaca_cima_sobe',  'assets/pixel_labs/chars/vaca/south.png');
-        this.load.image('vaca_cima_desce', 'assets/pixel_labs/chars/vaca/south.png');
-        this.load.image('boi_frente',      'assets/pixel_labs/chars/boi/south.png');
-        this.load.image('boi_cima_sobe',   'assets/pixel_labs/chars/boi/south.png');
-        this.load.image('boi_cima_desce',  'assets/pixel_labs/chars/boi/south.png');
-        this.load.image('fazendeiro',      'assets/pixel_labs/chars/fazendeiro/south.png');
+        this.load.image('cow_frente',     'assets/pixel_labs/chars/cow/south.png');
+        this.load.image('cow_cima_sobe',  'assets/pixel_labs/chars/cow/south.png');
+        this.load.image('cow_cima_desce', 'assets/pixel_labs/chars/cow/south.png');
+        this.load.image('ox_frente',      'assets/pixel_labs/chars/ox/south.png');
+        this.load.image('ox_cima_sobe',   'assets/pixel_labs/chars/ox/south.png');
+        this.load.image('ox_cima_desce',  'assets/pixel_labs/chars/ox/south.png');
+        this.load.image('farmer',      'assets/pixel_labs/chars/farmer/south.png');
         // burger now vem do PixelLab (substitui geometria antiga)
-        this.load.image('hamburguer',      'assets/pixel_labs/items/burger_classic.png');
+        this.load.image('burger',      'assets/pixel_labs/items/burger_classic.png');
 
         // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
         // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
         const D8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
             // Cow chubby (8d) — walk + idle_head_shake (eat) + lie_down (angry-ish)
-            { char: 'vaca',       prefix: 'vaca_walk',  anim: 'walk',            frames: 4 },
-            { char: 'vaca',       prefix: 'vaca_eat',   anim: 'idle_head_shake', frames: 11 },
-            { char: 'vaca',       prefix: 'vaca_angry', anim: 'lie_down',        frames: 8 },
+            { char: 'cow',       prefix: 'cow_walk',  anim: 'walk',            frames: 4 },
+            { char: 'cow',       prefix: 'cow_eat',   anim: 'idle_head_shake', frames: 11 },
+            { char: 'cow',       prefix: 'cow_angry', anim: 'lie_down',        frames: 8 },
             // Farmer running, Ox walk
-            { char: 'fazendeiro', prefix: 'faz_run',    anim: 'running',         frames: 4 },
-            { char: 'boi',        prefix: 'boi_walk',   anim: 'walk',            frames: 4 },
+            { char: 'farmer', prefix: 'farmer_run',    anim: 'running',         frames: 4 },
+            { char: 'ox',        prefix: 'ox_walk',   anim: 'walk',            frames: 4 },
             // UFO hovering 8-dir (idle bob/light flicker)
             { char: 'ufo',        prefix: 'ufo_hover',  anim: 'hovering_idle',   frames: 4 },
             // Ox idle_head_shake — without N (7 dirs)
-            { char: 'boi', prefix: 'boi_idle', anim: 'idle_head_shake', frames: 11,
+            { char: 'ox', prefix: 'ox_idle', anim: 'idle_head_shake', frames: 11,
               dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         ANIM8.forEach(({char, prefix, anim, frames, dirs}) => {
@@ -78,13 +78,13 @@ Object.assign(Jogo.prototype, {
                                   'post_lantern_low','post_lantern_thin','post_double_rope',
                                   'post_carved','post_thin_simple','tower_ornamental_thin',
                                   'segment_tall_dual','beam_horizontal'];
-        NATURE_PEDRAS.forEach(n => this.load.image(`nat_pedra_${n}`, `assets/pixel_labs/chars/nature/pedras/${n}.png`));
-        NATURE_VEGE.forEach(n   => this.load.image(`nat_vege_${n}`,  `assets/pixel_labs/chars/nature/vegetacao/${n}.png`));
-        NATURE_CERCAS.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas/${n}.png`));
-        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_cerca_${n}`, `assets/pixel_labs/chars/nature/cercas_v2/${n}.png`));
+        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/pixel_labs/chars/nature/rocks/${n}.png`));
+        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/pixel_labs/chars/nature/vegetation/${n}.png`));
+        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences/${n}.png`));
+        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences_v2/${n}.png`));
         // Outros itens decorativos (feno, pile de toras)
         const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
-        NATURE_OUTROS.forEach(n => this.load.image(`nat_outro_${n}`, `assets/pixel_labs/chars/nature/outros/${n}.png`));
+        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/pixel_labs/chars/nature/misc/${n}.png`));
         // Objects v3: landmarks (church, windmill, truck, satellite), props (gas, barrel, buckets), terreno (dry_turf)
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
@@ -94,9 +94,9 @@ Object.assign(Jogo.prototype, {
             .map(n => `nat_obj_${n}`);
         this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
         // Expor to outros módulos
-        this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_pedra_${n}`);
-        this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_vege_${n}`);
-        this._natureCercasKeys = NATURE_CERCAS.map(n => `nat_cerca_${n}`);
+        this._naturePedrasKeys = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
+        this._natureVegeKeys   = NATURE_VEGE.map(n   => `nat_veg_${n}`);
+        this._natureCercasKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
         // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');

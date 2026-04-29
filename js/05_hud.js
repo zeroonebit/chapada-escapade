@@ -239,7 +239,7 @@ Object.assign(Jogo.prototype, {
         if (this.corrals)     for (const c of this.corrals)     collect(c, 0x4499ff, 2.5);
         if (this.cows)       for (const v of this.cows) {
             if (!v.scene || v._destroyed || v.isBurger) continue;
-            collect(v, v.tipo === 'boi' ? 0xaa7744 : 0xffffff, 1.8);
+            collect(v, v.tipo === 'ox' ? 0xaa7744 : 0xffffff, 1.8);
         }
         if (this.farmers) for (const f of this.farmers) {
             if (!f.scene || f._destroyed || f._dying) continue;

@@ -107,7 +107,7 @@ Object.assign(Jogo.prototype, {
             // matter.add.SPRITE (not image) — sprite suporta .anims to running
             const farmerScale = (this.dbg?.scale?.faz) ?? 2.0;
             const farmerSize  = 81 * farmerScale;
-            const f = this.matter.add.sprite(x, y, 'faz_S');
+            const f = this.matter.add.sprite(x, y, 'farmer_S');
             // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
             // versões do Phaser, deixando body do size da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
@@ -117,7 +117,7 @@ Object.assign(Jogo.prototype, {
             f.setFixedRotation();
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
              .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
-            f.body.label = 'fazendeiro';
+            f.body.label = 'farmer';
             f.isEnemy = true;
             // HP=1: farmer only morre em pedra with impacto high
             f._hp = 1;
@@ -173,11 +173,11 @@ Object.assign(Jogo.prototype, {
                     f._lastDir = dir;
                 }
                 if (moving) {
-                    const animKey = `faz_run_${dir}`;
+                    const animKey = `farmer_run_${dir}`;
                     if (f.anims.currentAnim?.key !== animKey) f.play(animKey, true);
                 } else {
                     if (f.anims.isPlaying) f.anims.stop();
-                    const k = `faz_${dir}`;
+                    const k = `farmer_${dir}`;
                     if (f.texture.key !== k) f.setTexture(k);
                 }
             }

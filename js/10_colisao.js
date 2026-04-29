@@ -6,7 +6,7 @@ Object.assign(Jogo.prototype, {
             event.pairs.forEach(pair => {
                 let a=pair.bodyA.gameObject, b=pair.bodyB.gameObject;
                 if(!a||!b) return;
-                let entityKeys = ['vaca','boi','hamburguer','fazendeiro'];
+                let entityKeys = ['cow','ox','burger','farmer'];
                 if(a.scene && a.body && entityKeys.includes(a.body.label)) this._environmentCollision(a, b.body.label, b);
                 if(b.scene && b.body && entityKeys.includes(b.body.label)) this._environmentCollision(b, a.body.label, a);
             });
@@ -16,7 +16,7 @@ Object.assign(Jogo.prototype, {
     _environmentCollision(entity, otherLabel, otherEntity) {
         if (entity._dying || entity._destroyed) return;
         // Tutorial: cows/oxen imortais (skip total)
-        if (this._tutVacasImortais && (entity.body.label === 'vaca' || entity.body.label === 'boi')) return;
+        if (this._tutVacasImortais && (entity.body.label === 'cow' || entity.body.label === 'ox')) return;
 
         const entityIsEnemy   = !!entity.isEnemy;
         const entityAbducted  = this.abductedCows.includes(entity);
@@ -31,7 +31,7 @@ Object.assign(Jogo.prototype, {
         if (entity._lastHitT && (now - entity._lastHitT) < 120) return;
 
         // ROCHA: única forma de morte do farmer. Cow/ox has hp 3-5
-        if (otherLabel === 'rocha') {
+        if (otherLabel === 'rock') {
             if (!isHighImpact) return;
             entity._lastHitT = now;
             entity._hp = (entity._hp ?? 1) - 1;
@@ -41,7 +41,7 @@ Object.assign(Jogo.prototype, {
             }
         }
         // VACA-VACA / VACA-BOI / BOI-BOI: dano only with impacto de alta speed
-        else if (otherLabel === 'vaca' || otherLabel === 'boi') {
+        else if (otherLabel === 'cow' || otherLabel === 'ox') {
             if (entityIsEnemy) return;       // farmer: bounce físico, without dano
             if (!isHighImpact) return;
             entity._lastHitT = now;
@@ -50,11 +50,11 @@ Object.assign(Jogo.prototype, {
             if (entity._hp <= 0) this._explode(entity, 0xff2222);
         }
         // CACTO/MOITA: farmer only quica, without dano. Cow/ox also não toma dano.
-        else if (otherLabel === 'moita') {
+        else if (otherLabel === 'bush') {
             return;  // bounce já tratado pelo Matter (setBounce na entidade)
         }
         // FAZENDEIRO: cow vs farmer — ninguém toma dano (físico only)
-        else if (otherLabel === 'fazendeiro') {
+        else if (otherLabel === 'farmer') {
             return;
         }
     },
@@ -79,7 +79,7 @@ Object.assign(Jogo.prototype, {
             else if (e===1) { x=Phaser.Math.Between(200, W-200); y=H-200; }
             else if (e===2) { x=200; y=Phaser.Math.Between(200, H-200); }
             else { x=W-200; y=Phaser.Math.Between(200, H-200); }
-            const tipo = Math.random() < 0.20 ? 'boi' : 'holstein';
+            const tipo = Math.random() < 0.20 ? 'ox' : 'holstein';
             this._createCow(x, y, tipo);
         }
     }

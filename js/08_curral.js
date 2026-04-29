@@ -25,18 +25,18 @@ Object.assign(Jogo.prototype, {
             return curral.mascot;
         }
         // Size REAL da cow (igual _createCow: baseSize 68 * scale.cow)
-        const SIZE = 68 * (this.dbg?.scale?.vaca ?? 1.0);
+        const SIZE = 68 * (this.dbg?.scale?.cow ?? 1.0);
 
         // Cow chubby comendo virada to sul (anim fixa eat_S)
-        const initTex = this.textures.exists('vaca_eat_S_0') ? 'vaca_eat_S_0' : 'vaca_S';
+        const initTex = this.textures.exists('cow_eat_S_0') ? 'cow_eat_S_0' : 'cow_S';
         const m = this.add.sprite(curral.x - 14, curral.y, initTex)
             .setDisplaySize(SIZE, SIZE).setDepth(2);
-        if (this.anims.exists('vaca_eat_S')) m.play('vaca_eat_S', true);
+        if (this.anims.exists('cow_eat_S')) m.play('cow_eat_S', true);
 
         // Fardo de feno ao lado direito (cow olha to ele e come)
         let feno = null;
-        if (this.textures.exists('nat_outro_hay_bale')) {
-            feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_outro_hay_bale')
+        if (this.textures.exists('nat_misc_hay_bale')) {
+            feno = this.add.image(curral.x + 42, curral.y + 8, 'nat_misc_hay_bale')
                 .setDisplaySize(84, 76).setDepth(1.9);
         }
         // Balde ao lado esquerdo da cow — random between full (leite) e empty

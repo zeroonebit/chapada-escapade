@@ -29,7 +29,7 @@ const TUT_STEPS = [
         title: '④ ABDUCT A COW',
         text: 'Beam now works for real! Position the ship over a cow and activate the beam to lift it up.',
         note: 'Abduct at least 1 cow to advance.',
-        highlight: ['vacas'],
+        highlight: ['cows'],
     },
     {
         key: 'DELIVER',
@@ -50,21 +50,21 @@ const TUT_STEPS = [
         title: '⑧ TOMAR DANO',
         text: 'A farmer appeared and will shoot at you! Your ship is FROZEN until you take a hit — so you see fuel decrease in practice.',
         note: 'Wait for a hit to be released.',
-        highlight: ['fazendeiro', 'combustivel'],
+        highlight: ['farmer', 'combustivel'],
     },
     {
         key: 'FARMER',
         title: '⑨ FAZENDEIROS',
         text: 'Fazendeiros são inimigos que patrulham o mapa.\n\nUse o FEIXE GRAVITON sobre eles igual abduz uma vaca — o feixe os arrasta junto.',
         note: 'Capture um fazendeiro com o feixe para avançar.',
-        highlight: ['fazendeiro'],
+        highlight: ['farmer'],
     },
     {
         key: 'FARMER_KILL',
         title: '⑩ ARREMESSAR NAS ROCHAS',
         text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA mantendo o feixe ativo.\n\nA colisão em alta speed elimina o fazendeiro!',
         note: 'Mate um fazendeiro batendo em uma pedra para concluir.',
-        highlight: ['fazendeiro', 'rocha'],
+        highlight: ['farmer', 'rock'],
     },
 ];
 
@@ -132,7 +132,7 @@ Object.assign(Jogo.prototype, {
                 const cy = PAD + rh * r + rh/2;
                 const jx = (Math.random() - 0.5) * cw * 0.6;
                 const jy = (Math.random() - 0.5) * rh * 0.6;
-                const tipo = Math.random() < 0.20 ? 'boi' : 'holstein';
+                const tipo = Math.random() < 0.20 ? 'ox' : 'holstein';
                 this._createCow(cx + jx, cy + jy, tipo);
                 placed++;
             }
@@ -373,7 +373,7 @@ Object.assign(Jogo.prototype, {
                     if (cb) this._tutGlowAtScreenRect(cb.x, cb.y, cb.w, cb.h);
                     break;
                 }
-                case 'vacas': {
+                case 'cows': {
                     (this.cows || []).forEach(v => {
                         if (v && v.scene && !v.isBurger && !v.isEnemy && !v._dying) {
                             this._tutGlowAt(v.x, v.y, 26);
@@ -385,7 +385,7 @@ Object.assign(Jogo.prototype, {
                     (this.corrals || []).forEach(c => this._tutGlowAt(c.x, c.y, 110));
                     break;
                 }
-                case 'fazendeiro': {
+                case 'farmer': {
                     (this.farmers || []).forEach(f => {
                         if (f && f.scene && !f._dying && !f._destroyed) {
                             this._tutGlowAt(f.x, f.y, 28);
@@ -401,7 +401,7 @@ Object.assign(Jogo.prototype, {
                     });
                     break;
                 }
-                case 'rocha': {
+                case 'rock': {
                     const farmer = (this.abductedCows || []).find(e => e.isEnemy);
                     if (farmer) {
                         const r = this._tutAcharRochaPerto(farmer.x, farmer.y);
@@ -441,7 +441,7 @@ Object.assign(Jogo.prototype, {
         const bodies = this.matter?.world?.localWorld?.bodies || [];
         let best = null, bestD = Infinity;
         for (const b of bodies) {
-            if (b.label !== 'rocha') continue;
+            if (b.label !== 'rock') continue;
             const dx = b.position.x - x, dy = b.position.y - y;
             const d2 = dx*dx + dy*dy;
             if (d2 < bestD) { bestD = d2; best = b.position; }
