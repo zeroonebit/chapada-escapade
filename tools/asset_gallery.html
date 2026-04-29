@@ -133,9 +133,9 @@
   .meta{font-size:11px;line-height:1.6;text-align:center;max-width:480px;}
   .meta strong{color:#f4c95d;font-size:13px;}
   .detail-main .meta{font-size:11px;line-height:1.6;}
-  .tools-grid{display:grid;grid-template-columns:1fr;gap:10px;}
-  .tool-sections-row{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-top:14px;}
-  .tool-section{border:1px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);align-self:start;}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill, 240px);gap:10px;justify-content:start;}
+  .tool-sections-row{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .tool-section{border:2px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);}
   .tool-section .sec-head{margin:0;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;color:#a89368;background:#2a2218;border-radius:4px 4px 0 0;user-select:none;}
   .tool-section .sec-head:hover{color:#f4c95d;background:#3a2d1e;}
   .tool-section .sec-head .toggle{font-size:13px;width:14px;display:inline-block;}
@@ -143,12 +143,31 @@
   .tool-section[data-collapsed="true"] .sec-body{display:none;}
   .tool-section[data-collapsed="true"] .sec-head{border-radius:4px;}
   .tool-section .sec-body{padding:10px;}
-  .tool-card{border:1px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);}
-  .tool-card.cat-create{border-color:#3da53d;}
-  .tool-card.cat-modify{border-color:#3d7da5;}
-  .tool-card.cat-anim{border-color:#a85ba8;}
-  .tool-card.cat-meta{border-color:#a89368;}
-  .tool-card.cat-delete{border-color:#a53d3d;}
+  .tool-card{border:2px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);text-align:left;}
+  .tool-card.cat-create{border-color:#3da53d;background:rgba(61,165,61,0.10);}
+  .tool-card.cat-modify{border-color:#3d7da5;background:rgba(61,125,165,0.10);}
+  .tool-card.cat-anim{border-color:#a85ba8;background:rgba(168,91,168,0.12);}
+  .tool-card.cat-meta{border-color:#a89368;background:rgba(168,147,104,0.10);}
+  .tool-card.cat-delete{border-color:#a53d3d;background:rgba(165,61,61,0.10);}
+  .tool-card .tname{color:#fff;}
+  .tool-card.cat-create .tname{color:#9fe89f;}
+  .tool-card.cat-modify .tname{color:#9fcfe8;}
+  .tool-card.cat-anim .tname{color:#dfa6df;}
+  .tool-card.cat-meta .tname{color:#f4c95d;}
+  .tool-section[data-cat="create"]{border-color:#3da53d;}
+  .tool-section[data-cat="modify"]{border-color:#3d7da5;}
+  .tool-section[data-cat="anim"]{border-color:#a85ba8;}
+  .tool-section[data-cat="meta"]{border-color:#a89368;}
+  .tool-section[data-cat="create"] .sec-head{color:#9fe89f;}
+  .tool-section[data-cat="modify"] .sec-head{color:#9fcfe8;}
+  .tool-section[data-cat="anim"] .sec-head{color:#dfa6df;}
+  .tool-section[data-cat="meta"] .sec-head{color:#f4c95d;}
+  .tool-section{cursor:default;}
+  .tool-section .sec-head{cursor:grab;}
+  .tool-section.dragging{opacity:0.4;}
+  .tool-section.drag-over{outline:2px dashed #f4c95d;outline-offset:-2px;}
+  .tool-section .sec-head .drag-handle{cursor:grab;opacity:.5;font-size:11px;margin-right:4px;}
+  .tool-section .sec-head:active{cursor:grabbing;}
   .tool-card .tname{font-size:12px;font-weight:bold;color:#f4c95d;margin-bottom:6px;font-family:monospace;}
   .tool-card label{font-size:10px;opacity:.7;display:block;margin:6px 0 2px;}
   .tool-card input, .tool-card select, .tool-card textarea{width:100%;background:#1a1410;color:#e8d9b8;border:1px solid #4a3826;padding:4px 6px;font-family:monospace;font-size:11px;box-sizing:border-box;}
@@ -1224,7 +1243,13 @@ function renderDetailMain(){
   if(!titleEl || !bodyEl){ return; }
   titleEl.textContent = a.name;
   const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 META'};
-  const cats = ['create','modify','anim','meta']; // Delete vai pro Manager
+  const defaultCats = ['create','modify','anim','meta'];
+  let savedOrder = null;
+  try { savedOrder = JSON.parse(localStorage.getItem('chapEscapadeEditorSectionOrder') || 'null'); } catch(e){}
+  // valida e completa caso falte algum
+  const cats = (savedOrder && Array.isArray(savedOrder))
+    ? defaultCats.sort((a,b) => (savedOrder.indexOf(a) === -1 ? 999 : savedOrder.indexOf(a)) - (savedOrder.indexOf(b) === -1 ? 999 : savedOrder.indexOf(b)))
+    : defaultCats;
 
   const dirVariants = findDirectionVariants(a);
   const dirShort = {north:'N','north-east':'NE',east:'E','south-east':'SE',south:'S','south-west':'SW',west:'W','north-west':'NW'};
@@ -1257,8 +1282,9 @@ function renderDetailMain(){
     const tools = PIXELLAB_TOOLS.filter(t => t.cat === cat);
     if(!tools.length) return;
     const collapsed = 'false';
-    sectionsHtml += `<div class="tool-section" data-cat="${cat}" data-collapsed="${collapsed}">
+    sectionsHtml += `<div class="tool-section" data-cat="${cat}" data-collapsed="${collapsed}" draggable="true">
       <div class="sec-head" onclick="this.parentElement.dataset.collapsed = this.parentElement.dataset.collapsed === 'true' ? 'false' : 'true'; const t = this.querySelector('.toggle'); if(t) t.textContent = this.parentElement.dataset.collapsed === 'true' ? '▶' : '▼';">
+        <span class="drag-handle" title="arrasta pra reordenar">⋮⋮</span>
         <span class="toggle">▼</span>
         <span>${catLabels[cat]}</span>
         <span class="count">${tools.length}</span>
@@ -1288,6 +1314,28 @@ function renderDetailMain(){
   const toolsContainer = $("editorToolsRow");
   if(toolsContainer){ toolsContainer.innerHTML = sectionsHtml; }
   else { html += sectionsHtml; }
+  // Drag-drop handlers pras sections (reordenar)
+  setTimeout(() => {
+    document.querySelectorAll('.tool-section').forEach(sec => {
+      sec.ondragstart = (e) => { e.dataTransfer.setData('text/plain', sec.dataset.cat); e.dataTransfer.effectAllowed = 'move'; sec.classList.add('dragging'); };
+      sec.ondragend = () => sec.classList.remove('dragging');
+      sec.ondragover = (e) => { e.preventDefault(); sec.classList.add('drag-over'); };
+      sec.ondragleave = () => sec.classList.remove('drag-over');
+      sec.ondrop = (e) => {
+        e.preventDefault();
+        sec.classList.remove('drag-over');
+        const fromCat = e.dataTransfer.getData('text/plain');
+        const toCat = sec.dataset.cat;
+        if(!fromCat || fromCat === toCat) return;
+        const order = cats.slice();
+        const i1 = order.indexOf(fromCat), i2 = order.indexOf(toCat);
+        if(i1 < 0 || i2 < 0) return;
+        order.splice(i1, 1); order.splice(i2, 0, fromCat);
+        localStorage.setItem('chapEscapadeEditorSectionOrder', JSON.stringify(order));
+        renderDetailMain(); // re-render com nova ordem
+      };
+    });
+  }, 0);
   bodyEl.innerHTML = html;
   // qbtn handlers — pesquisa em ambos editorBody e editorToolsRow
   const containers = [bodyEl, $("editorToolsRow")].filter(Boolean);
