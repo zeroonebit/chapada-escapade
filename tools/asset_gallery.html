@@ -1249,6 +1249,38 @@ async function regenCellImage(cellState){
   return cellState.current;
 }
 
+// Aplica correções salvas em tools/saves/wang_corrections.json (se houver pra esse preset)
+async function applyStoredCorrections(presetId){
+  if(!tileEditState || tileEditState.presetId !== presetId) return;
+  try {
+    const res = await fetch(API_BASE + '/tools/saves/wang_corrections.json?t=' + Date.now());
+    if(!res.ok) return;
+    const registry = await res.json();
+    const corr = registry?.[presetId];
+    if(!corr) return;
+    // Reordena cells + reaplica transforms
+    const original = tileEditState.cells.slice();
+    const newCells = [];
+    for(let i=0; i<16; i++){
+      const c = corr.cells[i];
+      if(!c) continue;
+      // procura cell cuja origIdx === c.origIdx no estado original
+      const found = original.find(x => x.origIdx === c.origIdx);
+      if(!found) continue;
+      const cloned = { ...found, transforms: c.transforms.slice() };
+      const img = await applyTransform(cloned.src);
+      cloned.current = transformCanvas(img, cloned.transforms);
+      newCells[i] = cloned;
+    }
+    if(newCells.length === 16){
+      tileEditState.cells = newCells;
+      $("editorHint").textContent = `↪ correções salvas re-aplicadas (${corr.cells.length} cells)`;
+      if(editorMode) rerenderEditorGrid();
+      renderTestMap();
+    }
+  } catch(e){ /* sem rede / sem registry */ }
+}
+
 let activePreset = WANG_PRESETS[0];
 let presetMetadata = {};
 
@@ -1270,6 +1302,11 @@ function rotInfoFor(b){
   return {canon: b, rotations: 0};
 }
 const ROT_CANONS = [0, 1, 3, 5, 7, 15]; // 6 representantes únicos
+
+// PixelLab gera tiles em convenção CCW-shifted vs cr31. Discovered manualmente
+// pelo usuário no Ground Truth. Mapping: cr31 position N -> PixelLab source index.
+// Permutação: CR31_TO_PIXELLAB[N] = ((N & 7) * 2) + ((N >> 3) & 1) — interleave bits
+const CR31_TO_PIXELLAB_MAP = [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
 
 function bitsToCorners(bits){
   return {
@@ -1623,7 +1660,8 @@ async function renderTiles(){
         mapping[b] = i;
       });
     } else {
-      for(let i=0;i<16;i++) mapping[i] = i;
+      // Aplicar default: PixelLab usa convenção CCW-shifted vs cr31 (validado em Ground Truth)
+      for(let i=0;i<16;i++) mapping[i] = CR31_TO_PIXELLAB_MAP[i];
     }
     const orderedTiles = [];
     for(let bits=0; bits<16; bits++){
@@ -1645,8 +1683,10 @@ async function renderTiles(){
     initEditState(p, orderedTiles);
     renderTestMap();
     if(!meta?.tiles){
-      $("tilesetInfo").innerHTML += `<br>⚠ sem metadata — exibindo ordem natural do PNG (não-cr31)`;
+      $("tilesetInfo").innerHTML += `<br>🔁 default PixelLab→cr31 permutation aplicada (sem metadata cr31 nativa)`;
     }
+    // tenta aplicar correção salva por cima do default
+    applyStoredCorrections(p.id);
   };
   img.onerror = () => {
     $("tilesetInfo").innerHTML += `<br>⚠ erro ao carregar imagem (tileset talvez ainda em geração no PixelLab)`;
@@ -1681,20 +1721,22 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
   if(e.target.id === 'btnSaveCorrected'){
     if(!tileEditState) return;
-    const corrections = {
-      presetId: tileEditState.presetId,
-      timestamp: Date.now(),
-      cells: tileEditState.cells.map((c,i) => ({ position: i, origIdx: c.origIdx, transforms: c.transforms })),
-      tilesDataURL: tileEditState.cells.map(c => c.current),
-    };
-    fetch(API_BASE + '/save_wang_corrections', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(corrections)
-    }).then(r => r.json()).then(r => {
-      $("editorHint").textContent = r.ok ? `💾 Salvo em ${r.saved_to}` : `⚠ erro: ${JSON.stringify(r)}`;
-    }).catch(err => {
-      $("editorHint").textContent = `⚠ servidor offline (${err.message})`;
+    // Fetch existing registry, merge this preset, save back
+    fetch(API_BASE + '/tools/saves/wang_corrections.json').then(r => r.ok ? r.json() : {}).catch(()=>({})).then(registry => {
+      registry = registry || {};
+      registry[tileEditState.presetId] = {
+        timestamp: Date.now(),
+        cells: tileEditState.cells.map((c,i) => ({ position: i, origIdx: c.origIdx, transforms: c.transforms })),
+      };
+      fetch(API_BASE + '/save_wang_corrections', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(registry)
+      }).then(r => r.json()).then(r => {
+        $("editorHint").textContent = r.ok ? `💾 Salvo (${Object.keys(registry).length} presets registrados)` : `⚠ erro: ${JSON.stringify(r)}`;
+      }).catch(err => {
+        $("editorHint").textContent = `⚠ servidor offline (${err.message})`;
+      });
     });
   }
   if(e.target.id === 'btnResetCorrections'){
