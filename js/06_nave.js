@@ -82,7 +82,7 @@ Object.assign(Jogo.prototype, {
         let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
-            // Carga: -10% velocidade por vaca/boi abduzido (max -50% com 5 animais)
+            // Carga: -10% speed por vaca/boi abduzido (max -50% com 5 animais)
             // Fazendeiros NÃO desaceleram a nave
             const carryingCows = (this.abductedCows || [])
                 .filter(v => !v.isBurger && !v.isEnemy).length;
@@ -137,7 +137,7 @@ Object.assign(Jogo.prototype, {
     // Container atrelado à entidade — posição sincronizada no _updateShadows
     _attachSombra(entity, opts = {}) {
         // Tamanho proporcional ao displayWidth da entidade (pega no momento da criação).
-        // Se a entidade escalar depois, sombra fica fixa no tamanho inicial — ok pra MVP.
+        // Se a entidade escalar depois, sombra fica fixa no size inicial — ok pra MVP.
         const dw = entity.displayWidth || 60;
         const dh = entity.displayHeight || 60;
         const {

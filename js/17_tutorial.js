@@ -62,7 +62,7 @@ const TUT_STEPS = [
     {
         key: 'FARMER_KILL',
         title: '⑩ ARREMESSAR NAS ROCHAS',
-        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA mantendo o feixe ativo.\n\nA colisão em alta velocidade elimina o fazendeiro!',
+        text: 'Com o fazendeiro preso ao feixe, voe em direção a uma PEDRA mantendo o feixe ativo.\n\nA colisão em alta speed elimina o fazendeiro!',
         note: 'Mate um fazendeiro batendo em uma pedra para concluir.',
         highlight: ['fazendeiro', 'rocha'],
     },
@@ -520,7 +520,7 @@ Object.assign(Jogo.prototype, {
             .setStrokeStyle(2, 0x00ff55, 0.85)
             .setScrollFactor(0).setDepth(509);
 
-        // Barra de progresso (pontos)
+        // Barra de progresso (points)
         const totalSteps = TUT_STEPS.length;
         const dots = TUT_STEPS.map((_, i) => (i <= idx ? '●' : '○')).join(' ');
         const progress = this.add.text(bx, by - BOX_H / 2 + 10, dots, {

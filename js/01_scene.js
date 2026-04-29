@@ -100,8 +100,8 @@ class Jogo extends Phaser.Scene {
         // matter.add.SPRITE (não image) — sprite suporta .anims pra hovering_idle 8-dir
         this.ship = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.ship.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
-        const naveScale = this.dbg?.scale?.nave ?? 1.0;
-        this.ship.setDisplaySize(80 * naveScale, 80 * naveScale);
+        const shipScale = this.dbg?.scale?.nave ?? 1.0;
+        this.ship.setDisplaySize(80 * shipScale, 80 * shipScale);
         // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
         // via discoRot slider no _updateBody
         this.ship.setFixedRotation();
@@ -333,7 +333,7 @@ class Jogo extends Phaser.Scene {
         this._updateShadows();
         this.lightCone.setPosition(this.ship.x, this.ship.y);
 
-        // Disco: rotação base (slider) + tilt baseado em mudança de velocidade lateral
+        // Disco: rotação base (slider) + tilt baseado em mudança de speed lateral
         const discoRot = this.dbg?.behavior?.discoRot ?? 0;
         this._discoBaseAngle = (this._discoBaseAngle ?? 0) + discoRot * (delta / 1000);
         const navVx = this.ship.body.velocity.x;
@@ -345,7 +345,7 @@ class Jogo extends Phaser.Scene {
         this.ship.rotation = this._discoBaseAngle + this._tiltCurrent;
 
         // ── UFO directional hover anim ───────────────────────────────
-        // Acima de threshold, escolhe dir8 do vetor velocidade; abaixo, mantém última dir
+        // Acima de threshold, escolhe dir8 do vetor speed; abaixo, mantém última dir
         const navSpeedAnim = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeedAnim > 0.5) {
             const deg = (Math.atan2(navVy, navVx) * 180 / Math.PI + 360) % 360;
@@ -376,7 +376,7 @@ class Jogo extends Phaser.Scene {
                 if (Math.random() < 0.55) {
                     const colors = [0x33aaff, 0xff4466, 0xffcc33, 0x44ff88, 0xcc66ff];
                     const col = colors[Math.floor(Math.random() * colors.length)];
-                    // Offset radial pra parecer que sai de pontos diferentes do disco
+                    // Offset radial pra parecer que sai de points diferentes do disco
                     const radial = (Math.random() - 0.5) * 24;
                     const perpX = -uy * radial, perpY = ux * radial;
                     this._spawnSmoke(px + perpX, py + perpY, {
@@ -391,20 +391,20 @@ class Jogo extends Phaser.Scene {
         this._atmoUpdate(delta);
         this._updateLEDs(delta);
 
-        const querBeam = (inputMode === 'wasd' || this.isMobile)
+        const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
             : this.input.activePointer.isDown;
         // Tutorial flags:
         //  _tutBeamNoDrain: cone aparece, NÃO consome graviton (etapa BEAM_VISUAL)
         //  _tutBeamNoPull:  cone aparece, NÃO atrai entidades (BEAM_VISUAL + GRAVITON_BAR)
         const noDrain = !!this._tutBeamNoDrain;
-        const beamAtivo = querBeam && (noDrain || this.energiaLed > 0);
+        const beamActive = wantBeam && (noDrain || this.energiaLed > 0);
 
-        if (querBeam && !noDrain && this.energiaLed > 0) {
+        if (wantBeam && !noDrain && this.energiaLed > 0) {
             const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
             this.energiaLed -= this.energiaDrain * drainMul * (delta/1000);
             if (this.energiaLed < 0) this.energiaLed = 0;
-        } else if (!querBeam && !noDrain) {
+        } else if (!wantBeam && !noDrain) {
             this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * (delta/1000));
         }
 
@@ -424,7 +424,7 @@ class Jogo extends Phaser.Scene {
             }
         }
 
-        if (beamAtivo) {
+        if (beamActive) {
             // FX: detecta transição off→on pra dar shake/flash uma vez
             if (!this._beamWasOn) {
                 this._beamWasOn = true;
@@ -449,7 +449,7 @@ class Jogo extends Phaser.Scene {
                 if (this.abductedCows.length < 5) this._tryAbduct();
                 this.abductedCows.forEach(v => this._basinPhysics(v));
             }
-        } else if (querBeam) {
+        } else if (wantBeam) {
             this._dropNonBurgers();
             this.lightCone.setVisible(true);
             this.lightCone.setAlpha(0.35);

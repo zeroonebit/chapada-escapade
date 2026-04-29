@@ -10,7 +10,7 @@ const WORLD_H = 6000;
 const BEAM_RADIUS_BASE   = 40 * 5.55 / 2;   // raio cone do beam
 const BEAM_CAP_VACAS     = 5;               // max vacas/bois abduzidos
 const BEAM_CAP_FARMERS   = 1;               // max fazendeiros abduzidos (mutex com vacas)
-const NAVE_CARGA_DECAY   = 0.10;            // -10% velocidade por animal
+const NAVE_CARGA_DECAY   = 0.10;            // -10% speed por animal
 const NAVE_CARGA_MIN     = 0.5;             // floor 50% mesmo cheio
 
 // ── DISTANCIAS (todas em px, alguns squared pra comparações sem sqrt) ──
@@ -27,7 +27,7 @@ const FAZENDEIRO_BOUNCE  = 0.45;
 
 // ── CURRAL / BURGER ───────────────────────────────────────────────
 const CURRAL_SLOTS       = 3;
-const SLOT_VALOR         = [100, 150, 220];   // pontos por tipo (classic/cheese/double)
+const SLOT_VALOR         = [100, 150, 220];   // points por tipo (classic/cheese/double)
 const SLOT_FUEL          = [22,  28,  36 ];   // fuel restaurado por tipo
 const BURGER_TEXTURES    = ['burger_classic', 'burger_cheese', 'burger_double'];
 const PROCESS_TIME_MS    = 3000;              // vaca → burger

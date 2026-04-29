@@ -38,8 +38,8 @@ Object.assign(Jogo.prototype, {
 
         // ── Barra Graviton (v2 mesma lógica) ─────────────────────────
         const ENE_W = 290, ENE_H = 72;
-        const useV2Ene = this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2');
-        if (useV2Ene) {
+        const useV2Energy = this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2');
+        if (useV2Energy) {
             this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
             this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
         } else {

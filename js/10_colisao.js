@@ -40,7 +40,7 @@ Object.assign(Jogo.prototype, {
                 this._explode(entity, entityIsEnemy ? 0xff8800 : 0xff2222);
             }
         }
-        // VACA-VACA / VACA-BOI / BOI-BOI: dano só com impacto de alta velocidade
+        // VACA-VACA / VACA-BOI / BOI-BOI: dano só com impacto de alta speed
         else if (otherLabel === 'vaca' || otherLabel === 'boi') {
             if (entityIsEnemy) return;       // fazendeiro: bounce físico, sem dano
             if (!isHighImpact) return;

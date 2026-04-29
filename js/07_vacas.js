@@ -7,13 +7,13 @@ Object.assign(Jogo.prototype, {
         // matter.add.SPRITE (não image) — sprite suporta .anims, image não
         let v = this.matter.add.sprite(x, y, tex);
         v.setFixedRotation();  // sem isso, colisão com beam/atirador deita o bicho de lado
-        // setDisplaySize força tamanho visual fixo (anim frames 68px e static 180px viram mesma escala)
+        // setDisplaySize força size visual fixo (anim frames 68px e static 180px viram mesma scale)
         const baseSize = tipo === 'boi' ? 78 : 68;
         const sizeScale = tipo === 'boi' ? ((this.dbg?.scale?.boi) ?? 3.0) : ((this.dbg?.scale?.vaca) ?? 1.0);
-        const tamanho = baseSize * sizeScale;
-        v.setDisplaySize(tamanho, tamanho);
-        const massa = tipo === 'boi' ? 3.2 : 2;
-        v.setFrictionAir(0.08).setMass(massa).setDepth(5).setCollisionCategory(2);
+        const size = baseSize * sizeScale;
+        v.setDisplaySize(size, size);
+        const mass = tipo === 'boi' ? 3.2 : 2;
+        v.setFrictionAir(0.08).setMass(mass).setDepth(5).setCollisionCategory(2);
         v.body.label = label;
         v.isBurger = false;
         v.stuckInBush = false;
@@ -289,7 +289,7 @@ Object.assign(Jogo.prototype, {
         const speed = Math.sqrt(vx*vx + vy*vy);
 
         // Direção 8-dir (vaca chubby agora é 8-dir como o boi)
-        // Durante janela de 3s pós-abdução, força south (independe de velocidade/wander)
+        // Durante janela de 3s pós-abdução, força south (independe de speed/wander)
         const now = this.time?.now ?? 0;
         const returningSouth = v._returnSouthUntil && now < v._returnSouthUntil;
         let angRad = null;
@@ -366,8 +366,8 @@ Object.assign(Jogo.prototype, {
 
             const dx = v.x - this.ship.x, dy = v.y - this.ship.y;
             const distSq = dx*dx + dy*dy;
-            // Bumpou o boi pra 0.0030 (era 0.0010) — antes força/massa não vencia atrito,
-            // boi parecia preso e picker caía no wanderAngle (random) em vez do vetor velocidade
+            // Bumpou o boi pra 0.0030 (era 0.0010) — antes força/mass não vencia atrito,
+            // boi parecia preso e picker caía no wanderAngle (random) em vez do vetor speed
             const baseF = (v.tipo === 'boi' ? 0.0030 : 0.0016) * velMul;
 
             if (distSq >= FLEE_DIST_SQ) {

@@ -1,5 +1,5 @@
 // 14_grass_patch.js — Patch de grama interativo via Verlet integration (cloth sim).
-// Cada blade é uma string vertical de pontos conectados por constraints rígidas.
+// Cada blade é uma string vertical de points conectados por constraints rígidas.
 // Mouse aplica força com falloff por distância. Vento global oscila no tempo.
 // Roda em JS puro (CPU) — performance ok até ~400 blades em 60fps.
 
@@ -30,7 +30,7 @@ class GrassBlade {
             const vx = (p.x - pr.x) * damping;
             const vy = (p.y - pr.y) * damping;
             this.prev[i] = { x: p.x, y: p.y };
-            // Wind cresce com a altura do ponto (top sente mais)
+            // Wind cresce com a height do ponto (top sente mais)
             const heightFactor = i / (this.points.length - 1);
             p.x += vx + windX * dt * heightFactor;
             p.y += vy + gravity * dt * heightFactor;

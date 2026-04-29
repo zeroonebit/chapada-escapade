@@ -85,7 +85,7 @@ Object.assign(Jogo.prototype, {
         if (!curral.slots) curral.slots = [null, null, null];
     },
 
-    // Conta slots livres (null) — limita aceitação de vacas
+    // Conta slots free (null) — limita aceitação de vacas
     _freeSlots(curral) {
         this._ensureSlots(curral);
         return curral.slots.filter(s => s === null).length;
@@ -93,20 +93,20 @@ Object.assign(Jogo.prototype, {
 
     _dropCowsAtCorral(curral) {
         this._ensureSlots(curral);
-        const candidatas = this.abductedCows.filter(v => !v.isBurger && !v.isEnemy);
-        if (candidatas.length === 0) return;
+        const candidates = this.abductedCows.filter(v => !v.isBurger && !v.isEnemy);
+        if (candidates.length === 0) return;
 
-        const livres = this._freeSlots(curral);
-        if (livres === 0) return;  // curral cheio — vacas continuam abduzidas
+        const free = this._freeSlots(curral);
+        if (free === 0) return;  // curral cheio — vacas continuam abduzidas
 
-        const aceitas = candidatas.slice(0, livres);
-        // Remove só as aceitas das abduzidas; restantes continuam no beam
-        this.abductedCows = this.abductedCows.filter(v => !aceitas.includes(v));
+        const accepted = candidates.slice(0, free);
+        // Remove só as accepted das abduzidas; restantes continuam no beam
+        this.abductedCows = this.abductedCows.filter(v => !accepted.includes(v));
         if (this._updateBeamCounters) this._updateBeamCounters();
 
         this._ensureCowMascot(curral);
 
-        for (const v of aceitas) {
+        for (const v of accepted) {
             if (!v.scene || !v.body) continue;
             v._inCurral = true;
 
@@ -207,7 +207,7 @@ Object.assign(Jogo.prototype, {
         if (!slot || slot._sendoColetado) return;
         slot._sendoColetado = true;
         const icon = slot.icon;
-        const pontos = SLOT_VALOR[slotIdx] || 100;
+        const points = SLOT_VALOR[slotIdx] || 100;
         const fuel   = SLOT_FUEL[slotIdx] || 28;
         if (slot.bounce) slot.bounce.stop();
         this.tweens.killTweensOf(icon);
@@ -226,11 +226,11 @@ Object.assign(Jogo.prototype, {
             onComplete: () => {
                 if (icon.scene) icon.destroy();
                 // Aplica recompensa ao chegar
-                this.score += pontos;
+                this.score += points;
                 this.scoreText.setText(this.score);
                 this.fuelCurrent = Math.min(this.fuelMax, this.fuelCurrent + fuel);
                 this.cameras.main.flash(140, 255, 220, 0);
-                const lbl = `+${pontos}`;
+                const lbl = `+${points}`;
                 const popup = this.add.text(this.ship.x, this.ship.y - 50, lbl, {
                     fontSize: '18px', fill: '#ffcc00', fontStyle: 'bold'
                 }).setDepth(50).setOrigin(0.5);

@@ -37,7 +37,7 @@ Object.assign(Jogo.prototype, {
         const w = this.scale.width, h = this.scale.height;
 
         // ── CHUVA ──────────────────────────────────────────────────────
-        // Gotas com angulo/comprimento/velocidade controlados live via dbg.fx.
+        // Gotas com angulo/comprimento/speed controlados live via dbg.fx.
         // Container guarda referência das gotas pra recriar quando frequencia muda.
         this.fxRain = this.add.container(0, 0).setScrollFactor(0).setDepth(180).setVisible(false);
         this._rainDrops = [];
@@ -84,7 +84,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Recria as gotas com base em dbg.fx.chuvaCount.
-    // Cada gota lê angulo/comprimento/velocidade dinamicamente em cada ciclo.
+    // Cada gota lê angulo/comprimento/speed dinamicamente em cada ciclo.
     _rebuildRain() {
         if (!this.fxRain) return;
         const w = this.scale.width, h = this.scale.height;
@@ -121,7 +121,7 @@ Object.assign(Jogo.prototype, {
             const c = this.dbg?.fx || {};
             const ang     = c.chuvaAngulo  ?? 0.3;   // -1..1 (incl. horiz por unidade vert)
             const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento)
-            const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. velocidade)
+            const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. speed)
             const baseLen = 18 * lenMul;
             const dx      = -ang * baseLen;
             // Atualiza geometria da linha (direção visual)
@@ -129,7 +129,7 @@ Object.assign(Jogo.prototype, {
             drop.setLineWidth(1.4 * Math.max(0.5, Math.min(2, lenMul)));
             // Duração base 700ms — velMul maior = duração menor (cai mais rápido)
             const dur = Phaser.Math.Between(550, 850) / Math.max(0.2, velMul);
-            // Drift horizontal proporcional ao angulo e altura percorrida
+            // Drift horizontal proporcional ao angulo e height percorrida
             const driftX = ang * (h + 60) * 0.45;
             this.tweens.add({
                 targets: drop,

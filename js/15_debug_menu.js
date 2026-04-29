@@ -20,7 +20,7 @@ const MENU_I18N = {
         nave_ufo:'Ship (UFO)', burger:'Burger', dist_esf:'Spherical distortion',
         time:'Time', auto_cycle:'Auto-cycle (60s/preset)', preset:'Preset', shuffle_prev:'Shuffle on PREVIEW',
         ativar:'Active', intensidade:'Intensity', frequencia:'Frequency (drops)', angulo:'Angle (-1=L, +1=R)',
-        velocidade:'Speed', comp_traco:'Stroke length', flocos:'Flakes',
+        speed:'Speed', comp_traco:'Stroke length', flocos:'Flakes',
         sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosao:'Fancy explosion',
         wang:'Wang tiles (debug)', vacas_e:'Cows', bois_e:'Oxen', fazendeiros_e:'Farmers',
         atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
@@ -42,7 +42,7 @@ const MENU_I18N = {
         nave_ufo:'Nave (UFO)', burger:'Hambúrguer', dist_esf:'Distorção esférica',
         time:'Hora', auto_cycle:'Ciclo automático (60s/preset)', preset:'Preset', shuffle_prev:'Aleatório na PRÉVIA',
         ativar:'Ativar', intensidade:'Intensidade', frequencia:'Frequência (gotas)', angulo:'Ângulo (-1=esq, +1=dir)',
-        velocidade:'Velocidade', comp_traco:'Comprimento do traço', flocos:'Flocos',
+        speed:'Velocidade', comp_traco:'Comprimento do traço', flocos:'Flocos',
         sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosao:'Explosão fancy',
         wang:'Wang tiles (debug)', vacas_e:'Vacas', bois_e:'Bois', fazendeiros_e:'Fazendeiros',
         atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
@@ -89,7 +89,7 @@ const DBG_DEFAULTS = {
         chuvaAngulo:        0.3,   // -1..1 (negativo = pra esquerda)
         chuvaVelocidade:    1.0,   // 0.2..3 multiplicador
         chuvaTamanho:       1.0,   // 0.3..3 mult. do comprimento da gota
-        chuvaCount:         80,    // 0..400 frequência (qtd de gotas)
+        chuvaCount:         80,    // 0..400 frequência (qty de gotas)
         neblina:            false,
         neblinaIntensidade: 0.5,
         beamSparks:         true,
@@ -302,7 +302,7 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="angulo">Ângulo (-1=esq, +1=dir)</span>
                             <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
                             <input type="number" class="val" data-show="fx.chuvaAngulo" /></label>
-                        <label><span data-i18n="velocidade">Velocidade</span>
+                        <label><span data-i18n="speed">Velocidade</span>
                             <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
                             <input type="number" class="val" data-show="fx.chuvaVelocidade" /></label>
                         <label><span data-i18n="comp_traco">Comprimento traço</span>
