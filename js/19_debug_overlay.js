@@ -63,11 +63,11 @@ Object.assign(Jogo.prototype, {
 
         const fps = this.game.loop.actualFps.toFixed(1);
         const tweens = this.tweens.getTweens().length;
-        const vacas = (this.vacas || []).length;
-        const farmers = (this.fazendeiros || []).length;
-        const towers = (this.atiradores || []).length;
-        const bullets = (this.balas || []).length;
-        const abduzidas = (this.vacas_abduzidas || []).length;
+        const vacas = (this.cows || []).length;
+        const farmers = (this.farmers || []).length;
+        const towers = (this.shooters || []).length;
+        const bullets = (this.bullets || []).length;
+        const abduzidas = (this.abductedCows || []).length;
         const radarFades = this._radarBlipFades?.size || 0;
 
         // Heap (Chrome / Edge / Brave somente)
@@ -108,11 +108,11 @@ Object.assign(Jogo.prototype, {
         const snap = {
             fps, heap,
             tweens: this.tweens.getTweens().length,
-            vacas: (this.vacas || []).length,
-            farmers: (this.fazendeiros || []).length,
-            towers: (this.atiradores || []).length,
-            bullets: (this.balas || []).length,
-            abduzidas: (this.vacas_abduzidas || []).length,
+            vacas: (this.cows || []).length,
+            farmers: (this.farmers || []).length,
+            towers: (this.shooters || []).length,
+            bullets: (this.bullets || []).length,
+            abduzidas: (this.abductedCows || []).length,
             errors: this._errorLog.length,
         };
         console.log('[DBG SNAPSHOT]', snap);

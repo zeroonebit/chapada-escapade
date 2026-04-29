@@ -3,7 +3,7 @@
 // polígonos orgânicos oversize. Cells adjacentes do mesmo nível fundem visualmente.
 Object.assign(Jogo.prototype, {
 
-    _setupCenario(W, H) {
+    _setupScenery(W, H) {
         const CELL = 80;
         const COLS = Math.ceil(W / CELL);
         const ROWS = Math.ceil(H / CELL);
@@ -275,8 +275,8 @@ Object.assign(Jogo.prototype, {
         }
 
         // ── 6. CURRAIS (em terra firme)
-        this.currais = [];
-        this.driveThrus = this.currais;
+        this.corrals = [];
+        this.driveThrus = this.corrals;
         // Currais — qualquer posição válida (terra ou grama), longe das bordas
         // e com distância mínima entre si pra não sobrepor
         const curralPositions = [];
@@ -290,14 +290,14 @@ Object.assign(Jogo.prototype, {
                 );
                 if (tooClose) continue;
                 curralPositions.push({x: cx, y: cy});
-                this._construirCurral(cx, cy);
+                this._buildCorral(cx, cy);
                 break;
             }
         }
     },
 
     // 4 variantes de curral aleatorias por spawn
-    _construirCurral(cx, cy) {
+    _buildCorral(cx, cy) {
         const VARIANTS = [
             // V1: padrao chapada (fence curved + tower ornamental + lanterna baixa, gate aberto)
             { side:'fence_curved_long', gate:'gate_open_double', corner:'tower_ornamental_thin',
@@ -356,7 +356,7 @@ Object.assign(Jogo.prototype, {
             place(cx + SEG, cy + H2 + 10, v.lantern, SCALE * 0.8);
         }
 
-        this.currais.push({
+        this.corrals.push({
             x: cx, y: cy, sprite: null, processing: [], ready: [],
             variant: v
         });

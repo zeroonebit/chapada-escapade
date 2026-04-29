@@ -1,7 +1,7 @@
 // 05_hud.js — HUD: criação e posicionamento dos elementos da interface
 Object.assign(Jogo.prototype, {
 
-    _criarHUD() {
+    _createHUD() {
         // HUD acima do atmosphere overlay (depth 195) e do storm flash (196)
         const D = 200, D2 = 201;
 
@@ -9,7 +9,7 @@ Object.assign(Jogo.prototype, {
         // frame limpo (sem dígitos baked-in); número sobreposto pelo código
         this.hud.scoreBg   = this.add.image(0,0,'hud_score_frame').setDisplaySize(200,52).setScrollFactor(0).setDepth(D);
         this.hud.scoreText = this.add.text(0,12,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.textoScore    = this.hud.scoreText;
+        this.scoreText    = this.hud.scoreText;
 
         // ── COWS box (vacas + bois abduzidos no feixe) ─────────────────
         this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 80).setScrollFactor(0).setDepth(D);
@@ -18,7 +18,7 @@ Object.assign(Jogo.prototype, {
         // ── BURGERS box (total entregue) ───────────────────────────────
         this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(176, 80).setScrollFactor(0).setDepth(D);
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.textoContador   = this.hud.burgersText;  // alias mantido pra _virarBurger
+        this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
         // ── Barra Combustível (v2: empty base + full com setCrop dinâmico) ─
         const COMB_W = 380, COMB_H = 68;
@@ -30,7 +30,7 @@ Object.assign(Jogo.prototype, {
             // Fallback pro frame antigo + Graphics fill
             this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
             this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-            this.barraCombustivel = this.hud.combFill;
+            this.fuelBar = this.hud.combFill;
         }
         this.hud.combLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
@@ -45,7 +45,7 @@ Object.assign(Jogo.prototype, {
         } else {
             this.hud.eneImg  = this.add.image(0,0,'hud_frame_graviton').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
             this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-            this.barraEnergia = this.hud.eneFill;
+            this.energyBar = this.hud.eneFill;
         }
         this.hud.eneLabelBg = this.add.rectangle(0,0,90,18,0x000000,1).setScrollFactor(0).setDepth(D2);
         this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'12px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
@@ -54,14 +54,14 @@ Object.assign(Jogo.prototype, {
         // Hint inicial removido — tutorial cobre instruções de input.
 
         // ── Seta indicadora e rastro ──────────────────────────────────
-        this.setaIndicadora = this.add.graphics().setScrollFactor(0).setDepth(D2);
-        this.rastroMouse    = [];
-        this.graficoRastro  = this.add.graphics().setDepth(9);
+        this.indicatorArrow = this.add.graphics().setScrollFactor(0).setDepth(D2);
+        this.mouseTrail    = [];
+        this.trailGraphic  = this.add.graphics().setDepth(9);
 
         // ── Radar (canto inferior esquerdo) ───────────────────────────
         // hud_radar_frame: sprite com NSWE marcados; conteúdo (sweep + blips) desenhado dentro
         this.hud.miniBg  = this.add.graphics().setScrollFactor(0).setDepth(D - 0.5);  // fundo verde + sweep abaixo do frame
-        this.hud.radarFrame = null;  // criado em _posicionarHUD após sabermos posição
+        this.hud.radarFrame = null;  // criado em _positionHUD após sabermos posição
         this.hud.miniGfx = this.add.graphics().setScrollFactor(0).setDepth(D);  // blips entre fundo e frame
         this._radarAngle = 0;
         // Map de blip → lastSeenAt (timestamp em ms) pra fade
@@ -71,7 +71,7 @@ Object.assign(Jogo.prototype, {
         if (this._applyHudI18n) this._applyHudI18n();
     },
 
-    _posicionarHUD() {
+    _positionHUD() {
         const w = this.scale.width, h = this.scale.height;
 
         // Score — centro-topo
@@ -133,7 +133,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Mostra/esconde as barras de combustível e graviton (usado pelo tutorial)
-    _setBarrasVisibility(combVisible, gravVisible) {
+    _setBarsVisibility(combVisible, gravVisible) {
         if (this.hud.combImg)     this.hud.combImg.setVisible(combVisible);
         if (this.hud.combFill)    this.hud.combFill.setVisible(combVisible);
         if (this.hud.combFillImg) this.hud.combFillImg.setVisible(combVisible);
@@ -169,13 +169,13 @@ Object.assign(Jogo.prototype, {
         if (this.hud.eneLabel)  this.hud.eneLabel.setText(L.graviton);
     },
 
-    _atualizarMinimapa() {
-        const m = this._mini; if (!m || !this.hud?.miniGfx || !this.nave) return;
+    _updateMinimap() {
+        const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ship) return;
         const { cx, cy, r } = m;
         const W = 8000, H = 6000;
         const RANGE = Math.max(W, H) * 0.6;
-        const wx = (vx) => cx + (vx - this.nave.x) / RANGE * r;
-        const wy = (vy) => cy + (vy - this.nave.y) / RANGE * r;
+        const wx = (vx) => cx + (vx - this.ship.x) / RANGE * r;
+        const wy = (vy) => cy + (vy - this.ship.y) / RANGE * r;
         const inRadar = (x, y) => (x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r;
 
         const g = this.hud.miniGfx;
@@ -236,12 +236,12 @@ Object.assign(Jogo.prototype, {
             blips.push({ x: bx, y: by, color, size, alpha });
         };
 
-        if (this.currais)     for (const c of this.currais)     collect(c, 0x4499ff, 2.5);
-        if (this.vacas)       for (const v of this.vacas) {
+        if (this.corrals)     for (const c of this.corrals)     collect(c, 0x4499ff, 2.5);
+        if (this.cows)       for (const v of this.cows) {
             if (!v.scene || v._destroyed || v.isBurger) continue;
             collect(v, v.tipo === 'boi' ? 0xaa7744 : 0xffffff, 1.8);
         }
-        if (this.fazendeiros) for (const f of this.fazendeiros) {
+        if (this.farmers) for (const f of this.farmers) {
             if (!f.scene || f._destroyed || f._dying) continue;
             collect(f, 0xffdd33, 2);
         }

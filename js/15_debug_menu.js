@@ -467,12 +467,12 @@ Object.assign(Jogo.prototype, {
             const inSplash = !this.gameStarted;
             const snap = {
                 inSplash,
-                pausadoBefore: this.pausado,
+                pausadoBefore: this.paused,
                 matterBefore:  this.matter.world.enabled,
                 splash:  inSplash ? (this._splashElements || []).slice() : [],
-                farmers: (this.fazendeiros || []).slice(),
-                towers:  (this.atiradores  || []).slice(),
-                bullets: (this.balas       || []).slice(),
+                farmers: (this.farmers || []).slice(),
+                towers:  (this.shooters  || []).slice(),
+                bullets: (this.bullets       || []).slice(),
             };
             // Hide
             this._toggleDebugMenu(false);
@@ -482,7 +482,7 @@ Object.assign(Jogo.prototype, {
             snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(false));
             snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(false));
             // Despausa pra atmosfera/chuva animarem
-            this.pausado = false;
+            this.paused = false;
             this.matter.world.enabled = true;
             if (this.pauseOverlay) this.pauseOverlay.setVisible(false);
             if (this.pauseGrafico) this.pauseGrafico.setVisible(false);
@@ -496,7 +496,7 @@ Object.assign(Jogo.prototype, {
                 snap.farmers.forEach(f => f && f.scene && f.setVisible(true));
                 snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(true));
                 snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(true));
-                this.pausado = snap.pausadoBefore;
+                this.paused = snap.pausadoBefore;
                 this.matter.world.enabled = snap.matterBefore;
                 if (this.pauseOverlay) this.pauseOverlay.setVisible(snap.pausadoBefore);
                 if (this.pauseGrafico) this.pauseGrafico.setVisible(snap.pausadoBefore);

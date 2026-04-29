@@ -1,19 +1,19 @@
 // 09_inimigos.js — Atiradores fixos (torres) e fazendeiros móveis
 Object.assign(Jogo.prototype, {
 
-    _setupAtiradores() {
+    _setupShooters() {
         // 6 torres fixas em posições estratégicas
-        this.balas = [];
-        this.atiradores = [];
+        this.bullets = [];
+        this.shooters = [];
         const POSTS = [[480,480],[2720,480],[480,1920],[2720,1920],[1600,280],[1600,2120]];
         for (const [ax,ay] of POSTS) {
             const spr = this.add.image(ax, ay, 'atirador').setDepth(2).setScale(1.4);
             this._attachSombra(spr, { rx: 22, ry: 8, alpha: 0.40, offY: 16, offX: 4 });
-            this.atiradores.push({ x:ax, y:ay, sprite:spr, cooldown: Phaser.Math.Between(800,3000) });
+            this.shooters.push({ x:ax, y:ay, sprite:spr, cooldown: Phaser.Math.Between(800,3000) });
         }
     },
 
-    _destruirAtirador(at, hitter) {
+    _destroyShooter(at, hitter) {
         if (this.cameras.main.worldView.contains(at.x, at.y)) {
             this.cameras.main.shake(180, 0.012);
         }
@@ -26,11 +26,11 @@ Object.assign(Jogo.prototype, {
             onComplete: () => at.sprite.destroy()
         });
         // Sacrifica o projétil (vaca/boi/fazendeiro arremessado)
-        if (hitter) this._explodir(hitter, 0xff8800);
-        this._checkVitoria();
+        if (hitter) this._explode(hitter, 0xff8800);
+        this._checkVictory();
     },
 
-    _atualizarAtiradores(delta) {
+    _updateShooters(delta) {
         const RANGE = 420;
         const RANGE_SQ = RANGE * RANGE;
         const VEL = 4.5;
@@ -38,8 +38,8 @@ Object.assign(Jogo.prototype, {
         const DANO = 13 * danoMul;
         const MAX_DIST = 580;
 
-        for (const at of this.atiradores) {
-            const dx = this.nave.x - at.x, dy = this.nave.y - at.y;
+        for (const at of this.shooters) {
+            const dx = this.ship.x - at.x, dy = this.ship.y - at.y;
             const emRange = (dx*dx + dy*dy) <= RANGE_SQ;
 
             at.sprite.setTint(emRange ? 0xff4400 : 0xffffff);
@@ -48,13 +48,13 @@ Object.assign(Jogo.prototype, {
 
             at.cooldown = Phaser.Math.Between(2000, 3500);
             // M5: cap rígido de 100 balas — descarta a mais antiga se cheio
-            if (this.balas.length >= 100) {
-                const oldest = this.balas.shift();
+            if (this.bullets.length >= 100) {
+                const oldest = this.bullets.shift();
                 if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
             }
             const ang = Math.atan2(dy, dx);
             const bSprite = this.add.circle(at.x, at.y, 5, 0xff4400).setDepth(8);
-            this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
+            this.bullets.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
 
             const flash = this.add.circle(at.x, at.y, 14, 0xffcc00, 0.9).setDepth(9);
             this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
@@ -62,16 +62,16 @@ Object.assign(Jogo.prototype, {
 
         // Limites do mundo + margem pra detectar saída de tela
         const W = 8000, H = 6000;
-        this.balas = this.balas.filter(b => {
+        this.bullets = this.bullets.filter(b => {
             if (!b.sprite || !b.sprite.active) return false;
             b.sprite.x += b.vx;
             b.sprite.y += b.vy;
             b.dist += VEL;
 
-            const dx = b.sprite.x - this.nave.x, dy = b.sprite.y - this.nave.y;
+            const dx = b.sprite.x - this.ship.x, dy = b.sprite.y - this.ship.y;
             // Bala "armada" só após 25px — evita hit instantâneo se atirador estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
-                this.combustivelAtual = Math.max(0, this.combustivelAtual - DANO);
+                this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
                 this.cameras.main.shake(200, 0.013);
                 this.cameras.main.flash(160, 255, 80, 0);
                 b.sprite.destroy();
@@ -86,12 +86,12 @@ Object.assign(Jogo.prototype, {
         });
 
         // Slam: entidade arremessada bate na torre → ambos destruídos
-        this.atiradores = this.atiradores.filter(at => {
-            for (const v of this.vacas_abduzidas) {
+        this.shooters = this.shooters.filter(at => {
+            for (const v of this.abductedCows) {
                 if (!v.scene || !v.body || v.isBurger) continue;
                 const ddx = v.x - at.x, ddy = v.y - at.y;
                 if (ddx*ddx + ddy*ddy < 35*35) {
-                    this._destruirAtirador(at, v);
+                    this._destroyShooter(at, v);
                     return false;
                 }
             }
@@ -99,7 +99,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    _spawnFazendeiros(n) {
+    _spawnFarmers(n) {
         const W = 8000, H = 6000;
         for (let i = 0; i < n; i++) {
             const x = Phaser.Math.Between(400, W-400);
@@ -138,21 +138,21 @@ Object.assign(Jogo.prototype, {
             // Sombra blur abaixo do fazendeiro
             this._attachSombra(f, { rx: 24, ry: 9, alpha: 0.45, offY: 18, offX: 5 });
 
-            this.fazendeiros.push(f);
+            this.farmers.push(f);
         }
     },
 
-    _atualizarFazendeiros(delta) {
+    _updateFarmers(delta) {
         const velMul = this.dbg?.behavior?.velFaz ?? 1.0;
         const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
         const IDLE_F   = 0.0008 * velMul; // mesmo ritmo do idle das vacas brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
 
-        for (const f of this.fazendeiros) {
+        for (const f of this.farmers) {
             if (!f.scene || !f.body) continue;
 
-            const isAbducted = this.vacas_abduzidas.includes(f);
+            const isAbducted = this.abductedCows.includes(f);
 
             // Caminhada idle (não anda nem atira sendo arremessado)
             if (f._wandering && !isAbducted) {
@@ -184,19 +184,19 @@ Object.assign(Jogo.prototype, {
             if (isAbducted) continue;
 
             // Disparo quando nave está perto (mas com distância mínima de engajamento)
-            const dx = this.nave.x - f.x, dy = this.nave.y - f.y;
+            const dx = this.ship.x - f.x, dy = this.ship.y - f.y;
             const distSq = dx*dx + dy*dy;
             f._cooldown -= delta;
             if (distSq <= SHOOT_SQ && distSq > 80*80 && f._cooldown <= 0) {
                 f._cooldown = Phaser.Math.Between(2200, 3800);
                 const ang = Math.atan2(dy, dx);
                 // Cap rígido (M5)
-                if (this.balas.length >= 100) {
-                    const oldest = this.balas.shift();
+                if (this.bullets.length >= 100) {
+                    const oldest = this.bullets.shift();
                     if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
                 }
                 const bSprite = this.add.circle(f.x, f.y, 4, 0xff4400).setDepth(8);
-                this.balas.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
+                this.bullets.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
                 const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);
                 this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
                 // Puff de fumaça do disparo (3 nuvenzinhas com offset aleatório)

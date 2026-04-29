@@ -29,7 +29,7 @@ class Jogo extends Phaser.Scene {
         // Carrega config de debug ANTES de qualquer spawn (afeta scales/counts)
         this._loadDebugCfg();
 
-        this._setupTexturasGeometricas();   // 03_textures.js (textura 'nave' usada abaixo)
+        this._setupGeometricTextures();   // 03_textures.js (textura 'nave' usada abaixo)
 
         // ── REGISTRA ANIMS 8-DIR (vaca chubby, faz, boi) ─────────────
         // Vaca chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
@@ -66,54 +66,54 @@ class Jogo extends Phaser.Scene {
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
             this.add.rectangle(W/2, H/2, W, H, 0x1a1a1a).setDepth(0);
-            this.fazendeiros = [];
-            this.vacas = [];
-            this.vacas_abduzidas = [];
-            this.currais = [];
+            this.farmers = [];
+            this.cows = [];
+            this.abductedCows = [];
+            this.corrals = [];
             this.grassPatches = [];
             this.terrainGrid = null;
             this._setupGrassPatch(W, H);    // 14_grass_patch.js
         } else {
             // Cenário sempre roda (terreno/grama base); cercas/moitas opcionais via cfg.cenario
-            this._setupCenario(W, H);
-            if (this.dbg.enabled.atiradores) this._setupAtiradores();
-            else { this.balas = []; this.atiradores = []; }
-            this.fazendeiros = [];
-            if (this.dbg.enabled.fazendeiros) this._spawnFazendeiros(this.dbg.counts.fazendeiros);
+            this._setupScenery(W, H);
+            if (this.dbg.enabled.atiradores) this._setupShooters();
+            else { this.bullets = []; this.shooters = []; }
+            this.farmers = [];
+            if (this.dbg.enabled.fazendeiros) this._spawnFarmers(this.dbg.counts.fazendeiros);
         }
 
         // ── NAVE ─────────────────────────────────────────────────────
         // Sombra blur fake (3 elipses stacked) — substituiu o tinted nave clone
-        this.sombraNave = this.add.container(0, 0);
-        this.sombraNave.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
-        this.sombraNave.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
-        this.sombraNave.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
-        this.sombraNave.setDepth(1);
+        this.shipShadow = this.add.container(0, 0);
+        this.shipShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
+        this.shipShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
+        this.shipShadow.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
+        this.shipShadow.setDepth(1);
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
-        this.raioCone = CONE_R;
+        this.coneRadius = CONE_R;
         // Beam: Graphics com círculos concêntricos de alpha variável (sem PNG → sem
         // artefato de mask). Desenhado em _desenharCone(raio) chamado em _updateBody.
-        this.coneLuz = this.add.graphics().setDepth(2).setVisible(false);
+        this.lightCone = this.add.graphics().setDepth(2).setVisible(false);
         this._desenharCone(CONE_R);
-        if (!this.dbg.enabled.beam) this.coneLuz.setAlpha(0);  // beam invisível se OFF
+        if (!this.dbg.enabled.beam) this.lightCone.setAlpha(0);  // beam invisível se OFF
         // matter.add.SPRITE (não image) — sprite suporta .anims pra hovering_idle 8-dir
-        this.nave = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
-        this.nave.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
+        this.ship = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
+        this.ship.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         const naveScale = this.dbg?.scale?.nave ?? 1.0;
-        this.nave.setDisplaySize(80 * naveScale, 80 * naveScale);
+        this.ship.setDisplaySize(80 * naveScale, 80 * naveScale);
         // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
         // via discoRot slider no _updateBody
-        this.nave.setFixedRotation();
+        this.ship.setFixedRotation();
         this._naveDir8 = 'S';
-        if (this.anims.exists('ufo_hover_S')) this.nave.play('ufo_hover_S');
+        if (this.anims.exists('ufo_hover_S')) this.ship.play('ufo_hover_S');
 
         this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da nave
 
         // ── VACAS ────────────────────────────────────────────────────
         if (!this.EXPERIMENT_MODE) {
-            this.vacas = [];
-            this.vacas_abduzidas = [];
+            this.cows = [];
+            this.abductedCows = [];
             // Só spawna se vaca OU boi tá habilitado — _spawnVacas filtra por tipo internamente
             if (this.dbg.enabled.vacas || this.dbg.enabled.bois) {
                 this._spawnVacas(this.dbg.counts.vacas);
@@ -122,10 +122,10 @@ class Jogo extends Phaser.Scene {
 
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
-        this.scoreAtual = 0;
-        this.combustivelMax   = 100;
-        this.combustivelAtual = 100;
-        this.dificuldade = 1;
+        this.score = 0;
+        this.fuelMax   = 100;
+        this.fuelCurrent = 100;
+        this.difficulty = 1;
         this.gameOver = false;
         this.energiaMax = 100;
         this.energiaLed = 100;
@@ -136,9 +136,9 @@ class Jogo extends Phaser.Scene {
         this.isMobile = this.sys.game.device.input.touch;
         this.input.addPointer(1);
         this.hud = {};
-        this._criarHUD();
-        this._posicionarHUD();
-        this.scale.on('resize', () => this._posicionarHUD());
+        this._createHUD();
+        this._positionHUD();
+        this.scale.on('resize', () => this._positionHUD());
 
         // ── CURSOR VIRTUAL ───────────────────────────────────────────
         this.virtualX = this.scale.width / 2;
@@ -156,21 +156,21 @@ class Jogo extends Phaser.Scene {
             if(this.hud.hintBg) { this.hud.hintBg.destroy(); this.hud.hintBg = null; }
         });
 
-        this.cameras.main.startFollow(this.nave, true, 0.05, 0.05);
+        this.cameras.main.startFollow(this.ship, true, 0.05, 0.05);
 
         // Repovoamento periódico (desabilitado em experiment mode)
         if (!this.EXPERIMENT_MODE) {
-            this.time.addEvent({delay:6000, loop:true, callback:()=>{ if(!this.gameOver) this._repovoar(); }});
+            this.time.addEvent({delay:6000, loop:true, callback:()=>{ if(!this.gameOver) this._repopulate(); }});
         }
 
-        this._setupPausa();                 // 11_gameflow.js
+        this._setupPause();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
         this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
         this._setupDebugOverlay();          // 19_debug_overlay.js — F3 overlay (FPS, heap, counts)
         this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
-        this._setupColisoes();              // 10_colisao.js
+        this._setupCollisions();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
 
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
@@ -269,20 +269,20 @@ class Jogo extends Phaser.Scene {
 
         // ESC — toggle pausa + debug menu
         if (Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
-            this.pausado = !this.pausado;
-            this.matter.world.enabled = !this.pausado;
-            this.pauseOverlay.setVisible(this.pausado);
-            this.pauseGrafico.setVisible(this.pausado);
-            this.pauseLabel.setVisible(this.pausado);
-            this.pauseHint.setVisible(this.pausado);
-            this._toggleDebugMenu(this.pausado);
+            this.paused = !this.paused;
+            this.matter.world.enabled = !this.paused;
+            this.pauseOverlay.setVisible(this.paused);
+            this.pauseGrafico.setVisible(this.paused);
+            this.pauseLabel.setVisible(this.paused);
+            this.pauseHint.setVisible(this.paused);
+            this._toggleDebugMenu(this.paused);
         }
-        if (this.pausado) return;
+        if (this.paused) return;
 
-        this.dificuldade += 0.000018 * delta;
+        this.difficulty += 0.000018 * delta;
 
-        if (!this._tutCombustivelCongelado) this._atualizarCombustivel(delta);
-        if (!this.EXPERIMENT_MODE) this._atualizarIAVacas();
+        if (!this._tutCombustivelCongelado) this._updateFuel(delta);
+        if (!this.EXPERIMENT_MODE) this._updateCowsAI();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
         // COWS counter: usa _cowsInBeamCount mantido por _updateBeamCounters
@@ -304,12 +304,12 @@ class Jogo extends Phaser.Scene {
                 const len = Math.hypot(dx, dy);
                 const REACH = 220;
                 cursor = {
-                    x: this.nave.x + (dx/len) * REACH,
-                    y: this.nave.y + (dy/len) * REACH
+                    x: this.ship.x + (dx/len) * REACH,
+                    y: this.ship.y + (dy/len) * REACH
                 };
             } else {
                 // Sem input: cursor na nave (não move)
-                cursor = { x: this.nave.x, y: this.nave.y };
+                cursor = { x: this.ship.x, y: this.ship.y };
             }
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
             this._beamHeld = this._keysWASD.SPACE.isDown;
@@ -317,32 +317,32 @@ class Jogo extends Phaser.Scene {
             // Joystick — vetor vira "alvo virtual" 220px à frente da nave
             const REACH = 220;
             cursor = {
-                x: this.nave.x + this._joyVec.x * REACH,
-                y: this.nave.y + this._joyVec.y * REACH
+                x: this.ship.x + this._joyVec.x * REACH,
+                y: this.ship.y + this._joyVec.y * REACH
             };
         } else {
             const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
             cursor = { x: wp.x, y: wp.y };
         }
 
-        this._atualizarRastro(cursor);
-        this._moverNave(cursor);
-        this._atualizarSeta();
+        this._updateTrail(cursor);
+        this._moveShip(cursor);
+        this._updateArrow();
 
-        this.sombraNave.setPosition(this.nave.x+8, this.nave.y+24);
-        this._atualizarSombras();
-        this.coneLuz.setPosition(this.nave.x, this.nave.y);
+        this.shipShadow.setPosition(this.ship.x+8, this.ship.y+24);
+        this._updateShadows();
+        this.lightCone.setPosition(this.ship.x, this.ship.y);
 
         // Disco: rotação base (slider) + tilt baseado em mudança de velocidade lateral
         const discoRot = this.dbg?.behavior?.discoRot ?? 0;
         this._discoBaseAngle = (this._discoBaseAngle ?? 0) + discoRot * (delta / 1000);
-        const navVx = this.nave.body.velocity.x;
-        const navVy = this.nave.body.velocity.y;
+        const navVx = this.ship.body.velocity.x;
+        const navVy = this.ship.body.velocity.y;
         const vAxDelta = navVx - (this._lastNavVx ?? navVx);
         this._lastNavVx = navVx;
         const tiltTarget = Phaser.Math.Clamp(-vAxDelta * 8, -0.4, 0.4);
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
-        this.nave.rotation = this._discoBaseAngle + this._tiltCurrent;
+        this.ship.rotation = this._discoBaseAngle + this._tiltCurrent;
 
         // ── UFO directional hover anim ───────────────────────────────
         // Acima de threshold, escolhe dir8 do vetor velocidade; abaixo, mantém última dir
@@ -353,8 +353,8 @@ class Jogo extends Phaser.Scene {
             this._naveDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
         }
         const hoverKey = `ufo_hover_${this._naveDir8 || 'S'}`;
-        if (this.nave.anims && this.anims.exists(hoverKey) && this.nave.anims.currentAnim?.key !== hoverKey) {
-            this.nave.play(hoverKey, true);
+        if (this.ship.anims && this.anims.exists(hoverKey) && this.ship.anims.currentAnim?.key !== hoverKey) {
+            this.ship.play(hoverKey, true);
         }
 
         // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
@@ -366,8 +366,8 @@ class Jogo extends Phaser.Scene {
             if (this._smokeTimer > 100) {
                 this._smokeTimer = 0;
                 const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
-                const px = this.nave.x + ux * 30;
-                const py = this.nave.y + uy * 30;
+                const px = this.ship.x + ux * 30;
+                const py = this.ship.y + uy * 30;
                 this._spawnSmoke(px, py, {
                     color: 0xbbbbcc, alpha: 0.75, size: 4,
                     dur: 1400, drift: 26
@@ -389,7 +389,7 @@ class Jogo extends Phaser.Scene {
 
         this._updateBarrel();
         this._atmoUpdate(delta);
-        this._atualizarLEDs(delta);
+        this._updateLEDs(delta);
 
         const querBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
@@ -441,33 +441,33 @@ class Jogo extends Phaser.Scene {
                     this._emitBeamSparkle();
                 }
             }
-            this.coneLuz.setVisible(true);
-            this.coneLuz.setAlpha(1);
+            this.lightCone.setVisible(true);
+            this.lightCone.setAlpha(1);
             // Tutorial BEAM_VISUAL e GRAVITON_BAR: cone aparece mas zero pull
             const noPull = !!this._tutBeamNoPull;
             if (!noPull) {
-                if (this.vacas_abduzidas.length < 5) this._tentarAbduzir();
-                this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
+                if (this.abductedCows.length < 5) this._tryAbduct();
+                this.abductedCows.forEach(v => this._basinPhysics(v));
             }
         } else if (querBeam) {
             this._dropNonBurgers();
-            this.coneLuz.setVisible(true);
-            this.coneLuz.setAlpha(0.35);
-            this.vacas_abduzidas.forEach(v => this._fisicaBacia(v));
+            this.lightCone.setVisible(true);
+            this.lightCone.setAlpha(0.35);
+            this.abductedCows.forEach(v => this._basinPhysics(v));
         } else {
             this._beamWasOn = false;
-            this._soltarTodas();
-            this.coneLuz.setVisible(false);
+            this._releaseAll();
+            this.lightCone.setVisible(false);
         }
 
         if (!this.EXPERIMENT_MODE) {
-            this._verificarEntrega();
-            this._atualizarAtiradores(delta);
-            this._atualizarFazendeiros(delta);
+            this._checkDelivery();
+            this._updateShooters(delta);
+            this._updateFarmers(delta);
         } else {
             this._updateGrassMouse();
         }
 
-        this._atualizarMinimapa();
+        this._updateMinimap();
     }
 }

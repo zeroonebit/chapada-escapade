@@ -3,7 +3,7 @@
 // Vaca/boi vêm de PNGs carregados em 02_preload.js
 Object.assign(Jogo.prototype, {
 
-    _setupTexturasGeometricas() {
+    _setupGeometricTextures() {
         let g = this.add.graphics();
 
         // NAVE — agora vem de assets/pixel_labs/nave.png (carregado no preload)

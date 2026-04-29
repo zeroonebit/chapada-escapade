@@ -11,20 +11,20 @@ Object.assign(Jogo.prototype, {
     },
 
     _desenharCone(r) {
-        this.coneLuz.clear();
+        this.lightCone.clear();
         // Camadas concêntricas, alpha crescente do exterior pro centro — gera halo suave
-        this.coneLuz.fillStyle(0x66ff99, 0.05); this.coneLuz.fillCircle(0, 0, r * 1.10);
-        this.coneLuz.fillStyle(0x66ff99, 0.08); this.coneLuz.fillCircle(0, 0, r * 0.92);
-        this.coneLuz.fillStyle(0x88ffaa, 0.12); this.coneLuz.fillCircle(0, 0, r * 0.72);
-        this.coneLuz.fillStyle(0xaaffcc, 0.16); this.coneLuz.fillCircle(0, 0, r * 0.50);
-        this.coneLuz.fillStyle(0xddffee, 0.22); this.coneLuz.fillCircle(0, 0, r * 0.28);
+        this.lightCone.fillStyle(0x66ff99, 0.05); this.lightCone.fillCircle(0, 0, r * 1.10);
+        this.lightCone.fillStyle(0x66ff99, 0.08); this.lightCone.fillCircle(0, 0, r * 0.92);
+        this.lightCone.fillStyle(0x88ffaa, 0.12); this.lightCone.fillCircle(0, 0, r * 0.72);
+        this.lightCone.fillStyle(0xaaffcc, 0.16); this.lightCone.fillCircle(0, 0, r * 0.50);
+        this.lightCone.fillStyle(0xddffee, 0.22); this.lightCone.fillCircle(0, 0, r * 0.28);
     },
 
-    _atualizarLEDs(delta) {
+    _updateLEDs(delta) {
         const N = this.leds.length;
         // Raio do anel = ~48% do displayWidth da nave (borda visual exterior)
         // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se nave escalar.
-        const LED_R = (this.nave?.displayWidth || 80) * 0.48;
+        const LED_R = (this.ship?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
         const fullRevs = Math.floor(this._ledHead / N);
         const corBase = (fullRevs % 2 === 0)
@@ -36,8 +36,8 @@ Object.assign(Jogo.prototype, {
         for (let i = 0; i < N; i++) {
             const led = this.leds[i];
             const halo = this.ledHalos[i];
-            const x = this.nave.x + Math.cos(led._ang) * LED_R;
-            const y = this.nave.y + Math.sin(led._ang) * LED_R;
+            const x = this.ship.x + Math.cos(led._ang) * LED_R;
+            const y = this.ship.y + Math.sin(led._ang) * LED_R;
             led.setPosition(x, y);
             halo.setPosition(x, y);
 
@@ -61,59 +61,59 @@ Object.assign(Jogo.prototype, {
     },
 
     // Cursor laser vermelho — ponto teleguiado seguindo o mouse/joystick
-    _atualizarRastro(c) {
-        this.graficoRastro.clear();
+    _updateTrail(c) {
+        this.trailGraphic.clear();
         // Halo externo (sutil)
-        this.graficoRastro.fillStyle(0xff2222, 0.18);
-        this.graficoRastro.fillCircle(c.x, c.y, 9);
+        this.trailGraphic.fillStyle(0xff2222, 0.18);
+        this.trailGraphic.fillCircle(c.x, c.y, 9);
         // Halo médio
-        this.graficoRastro.fillStyle(0xff4444, 0.4);
-        this.graficoRastro.fillCircle(c.x, c.y, 5);
+        this.trailGraphic.fillStyle(0xff4444, 0.4);
+        this.trailGraphic.fillCircle(c.x, c.y, 5);
         // Núcleo vermelho intenso
-        this.graficoRastro.fillStyle(0xff1111, 1);
-        this.graficoRastro.fillCircle(c.x, c.y, 2.5);
+        this.trailGraphic.fillStyle(0xff1111, 1);
+        this.trailGraphic.fillCircle(c.x, c.y, 2.5);
         // Pequeno reflexo branco no centro (efeito laser)
-        this.graficoRastro.fillStyle(0xffffff, 0.85);
-        this.graficoRastro.fillCircle(c.x, c.y, 1);
+        this.trailGraphic.fillStyle(0xffffff, 0.85);
+        this.trailGraphic.fillCircle(c.x, c.y, 1);
     },
 
-    _moverNave(c) {
+    _moveShip(c) {
         if (this._tutFreezeNave) return;
-        let dist = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+        let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
             // Carga: -10% velocidade por vaca/boi abduzido (max -50% com 5 animais)
             // Fazendeiros NÃO desaceleram a nave
-            const cargaVacas = (this.vacas_abduzidas || [])
+            const carryingCows = (this.abductedCows || [])
                 .filter(v => !v.isBurger && !v.isEnemy).length;
-            const cargaMul = Math.max(0.5, 1 - 0.10 * cargaVacas);
-            const ang = Phaser.Math.Angle.Between(this.nave.x, this.nave.y, c.x, c.y);
-            const mag = Math.min(dist*0.0001, 0.0035) * sens * cargaMul;
-            this.nave.applyForce({
+            const carryingMul = Math.max(0.5, 1 - 0.10 * carryingCows);
+            const ang = Phaser.Math.Angle.Between(this.ship.x, this.ship.y, c.x, c.y);
+            const mag = Math.min(dist*0.0001, 0.0035) * sens * carryingMul;
+            this.ship.applyForce({
                 x: Math.cos(ang) * mag,
                 y: Math.sin(ang) * mag,
             });
         }
     },
 
-    _atualizarSeta() {
-        this.setaIndicadora.clear();
+    _updateArrow() {
+        this.indicatorArrow.clear();
         let cowsInBeam = 0;
-        for (const v of this.vacas_abduzidas) if (!v.isBurger && !v.isEnemy) cowsInBeam++;
+        for (const v of this.abductedCows) if (!v.isBurger && !v.isEnemy) cowsInBeam++;
 
         let alvo = null, dMin = Infinity, cor = 0xffcc00;
         if (cowsInBeam > 0) {
-            for (const c of this.currais) {
-                const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+            for (const c of this.corrals) {
+                const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }
-        } else if (this._anyCurralReady && this._anyCurralReady()) {
+        } else if (this._anyCorralReady && this._anyCorralReady()) {
             cor = 0xff8800;
-            for (const c of this.currais) {
+            for (const c of this.corrals) {
                 // Estrutura nova (slots fixos): checa se algum slot tem burger ready
                 const hasReady = c.slots && c.slots.some(s => s && s.state === 'ready' && !s._sendoColetado);
                 if (!hasReady) continue;
-                const d = Phaser.Math.Distance.Between(this.nave.x, this.nave.y, c.x, c.y);
+                const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }
         }
@@ -125,8 +125,8 @@ Object.assign(Jogo.prototype, {
         const ang = Phaser.Math.Angle.Between(cam.midPoint.x, cam.midPoint.y, alvo.x, alvo.y);
         const radius = Math.min(cx, cy) - 30;
         const sx = cx + Math.cos(ang)*radius, sy = cy + Math.sin(ang)*radius;
-        this.setaIndicadora.fillStyle(cor, 1);
-        this.setaIndicadora.fillTriangle(
+        this.indicatorArrow.fillStyle(cor, 1);
+        this.indicatorArrow.fillTriangle(
             sx + Math.cos(ang)*16, sy + Math.sin(ang)*16,
             sx + Math.cos(ang+2.5)*10, sy + Math.sin(ang+2.5)*10,
             sx + Math.cos(ang-2.5)*10, sy + Math.sin(ang-2.5)*10
@@ -134,7 +134,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Sombra com blur fake (3 elipses stackadas com alpha decrescente)
-    // Container atrelado à entidade — posição sincronizada no _atualizarSombras
+    // Container atrelado à entidade — posição sincronizada no _updateShadows
     _attachSombra(entity, opts = {}) {
         // Tamanho proporcional ao displayWidth da entidade (pega no momento da criação).
         // Se a entidade escalar depois, sombra fica fixa no tamanho inicial — ok pra MVP.
@@ -157,7 +157,7 @@ Object.assign(Jogo.prototype, {
         return c;
     },
 
-    _atualizarSombras() {
+    _updateShadows() {
         if (!this._allShadows) return;
         // Filtra entidades destruídas e sincroniza posição
         this._allShadows = this._allShadows.filter(e => {
@@ -192,10 +192,10 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    _atualizarCombustivel(delta) {
-        this.combustivelAtual -= 2.2 * this.dificuldade * (delta/1000);
-        if (this.combustivelAtual <= 0) { this.combustivelAtual = 0; this._gameOver(); }
-        const pct = this.combustivelAtual / this.combustivelMax;
+    _updateFuel(delta) {
+        this.fuelCurrent -= 2.2 * this.difficulty * (delta/1000);
+        if (this.fuelCurrent <= 0) { this.fuelCurrent = 0; this._gameOver(); }
+        const pct = this.fuelCurrent / this.fuelMax;
 
         // V2: setCrop no fillImg (preferido)
         if (this.hud.combFillImg && this._updateFillCrop) {
