@@ -299,7 +299,9 @@
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
         <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
-        <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper se classificou errado">🔄 Flip L/U</button>
+        <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper">🔄 Flip L/U</button>
+        <button id="btnRotPlaceCW" style="background:#a89368;color:#000;" title="Rotaciona TODAS as placements CW em bitmask space (1→2→4→8→1, 5↔10, etc)">↻ Rot+ </button>
+        <button id="btnRotPlaceCCW" style="background:#a89368;color:#000;" title="Inverso: rotaciona placements CCW">↺ Rot-</button>
         <button id="btnRestoreSnap" style="background:#a89368;color:#000;" title="Volta pro estado antes do último auto-sort" hidden>↩ Restore</button>
         <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
         <label style="font-size:11px;color:#a89368;">VIEW:</label>
@@ -1407,6 +1409,7 @@ let presetMetadata = {};
 
 // rotação CW dos 4 cantos: NW→NE→SE→SW→NW (bit positions cyclical shift)
 function rotCW(b){ return ((b << 1) & 0xF) | ((b >> 3) & 1); }
+function rotCCW(b){ return ((b >> 1) & 0xF) | ((b & 1) << 3); }
 function rotOrbit(b){
   const seen = new Set(); let cur = b;
   while(!seen.has(cur)){ seen.add(cur); cur = rotCW(cur); }
@@ -1841,6 +1844,19 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
   if(e.target.id === 'btnAutoSort') autoSortTiles();
   if(e.target.id === 'btnFlipLU') autoSortTiles(!_lastAutoSortFlipped);
+  if(e.target.id === 'btnRotPlaceCW' || e.target.id === 'btnRotPlaceCCW'){
+    if(!tileEditState) return;
+    const dir = (e.target.id === 'btnRotPlaceCW') ? 1 : -1;
+    const newCells = new Array(16).fill(null);
+    for(let i=0; i<16; i++){
+      const target = dir === 1 ? rotCW(i) : rotCCW(i);
+      newCells[target] = tileEditState.cells[i];
+    }
+    tileEditState.cells = newCells;
+    if(editorMode) rerenderEditorGrid();
+    renderTestMap();
+    $("editorHint").textContent = `${dir===1?'↻':'↺'} placements rotacionados`;
+  }
   if(e.target.id === 'btnRestoreSnap'){
     if(!_autoSortSnapshot){ return; }
     tileEditState.cells = _autoSortSnapshot.map(c => c ? {...c, transforms: c.transforms.slice()} : null);
