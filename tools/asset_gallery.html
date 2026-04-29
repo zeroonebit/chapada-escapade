@@ -186,9 +186,13 @@
   .queue-bar button{padding:6px 14px;font-size:11px;}
   /* Tab Tiles */
   .tiles-wrap{display:flex;flex-direction:column;gap:14px;width:96vw;max-width:1400px;margin:20px auto;}
-  .tileset-select-bar{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px;background:rgba(0,0,0,0.3);border:1px solid #4a3826;border-radius:6px;flex-wrap:wrap;}
-  .tileset-select-bar label{font-size:11px;color:#a89368;letter-spacing:1px;}
-  .tileset-select-bar select{background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:6px 10px;font-family:monospace;font-size:12px;min-width:280px;}
+  .tileset-select-bar{display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(0,0,0,0.3);border:1px solid #4a3826;border-radius:6px;}
+  .tileset-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .tileset-row .row-label{font-size:10px;color:#a89368;letter-spacing:2px;min-width:70px;}
+  .tileset-btn{padding:6px 12px;font-size:11px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
+  .tileset-btn:hover{background:#3a2d1e;color:#f4c95d;}
+  .tileset-btn.active{background:#3a2d1e;color:#f4c95d;border-color:#f4c95d;}
+  .tileset-btn.placeholder{opacity:.5;border-style:dashed;}
   .tiles-main{border:2px solid #4a3826;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);}
   .tiles-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
   .wang-grid{display:grid;grid-template-columns:repeat(4, 110px);gap:8px;justify-content:center;margin:14px 0;}
@@ -339,16 +343,21 @@
 <div class="refresh" id="refreshInfo">próximo refresh em 8s</div>
 </div><!-- /tab-manager -->
 
-<!-- ====== TAB DETAIL (queue MCP raw) ====== -->
+<!-- ====== TAB DETAIL (queue MCP + tileset info/refs) ====== -->
 <div class="tab-content" id="tab-detail" hidden>
   <div style="max-width:900px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
     <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue</h3>
     <div style="font-size:11px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra eu rodar.</div>
-    <pre id="detailQueueDump" style="background:#1a1410;color:#e8d9b8;padding:10px;border:1px solid #4a3826;border-radius:4px;max-height:60vh;overflow:auto;font-size:11px;">[]</pre>
+    <pre id="detailQueueDump" style="background:#1a1410;color:#e8d9b8;padding:10px;border:1px solid #4a3826;border-radius:4px;max-height:50vh;overflow:auto;font-size:11px;">[]</pre>
     <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
       <button id="btnDetailRefreshQueue">↻ Refresh</button>
       <button id="btnDetailClearQueue" style="background:#a53d3d;color:#fff;">Limpar tudo</button>
     </div>
+  </div>
+  <!-- Info sobre tileset ativo (movido da Tiles tab) -->
+  <div style="max-width:900px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">🧩 Active Tileset Info</h3>
+    <div id="tilesetInfo" style="font-size:11px;line-height:1.5;">selecione um tileset na Tab Tiles</div>
   </div>
   <div class="queue-bar" id="queueBar" hidden>
     <span id="queueBarText">📋 0 ações na fila</span>
@@ -363,13 +372,33 @@
 <div class="tab-content" id="tab-tiles" hidden>
   <div class="tiles-wrap">
     <div class="tileset-select-bar">
-      <label>TILESET:</label>
-      <select id="tilesetSelect"></select>
-      <span style="font-size:10px;opacity:.5;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8</span>
+      <div class="tileset-row">
+        <span class="row-label">PRESETS</span>
+        <div id="tilesetPresetButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+      </div>
+      <div class="tileset-row">
+        <span class="row-label">BIOMA</span>
+        <div id="biomeButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;">
+          <button class="tileset-btn placeholder" data-biome="cerrado">🌾 Cerrado</button>
+          <button class="tileset-btn placeholder" data-biome="caatinga">🌵 Caatinga</button>
+          <button class="tileset-btn placeholder" data-biome="floresta">🌳 Floresta</button>
+          <button class="tileset-btn placeholder" data-biome="pantanal">💧 Pantanal</button>
+        </div>
+      </div>
+      <div class="tileset-row">
+        <span class="row-label">ESTAÇÃO</span>
+        <div id="seasonButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;">
+          <button class="tileset-btn placeholder" data-season="seca">☀️ Seca</button>
+          <button class="tileset-btn placeholder" data-season="chuva">🌧 Chuva</button>
+          <button class="tileset-btn placeholder" data-season="outono">🍂 Outono</button>
+          <button class="tileset-btn placeholder" data-season="floracao">🌸 Floração</button>
+        </div>
+      </div>
+      <div style="font-size:10px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8 · biome+season tilesets em construção</div>
     </div>
     <div class="tiles-main">
       <h3 id="tilesetTitle">cr31 Wang Tiles</h3>
-      <div class="tile-info" id="tilesetInfo">Selecione um tileset acima.</div>
+      <div class="tile-info" style="font-size:10px;opacity:.5;">Info detalhada + refs movidas pra <strong>Tab Detail</strong>.</div>
       <div class="editor-bar" id="editorBar" hidden>
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
@@ -1733,18 +1762,28 @@ function cornerSquare(c){
 }
 
 function renderPresetList(){
-  const sel = $("tilesetSelect");
-  if(!sel) return;
-  if(sel.options.length === 0){
-    WANG_PRESETS.forEach((p, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = p.name + ' — ' + p.meta;
-      sel.appendChild(opt);
-    });
-    sel.onchange = () => { activePreset = WANG_PRESETS[sel.value]; tileEditState = null; renderTiles(); renderTestMap(); };
-  }
-  sel.value = WANG_PRESETS.indexOf(activePreset);
+  const cont = $("tilesetPresetButtons");
+  if(!cont) return;
+  cont.innerHTML = '';
+  WANG_PRESETS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.className = 'tileset-btn' + (p === activePreset ? ' active' : '');
+    b.textContent = p.name;
+    b.title = p.meta;
+    b.onclick = () => { activePreset = p; tileEditState = null; renderTiles(); };
+    cont.appendChild(b);
+  });
+  // biome + season buttons (placeholder por enquanto)
+  document.querySelectorAll('#biomeButtons button, #seasonButtons button').forEach(btn => {
+    btn.onclick = () => {
+      btn.parentElement.querySelectorAll('button').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      // TODO: lookup tileset por biome+season e ativar quando existirem
+      const biome = document.querySelector('#biomeButtons button.active')?.dataset.biome;
+      const season = document.querySelector('#seasonButtons button.active')?.dataset.season;
+      $("tilesetInfo").innerHTML += `<br>🚧 ${biome||'?'} + ${season||'?'} — tileset não gerado ainda`;
+    };
+  });
 }
 
 // PRNG simples (mulberry32)
