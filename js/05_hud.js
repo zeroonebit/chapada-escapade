@@ -1,4 +1,40 @@
 // 05_hud.js — HUD: criação e posicionamento dos elementos da interface
+
+// Fragment shader do dome holografico do radar (semi-esfera com lighting +
+// scanline + edge glow, alpha 0.6). Usa uniforms time/resolution que o
+// Phaser.GameObjects.Shader injeta automatico.
+const RADAR_DOME_FRAG = `
+precision mediump float;
+uniform float time;
+uniform vec2 resolution;
+
+void main(void) {
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec2 c = uv * 2.0 - 1.0;
+    float d = length(c);
+    if (d > 1.0) discard;
+    float z = sqrt(1.0 - d*d);
+    vec3 n = vec3(c.x, c.y, z);
+
+    vec3 base = vec3(0.04, 0.55, 0.45);
+    vec3 ld = normalize(vec3(0.45, -0.45, 0.7));
+    float lam = max(dot(n, ld), 0.0);
+    vec3 col = base * (0.22 + 0.78 * lam);
+
+    float spec = pow(max(dot(n, normalize(vec3(0.4, -0.4, 0.85))), 0.0), 32.0);
+    col += vec3(0.7, 1.0, 0.9) * spec * 0.75;
+
+    float scan = abs(sin((c.y * 14.0) + time * 0.45));
+    scan = smoothstep(0.7, 1.0, scan);
+    col += vec3(0.3, 1.0, 0.7) * scan * 0.18;
+
+    float edge = smoothstep(0.86, 1.0, d);
+    col += vec3(0.2, 0.95, 0.6) * edge * 0.7;
+
+    gl_FragColor = vec4(col, 0.62);
+}
+`;
+
 Object.assign(Jogo.prototype, {
 
     _createHUD() {
@@ -70,6 +106,13 @@ Object.assign(Jogo.prototype, {
         // Map de blip → lastSeenAt (timestamp em ms) to fade
         this._radarBlipFades = new Map();
 
+        // Pool de mini sprites holograficos pros blips (reciclados por frame).
+        // Substituem os pixels de fillCircle/fillRect — ficam com tint cyan +
+        // ADD blend mode -> look holografico dentro do dome 3D.
+        this._radarHoloPool = [];
+        this._radarHoloPoolSize = 32;
+        this._radarHoloDome = null;
+
         // Applies i18n inicial nos labels (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
         if (this._applyHudI18n) this._applyHudI18n();
     },
@@ -115,46 +158,66 @@ Object.assign(Jogo.prototype, {
             this.hud.hint.setPosition(w/2, h/2 + 60);
         }
 
-        // Radar v2 — sprite steampunk (radar_frame_v2.png) + sweep/blips por cima
-        // Source 254x254, inner dial r=73. Display 160x160 (proporcional pra
-        // nao invadir a area das barras: PAC_Y=h-18 com bar height 68 -> bar
-        // top em h-52). PAD_BOTTOM=110 garante bottom do radar em h-110 com
-        // 16px de gap pra ENE bar top (h-94).
-        const FRAME_DISPLAY = 160;
-        const R = Math.floor(FRAME_DISPLAY * 73 / 254);  // ~46 — proporcional ao inner dial
-        const PAD_X = 14, PAD_BOTTOM = 142;  // ENE bar top em h-138 -> 4px gap
-        const rx = PAD_X + FRAME_DISPLAY/2;
-        const ry = h - PAD_BOTTOM - FRAME_DISPLAY/2;
-        this._mini = { cx: rx, cy: ry, r: R };
+        // Radar v2 — sprite tilted/perspectivo (radar_frame_v2.png 1024x1024).
+        // Source frame visivel 864x564 (aspect 1.53), inner hollow ellipse
+        // ~468x238 (aspect 1.97). Display proporcional 220x144 -> inner
+        // ellipse aprox 120x60.
+        const FRAME_W = 220, FRAME_H = Math.round(FRAME_W * 564 / 864);  // ~144
+        const INNER_RX = Math.round(FRAME_W * 234 / 864);   // half-width inner
+        const INNER_RY = Math.round(FRAME_H * 119 / 564);   // half-height inner
+        const PAD_X = 14, PAD_BOTTOM = 130;  // ENE bar top em h-138 -> ~8px gap
+        const cx = PAD_X + FRAME_W/2;
+        const cy = h - PAD_BOTTOM - FRAME_H/2;
+        // _mini exposes rx/ry pra _updateMinimap projetar elipse + z dome
+        this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
         // Cria sprite do radar v2 (lazy — primeira vez ou apos resize)
         if (!this.hud.radarFrameV2 && this.textures.exists('hud_radar_frame_v2')) {
-            this.hud.radarFrameV2 = this.add.image(rx, ry, 'hud_radar_frame_v2')
-                .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_DISPLAY, FRAME_DISPLAY);
+            this.hud.radarFrameV2 = this.add.image(cx, cy, 'hud_radar_frame_v2')
+                .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_W, FRAME_H);
         } else if (this.hud.radarFrameV2) {
-            this.hud.radarFrameV2.setPosition(rx, ry).setDisplaySize(FRAME_DISPLAY, FRAME_DISPLAY);
+            this.hud.radarFrameV2.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
         }
 
         // Hide o sprite radar antigo se existir (radar_frame.png v1)
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
-        // Fundo (depth 199 — abaixo do sprite que tem semi-transparencia no centro):
-        // fica como manchinha escura interna pra contrastar blips claros
+        // Fundo: agora o frame v2 tem inner hollow transparente (perspectiva
+        // ja cozida). Sem mais concentric circles — dome shader cuida disso.
         this.hud.miniBg.clear();
-        if (!this.hud.radarFrameV2) {
-            // Fallback: sem sprite, desenha graphics original (concentric circles)
-            this.hud.miniBg.fillStyle(0x000a04, 0.82);
-            this.hud.miniBg.fillCircle(rx, ry, R);
-            [0.33, 0.66, 1.0].forEach(f => {
-                this.hud.miniBg.lineStyle(f === 1.0 ? 1.5 : 0.8, 0x00ff55, f === 1.0 ? 0.8 : 0.25);
-                this.hud.miniBg.strokeCircle(rx, ry, R * f);
-            });
-            this.hud.miniBg.lineStyle(0.8, 0x00ff55, 0.2);
-            this.hud.miniBg.lineBetween(rx - R, ry, rx + R, ry);
-            this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
-        }
-        // miniGfx (sweep + blips) — depth 200 acima do sprite
+        // miniGfx (sweep + blips) — depth 200 acima do sprite + dome
         if (this.hud.miniGfx) this.hud.miniGfx.setDepth(200);
+
+        // ── Dome holografico (Phaser.Shader fragment) — semi-esfera 3D ──
+        // Sized como elipse (INNER_RX*2 x INNER_RY*2) — shader auto-squasha,
+        // resultado parece dome tilted dentro do frame perspectivo.
+        const DOME_W = INNER_RX * 2 + 2;
+        const DOME_H = INNER_RY * 2 + 2;
+        if (!this._radarHoloDome) {
+            try {
+                const baseShader = new Phaser.Display.BaseShader('radarDomeShader', RADAR_DOME_FRAG);
+                this._radarHoloDome = this.add.shader(baseShader, cx, cy, DOME_W, DOME_H)
+                    .setScrollFactor(0).setDepth(199.6);  // entre frame (199.5) e blips
+            } catch (e) {
+                console.warn('Radar dome shader failed:', e);
+            }
+        } else {
+            this._radarHoloDome.setPosition(cx, cy).setSize(DOME_W, DOME_H);
+        }
+
+        // ── Pool de mini sprites holograficos pros blips ──
+        if (this._radarHoloPool && this._radarHoloPool.length === 0) {
+            for (let i = 0; i < this._radarHoloPoolSize; i++) {
+                // Textura placeholder — setTexture troca por frame conforme entity
+                const tex = this.textures.exists('cow_S') ? 'cow_S' : null;
+                if (!tex) break;
+                const s = this.add.image(0, 0, tex)
+                    .setScrollFactor(0).setDepth(200.5)
+                    .setBlendMode(Phaser.BlendModes.ADD)
+                    .setVisible(false);
+                this._radarHoloPool.push(s);
+            }
+        }
     },
 
     // Shows/hides as barras de fuel e graviton (usado pelo tutorial)
@@ -196,12 +259,18 @@ Object.assign(Jogo.prototype, {
 
     _updateMinimap() {
         const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ship) return;
-        const { cx, cy, r } = m;
+        const { cx, cy, rx, ry } = m;
+        const r = rx;  // compat (sweep usa raio horizontal)
         const W = 8000, H = 6000;
         const RANGE = Math.max(W, H) * 0.6;
-        const wx = (vx) => cx + (vx - this.ship.x) / RANGE * r;
-        const wy = (vy) => cy + (vy - this.ship.y) / RANGE * r;
-        const inRadar = (x, y) => (x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r;
+        // Mapa world -> elipse: x usa rx, y usa ry (perspective squash baked)
+        const wx = (vx) => cx + (vx - this.ship.x) / RANGE * rx;
+        const wy = (vy) => cy + (vy - this.ship.y) / RANGE * ry;
+        // Teste elipse: u² + v² <= 1 com u=(x-cx)/rx, v=(y-cy)/ry
+        const inRadar = (x, y) => {
+            const u = (x - cx) / rx, v = (y - cy) / ry;
+            return u*u + v*v <= 1;
+        };
 
         const g = this.hud.miniGfx;
         g.clear();
@@ -211,23 +280,27 @@ Object.assign(Jogo.prototype, {
         this._radarAngle = (prevAngle + 0.018) % (Math.PI * 2);
         const sa = this._radarAngle;
 
-        // Fundo verde semi-transparente inside do interior
-        g.fillStyle(0x002211, 0.45);
-        g.fillCircle(cx, cy, r);
+        // Se o dome shader esta ativo, fundo verde + concentric circles ja vem
+        // dele -> pula o desenho do graphics. Senao desenha fallback.
+        if (!this._radarHoloDome) {
+            g.fillStyle(0x002211, 0.45);
+            g.fillCircle(cx, cy, r);
+        }
 
-        // Triângulo de varredura (leque de ~50°)
+        // Triângulo de varredura (leque de ~50°) — fica acima do dome shader.
+        // Sweep usa rx/ry pra varredura ellipse (acompanha tilt do frame)
         const SWEEP = Math.PI * 0.28;
-        g.fillStyle(0x00ff55, 0.10);
+        g.fillStyle(0x55ff99, 0.18);
         g.beginPath();
         g.moveTo(cx, cy);
         for (let i = 0; i <= 16; i++) {
             const a = sa - SWEEP + (SWEEP / 16) * i;
-            g.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+            g.lineTo(cx + Math.cos(a)*rx, cy + Math.sin(a)*ry);
         }
         g.closePath(); g.fillPath();
         // Linha de scan brilhante
-        g.lineStyle(1.5, 0x55ff99, 0.95);
-        g.lineBetween(cx, cy, cx + Math.cos(sa)*r, cy + Math.sin(sa)*r);
+        g.lineStyle(1.5, 0x99ffcc, 1.0);
+        g.lineBetween(cx, cy, cx + Math.cos(sa)*rx, cy + Math.sin(sa)*ry);
 
         // Decay-based blips: each entidade only "acende" when a sweep line passa by ela.
         // Depois fade gradual via lastSeenAt timestamp (decay ~2.5s).
@@ -246,43 +319,92 @@ Object.assign(Jogo.prototype, {
             return b >= prev || b <= curr;
         };
 
-        // Coleta blips e updates lastSeenAt se foram varridos now
-        const blips = [];
-        const collect = (entity, color, size = 2) => {
+        // Pool de mini sprites holograficos: hide tudo, depois ativa os
+        // necessarios (sprite recycle pattern).
+        const pool = this._radarHoloPool || [];
+        for (const s of pool) s.setVisible(false);
+        let poolIdx = 0;
+
+        // Projecao 3D-fake: blip dentro do hemisferio elip (rx,ry) com z
+        // height. Frame ja tem perspective baked, dome puxa centro pra cima
+        // pra reforcar profundidade.
+        const TILT_PUSH = ry * 0.35;  // quanto o polo do dome puxa pra cima
+
+        const renderHolo = (entity, texKey, tint, baseScale) => {
+            if (poolIdx >= pool.length) return;
             const bx = wx(entity.x), by = wy(entity.y);
             if (!inRadar(bx, by)) return;
             const ang = Math.atan2(by - cy, bx - cx);
             if (sweptThis(ang)) fades.set(entity, now);
             const last = fades.get(entity);
-            if (last == null) return;  // still não was visto
+            if (last == null) return;
             const age = now - last;
             if (age > FADE_MS) { fades.delete(entity); return; }
-            const alpha = 1 - (age / FADE_MS);  // 1 → 0 ao longo de FADE_MS
-            blips.push({ x: bx, y: by, color, size, alpha });
+            const alpha = 1 - (age / FADE_MS);
+
+            // Coords normalizadas no elipse (-1..1)
+            const u = (bx - cx) / rx;
+            const v = (by - cy) / ry;
+            const r2 = u*u + v*v;
+            const z = Math.sqrt(Math.max(0, 1 - r2));
+
+            const screenY = by - z * TILT_PUSH;
+            const scale = baseScale * (0.55 + 0.45 * z);
+
+            const s = pool[poolIdx++];
+            if (!s.scene) return;
+            s.setVisible(true);
+            s.setPosition(bx, screenY);
+            if (s.texture.key !== texKey && this.textures.exists(texKey)) {
+                s.setTexture(texKey);
+            }
+            s.setDisplaySize(scale, scale);
+            s.setTint(tint);
+            s.setAlpha(alpha * 0.85);
         };
 
-        if (this.corrals)     for (const c of this.corrals)     collect(c, 0x4499ff, 2.5);
-        if (this.cows)       for (const v of this.cows) {
+        // Curral: square cyan via Graphics com mesma projecao
+        if (this.corrals) {
+            for (const c of this.corrals) {
+                const bx = wx(c.x), by = wy(c.y);
+                if (!inRadar(bx, by)) continue;
+                const ang = Math.atan2(by - cy, bx - cx);
+                if (sweptThis(ang)) fades.set(c, now);
+                const last = fades.get(c);
+                if (last == null) continue;
+                const age = now - last;
+                if (age > FADE_MS) { fades.delete(c); continue; }
+                const alpha = 1 - (age / FADE_MS);
+                const u = (bx - cx) / rx, v = (by - cy) / ry;
+                const r2 = u*u + v*v;
+                const z = Math.sqrt(Math.max(0, 1 - r2));
+                const screenY = by - z * TILT_PUSH;
+                const sz = 5 * (0.55 + 0.45 * z);
+                g.fillStyle(0x4499ff, alpha);
+                g.fillRect(bx - sz/2, screenY - sz/2, sz, sz);
+            }
+        }
+
+        // Cows + oxen + farmers usam pool de mini sprites holograficos
+        if (this.cows) for (const v of this.cows) {
             if (!v.scene || v._destroyed || v.isBurger) continue;
-            collect(v, v.tipo === 'ox' ? 0xaa7744 : 0xffffff, 1.8);
+            const isOx = v.tipo === 'ox';
+            renderHolo(v,
+                isOx ? 'ox_S' : 'cow_S',
+                isOx ? 0xddccaa : 0xaaffee,    // ox marrom-clarinho cyan / cow cyan
+                18                              // display size em px
+            );
         }
         if (this.farmers) for (const f of this.farmers) {
             if (!f.scene || f._destroyed || f._dying) continue;
-            collect(f, 0xffdd33, 2);
-        }
-
-        // Draws blips with alpha decay
-        for (const b of blips) {
-            g.fillStyle(b.color, b.alpha);
-            if (b.size === 2.5) g.fillRect(b.x - 2.5, b.y - 2.5, 5, 5);
-            else                g.fillCircle(b.x, b.y, b.size);
+            renderHolo(f, 'farmer_S', 0xffee99, 18);
         }
 
         // Ship — ponto verde central fixo + pulso (always visível)
-        g.fillStyle(0x66ff99, 1);
-        g.fillCircle(cx, cy, 3);
+        g.fillStyle(0xaaffcc, 1);
+        g.fillCircle(cx, cy, 3.5);
         const pulse = 0.5 + 0.5 * Math.sin(this._radarAngle * 4);
-        g.lineStyle(1, 0x66ff99, 0.4 * pulse);
+        g.lineStyle(1.2, 0xaaffcc, 0.5 * pulse);
         g.strokeCircle(cx, cy, 6 + pulse * 3);
     },
 
