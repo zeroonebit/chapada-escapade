@@ -76,8 +76,15 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - HUD coberto pelo atmosphere overlay (depth 100 → 200)
 - PREVIEW: safety reset 6s da flag `_tutPreviewActive`
 
+### Pós-checkpoint (mesma sessão, polish final)
+- **Cursor laser vermelho** (substitui rastro escuro) — 4 layers: halo + nucleo + reflexo branco
+- **Radar revertido pro Graphics-based** (mantém decay-based blips)
+- **TAKE_DAMAGE com fazendeiro** em vez de torre (cooldown 400ms, spawn a 280px)
+- **Slider Rotação disco removido** das configs
+- **HUD bars v2** com setCrop dinâmico: `_full.png` (fill bakeded) + `_empty.png` (miolo preto) via `tools/slice_huds_v2.py`. Substitui Graphics gradient.
+
 ### Pendentes (próxima sessão)
-- **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar texto/glow + condições
+- **Tutorial etapas 8-9** (FARMER / FARMER_KILL) — TAKE_DAMAGE pronto
 - **Tradução D+R2** (identificadores PT→EN) — esperando JSON do localStorage do user
 - **Configs do user como DBG_DEFAULTS** (mesma dependência)
 - **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input), L6 (FSM tutorial)
