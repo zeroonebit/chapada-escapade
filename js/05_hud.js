@@ -97,34 +97,27 @@ Object.assign(Jogo.prototype, {
             this.hud.hint.setPosition(w/2, h/2 + 60);
         }
 
-        // Radar — sprite frame + sweep/blips internos
-        // Frame PNG é 600x600; usamos display 160x160 (R interno ~62px após borda)
-        const FRAME_DISPLAY = 160;
-        const R = 62;          // raio do interior verde do sprite (ajustado pra caber dentro do frame)
-        const PAD = 14;
-        const rx = PAD + FRAME_DISPLAY/2;
-        const ry = h - FRAME_DISPLAY/2 - PAD - 58 + R/2;
+        // Radar — Graphics-based (versão original) com decay system novo
+        const R = 70, PAD = 14;
+        const rx = PAD + R, ry = h - R - PAD - 58 + R/2;
         this._mini = { cx: rx, cy: ry, r: R };
 
-        // Cria/reposiciona o sprite do frame (uma vez)
-        if (!this.hud.radarFrame) {
-            const frameKey = this.textures.exists('hud_radar_frame') ? 'hud_radar_frame' : null;
-            if (frameKey) {
-                this.hud.radarFrame = this.add.image(rx, ry, frameKey)
-                    .setDisplaySize(FRAME_DISPLAY, FRAME_DISPLAY)
-                    .setScrollFactor(0).setDepth(201);  // acima dos blips
-            }
-        } else {
-            this.hud.radarFrame.setPosition(rx, ry);
-        }
+        // Esconde o sprite frame se existir (não usado nessa versão)
+        if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
-        // Fundo (radar interno verde escuro) — desenhado abaixo do frame
+        // Redesenha o fundo (estático — só muda no resize)
         this.hud.miniBg.clear();
-        if (!this.hud.radarFrame) {
-            // Fallback se sprite faltou
-            this.hud.miniBg.fillStyle(0x000a04, 0.82);
-            this.hud.miniBg.fillCircle(rx, ry, R);
-        }
+        this.hud.miniBg.fillStyle(0x000a04, 0.82);
+        this.hud.miniBg.fillCircle(rx, ry, R);
+        // Círculos concêntricos
+        [0.33, 0.66, 1.0].forEach(f => {
+            this.hud.miniBg.lineStyle(f === 1.0 ? 1.5 : 0.8, 0x00ff55, f === 1.0 ? 0.8 : 0.25);
+            this.hud.miniBg.strokeCircle(rx, ry, R * f);
+        });
+        // Cruz central
+        this.hud.miniBg.lineStyle(0.8, 0x00ff55, 0.2);
+        this.hud.miniBg.lineBetween(rx - R, ry, rx + R, ry);
+        this.hud.miniBg.lineBetween(rx, ry - R, rx, ry + R);
     },
 
     // Mostra/esconde as barras de combustível e graviton (usado pelo tutorial)
