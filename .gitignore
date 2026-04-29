@@ -22,3 +22,6 @@ __pycache__/
 
 # PixelLab raw downloads (ZIPs e unzip extraído) — só o resultado em chars/ entra no git
 assets/pixel_labs/_inbox/
+
+# Saves locais do gallery_server.py (decisions/configs + history) — dados do user, não código
+tools/saves/

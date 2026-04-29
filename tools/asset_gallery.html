@@ -5,37 +5,56 @@
 <title>Chapada Escapade — Asset Gallery</title>
 <style>
   body{margin:0;background:#1a1410;color:#e8d9b8;font-family:monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-  h1{margin:18px 0 6px;font-size:18px;color:#f4c95d;}
-  .meta{font-size:12px;opacity:.7;margin-bottom:14px;}
-  .stage{position:relative;width:520px;height:520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
+  h1{margin:12px 0 8px;font-size:18px;color:#f4c95d;}
+  .workspace{display:flex;gap:8px;align-items:stretch;width:96vw;justify-content:center;margin-bottom:10px;}
+  .stage{position:relative;width:520px;height:520px;flex:0 0 520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
   .stage img{max-width:90%;max-height:90%;image-rendering:pixelated;}
   .pending{color:#f4c95d;font-size:14px;text-align:center;padding:20px;}
-  .nav{display:flex;gap:18px;margin:18px 0 8px;align-items:center;}
   button{background:#3a2d1e;color:#f4c95d;border:2px solid #6b5234;padding:10px 18px;font-family:monospace;font-size:18px;cursor:pointer;border-radius:4px;}
   button:hover{background:#4a3826;}
   button:disabled{opacity:.3;cursor:not-allowed;}
-  .info{font-size:14px;text-align:center;line-height:1.6;margin-bottom:8px;}
   .name{color:#f4c95d;font-size:16px;font-weight:bold;}
   .id{font-size:10px;opacity:.5;}
   .status{font-size:12px;padding:3px 8px;border-radius:3px;display:inline-block;margin-top:4px;}
   .status.ready{background:#2d5a2d;color:#9fe89f;}
   .status.pending{background:#5a4a2d;color:#f4c95d;}
-  .counter{font-size:14px;color:#a89368;}
-  .grid{display:grid;grid-template-columns:repeat(8,48px);gap:4px;margin:18px 0;}
+  .counter{font-size:13px;color:#a89368;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,48px);gap:4px;margin:14px 0 4px;width:96vw;max-width:96vw;justify-content:center;}
+  .side-grid{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;flex:1;height:520px;overflow-y:auto;align-content:start;justify-content:center;padding:6px;border:2px solid;border-radius:4px;}
+  .side-grid.left{border-color:#5a2222;background:rgba(74,29,29,0.15);}
+  .side-grid.right{border-color:#2d5a2d;background:rgba(29,74,29,0.15);}
+  .side-grid .side-title{grid-column:1/-1;font-size:11px;font-weight:bold;text-align:center;padding:2px 0 6px;letter-spacing:1px;}
+  .side-grid.left .side-title{color:#e89f9f;}
+  .side-grid.right .side-title{color:#9fe89f;}
+  .side-grid .thumb{width:42px;height:42px;border-width:1px;}
   .thumb{width:48px;height:48px;background:#2a2218;border:2px solid #4a3826;cursor:pointer;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
   .thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;}
   .thumb.active{border-color:#f4c95d;}
   .thumb.pending{opacity:.4;}
-  .refresh{font-size:11px;opacity:.6;margin-top:4px;}
-  .actions{display:flex;gap:10px;margin:14px 0 4px;}
-  .actions button{padding:10px 16px;font-size:14px;font-weight:bold;}
-  .btn-promote{background:#1d4a1d!important;color:#9fe89f!important;border-color:#3da53d!important;}
-  .btn-promote:hover{background:#2d6a2d!important;}
-  .btn-discard{background:#4a1d1d!important;color:#e89f9f!important;border-color:#a53d3d!important;}
-  .btn-discard:hover{background:#6a2d2d!important;}
-  .btn-rename{background:#1d3a4a!important;color:#9fcfe8!important;border-color:#3d7da5!important;}
-  .btn-rename:hover{background:#2d4d6a!important;}
-  .btn-export{background:#4a3826!important;color:#f4c95d!important;border-color:#6b5234!important;margin-top:8px;}
+  .refresh{font-size:33px;opacity:.6;margin-top:8px;font-weight:bold;}
+  .stage > .actions, .stage > .caption, .stage > .nav-prev, .stage > .nav-next{position:absolute;opacity:0;transition:opacity .15s;pointer-events:none;z-index:10;}
+  .stage:hover > .actions, .stage:hover > .caption, .stage:hover > .nav-prev, .stage:hover > .nav-next{opacity:1;pointer-events:auto;}
+  .stage > .actions{bottom:8px;left:8px;right:8px;display:flex;gap:4px;}
+  .stage > .actions button{flex:1 1 0;padding:6px 2px;font-size:11px;font-weight:bold;min-width:0;opacity:.85;}
+  .stage > .actions button:hover{opacity:1;}
+  .stage > .caption{top:8px;left:8px;right:8px;text-align:center;background:rgba(0,0,0,.72);padding:6px 8px;border-radius:3px;}
+  .stage > .caption .name{color:#f4c95d;font-size:13px;font-weight:bold;}
+  .stage > .caption .id{font-size:9px;opacity:.6;display:block;margin-top:2px;}
+  .stage > .caption .status{font-size:10px;}
+  .stage > .caption .counter{font-size:10px;display:block;margin-top:3px;}
+  .stage > .nav-prev, .stage > .nav-next{top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:1px solid #6b5234;color:#f4c95d;padding:14px 10px;font-size:18px;}
+  .stage > .nav-prev{left:8px;}
+  .stage > .nav-next{right:8px;}
+  .btn-promote{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
+  .btn-promote:hover{background:#5ee85e!important;}
+  .btn-discard{background:#e84d4d!important;color:#000!important;border-color:#a02020!important;}
+  .btn-discard:hover{background:#ff6464!important;}
+  .btn-rename{background:#4da9e8!important;color:#000!important;border-color:#1d6aa0!important;}
+  .btn-rename:hover{background:#65bdf5!important;}
+  .btn-save{background:#f4c95d!important;color:#000!important;border-color:#a8862e!important;}
+  .btn-save:hover{background:#ffd770!important;}
+  .btn-clear{background:#d63ad6!important;color:#000!important;border-color:#8a228a!important;}
+  .btn-clear:hover{background:#e84fe8!important;}
   .decision{position:absolute;top:8px;right:8px;font-size:11px;font-weight:bold;padding:3px 6px;border-radius:3px;}
   .decision.promoted{background:#1d4a1d;color:#9fe89f;}
   .decision.discarded{background:#4a1d1d;color:#e89f9f;}
@@ -43,44 +62,209 @@
   .thumb-wrap{position:relative;}
   .thumb-decision{position:absolute;bottom:0;right:0;width:14px;height:14px;font-size:10px;display:flex;align-items:center;justify-content:center;border-radius:0 0 4px 0;}
   .stats{font-size:11px;opacity:.7;margin:4px 0;}
+  .tabs{display:flex;gap:4px;margin:6px 0 14px;}
+  .tab{padding:8px 22px;font-size:13px;background:#2a2218;color:#a89368;border:2px solid #4a3826;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;font-family:monospace;letter-spacing:1px;}
+  .tab:hover{background:#3a2d1e;color:#f4c95d;}
+  .tab.active{background:#3a2d1e;color:#f4c95d;border-color:#6b5234;border-bottom:2px solid #1a1410;margin-bottom:-2px;position:relative;z-index:2;}
+  .tab-content{width:100%;display:flex;flex-direction:column;align-items:center;}
+  .tab-content[hidden]{display:none;}
+  /* Tab Gallery — sumário */
+  .summary{display:flex;gap:16px;width:96vw;max-width:1400px;margin:20px auto;}
+  .summary-panel{flex:1;border:2px solid;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);min-height:520px;display:flex;flex-direction:column;}
+  .summary-panel.promoted{border-color:#3da53d;}
+  .summary-panel.pending{border-color:#a8862e;}
+  .summary-panel.discarded{border-color:#a53d3d;}
+  .summary-panel h2{margin:0 0 10px;font-size:14px;letter-spacing:2px;text-align:center;}
+  .summary-panel.promoted h2{color:#9fe89f;}
+  .summary-panel.pending h2{color:#f4c95d;}
+  .summary-panel.discarded h2{color:#e89f9f;}
+  .summary-panel .count{font-size:48px;text-align:center;font-weight:bold;margin:8px 0 12px;}
+  .summary-panel .breakdown{font-size:11px;opacity:.7;margin-bottom:10px;}
+  .summary-panel .grid-thumbs{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;overflow-y:auto;overflow-x:visible;flex:1;align-content:start;justify-content:center;}
+  .thumb-group{position:relative;}
+  .thumb-group .group-badge{position:absolute;top:-4px;right:-4px;background:#f4c95d;color:#000;font-size:9px;font-weight:bold;padding:1px 4px;border-radius:6px;line-height:1;z-index:2;}
+  .thumb-group .group-popup{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:rgba(26,20,16,0.98);border:2px solid #f4c95d;border-radius:4px;padding:6px;z-index:200;grid-template-columns:repeat(auto-fit,38px);gap:3px;min-width:240px;max-width:520px;max-height:480px;overflow-y:auto;box-shadow:0 4px 18px rgba(0,0,0,0.6);}
+  .thumb-group .group-popup .pop-title{grid-column:1/-1;font-size:10px;color:#f4c95d;text-align:center;padding:2px 0 4px;font-weight:bold;}
+  .thumb-group .group-popup img{width:38px;height:38px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;}
+  .thumb-group:hover .group-popup{display:grid;}
+  /* Tab Detail */
+  .detail-wrap{display:flex;gap:14px;width:96vw;max-width:1400px;margin:20px auto;align-items:flex-start;}
+  .detail-list{flex:0 0 320px;border:2px solid #4a3826;border-radius:6px;padding:8px;max-height:80vh;overflow-y:auto;background:rgba(0,0,0,0.2);}
+  .detail-list h3{margin:4px 0 10px;font-size:12px;color:#f4c95d;letter-spacing:2px;text-align:center;}
+  .detail-list-grid{display:grid;grid-template-columns:repeat(auto-fit,48px);gap:4px;justify-content:center;}
+  .detail-list-grid .thumb{cursor:pointer;}
+  .detail-list-grid .thumb.active{border-color:#f4c95d;outline:1px solid #f4c95d;}
+  .detail-main{flex:1;border:2px solid #4a3826;border-radius:6px;padding:16px;background:rgba(0,0,0,0.2);}
+  .detail-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
+  .detail-main .preview{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+  .detail-main .preview img{width:140px;height:140px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;}
+  .detail-main .meta{font-size:11px;line-height:1.6;}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;margin-top:16px;}
+  .tool-card{border:1px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);}
+  .tool-card.cat-create{border-color:#3da53d;}
+  .tool-card.cat-modify{border-color:#3d7da5;}
+  .tool-card.cat-anim{border-color:#a85ba8;}
+  .tool-card.cat-meta{border-color:#a89368;}
+  .tool-card.cat-delete{border-color:#a53d3d;}
+  .tool-card .tname{font-size:12px;font-weight:bold;color:#f4c95d;margin-bottom:6px;font-family:monospace;}
+  .tool-card label{font-size:10px;opacity:.7;display:block;margin:6px 0 2px;}
+  .tool-card input, .tool-card select, .tool-card textarea{width:100%;background:#1a1410;color:#e8d9b8;border:1px solid #4a3826;padding:4px 6px;font-family:monospace;font-size:11px;box-sizing:border-box;}
+  .tool-card textarea{min-height:46px;resize:vertical;}
+  .tool-card .qbtn{margin-top:8px;width:100%;padding:6px;font-size:11px;font-weight:bold;background:#f4c95d;color:#000;border:1px solid #a8862e;cursor:pointer;}
+  .tool-card .qbtn:hover{background:#ffd770;}
+  .queue-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(26,20,16,0.96);border-top:2px solid #6b5234;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;align-items:center;z-index:100;}
+  .queue-bar button{padding:6px 14px;font-size:11px;}
+  /* Tab Tiles */
+  .tiles-wrap{display:flex;gap:14px;width:96vw;max-width:1400px;margin:20px auto;align-items:flex-start;}
+  .tiles-side{flex:0 0 280px;border:2px solid #4a3826;border-radius:6px;padding:10px;background:rgba(0,0,0,0.2);}
+  .tiles-side h3{margin:4px 0 10px;font-size:12px;color:#f4c95d;letter-spacing:2px;text-align:center;}
+  .preset-row{display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;background:#2a2218;color:#e8d9b8;border:1px solid #4a3826;cursor:pointer;font-family:monospace;font-size:11px;}
+  .preset-row:hover{background:#3a2d1e;}
+  .preset-row.active{background:#4a3826;border-color:#f4c95d;color:#f4c95d;}
+  .preset-row .pname{font-weight:bold;font-size:12px;}
+  .preset-row .pmeta{font-size:9px;opacity:.6;margin-top:2px;}
+  .tiles-main{flex:1;border:2px solid #4a3826;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);}
+  .tiles-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
+  .wang-grid{display:grid;grid-template-columns:repeat(4, 110px);gap:8px;justify-content:center;margin:14px 0;}
+  .wang-cell{border:2px solid #4a3826;border-radius:4px;padding:6px;background:#1a1410;text-align:center;}
+  .wang-cell .wtile{width:96px;height:96px;background:#2a2218;image-rendering:pixelated;display:block;margin:0 auto 4px;}
+  .wang-cell canvas{width:96px;height:96px;image-rendering:pixelated;}
+  .wang-cell .wlabel{font-size:11px;font-weight:bold;color:#f4c95d;}
+  .wang-cell .wcorners{font-size:8px;opacity:.6;font-family:monospace;letter-spacing:.5px;}
+  .wang-cell .wbits{font-size:9px;opacity:.5;}
+  .corner-vis{display:grid;grid-template-columns:1fr 1fr;width:24px;height:24px;margin:2px auto;border:1px solid #6b5234;}
+  .corner-vis div{width:100%;height:100%;}
+  .corner-vis .lower{background:#5a4a2d;}
+  .corner-vis .upper{background:#9fe89f;}
+  .tile-info{margin:14px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:11px;line-height:1.5;}
+  .tile-info code{background:#2a2218;padding:2px 4px;border-radius:2px;color:#f4c95d;}
 </style>
 </head>
 <body>
 
-<h1>CHAPADA ESCAPADE — ASSET GALLERY</h1>
-<div class="meta">setinhas ← → pra navegar · auto-refresh 8s · só pendentes</div>
+<h1>CHAPADA ESCAPADE — ASSET GALLERY MANAGER</h1>
 
-<div class="info">
-  <div class="name" id="name">—</div>
-  <div class="id" id="id">—</div>
-  <div><span class="status" id="status">—</span></div>
+<div class="tabs">
+  <button class="tab" data-tab="gallery">📊 Gallery</button>
+  <button class="tab active" data-tab="manager">🎨 Manager</button>
+  <button class="tab" data-tab="detail">🔧 Detail</button>
+  <button class="tab" data-tab="tiles">🧩 Tiles</button>
 </div>
 
-<div class="stage" id="stage">
-  <div class="pending" id="pending" style="display:none;">⏳ aguardando geração…</div>
-  <img id="img" style="display:none;" alt="">
-  <div class="decision" id="decisionBadge" style="display:none;"></div>
+<!-- ====== TAB GALLERY ====== -->
+<div class="tab-content" id="tab-gallery" hidden>
+  <div class="summary">
+    <div class="summary-panel discarded">
+      <h2>❌ DISCARDED</h2>
+      <div class="count" id="sumDiscarded">—</div>
+      <div class="breakdown" id="sumDiscardedBd">aguardando scan…</div>
+      <div class="grid-thumbs" id="sumDiscardedGrid"></div>
+    </div>
+    <div class="summary-panel pending">
+      <h2>⏳ PENDING</h2>
+      <div class="count" id="sumPending">—</div>
+      <div class="breakdown" id="sumPendingBd">aguardando scan…</div>
+      <div class="grid-thumbs" id="sumPendingGrid"></div>
+    </div>
+    <div class="summary-panel promoted">
+      <h2>✅ PROMOTED</h2>
+      <div class="count" id="sumPromoted">—</div>
+      <div class="breakdown" id="sumPromotedBd">aguardando scan…</div>
+      <div class="grid-thumbs" id="sumPromotedGrid"></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin:8px 0 30px;font-size:11px;opacity:.6;">
+    Soma: filesystem (<code>assets/pixel_labs/</code>) + decisions locais + MCP <code>list_objects</code>/<code>list_characters</code>
+    <button id="btnRefreshSummary" style="margin-left:14px;padding:4px 12px;font-size:11px;">↻ Refresh</button>
+  </div>
 </div>
 
-<div class="nav">
-  <button id="prev">←</button>
-  <span class="counter" id="counter">0 / 0</span>
-  <button id="next">→</button>
+<!-- ====== TAB MANAGER (curadoria atual) ====== -->
+<div class="tab-content" id="tab-manager">
+<div class="workspace">
+  <div class="side-grid left" id="gridLeft">
+    <div class="side-title">❌ DISCARDED (0)</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="caption">
+      <div class="name" id="name">—</div>
+      <span class="id" id="id">—</span>
+    </div>
+    <div class="pending" id="pending" style="display:none;">⏳ aguardando geração…</div>
+    <img id="img" style="display:none;" alt="">
+    <div class="decision" id="decisionBadge" style="display:none;"></div>
+    <button class="nav-prev" id="prev">←</button>
+    <button class="nav-next" id="next">→</button>
+    <div class="actions">
+      <button class="btn-promote" id="btnPromote">✅ P</button>
+      <button class="btn-discard"  id="btnDiscard">❌ D</button>
+      <button class="btn-rename"   id="btnRename">✏️ R</button>
+      <button class="btn-clear" id="btnClear" title="Limpa decisão">↺ C</button>
+      <button class="btn-save" id="btnExport">💾 Save</button>
+    </div>
+  </div>
+
+  <div class="side-grid right" id="gridRight">
+    <div class="side-title">✅ PROMOTED (0)</div>
+  </div>
 </div>
 
-<div class="actions">
-  <button class="btn-promote" id="btnPromote">✅ Promote</button>
-  <button class="btn-discard"  id="btnDiscard">❌ Discard</button>
-  <button class="btn-rename"   id="btnRename">✏️ Rename</button>
-  <button id="btnClear" title="Limpa decisão deste asset">↺ Clear</button>
-</div>
 <div class="stats" id="stats">—</div>
-<div class="actions">
-  <button class="btn-export" id="btnExport">📥 Export decisions.json</button>
-</div>
 
 <div class="grid" id="grid"></div>
 <div class="refresh" id="refreshInfo">próximo refresh em 8s</div>
+</div><!-- /tab-manager -->
+
+<!-- ====== TAB DETAIL (PixelLab MCP) ====== -->
+<div class="tab-content" id="tab-detail" hidden>
+  <div class="detail-wrap">
+    <div class="detail-list" id="detailList">
+      <h3>✅ APPROVED ASSETS</h3>
+      <div id="detailListBody">aguardando…</div>
+    </div>
+    <div class="detail-main" id="detailMain">
+      <h3 id="detailTitle">Selecione um asset à esquerda</h3>
+      <div id="detailBody">
+        <div style="opacity:.6;font-size:12px;line-height:1.6;">
+          A partir de um asset aprovado, você pode disparar qualquer tool do PixelLab MCP.<br>
+          Cada submit adiciona uma entrada em <code>tools/saves/mcp_queue.json</code>.<br>
+          Depois cole no Claude: <code>"executa o mcp queue"</code> que eu rodo as tools.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="queue-bar" id="queueBar" hidden>
+    <span id="queueBarText">📋 0 ações na fila</span>
+    <div>
+      <button id="btnQueueShow">Ver queue</button>
+      <button id="btnQueueClear" style="background:#a53d3d;color:#fff;">Limpar</button>
+    </div>
+  </div>
+</div><!-- /tab-detail -->
+
+<!-- ====== TAB TILES (Wang cr31) ====== -->
+<div class="tab-content" id="tab-tiles" hidden>
+  <div class="tiles-wrap">
+    <div class="tiles-side">
+      <h3>🧩 TILESETS</h3>
+      <div id="tilesetList"></div>
+      <div style="margin-top:14px;font-size:10px;opacity:.6;line-height:1.5;">
+        Convenção <strong>cr31</strong>: tile ID = bitmask de cantos<br>
+        NW=1, NE=2, SE=4, SW=8<br>
+        Ex: tile 5 = NW+SE upper (diag)
+      </div>
+    </div>
+    <div class="tiles-main">
+      <h3 id="tilesetTitle">cr31 Wang Tiles — Standard 16</h3>
+      <div class="tile-info" id="tilesetInfo">
+        Selecione um tileset à esquerda. A grid abaixo mostra os 16 tiles padrão da convenção cr31 (corner-based 2-edge Wang).
+      </div>
+      <div class="wang-grid" id="wangGrid"></div>
+    </div>
+  </div>
+</div><!-- /tab-tiles -->
+
 
 <script>
 // MANIFEST: edita aqui conforme novas gerações entram
@@ -167,6 +351,8 @@ const MANIFEST = [
 ];
 
 const API_URL = id => `https://api.pixellab.ai/mcp/map-objects/${id}/download`;
+// API_BASE = se servido pelo gallery_server.py, usa same-origin; senão aponta pro 8090
+const API_BASE = (window.location.port === '8090') ? '' : 'http://localhost:8090';
 const DECISIONS_KEY = 'chapEscapadeAssetDecisions';
 let idx = 0;
 let refreshTimer = 8;
@@ -189,21 +375,98 @@ function suggestTargetFolder(name) {
     return 'objects';
 }
 
+function updateStats(){
+  let p=0, d=0, r=0, w=0;
+  MANIFEST.forEach(a => {
+    const dec = decisions[a.id];
+    if(!dec) { w++; return; }
+    if(dec.action==='promote') p++;
+    else if(dec.action==='discard') d++;
+    else if(dec.action==='rename') r++;
+  });
+  $("stats").textContent = `✅ ${p} promoted · ❌ ${d} discarded · ✏️ ${r} renamed · ⏳ ${w} pending`;
+}
+
+function renderBadge(assetId, el){
+  const dec = decisions[assetId];
+  if(!dec){ el.style.display='none'; return; }
+  el.style.display='block';
+  if(dec.action==='promote'){ el.textContent='✅ '+dec.target; el.className='decision promoted'; }
+  else if(dec.action==='discard'){ el.textContent='❌ DISCARD'; el.className='decision discarded'; }
+  else if(dec.action==='rename'){ el.textContent='✏️ →'+dec.newName; el.className='decision renamed'; }
+}
+
+function thumbBadge(assetId){
+  const dec = decisions[assetId];
+  if(!dec) return '';
+  const colors = {promote:'#1d4a1d',discard:'#4a1d1d',rename:'#1d3a4a'};
+  const icons = {promote:'✓',discard:'✗',rename:'✎'};
+  return `<span class="thumb-decision" style="background:${colors[dec.action]};color:#fff;">${icons[dec.action]}</span>`;
+}
+
+function pendingIndices(){
+  const out = [];
+  MANIFEST.forEach((m,i) => { if(!decisions[m.id] || decisions[m.id].action === 'rename') out.push(i); });
+  return out;
+}
+
+function nextPendingIdx(from, dir){
+  const pend = pendingIndices();
+  if(pend.length === 0) return from;
+  const futureSorted = pend.slice().sort((a,b) => {
+    const da = ((a - from) * dir + MANIFEST.length) % MANIFEST.length || MANIFEST.length;
+    const db = ((b - from) * dir + MANIFEST.length) % MANIFEST.length || MANIFEST.length;
+    return da - db;
+  });
+  return futureSorted[0];
+}
+
+function makeThumb(m, i){
+  const t = document.createElement("div");
+  t.className = "thumb" + (i===idx?" active":"") + (m.status==="pending"?" pending":"");
+  if(m.status === "ready"){
+    const img = document.createElement("img");
+    img.src = m.path || API_URL(m.id);
+    t.appendChild(img);
+  }else{
+    t.textContent = "…";
+  }
+  t.title = m.name;
+  return t;
+}
+
+function renderSide(targetId, action, label){
+  const el = $(targetId);
+  el.innerHTML = "";
+  const items = MANIFEST.map((m,i)=>({m,i})).filter(x => decisions[x.m.id]?.action === action);
+  const title = document.createElement('div');
+  title.className = 'side-title';
+  title.textContent = label.replace('(N)', `(${items.length})`);
+  el.appendChild(title);
+  items.forEach(({m,i}) => {
+    const t = makeThumb(m, i);
+    t.onclick = () => {
+      delete decisions[m.id];
+      saveDecisions();
+      idx = i;
+      render();
+    };
+    t.title = m.name + ' — click pra restaurar';
+    el.appendChild(t);
+  });
+}
+
 function render(){
   const a = MANIFEST[idx];
   if(!a){return;}
   $("name").textContent = a.name;
   $("id").textContent = a.id;
-  $("status").textContent = a.status;
-  $("status").className = "status " + a.status;
-  $("counter").textContent = (idx+1) + " / " + MANIFEST.length;
 
   if(a.status === "ready"){
     $("img").src = a.path || API_URL(a.id);
     $("img").style.display = "block";
     $("pending").style.display = "none";
   }else{
-    // tenta carregar direto da API mesmo assim — se já saiu, aparece
     $("img").src = API_URL(a.id) + "?t=" + Date.now();
     $("img").style.display = "block";
     $("pending").style.display = "block";
@@ -211,30 +474,600 @@ function render(){
     $("img").onload = ()=>{ $("pending").style.display = "none"; };
   }
 
-  // grid
+  renderBadge(a.id, $("decisionBadge"));
+  updateStats();
+
+  renderSide('gridLeft', 'discard', '❌ DISCARDED (N)');
+  renderSide('gridRight', 'promote', '✅ PROMOTED (N)');
+
   $("grid").innerHTML = "";
   MANIFEST.forEach((m,i)=>{
-    const t = document.createElement("div");
-    t.className = "thumb" + (i===idx?" active":"") + (m.status==="pending"?" pending":"");
-    if(m.status === "ready"){
-      const img = document.createElement("img");
-      img.src = m.path || API_URL(m.id);
-      t.appendChild(img);
-    }else{
-      t.textContent = "…";
-    }
+    const dec = decisions[m.id];
+    if(dec && (dec.action === 'promote' || dec.action === 'discard')) return;
+    const wrap = document.createElement("div");
+    wrap.className = "thumb-wrap";
+    wrap.style.position = "relative";
+    const t = makeThumb(m, i);
     t.onclick = ()=>{ idx = i; render(); };
-    $("grid").appendChild(t);
+    wrap.appendChild(t);
+    wrap.insertAdjacentHTML('beforeend', thumbBadge(m.id));
+    $("grid").appendChild(wrap);
   });
 }
 
-$("prev").onclick = ()=>{ idx = (idx - 1 + MANIFEST.length) % MANIFEST.length; render(); };
-$("next").onclick = ()=>{ idx = (idx + 1) % MANIFEST.length; render(); };
+$("prev").onclick = ()=>{ idx = nextPendingIdx(idx, -1); render(); };
+$("next").onclick = ()=>{ idx = nextPendingIdx(idx, 1); render(); };
+
+$("btnPromote").onclick = ()=>{
+  const a = MANIFEST[idx];
+  decisions[a.id] = { action:'promote', target: suggestTargetFolder(a.name), name: a.name, path: a.path };
+  saveDecisions();
+  idx = nextPendingIdx(idx, 1); render();
+};
+
+$("btnDiscard").onclick = ()=>{
+  const a = MANIFEST[idx];
+  decisions[a.id] = { action:'discard', name: a.name, path: a.path };
+  saveDecisions();
+  idx = nextPendingIdx(idx, 1); render();
+};
+
+$("btnRename").onclick = ()=>{
+  const a = MANIFEST[idx];
+  const newName = prompt(`Novo nome (sem extensão):`, a.name);
+  if(!newName || newName === a.name) return;
+  decisions[a.id] = { action:'rename', newName, name: a.name, path: a.path };
+  saveDecisions(); render();
+};
+
+$("btnClear").onclick = ()=>{
+  const a = MANIFEST[idx];
+  delete decisions[a.id];
+  saveDecisions();
+  idx = nextPendingIdx(idx, 1); render();
+};
+
+$("btnExport").onclick = async ()=>{
+  const out = {};
+  MANIFEST.forEach(a => {
+    const dec = decisions[a.id];
+    if(!dec) return;
+    out[a.id] = { ...dec };
+  });
+  try {
+    const res = await fetch(API_BASE + '/save_decisions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(out, null, 2)
+    });
+    if(res.ok){
+      const r = await res.json();
+      $("stats").textContent = `💾 Salvo ${r.count} decisões em ${r.saved_to}`;
+    } else {
+      $("stats").textContent = `⚠ Servidor sem endpoint. Mata o http.server e roda: python tools/gallery_server.py`;
+    }
+  } catch(e){
+    $("stats").textContent = `⚠ Servidor offline. Roda: python tools/gallery_server.py`;
+  }
+};
 
 document.addEventListener("keydown", e => {
+  if(e.target.matches('input, textarea')) return;
+  if(activeTab !== 'manager') return;
   if(e.key === "ArrowLeft") $("prev").click();
   if(e.key === "ArrowRight") $("next").click();
+  if(e.key === "p" || e.key === "P") $("btnPromote").click();
+  if(e.key === "d" || e.key === "D") $("btnDiscard").click();
+  if(e.key === "r" || e.key === "R") $("btnRename").click();
+  if(e.key === "c" || e.key === "C") $("btnClear").click();
 });
+
+// ============ TABS ============
+let activeTab = 'manager';
+function switchTab(name){
+  activeTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.hidden = (c.id !== 'tab-' + name));
+  if(name === 'gallery') renderGallery();
+  else if(name === 'detail') renderDetailList();
+  else if(name === 'tiles') renderTiles();
+}
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => switchTab(t.dataset.tab);
+});
+
+// ============ TAB GALLERY (sumário) ============
+let summaryData = null;
+async function fetchSummary(){
+  try {
+    const res = await fetch(API_BASE + '/list_assets');
+    if(!res.ok) return null;
+    return await res.json();
+  } catch(e){ return null; }
+}
+
+function renderGallery(){
+  const fsAssets = summaryData?.filesystem || [];
+  const orphans = summaryData?.orphans || [];
+
+  // Promoted = filesystem assets em pastas categorizadas + decisions promote
+  const fsPromoted = fsAssets.filter(a => /\/(objects|vegetation|enemies|hud|chars\/[^\/]+\/)/.test(a.path) && !/inbox/.test(a.path));
+  const localPromoted = MANIFEST.filter(m => decisions[m.id]?.action === 'promote');
+
+  // Discarded = decisions discard
+  const localDiscarded = MANIFEST.filter(m => decisions[m.id]?.action === 'discard');
+
+  // Pending = inbox + manifest sem decisão + orfãos do PixelLab
+  const inboxAssets = fsAssets.filter(a => /inbox/.test(a.path));
+  const localPending = MANIFEST.filter(m => !decisions[m.id] || decisions[m.id].action === 'rename');
+
+  $("sumPromoted").textContent = fsPromoted.length + localPromoted.length;
+  $("sumPromotedBd").innerHTML = `📁 ${fsPromoted.length} no filesystem<br>📋 ${localPromoted.length} marcados (manager)`;
+  fillSumGrid('sumPromotedGrid', [...fsPromoted.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})), ...localPromoted.map(m => ({path: m.path, name: m.name}))]);
+
+  $("sumDiscarded").textContent = localDiscarded.length;
+  $("sumDiscardedBd").innerHTML = `📋 ${localDiscarded.length} marcados (manager)<br><span style="opacity:.5">obs: descartados ainda não removidos do disco</span>`;
+  fillSumGrid('sumDiscardedGrid', localDiscarded.map(m => ({path: m.path, name: m.name})));
+
+  $("sumPending").textContent = inboxAssets.length + orphans.length;
+  $("sumPendingBd").innerHTML = `📁 ${inboxAssets.length} no inbox<br>☁ ${orphans.length} órfãos no PixelLab (sem decisão local)`;
+  fillSumGrid('sumPendingGrid', inboxAssets.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})));
+
+  if(!summaryData){
+    fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderGallery(); });
+  }
+}
+
+// Pega chave de grupo "natural": personagem inteiro (chars/boi) ou categoria (chars/nature/objects)
+function groupKeyForPath(path){
+  const m = path.match(/pixel_labs\/(.+)$/);
+  if(!m) return path;
+  const parts = m[1].split('/');
+  parts.pop(); // tira filename
+  if(parts.length === 0) return 'root';
+  if(parts[0] === 'chars'){
+    if(parts[1] === 'nature' && parts.length >= 3) return 'chars/nature/' + parts[2];
+    if(parts[1]) return 'chars/' + parts[1];
+  }
+  return parts.slice(0, 2).join('/') || parts[0];
+}
+
+function groupByFolder(items){
+  const groups = new Map();
+  items.forEach(it => {
+    const key = groupKeyForPath(it.path);
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  });
+  return groups;
+}
+
+function fillSumGrid(id, items){
+  const el = $(id);
+  el.innerHTML = '';
+  const groups = groupByFolder(items);
+  let count = 0;
+  for(const [folder, fitems] of groups){
+    if(count >= 200) break;
+    if(fitems.length === 1){
+      const it = fitems[0];
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.style.width = '42px'; t.style.height = '42px';
+      const img = document.createElement('img');
+      img.src = it.path;
+      t.appendChild(img);
+      t.title = it.name;
+      el.appendChild(t);
+    } else {
+      // group: show first as representative + badge + hover popup
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb-group';
+      wrap.style.width = '42px'; wrap.style.height = '42px';
+      wrap.addEventListener('mouseenter', () => {
+        const popup = wrap.querySelector('.group-popup');
+        if(!popup) return;
+        const r = wrap.getBoundingClientRect();
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        // horizontal: se thumb na esquerda, abre direita; se na direita, abre esquerda
+        if(r.left + r.width/2 < cx){
+          popup.style.left = '100%'; popup.style.right = 'auto'; popup.style.transform = 'none';
+        } else {
+          popup.style.right = '100%'; popup.style.left = 'auto'; popup.style.transform = 'none';
+        }
+        // vertical: se thumb mais abaixo do centro, abre pra cima; se acima, abre pra baixo
+        if(r.top + r.height/2 > cy){
+          popup.style.bottom = '0'; popup.style.top = 'auto';
+        } else {
+          popup.style.top = '0'; popup.style.bottom = 'auto';
+        }
+      });
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.style.width = '42px'; t.style.height = '42px';
+      t.style.borderColor = '#f4c95d';
+      const img = document.createElement('img');
+      img.src = fitems[0].path;
+      t.appendChild(img);
+      const folderName = folder.split('/').pop() || folder || 'group';
+      t.title = `${folder} (${fitems.length} files)`;
+      const badge = document.createElement('span');
+      badge.className = 'group-badge';
+      badge.textContent = fitems.length;
+      const popup = document.createElement('div');
+      popup.className = 'group-popup';
+      popup.innerHTML = `<div class="pop-title">${folderName}</div>` + fitems.map(f => `<img src="${f.path}" title="${f.name}">`).join('');
+      wrap.appendChild(t);
+      wrap.appendChild(badge);
+      wrap.appendChild(popup);
+      el.appendChild(wrap);
+    }
+    count++;
+  }
+}
+
+$("btnRefreshSummary")?.addEventListener('click', async () => {
+  summaryData = null;
+  $("btnRefreshSummary").textContent = '⏳ Scanning…';
+  summaryData = await fetchSummary() || {filesystem:[], orphans:[]};
+  renderGallery();
+  $("btnRefreshSummary").textContent = '↻ Refresh';
+});
+
+// ============ TAB DETAIL (PixelLab MCP) ============
+const PIXELLAB_TOOLS = [
+  // CREATE
+  {name:'create_object', cat:'create', label:'🆕 Create Object', args:[
+    {k:'description', label:'Description', type:'textarea', required:true},
+    {k:'size', label:'Size (px)', type:'number', def:64},
+    {k:'view', label:'View', type:'select', opts:['top-down','3/4','side'], def:'top-down'},
+    {k:'no_background', label:'No Background', type:'checkbox', def:true},
+    {k:'palette_image_id', label:'Palette image ID (opt)', type:'text'},
+  ]},
+  {name:'create_character', cat:'create', label:'🆕 Create Character', args:[
+    {k:'description', label:'Description', type:'textarea', required:true},
+    {k:'size', label:'Size', type:'number', def:64},
+    {k:'view', label:'View', type:'select', opts:['top-down','3/4','side','low top-down','high top-down'], def:'top-down'},
+    {k:'n_directions', label:'N directions', type:'select', opts:['4','8'], def:'8'},
+    {k:'palette_image_id', label:'Palette image ID', type:'text'},
+  ]},
+  {name:'create_map_object', cat:'create', label:'🆕 Create Map Object', args:[
+    {k:'description', label:'Description', type:'textarea', required:true},
+    {k:'size', label:'Size', type:'number', def:96},
+    {k:'no_background', label:'No Background', type:'checkbox', def:true},
+  ]},
+  {name:'create_topdown_tileset', cat:'create', label:'🆕 Create Top-down Tileset', args:[
+    {k:'description', label:'Description', type:'textarea', required:true},
+    {k:'tile_size', label:'Tile size', type:'number', def:32},
+    {k:'transition', label:'Transition (e.g. grass↔dirt)', type:'text'},
+  ]},
+  // MODIFY
+  {name:'vary_object', cat:'modify', label:'🎨 Vary Object', args:[
+    {k:'object_id', label:'Object ID', type:'text', autoFromAsset:true, required:true},
+    {k:'description', label:'Variation description', type:'textarea', required:true},
+    {k:'n_variations', label:'N variations', type:'number', def:3},
+  ]},
+  {name:'select_object_frames', cat:'modify', label:'🎯 Select Object Frames', args:[
+    {k:'object_id', label:'Object ID', type:'text', autoFromAsset:true, required:true},
+    {k:'frame_indices', label:'Frame indices (csv ex: 0,2,4)', type:'text', required:true},
+  ]},
+  {name:'dismiss_review', cat:'modify', label:'✋ Dismiss Review', args:[
+    {k:'object_id', label:'Asset ID', type:'text', autoFromAsset:true, required:true},
+  ]},
+  // ANIM
+  {name:'animate_object', cat:'anim', label:'🎬 Animate Object', args:[
+    {k:'object_id', label:'Object ID', type:'text', autoFromAsset:true, required:true},
+    {k:'description', label:'Animation description', type:'textarea', required:true},
+    {k:'n_frames', label:'N frames', type:'number', def:4},
+  ]},
+  {name:'animate_character', cat:'anim', label:'🎬 Animate Character', args:[
+    {k:'character_id', label:'Character ID', type:'text', autoFromAsset:true, required:true},
+    {k:'description', label:'Animation description (e.g. walk, attack)', type:'textarea', required:true},
+    {k:'n_frames', label:'N frames', type:'number', def:4},
+    {k:'direction', label:'Direction', type:'select', opts:['','south','south-east','east','north-east','north','north-west','west','south-west'], def:''},
+  ]},
+  // META (get/list)
+  {name:'get_object', cat:'meta', label:'📖 Get Object', args:[{k:'object_id', label:'Object ID', type:'text', autoFromAsset:true, required:true}]},
+  {name:'get_character', cat:'meta', label:'📖 Get Character', args:[{k:'character_id', label:'Character ID', type:'text', autoFromAsset:true, required:true}]},
+  {name:'get_map_object', cat:'meta', label:'📖 Get Map Object', args:[{k:'map_object_id', label:'Map Object ID', type:'text', autoFromAsset:true, required:true}]},
+  {name:'get_topdown_tileset', cat:'meta', label:'📖 Get Topdown Tileset', args:[{k:'tileset_id', label:'Tileset ID', type:'text', autoFromAsset:true, required:true}]},
+  {name:'list_objects', cat:'meta', label:'📋 List Objects', args:[]},
+  {name:'list_characters', cat:'meta', label:'📋 List Characters', args:[]},
+  {name:'list_topdown_tilesets', cat:'meta', label:'📋 List Topdown Tilesets', args:[]},
+  // DELETE
+  {name:'delete_object', cat:'delete', label:'🗑 Delete Object', args:[{k:'object_id', label:'Object ID', type:'text', autoFromAsset:true, required:true}, {k:'confirm', label:'Confirm', type:'checkbox', def:false, required:true}]},
+  {name:'delete_character', cat:'delete', label:'🗑 Delete Character', args:[{k:'character_id', label:'Character ID', type:'text', autoFromAsset:true, required:true}, {k:'confirm', label:'Confirm', type:'checkbox', def:false, required:true}]},
+  {name:'delete_topdown_tileset', cat:'delete', label:'🗑 Delete Topdown Tileset', args:[{k:'tileset_id', label:'Tileset ID', type:'text', autoFromAsset:true, required:true}, {k:'confirm', label:'Confirm', type:'checkbox', def:false, required:true}]},
+];
+
+let detailSelected = null;
+let mcpQueue = [];
+try { mcpQueue = JSON.parse(localStorage.getItem('chapEscapadeMcpQueue') || '[]'); } catch(e){}
+function saveQueue(){ localStorage.setItem('chapEscapadeMcpQueue', JSON.stringify(mcpQueue)); updateQueueBar(); }
+
+function updateQueueBar(){
+  const bar = $("queueBar");
+  if(!bar) return;
+  bar.hidden = mcpQueue.length === 0;
+  $("queueBarText").textContent = `📋 ${mcpQueue.length} ações na fila`;
+}
+
+function approvedAssets(){
+  const list = [];
+  // do MANIFEST + decisions promote
+  MANIFEST.forEach(m => {
+    if(decisions[m.id]?.action === 'promote') list.push({id: m.id, name: m.name, path: m.path, target: decisions[m.id].target});
+  });
+  // do filesystem (assets já em pastas categorizadas)
+  if(summaryData?.filesystem){
+    summaryData.filesystem.forEach(a => {
+      if(/inbox/.test(a.path)) return;
+      const fname = a.path.split(/[\\/]/).pop().replace('.png','');
+      // tenta pegar id do MANIFEST se nome bate
+      const m = MANIFEST.find(x => x.name === fname);
+      list.push({id: m?.id || '', name: fname, path: a.path, target: a.path.split(/[\\/]/).slice(-2,-1)[0]});
+    });
+  }
+  // dedup
+  const seen = new Set();
+  return list.filter(a => { const k = a.path; if(seen.has(k)) return false; seen.add(k); return true; });
+}
+
+function renderDetailList(){
+  if(!summaryData){
+    fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderDetailList(); });
+  }
+  const body = $("detailListBody");
+  body.innerHTML = '';
+  body.className = 'detail-list-grid';
+  const list = approvedAssets();
+  if(list.length === 0){
+    body.innerHTML = '<div style="opacity:.6;font-size:11px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
+    return;
+  }
+  list.forEach(a => {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (detailSelected?.path === a.path ? ' active' : '');
+    const img = document.createElement('img');
+    img.src = a.path;
+    t.appendChild(img);
+    t.title = a.name + (a.target ? ' · ' + a.target : '');
+    t.onclick = () => { detailSelected = a; renderDetailList(); renderDetailMain(); };
+    body.appendChild(t);
+  });
+}
+
+function renderDetailMain(){
+  const a = detailSelected;
+  if(!a){ return; }
+  $("detailTitle").textContent = a.name;
+  const body = $("detailBody");
+  const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 METADATA', delete:'🗑 DELETE'};
+  const cats = ['create','modify','anim','meta','delete'];
+  let html = `<div class="preview"><img src="${a.path}"><div class="meta"><div><strong>${a.name}</strong></div><div>path: ${a.path}</div><div>id: ${a.id||'(unknown)'}</div><div>target: ${a.target||'-'}</div></div></div>`;
+  cats.forEach(cat => {
+    const tools = PIXELLAB_TOOLS.filter(t => t.cat === cat);
+    if(!tools.length) return;
+    html += `<h4 style="color:#a89368;font-size:11px;letter-spacing:2px;margin:18px 0 6px;">${catLabels[cat]}</h4>`;
+    html += `<div class="tools-grid">`;
+    tools.forEach(t => {
+      html += `<div class="tool-card cat-${t.cat}"><div class="tname">${t.label}<br><span style="opacity:.5;font-weight:normal;">mcp__pixellab__${t.name}</span></div>`;
+      t.args.forEach(arg => {
+        const id = `f-${t.name}-${arg.k}`;
+        const auto = arg.autoFromAsset && a.id ? a.id : (arg.def !== undefined ? arg.def : '');
+        if(arg.type === 'textarea'){
+          html += `<label>${arg.label}${arg.required?' *':''}</label><textarea id="${id}" data-tool="${t.name}" data-key="${arg.k}">${auto}</textarea>`;
+        } else if(arg.type === 'select'){
+          html += `<label>${arg.label}</label><select id="${id}" data-tool="${t.name}" data-key="${arg.k}">${arg.opts.map(o=>`<option value="${o}"${o===auto?' selected':''}>${o||'(none)'}</option>`).join('')}</select>`;
+        } else if(arg.type === 'checkbox'){
+          html += `<label><input type="checkbox" id="${id}" data-tool="${t.name}" data-key="${arg.k}"${auto?' checked':''}> ${arg.label}</label>`;
+        } else {
+          html += `<label>${arg.label}${arg.required?' *':''}</label><input type="${arg.type==='number'?'number':'text'}" id="${id}" data-tool="${t.name}" data-key="${arg.k}" value="${auto}">`;
+        }
+      });
+      html += `<button class="qbtn" data-queue="${t.name}">+ Add to queue</button></div>`;
+    });
+    html += `</div>`;
+  });
+  body.innerHTML = html;
+  body.querySelectorAll('.qbtn').forEach(b => {
+    b.onclick = () => queueTool(b.dataset.queue);
+  });
+}
+
+function queueTool(toolName){
+  const tool = PIXELLAB_TOOLS.find(t => t.name === toolName);
+  if(!tool) return;
+  const args = {};
+  tool.args.forEach(arg => {
+    const el = document.querySelector(`[data-tool="${toolName}"][data-key="${arg.k}"]`);
+    if(!el) return;
+    let val;
+    if(arg.type === 'checkbox') val = el.checked;
+    else if(arg.type === 'number') val = el.value === '' ? null : Number(el.value);
+    else val = el.value;
+    if(val !== null && val !== '') args[arg.k] = val;
+  });
+  mcpQueue.push({
+    tool: 'mcp__pixellab__' + toolName,
+    args,
+    asset: detailSelected ? {name: detailSelected.name, path: detailSelected.path, id: detailSelected.id} : null,
+    ts: Date.now()
+  });
+  saveQueue();
+  // POST ao server pra persistir
+  fetch(API_BASE + '/save_mcp_queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue) }).catch(()=>{});
+}
+
+$("btnQueueShow")?.addEventListener('click', () => {
+  alert(JSON.stringify(mcpQueue, null, 2));
+});
+$("btnQueueClear")?.addEventListener('click', () => {
+  if(!confirm('Limpar fila MCP?')) return;
+  mcpQueue = [];
+  saveQueue();
+  fetch(API_BASE + '/save_mcp_queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify([]) }).catch(()=>{});
+});
+
+updateQueueBar();
+
+// ============ TAB TILES (Wang cr31) ============
+const WANG_PRESETS = [
+  {
+    id: 'placeholder',
+    name: 'Placeholder (test)',
+    meta: 'Solid color blocks pra debug',
+    sliced: true,
+    sliceFn: (i) => `../assets/terrain/test/wang_${String(i).padStart(2,'0')}.png`,
+  },
+  {
+    id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
+    name: 'ocean ↔ sand',
+    meta: 'PixelLab · 16×16 tiles · 64×64 PNG',
+    image: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/metadata',
+    tileSize: 16,
+  },
+  {
+    id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
+    name: 'dirt ↔ grass (cerrado)',
+    meta: 'PixelLab · em geração ou pronto',
+    image: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/metadata',
+    tileSize: 16,
+  },
+];
+
+let activePreset = WANG_PRESETS[0];
+let presetMetadata = {};
+
+function bitsToCorners(bits){
+  return {
+    NW: (bits & 1) ? 'upper' : 'lower',
+    NE: (bits & 2) ? 'upper' : 'lower',
+    SE: (bits & 4) ? 'upper' : 'lower',
+    SW: (bits & 8) ? 'upper' : 'lower',
+  };
+}
+
+function cornerSquare(c){
+  return `<div class="corner-vis"><div class="${c.NW}"></div><div class="${c.NE}"></div><div class="${c.SW}"></div><div class="${c.SE}"></div></div>`;
+}
+
+function renderPresetList(){
+  const el = $("tilesetList");
+  el.innerHTML = '';
+  WANG_PRESETS.forEach(p => {
+    const r = document.createElement('div');
+    r.className = 'preset-row' + (p === activePreset ? ' active' : '');
+    r.innerHTML = `<div class="pname">${p.name}</div><div class="pmeta">${p.meta}</div>`;
+    r.onclick = () => { activePreset = p; renderTiles(); };
+    el.appendChild(r);
+  });
+}
+
+async function fetchTilesetMetadata(preset){
+  if(!preset.metadataUrl) return null;
+  if(presetMetadata[preset.id]) return presetMetadata[preset.id];
+  try {
+    const res = await fetch(preset.metadataUrl);
+    if(!res.ok) return null;
+    const data = await res.json();
+    presetMetadata[preset.id] = data;
+    return data;
+  } catch(e){ return null; }
+}
+
+function sliceImage(imgEl, tileSize, gridCols){
+  const tiles = [];
+  for(let i=0; i<16; i++){
+    const cx = (i % gridCols) * tileSize;
+    const cy = Math.floor(i / gridCols) * tileSize;
+    const c = document.createElement('canvas');
+    c.width = tileSize; c.height = tileSize;
+    c.getContext('2d').drawImage(imgEl, cx, cy, tileSize, tileSize, 0, 0, tileSize, tileSize);
+    tiles.push(c.toDataURL());
+  }
+  return tiles;
+}
+
+async function renderTiles(){
+  renderPresetList();
+  const p = activePreset;
+  $("tilesetTitle").textContent = p.name;
+  const grid = $("wangGrid");
+  grid.innerHTML = '';
+  const cells = [];
+  for(let bits=0; bits<16; bits++){
+    const corners = bitsToCorners(bits);
+    const cell = document.createElement('div');
+    cell.className = 'wang-cell';
+    cell.innerHTML = `
+      <div class="wtile" data-bits="${bits}"></div>
+      <div class="wlabel">${bits} (0x${bits.toString(16).toUpperCase()})</div>
+      <div class="wcorners">NW:${corners.NW[0].toUpperCase()} NE:${corners.NE[0].toUpperCase()} SE:${corners.SE[0].toUpperCase()} SW:${corners.SW[0].toUpperCase()}</div>
+      ${cornerSquare(corners)}`;
+    grid.appendChild(cell);
+    cells.push(cell);
+  }
+  $("tilesetInfo").innerHTML = `Tileset <code>${p.id}</code> · ${p.meta}`;
+  if(p.sliced){
+    cells.forEach((cell, bits) => {
+      const wtile = cell.querySelector('.wtile');
+      const img = new Image();
+      img.src = p.sliceFn(bits);
+      img.style.width = '96px'; img.style.height = '96px'; img.style.imageRendering = 'pixelated';
+      img.onerror = () => { wtile.style.background = '#3a2d1e'; wtile.textContent = '?'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; };
+      wtile.innerHTML = '';
+      wtile.appendChild(img);
+    });
+    return;
+  }
+  const meta = await fetchTilesetMetadata(p);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const tileSize = p.tileSize || 16;
+    const tiles = sliceImage(img, tileSize, Math.floor(img.width / tileSize));
+    const mapping = {};
+    if(meta?.tiles){
+      meta.tiles.forEach((t, i) => {
+        const c = t.corners || {};
+        const b = (c.NW==='upper'?1:0) + (c.NE==='upper'?2:0) + (c.SE==='upper'?4:0) + (c.SW==='upper'?8:0);
+        mapping[b] = i;
+      });
+    } else {
+      for(let i=0;i<16;i++) mapping[i] = i;
+    }
+    cells.forEach((cell, bits) => {
+      const wtile = cell.querySelector('.wtile');
+      wtile.innerHTML = '';
+      const ti = mapping[bits];
+      if(ti === undefined){
+        wtile.textContent = '—'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; return;
+      }
+      const tileImg = new Image();
+      tileImg.src = tiles[ti];
+      tileImg.style.width = '96px'; tileImg.style.height = '96px'; tileImg.style.imageRendering = 'pixelated';
+      wtile.appendChild(tileImg);
+    });
+    if(!meta?.tiles){
+      $("tilesetInfo").innerHTML += `<br>⚠ sem metadata — exibindo ordem natural do PNG (não-cr31)`;
+    }
+  };
+  img.onerror = () => {
+    $("tilesetInfo").innerHTML += `<br>⚠ erro ao carregar imagem (tileset talvez ainda em geração no PixelLab)`;
+    cells.forEach(cell => {
+      const wtile = cell.querySelector('.wtile');
+      wtile.style.background = '#4a1d1d';
+      wtile.style.color = '#e89f9f';
+      wtile.style.lineHeight = '96px';
+      wtile.textContent = 'X';
+    });
+  };
+  img.src = p.image + (p.image.includes('?') ? '&' : '?') + 't=' + Date.now();
+}
 
 setInterval(()=>{
   refreshTimer--;

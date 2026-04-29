@@ -132,6 +132,14 @@ Object.assign(Jogo.prototype, {
         this._saveDbgTimer = setTimeout(() => {
             try { localStorage.setItem(DBG_KEY, JSON.stringify(this.dbg)); }
             catch (e) { console.warn('[DBG SAVE FAIL]', e); }
+            // fire-and-forget POST pro gallery_server.py em 8090 (8080 é só do game)
+            try {
+                fetch('http://localhost:8090/save_configs', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(this.dbg)
+                }).catch(() => {}); // silencioso se servidor não estiver rodando
+            } catch (e) {}
             this._saveDbgTimer = null;
         }, 500);
     },
