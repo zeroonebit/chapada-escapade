@@ -133,8 +133,9 @@
   .meta{font-size:11px;line-height:1.6;text-align:center;max-width:480px;}
   .meta strong{color:#f4c95d;font-size:13px;}
   .detail-main .meta{font-size:11px;line-height:1.6;}
-  .tools-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;}
-  .tool-section{margin-top:14px;border:1px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);}
+  .tools-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  .tool-sections-row{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-top:14px;}
+  .tool-section{border:1px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);align-self:start;}
   .tool-section .sec-head{margin:0;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;color:#a89368;background:#2a2218;border-radius:4px 4px 0 0;user-select:none;}
   .tool-section .sec-head:hover{color:#f4c95d;background:#3a2d1e;}
   .tool-section .sec-head .toggle{font-size:13px;width:14px;display:inline-block;}
@@ -240,7 +241,7 @@
 <div class="tab-content" id="tab-gallery" hidden>
   <div class="summary">
     <div class="summary-panel promoted">
-      <h2>✅ PROMOTED <span id="sumPromoted" style="margin-left:8px;color:#9fe89f;">—</span></h2>
+      <h2>✅ APPROVED <span id="sumPromoted" style="margin-left:8px;color:#9fe89f;">—</span></h2>
       <div class="filter-bar" id="promotedFilterBar">
         <button data-filter="folders" class="active">📁 Folders</button>
         <button data-filter="files">📄 Single files</button>
@@ -1218,8 +1219,8 @@ function renderDetailMain(){
   const bodyEl = $("editorBody") || $("detailBody");
   if(!titleEl || !bodyEl){ return; }
   titleEl.textContent = a.name;
-  const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 METADATA', delete:'🗑 DELETE'};
-  const cats = ['create','modify','anim','meta','delete'];
+  const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 META'};
+  const cats = ['create','modify','anim','meta']; // Delete vai pro Manager
 
   const dirVariants = findDirectionVariants(a);
   const dirShort = {north:'N','north-east':'NE',east:'E','south-east':'SE',south:'S','south-west':'SW',west:'W','north-west':'NW'};
@@ -1244,16 +1245,17 @@ function renderDetailMain(){
         <div style="margin-top:8px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Click <strong>+</strong> nos slots vazios pra enfileirar geração via MCP.</div>
       </div>
     </div>`;
+  html += `<div class="tool-sections-row">`;
   cats.forEach((cat, ci) => {
     const tools = PIXELLAB_TOOLS.filter(t => t.cat === cat);
     if(!tools.length) return;
-    // default: só Create expandido, resto colapsado
-    const collapsed = (cat !== 'create') ? 'true' : 'false';
+    // todas as 4 expandidas por default (uma por coluna)
+    const collapsed = 'false';
     html += `<div class="tool-section" data-cat="${cat}" data-collapsed="${collapsed}">
       <div class="sec-head" onclick="this.parentElement.dataset.collapsed = this.parentElement.dataset.collapsed === 'true' ? 'false' : 'true'; const t = this.querySelector('.toggle'); if(t) t.textContent = this.parentElement.dataset.collapsed === 'true' ? '▶' : '▼';">
-        <span class="toggle">${collapsed === 'true' ? '▶' : '▼'}</span>
+        <span class="toggle">▼</span>
         <span>${catLabels[cat]}</span>
-        <span class="count">${tools.length} tool${tools.length>1?'s':''}</span>
+        <span class="count">${tools.length}</span>
       </div>
       <div class="sec-body"><div class="tools-grid">`;
     tools.forEach(t => {
@@ -1275,6 +1277,7 @@ function renderDetailMain(){
     });
     html += `</div></div></div>`;
   });
+  html += `</div>`; // fecha .tool-sections-row
   bodyEl.innerHTML = html;
   bodyEl.querySelectorAll('.qbtn').forEach(b => {
     b.onclick = () => queueTool(b.dataset.queue);
