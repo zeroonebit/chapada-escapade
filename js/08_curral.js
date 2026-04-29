@@ -241,6 +241,8 @@ Object.assign(Jogo.prototype, {
                 // M3: libera slot via _cleanSlot (null-safe + para tweens órfãos
                 // se algo travar entre o stop manual acima e o complete callback)
                 this._cleanSlot(curral, slotIdx);
+                // Quip ao entregar burger
+                if (this._showQuip) this._showQuip({ x: this.ship.x, y: this.ship.y }, 'burger');
             }
         });
     },

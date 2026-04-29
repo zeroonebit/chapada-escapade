@@ -240,6 +240,9 @@ Object.assign(Jogo.prototype, {
                 if (tooClose) continue;
                 lmPlaced.push({x: cx, y: cy});
                 this.add.image(cx, cy, lm).setScale(LM_SCALE[lm] || 2.0).setDepth(1.4);
+                // Track pra sistema de quips (proximity check em 20_quips.js)
+                if (!this._landmarkPositions) this._landmarkPositions = [];
+                this._landmarkPositions.push({ x: cx, y: cy, key: lm });
                 break;
             }
         }

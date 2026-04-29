@@ -23,6 +23,7 @@ const MENU_I18N = {
         ativar:'Active', intensidade:'Intensity', frequencia:'Frequency (drops)', angulo:'Angle (-1=L, +1=R)',
         speed:'Speed', comp_traco:'Stroke length', flocos:'Flakes',
         sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosao:'Fancy explosion',
+        quips:'Funny one-liners',
         wang:'Wang tiles (debug)', vacas_e:'Cows', bois_e:'Oxen', fazendeiros_e:'Farmers',
         atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
         language:'Language',
@@ -46,6 +47,7 @@ const MENU_I18N = {
         ativar:'Ativar', intensidade:'Intensidade', frequencia:'Frequência (gotas)', angulo:'Ângulo (-1=esq, +1=dir)',
         speed:'Velocidade', comp_traco:'Comprimento do traço', flocos:'Flocos',
         sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosao:'Explosão fancy',
+        quips:'Frases engraçadas',
         wang:'Wang tiles (debug)', vacas_e:'Vacas', bois_e:'Bois', fazendeiros_e:'Fazendeiros',
         atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
         language:'Idioma',
@@ -105,6 +107,7 @@ const DBG_DEFAULTS = {
         snow:               false,
         snowCount:          100,       // 0..400 flocos
         snowIntensidade:    0.85,      // 0..1 alpha
+        quips:              true,      // floating one-liners ao abduzir/matar/entregar
     },
 };
 
@@ -323,6 +326,7 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="sparkles_beam">Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                         <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
+                        <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
                         <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                     </fieldset>
                 </div>

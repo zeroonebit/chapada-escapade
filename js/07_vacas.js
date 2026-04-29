@@ -131,6 +131,10 @@ Object.assign(Jogo.prototype, {
         if (this.dbg?.fx?.explosaoBoa && this._spawnExplosao) {
             this._spawnExplosao(entity.x, entity.y, color, 1.0);
         }
+        // Quip ao matar farmer (one-shot — sem cooldown source)
+        if (entity.isEnemy && this._showQuip) {
+            this._showQuip(entity, 'farmer');
+        }
         this.tweens.add({
             targets: entity,
             scale: 2.2,
@@ -209,6 +213,8 @@ Object.assign(Jogo.prototype, {
             v.setAngularVelocity((Math.random() - 0.5) * 0.4);
             if (v.walkTimer) v.walkTimer.paused = true;
             if (this._spawnCaptureRings) this._spawnCaptureRings(v);
+            // Quip random ao abduzir (cow ou farmer pool conforme tipo)
+            if (this._showQuip) this._showQuip(v, v.isEnemy ? 'farmer' : 'cow');
         };
         this.cows.forEach(tryAbduct);
         this.farmers.forEach(tryAbduct);
