@@ -134,8 +134,8 @@ Object.assign(Jogo.prototype, {
     },
 
     // ── PAUSA ─────────────────────────────────────────────────────────────
-    _setupPausa() {
-        this.pausado = false;
+    _setupPause() {
+        this.paused = false;
         this.teclaEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         const pw = this.scale.width, ph = this.scale.height;
@@ -172,16 +172,16 @@ Object.assign(Jogo.prototype, {
     },
 
     // ── VITÓRIA ───────────────────────────────────────────────────────────
-    _checkVitoria() {
+    _checkVictory() {
         if (this.gameOver) return;
-        if (this.fazendeiros.length === 0 && this.atiradores.length === 0) {
-            this._vitoria();
+        if (this.farmers.length === 0 && this.shooters.length === 0) {
+            this._victory();
         }
     },
 
-    _vitoria() {
+    _victory() {
         this.gameOver = true;
-        this._soltarTodas();
+        this._releaseAll();
 
         const w = this.scale.width, h = this.scale.height;
 
@@ -215,7 +215,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '11px', fill: '#555555', fontStyle: 'bold', letterSpacing: 4
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        this.add.text(w/2, h/2 + 56, this.scoreAtual, {
+        this.add.text(w/2, h/2 + 56, this.score, {
             fontSize: '52px', fill: '#ffcc00', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
@@ -232,7 +232,7 @@ Object.assign(Jogo.prototype, {
     // ── GAME OVER ─────────────────────────────────────────────────────────
     _gameOver() {
         this.gameOver = true;
-        this._soltarTodas();
+        this._releaseAll();
 
         const w = this.scale.width, h = this.scale.height;
 
@@ -262,7 +262,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '11px', fill: '#555555', fontStyle: 'bold', letterSpacing: 4
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        this.add.text(w/2, h/2 + 28, this.scoreAtual, {
+        this.add.text(w/2, h/2 + 28, this.score, {
             fontSize: '52px', fill: '#00dd44', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 

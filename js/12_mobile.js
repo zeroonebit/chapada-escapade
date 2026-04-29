@@ -51,15 +51,15 @@ Object.assign(Jogo.prototype, {
         this._mobileIdleAlpha = IDLE_ALPHA;
         this._mobileHideAlpha = HIDE_ALPHA;
 
-        this._posicionarMobileControls();
+        this._positionMobileControls();
 
         // ── Pointer handlers ────────────────────────────────────────
         this.input.on('pointerdown', (p) => {
-            if (!this.gameStarted || this.gameOver || this.pausado) return;
+            if (!this.gameStarted || this.gameOver || this.paused) return;
             const dj = Phaser.Math.Distance.Between(p.x, p.y, this._joyCx, this._joyCy);
             if (dj < 90 && this._joyPointerId === null) {
                 this._joyPointerId = p.id;
-                this._atualizarJoy(p);
+                this._updateJoy(p);
                 fadeJoy(HIDE_ALPHA);
                 return;
             }
@@ -72,7 +72,7 @@ Object.assign(Jogo.prototype, {
         });
 
         this.input.on('pointermove', (p) => {
-            if (p.id === this._joyPointerId) this._atualizarJoy(p);
+            if (p.id === this._joyPointerId) this._updateJoy(p);
         });
 
         const releaseJoy = () => {
@@ -97,10 +97,10 @@ Object.assign(Jogo.prototype, {
         });
 
         // Reposiciona em resize
-        this.scale.on('resize', () => this._posicionarMobileControls());
+        this.scale.on('resize', () => this._positionMobileControls());
     },
 
-    _atualizarJoy(p) {
+    _updateJoy(p) {
         let dx = p.x - this._joyCx;
         let dy = p.y - this._joyCy;
         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -111,7 +111,7 @@ Object.assign(Jogo.prototype, {
         this._joyVec = { x: dx/max, y: dy/max, active: dist > 5 };
     },
 
-    _posicionarMobileControls() {
+    _positionMobileControls() {
         if (!this.isMobile || !this.joyBase) return;
         const w = this.scale.width, h = this.scale.height;
         const PAD_X = 95, PAD_Y = 110;
