@@ -1,8 +1,8 @@
 // 08_curral.js — Curral com slots fixos: 3 vacas max, 3 burgers max
 // Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
-const BURGER_SLOTS = ['burger_classic', 'burger_cheese', 'burger_double'];
-const SLOT_VALOR   = [100, 150, 220];      // pontos por tipo (mais elaborado vale mais)
-const SLOT_FUEL    = [22, 28, 36];          // fuel restaurado por tipo
+// Constantes BURGER_TEXTURES, SLOT_VALOR, SLOT_FUEL vêm de 00_constants.js
+// (alias local pra manter o código antigo lendo BURGER_SLOTS)
+const BURGER_SLOTS = BURGER_TEXTURES;
 
 Object.assign(Jogo.prototype, {
 

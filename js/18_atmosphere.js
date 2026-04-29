@@ -120,7 +120,8 @@ Object.assign(Jogo.prototype, {
     _scheduleStormFlash() {
         const next = Phaser.Math.Between(5000, 15000);
         this.time.delayedCall(next, () => {
-            if (!this.scene || !this.scene.scene || !this.scene.scene.isActive()) return;
+            // Cena ainda ativa? (this.sys existe enquanto a scene não foi destroyed)
+            if (!this.sys || !this.sys.isActive()) return;
             if (this.dbg?.fx?.weather === 'storm' && !this.tutorialMode) {
                 this._stormFlash();
             }
