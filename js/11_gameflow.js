@@ -7,13 +7,13 @@ Object.assign(Jogo.prototype, {
         this.tutorialMode = false;
         this.matter.world.enabled = false;
 
-        // Mobile auto-play: pula splash e entra direto em PLAY (mouse default).
-        // O DOM preloader ja eh fechado pelo 'complete' do this.load no preload.
-        if (window.__AUTO_PLAY) {
+        // Mobile mode: pula splash, entra direto em PLAY com touch input.
+        // O DOM preloader eh fechado pelo 'complete' do this.load no preload.
+        if (window.__MOBILE_MODE) {
             this.gameStarted = true;
             this.matter.world.enabled = true;
             if (this.dbg?.behavior) {
-                this.dbg.behavior.inputMode = 'mouse';
+                this.dbg.behavior.inputMode = 'mouse';  // joystick mobile usa mouse path
             }
             return;
         }
