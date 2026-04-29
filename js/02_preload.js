@@ -7,6 +7,24 @@ Object.assign(Jogo.prototype, {
             console.warn('[ASSET 404]', file.src || file.url || file.key);
         });
 
+        // Pre-loader DOM bar — atualiza durante carregamento + fade out ao terminar
+        const preBar = document.getElementById('pre-loader-bar');
+        const prePct = document.getElementById('pre-loader-pct');
+        const preLoader = document.getElementById('pre-loader');
+        if (preBar && prePct) {
+            this.load.on('progress', (v) => {
+                const pct = Math.round(v * 100);
+                preBar.style.width = pct + '%';
+                prePct.textContent = pct + '%';
+            });
+        }
+        if (preLoader) {
+            this.load.on('complete', () => {
+                preLoader.classList.add('fade');
+                setTimeout(() => preLoader.remove(), 500);
+            });
+        }
+
         // ── HERO ASSETS 200×200 (single sprite usado em algumas situações) ──
         // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
         this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
