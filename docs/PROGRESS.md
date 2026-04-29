@@ -4,6 +4,87 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-29 (madrugada) — Audit fixes + HUD assets + Objects v3 + debug overlay
+
+**~30 commits, ~6h, das 00:00 às 06:00+**
+
+### Engineering audit Sprint 1+2+3 (15 itens resolvidos)
+- **Sprint 1 trivials**: M6 (dead code), L4 (preload error handler), L1 (`js/00_constants.js` novo com magic numbers), L2 (helpers `isAbducibleCow`, `distSq`), L3 (speed thresholds), M1 (Math.sqrt → squared), H5 (counter `_cowsInBeamCount` reconciler — elimina filter por frame)
+- **Sprint 2 medios**: M7 (debounce 500ms localStorage), H3 (debounce 200ms rebuild rain/snow), M5 (cap rígido 100 balas)
+- **Sprint 3 complexos**: H1 (listener leak global keydown), H2 (tutorial flag pollution reset), H4 (fazendeiro `_timer` cleanup em `_explodir`), M2 (graphics destroy), M4 (`_sceneCleanup` central no `events.once('shutdown')`)
+- 15/18 issues resolvidas. Pendentes: M3 (slot tweens raro), L5 (mobile dual-input), L6 (FSM tutorial opcional)
+- `docs/AUDIT_2026-04-29.md` atualizado com status
+
+### HUD upgrade (refs do user)
+- `refs/hudradar.png` + `refs/huds isolados.png` integrados
+- `tools/slice_huds_isolados.py` extrai graviton/combustivel `_full` + `_frame` via PIL (bbox + saturation mask)
+- Radar redesenhado: sprite `hud_radar_frame` (NSWE marcado) + decay-based blips (cada entidade só acende quando sweep line passa, fade 2.5s via `_radarBlipFades` Map)
+- Barras: pintura preta sobre label baked PT-BR + Phaser text overlay (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
+- `_applyHudI18n` disparado on lang change e setup
+- HUD subido pra depth 200 (era 100, atmosphere overlay em 195 cobria)
+- Radar desce R/2 (35px) pra ficar acima das barras
+
+### Objects v3 (9 PixelLab via Chrome MCP)
+- `tools/pixellab_fetch_objects_v3.py` baixa 39 IDs novos (timestamp ≥1777400000)
+- `tools/pixellab_montage_objects_v3.py` contact sheet
+- `tools/organize_objects_v3.py` copia 9 com nomes legíveis
+- `chars/nature/objects/`: church, windmill, old_truck, satellite_dish_rusty, gas_can, barrel_rusty, bucket_empty, bucket_milk, dry_turf
+- 4 LANDMARKS aleatórios (1500px de distância entre si)
+- 4 spots de PROPS INDUSTRIAIS (gas_can/barrel_rusty random, 2-4 por spot)
+- 8 patches de DRY TURF espalhados (alpha 0.85)
+- Curral mascote: balde (milk OR empty random 50/50) ao lado da vaca
+
+### Debug overlay (F3)
+- `js/19_debug_overlay.js` novo — DOM div fixed top-left
+- FPS color-coded, heap MB, counts entidades/tweens, radar fades
+- Captura `window.error` e `unhandledrejection` (pega coisas fora do try/catch)
+- Snapshot estruturado no console.log a cada 5s pra anexar em bug reports
+- Toggleable com F3, funciona desde o splash
+- Removido `_errShown` flag (agora todos erros são capturados)
+
+### Splash + CONFIGS
+- 3 botões split: PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD
+- ESC funciona desde splash pra abrir CONFIGS
+- Botão **PREVIEW** (👁): 5s timeslice + esconde inimigos + reabre menu depois
+- Checkbox **Shuffle on PREVIEW** aleatoriza weather+TOD a cada click
+- Splash fit-to-screen + barrel ativo desde loading
+- Hit area expandida dos botões (compensa barrel post-fx)
+
+### Snow weather preset
+- Flocos brancos r=1-3.5px com drift sinuoso ±60px
+- Velocidade: flocos maiores caem mais rápido
+- Adicionado em `_applyWeatherPreset` + UI no select Weather
+
+### Editable sliders + UX
+- Sliders viraram `<input type="number">` editáveis (digita valor direto)
+- Sync bidirecional com clamp min/max
+- Sensibilidade discreto: 1 / 1.25 / 1.5 (step 0.25)
+- Toggle Input WASD/Mouse + Language ENG/PTBR no menu CONFIGS
+
+### i18n menu (en/pt)
+- `MENU_I18N` dict com ~50 chaves
+- `data-i18n` attrs em legends/notes/tabs/buttons/h2
+- `_applyMenuI18n()` percorre e troca textContent
+- Aba LOOKS → VISUALS, DEBUG MENU → CONFIGS
+
+### Bugs críticos corrigidos (post-audit)
+- **SLOT_VALOR/SLOT_FUEL/BURGER_TEXTURES** duplicados entre `00_constants.js` e `08_curral.js` → SyntaxError → arquivo inteiro falhava ao carregar → `_verificarEntrega is not a function` em cascata. **Causa do trava reportado.**
+- `18_atmosphere.js` `this.scene.scene.isActive()` não existe → crash no _scheduleStormFlash. Corrigido pra `this.sys.isActive()`.
+- `c.ready` legacy struct (curral refactor pros slots) ainda referenciada em `06_nave.js _atualizarSeta` e `17_tutorial DELIVER` → corrigido pra `c.slots.some(s => s.state === 'ready')`
+- Hint inicial 'CLICK AND HOLD' removido (poluía HUD em jogo normal)
+- Linha verde nos cantos eliminada (barrel out-of-bounds + box-shadow CSS)
+- HUD coberto pelo atmosphere overlay (depth 100 → 200)
+- PREVIEW: safety reset 6s da flag `_tutPreviewActive`
+
+### Pendentes (próxima sessão)
+- **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar texto/glow + condições
+- **Tradução D+R2** (identificadores PT→EN) — esperando JSON do localStorage do user
+- **Configs do user como DBG_DEFAULTS** (mesma dependência)
+- **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input), L6 (FSM tutorial)
+- **Labels de inputs** com `data-i18n` no menu (só legends/notes/buttons traduzidos)
+
+---
+
 ## Sessão 2026-04-29 (noite) — Atmosphere system + tutorial overhaul + i18n + responsividade
 
 **~25 commits, ~6h, das 18:00 às 00:00+**

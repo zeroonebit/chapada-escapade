@@ -4,6 +4,52 @@ Log de marcos do projeto. **Atualizado a cada sessão** — entrada nova no topo
 
 ---
 
+## 📅 2026-04-29 (sessão tripla manhã + noite + madrugada)
+
+> **~26h em 3 sessões. Engineering audit + HUD upgrade + 9 objects v3 + debug overlay + bugs críticos resolvidos.**
+
+### 📊 Snapshot
+| Métrica | Valor | vs sessão anterior |
+|---|---|---|
+| Commits totais | **120+** | +33 |
+| Linhas JS | **5.130+** (20 arquivos) | +522 |
+| Linhas Python (tools) | **1.890+** | +146 |
+| Assets PNG | **595** | +9 (objects v3) |
+| Idade do projeto | **3 dias úteis** | igual |
+
+### 🛸 Marcos atingidos
+- ✅ **Engineering audit** com 18 issues mapeadas e 15 resolvidas em 3 sprints (Sprint 1 trivials / 2 medios / 3 complexos)
+- ✅ **HUD radar com sprite** (refs do user) + decay-based blips estilo radar real
+- ✅ **HUD barras** com pintura preta sobre label baked + Phaser text overlay i18n dinâmico
+- ✅ **9 objects v3 PixelLab** baixados via batch (Chrome MCP + Backblaze CDN)
+- ✅ **Debug overlay F3** com FPS color-coded, heap MB, counts, errors capture, snapshots no console
+- ✅ **Splash 3 estágios** state machine (PLAY/TUTORIAL → ENG/PTBR ou MOUSE/WASD)
+- ✅ **PREVIEW timeslice** 5s + shuffle aleatório opcional
+- ✅ **Snow weather** preset (5º weather: clear/rain/snow/fog/storm)
+- ✅ **Sliders editáveis** + sensibilidade discreta + i18n menu (~50 chaves)
+- ✅ **`js/00_constants.js`** novo centralizando magic numbers + helpers reutilizáveis
+
+### 🐛 Bugs notáveis corrigidos
+- **SLOT_VALOR duplicado** entre `00_constants.js` e `08_curral.js` → SyntaxError quebrava arquivo inteiro → cascata de "X is not a function" → **causa do trava reportado pelo Dom**
+- `atmosphere this.scene.scene.isActive()` não existe → crash no `_scheduleStormFlash` → corrigido pra `this.sys.isActive()`
+- `c.ready` legacy struct (curral refactor pros slots) ainda em `06_nave.js _atualizarSeta` e `17_tutorial DELIVER`
+- Listener leak global `window.addEventListener('keydown')` sem cleanup → acumulava a cada restart
+- Tutorial flag pollution → flags vazavam pro modo normal entre restarts
+- Fazendeiro `_timer` orphan quando morria por slam (não passava por `_destruirVaca`)
+- Hint inicial 'CLICK AND HOLD' poluindo HUD em jogo normal
+- Linha verde nos cantos (barrel out-of-bounds + box-shadow CSS)
+
+### 📐 Decisões técnicas
+- Reconciler pattern pra contadores de cows in beam (evita filter por frame)
+- Debounce 500ms em `_saveDebugCfg` (slider drag = ~10 writes/s antes)
+- Debounce 200ms em `_rebuildRain/Snow` (evita churn em slider drag)
+- Cap rígido de 100 balas (descarta a mais antiga ao spawnar)
+- `_sceneCleanup` central no `events.once('shutdown')` cobrindo H1+H2+M2+M4
+- Objects v3: landmarks com 1500px de distância mínima, props industriais em 4 spots de cluster
+- Snapshot estruturado no console.log a cada 5s pra debug remoto
+
+---
+
 ## 📅 2026-04-29 (sessão dupla manhã + noite)
 
 > **~20h em 2 sessões. Maior salto qualitativo do projeto: tutorial guiado, atmosphere system, mobile responsivo, i18n.**

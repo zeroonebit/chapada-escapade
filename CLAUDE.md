@@ -140,6 +140,23 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - `tools/organize_cercas_v2.py` — copia inbox → chars/nature/cercas_v2 com nomes legíveis
 - Skill `~/.claude/skills/pixellab-asset-download/SKILL.md` documenta o padrão completo
 
+### ✅ Pronto (cont. — sessão 2026-04-29 madrugada / post-audit)
+- **Engineering audit 15/18 fixes** (Sprint 1+2+3) — `js/00_constants.js` novo, helpers `isAbducibleCow`/`distSq`, listener leak fix, scene shutdown handler, debounces, cap 100 balas, counter cows beam, etc
+- **HUD radar com sprite** + decay-based blips (cada blip acende quando sweep passa, fade 2.5s)
+- **HUD barras**: pintura preta sobre label baked + Phaser text overlay com i18n (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
+- **9 objects v3 PixelLab** (`chars/nature/objects/`): church, windmill, old_truck, satellite_dish_rusty (landmarks), gas_can, barrel_rusty (props industriais), bucket_milk, bucket_empty (curral random 50/50), dry_turf (8 patches)
+- **Debug overlay F3** (`js/19_debug_overlay.js`): FPS, heap MB, counts, errors, snapshots no console a cada 5s
+- **Splash multi-stage**: PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD; ESC abre CONFIGS desde splash
+- **Botão PREVIEW** (👁): 5s timeslice + esconde inimigos + checkbox shuffle weather/TOD
+- **Snow weather preset** (flocos brancos r=1-3.5px com drift sinuoso)
+- **Sliders editáveis** (digita valor direto, sync bidirecional)
+- **Sensibilidade discreto** 1/1.25/1.5
+- **Toggle Input WASD/Mouse + Language ENG/PTBR** no menu CONFIGS
+- **i18n menu CONFIGS** (~50 strings dict + data-i18n attrs + `_applyMenuI18n`)
+- **CONFIGS menu** (renomeado DEBUG MENU), aba VISUALS (renomeada LOOKS)
+- **Bugs críticos corrigidos**: SLOT_VALOR duplicado quebrava 08_curral inteiro (causa do trava reportado), atmosphere `isActive` crash, c.ready legacy struct em 2 arquivos, linha verde nos cantos
+- **`docs/AUDIT_2026-04-29.md`** documenta 18 issues + status (15 resolvidas, 3 pendentes)
+
 ### ✅ Pronto (cont. — sessão 2026-04-29 noite)
 - **Atmosphere system** (`js/18_atmosphere.js`) — 6 TOD presets + auto-cycle + 5 weather (clear/rain/snow/fog/storm) + storm flash
 - **Snow weather** com flocos brancos r=1-3.5px com drift sinuoso
@@ -168,15 +185,16 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 
 ### 🚧 Em andamento
 - **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
+- **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
 - **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida)
 
 ### 🔜 Próximos passos
-1. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + adicionar migration code
-2. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-3. **Etapas 7-9 do tutorial** (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar texto + glow + condições
-4. **Labels de inputs** com `data-i18n` no menu CONFIGS (ainda só legends/notes/buttons traduzidos)
-5. **Balde de leite** no curral (gerar via PixelLab MCP)
-6. **Tileset Wang real** com transição grass↔sand↔dirt
+1. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+2. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+3. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+4. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+5. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+6. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
