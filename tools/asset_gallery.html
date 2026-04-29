@@ -125,15 +125,11 @@
   .queue-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(26,20,16,0.96);border-top:2px solid #6b5234;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;align-items:center;z-index:100;}
   .queue-bar button{padding:6px 14px;font-size:11px;}
   /* Tab Tiles */
-  .tiles-wrap{display:flex;gap:14px;width:96vw;max-width:1400px;margin:20px auto;align-items:flex-start;}
-  .tiles-side{flex:0 0 280px;border:2px solid #4a3826;border-radius:6px;padding:10px;background:rgba(0,0,0,0.2);}
-  .tiles-side h3{margin:4px 0 10px;font-size:12px;color:#f4c95d;letter-spacing:2px;text-align:center;}
-  .preset-row{display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:4px;background:#2a2218;color:#e8d9b8;border:1px solid #4a3826;cursor:pointer;font-family:monospace;font-size:11px;}
-  .preset-row:hover{background:#3a2d1e;}
-  .preset-row.active{background:#4a3826;border-color:#f4c95d;color:#f4c95d;}
-  .preset-row .pname{font-weight:bold;font-size:12px;}
-  .preset-row .pmeta{font-size:9px;opacity:.6;margin-top:2px;}
-  .tiles-main{flex:1;border:2px solid #4a3826;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);}
+  .tiles-wrap{display:flex;flex-direction:column;gap:14px;width:96vw;max-width:1400px;margin:20px auto;}
+  .tileset-select-bar{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px;background:rgba(0,0,0,0.3);border:1px solid #4a3826;border-radius:6px;flex-wrap:wrap;}
+  .tileset-select-bar label{font-size:11px;color:#a89368;letter-spacing:1px;}
+  .tileset-select-bar select{background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:6px 10px;font-family:monospace;font-size:12px;min-width:280px;}
+  .tiles-main{border:2px solid #4a3826;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);}
   .tiles-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
   .wang-grid{display:grid;grid-template-columns:repeat(4, 110px);gap:8px;justify-content:center;margin:14px 0;}
   .wang-cell{border:2px solid #4a3826;border-radius:4px;padding:6px;background:#1a1410;text-align:center;}
@@ -148,6 +144,29 @@
   .corner-vis .upper{background:#9fe89f;}
   .tile-info{margin:14px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:11px;line-height:1.5;}
   .tile-info code{background:#2a2218;padding:2px 4px;border-radius:2px;color:#f4c95d;}
+  /* Editor de tiles - drag-drop + transform buttons */
+  .wang-cell.editable{position:relative;cursor:move;}
+  .wang-cell.editable.drag-over{border-color:#ffd770!important;background:#3a2d1e;}
+  .wang-cell.editable .tile-canvas{width:96px;height:96px;image-rendering:pixelated;background:#2a2218;display:block;margin:0 auto 4px;}
+  .wang-cell.editable .tx-btn{position:absolute;background:rgba(244,201,93,0.85);color:#000;border:none;font-size:14px;font-weight:bold;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:3px;opacity:0;transition:opacity .1s;z-index:5;padding:0;}
+  .wang-cell.editable:hover .tx-btn{opacity:1;}
+  .wang-cell.editable .tx-btn:hover{background:#ffd770;transform:scale(1.15);}
+  .wang-cell.editable .tx-cw{top:6px;left:50%;transform:translateX(-50%);}
+  .wang-cell.editable .tx-ccw{bottom:34px;left:50%;transform:translateX(-50%);}
+  .wang-cell.editable .tx-fh{top:50%;left:6px;transform:translateY(-50%);}
+  .wang-cell.editable .tx-fv{top:50%;right:6px;transform:translateY(-50%);}
+  .wang-cell.editable .corrected-mark{position:absolute;top:4px;right:4px;font-size:9px;background:#3da53d;color:#000;padding:1px 4px;border-radius:6px;font-weight:bold;}
+  /* Reference guide compact */
+  .wang-ref-grid{display:grid;grid-template-columns:repeat(4, 60px);gap:6px;justify-content:center;margin:8px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;}
+  .wang-ref-cell{text-align:center;font-size:9px;}
+  .wang-ref-cell .ref-corners{display:grid;grid-template-columns:1fr 1fr;width:40px;height:40px;margin:0 auto 2px;border:1px solid #6b5234;}
+  .wang-ref-cell .ref-corners div{width:100%;height:100%;}
+  .wang-ref-cell .ref-corners .lower{background:#7a5a2d;}
+  .wang-ref-cell .ref-corners .upper{background:#a8d088;}
+  .editor-bar{display:flex;gap:8px;justify-content:center;margin:14px 0;align-items:center;flex-wrap:wrap;}
+  .editor-bar button{padding:6px 14px;font-size:11px;}
+  .save-corrected{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
+  .reset-corrections{background:#a53d3d!important;color:#fff!important;}
 </style>
 </head>
 <body>
@@ -264,21 +283,48 @@
 <!-- ====== TAB TILES (Wang cr31) ====== -->
 <div class="tab-content" id="tab-tiles" hidden>
   <div class="tiles-wrap">
-    <div class="tiles-side">
-      <h3>🧩 TILESETS</h3>
-      <div id="tilesetList"></div>
-      <div style="margin-top:14px;font-size:10px;opacity:.6;line-height:1.5;">
-        Convenção <strong>cr31</strong>: tile ID = bitmask de cantos<br>
-        NW=1, NE=2, SE=4, SW=8<br>
-        Ex: tile 5 = NW+SE upper (diag)
-      </div>
+    <div class="tileset-select-bar">
+      <label>TILESET:</label>
+      <select id="tilesetSelect"></select>
+      <span style="font-size:10px;opacity:.5;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8</span>
     </div>
     <div class="tiles-main">
-      <h3 id="tilesetTitle">cr31 Wang Tiles — Standard 16</h3>
-      <div class="tile-info" id="tilesetInfo">
-        Selecione um tileset à esquerda. A grid abaixo mostra os 16 tiles padrão da convenção cr31 (corner-based 2-edge Wang).
+      <h3 id="tilesetTitle">cr31 Wang Tiles</h3>
+      <div class="tile-info" id="tilesetInfo">Selecione um tileset acima.</div>
+      <div class="editor-bar" id="editorBar" hidden>
+        <button id="btnEditorToggle">✏️ Edit mode</button>
+        <button id="btnReloadTileset">↻ Reload from PixelLab</button>
+        <button class="save-corrected" id="btnSaveCorrected" hidden>💾 Save corrections</button>
+        <button class="reset-corrections" id="btnResetCorrections" hidden>↺ Reset</button>
+        <span style="font-size:11px;opacity:.7;" id="editorHint"></span>
+      </div>
+      <div id="wangRefSection" hidden>
+        <div style="font-size:11px;opacity:.7;text-align:center;margin-top:10px;">📐 Reference cr31 (esperado por bitmask):</div>
+        <div class="wang-ref-grid" id="wangRefGrid"></div>
       </div>
       <div class="wang-grid" id="wangGrid"></div>
+    </div>
+    <!-- Test render: usa os 16 tiles pra renderizar um mapa procedural com seed -->
+    <div class="tiles-main">
+      <h3>🌍 Test render — terreno procedural</h3>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0 14px;">
+        <label style="font-size:11px;">Seed:</label>
+        <input type="number" id="testSeed" value="42" style="width:80px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;">
+        <button id="btnRandomSeed" style="padding:4px 12px;font-size:11px;">🎲 Random</button>
+        <label style="font-size:11px;">Threshold:</label>
+        <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
+        <span id="testThresholdVal" style="font-size:11px;">50%</span>
+        <label style="font-size:11px;">Size:</label>
+        <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
+          <option value="16">16×16 vertices</option>
+          <option value="24" selected>24×24</option>
+          <option value="32">32×32</option>
+          <option value="48">48×48</option>
+        </select>
+        <button id="btnRegenTest" style="padding:4px 12px;font-size:11px;">↻ Regen</button>
+      </div>
+      <canvas id="testCanvas" width="384" height="384" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;"></canvas>
+      <div style="font-size:10px;opacity:.6;text-align:center;margin-top:6px;">vertices terrain via PRNG · cada cell sample 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
     </div>
   </div>
 </div><!-- /tab-tiles -->
@@ -1101,11 +1147,14 @@ updateQueueBar();
 // ============ TAB TILES (Wang cr31) ============
 const WANG_PRESETS = [
   {
-    id: 'placeholder',
-    name: 'Placeholder (test)',
-    meta: 'Solid color blocks pra debug',
+    id: 'ground-truth',
+    name: 'Ground Truth (cr31 reference)',
+    meta: 'cr31 corner-2-edge convention · 16 solid blocks',
     sliced: true,
     sliceFn: (i) => `../assets/terrain/test/wang_${String(i).padStart(2,'0')}.png`,
+    docLink: 'http://www.cr31.co.uk/stagecast/wang/2corn.html',
+    docTitle: "cr31 — Corner Wang Tiles (2-edge)",
+    info: "Canonical reference de Wang tiles 2-edge corner-based. Cada tile = bitmask 4 bits dos 4 cantos (NW=1, NE=2, SE=4, SW=8). 16 tiles total cobrem todas as combinações lower/upper. Originalmente publicado por <strong>cr31</strong> (Charles Rector) em ~2009 no contexto de Stagecast Creator. Hoje é a convenção padrão usada em Tiled, Godot, e várias engines.",
   },
   {
     id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
@@ -1117,13 +1166,63 @@ const WANG_PRESETS = [
   },
   {
     id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
-    name: 'dirt ↔ grass (cerrado)',
-    meta: 'PixelLab · em geração ou pronto',
+    name: 'dirt ↔ grass (cerrado v1)',
+    meta: 'PixelLab · 1ª tentativa (404)',
     image: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/image',
     metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/metadata',
     tileSize: 16,
   },
+  {
+    id: '267836d8-f211-4260-8917-938216d7e0f1',
+    name: 'dirt ↔ grass (cerrado v2)',
+    meta: 'PixelLab · regeração ~100s',
+    image: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/metadata',
+    tileSize: 16,
+  },
 ];
+
+// ====== Editor de tiles ======
+// State: 16 cells, cada uma com {srcDataURL, transforms[], originalIdx}
+let tileEditState = null; // {presetId, cells: Array<{src, current, transforms, origIdx}>}
+
+function applyTransform(srcDataURL){
+  // recebe dataURL + array de transforms ['rotate-cw','flip-h',...] e retorna nova dataURL
+  return new Promise((resolve, reject) => {
+    if(!srcDataURL){ resolve(null); return; }
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = srcDataURL;
+  });
+}
+
+function transformCanvas(img, transforms){
+  let w = img.width, h = img.height;
+  // calcular tamanho final após rotações 90°
+  const rots = transforms.filter(t => t==='rotate-cw' || t==='rotate-ccw').length;
+  const final = (rots % 2 === 1) ? {w: h, h: w} : {w, h};
+  const c = document.createElement('canvas');
+  c.width = final.w; c.height = final.h;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(final.w/2, final.h/2);
+  // aplicar transforms na ordem
+  transforms.forEach(t => {
+    if(t === 'rotate-cw') ctx.rotate(Math.PI/2);
+    else if(t === 'rotate-ccw') ctx.rotate(-Math.PI/2);
+    else if(t === 'flip-h') ctx.scale(-1, 1);
+    else if(t === 'flip-v') ctx.scale(1, -1);
+  });
+  ctx.drawImage(img, -img.width/2, -img.height/2);
+  return c.toDataURL();
+}
+
+async function regenCellImage(cellState){
+  const img = await applyTransform(cellState.src);
+  cellState.current = transformCanvas(img, cellState.transforms);
+  return cellState.current;
+}
 
 let activePreset = WANG_PRESETS[0];
 let presetMetadata = {};
@@ -1142,15 +1241,81 @@ function cornerSquare(c){
 }
 
 function renderPresetList(){
-  const el = $("tilesetList");
-  el.innerHTML = '';
-  WANG_PRESETS.forEach(p => {
-    const r = document.createElement('div');
-    r.className = 'preset-row' + (p === activePreset ? ' active' : '');
-    r.innerHTML = `<div class="pname">${p.name}</div><div class="pmeta">${p.meta}</div>`;
-    r.onclick = () => { activePreset = p; renderTiles(); };
-    el.appendChild(r);
+  const sel = $("tilesetSelect");
+  if(!sel) return;
+  if(sel.options.length === 0){
+    WANG_PRESETS.forEach((p, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = p.name + ' — ' + p.meta;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => { activePreset = WANG_PRESETS[sel.value]; tileEditState = null; renderTiles(); renderTestMap(); };
+  }
+  sel.value = WANG_PRESETS.indexOf(activePreset);
+}
+
+// PRNG simples (mulberry32)
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function renderTestMap(){
+  const canvas = $("testCanvas");
+  if(!canvas || !tileEditState) return;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#2a2218';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const seed = parseInt($("testSeed").value) || 1;
+  const threshold = (parseInt($("testThreshold").value) || 50) / 100;
+  const N = parseInt($("testSize").value) || 24;  // # de vertices por lado
+  const rand = mulberry32(seed);
+  // gera grid de vertices (lower=0, upper=1) com PRNG
+  const vert = [];
+  for(let y=0; y<=N; y++){
+    vert[y] = [];
+    for(let x=0; x<=N; x++){
+      vert[y][x] = rand() < threshold ? 1 : 0;
+    }
+  }
+  const cellPx = Math.floor(canvas.width / N);
+  // pré-carregar todas as 16 imagens dataURL
+  const imgs = tileEditState.cells.map(c => {
+    if(!c || !c.current) return null;
+    const i = new Image();
+    i.src = c.current;
+    return i;
   });
+  // depois que imgs carregarem (eles são dataURL síncronos via .onload), desenha
+  let pendingLoad = imgs.filter(i => i && !i.complete).length;
+  const draw = () => {
+    for(let y=0; y<N; y++){
+      for(let x=0; x<N; x++){
+        // cantos: NW=(x,y), NE=(x+1,y), SE=(x+1,y+1), SW=(x,y+1)
+        const nw = vert[y][x];
+        const ne = vert[y][x+1];
+        const se = vert[y+1][x+1];
+        const sw = vert[y+1][x];
+        const bits = nw + ne*2 + se*4 + sw*8;
+        const img = imgs[bits];
+        if(img && img.complete){
+          ctx.drawImage(img, x*cellPx, y*cellPx, cellPx, cellPx);
+        } else {
+          // fallback: cor sólida
+          ctx.fillStyle = bits === 0 ? '#7a5a2d' : (bits === 15 ? '#a8d088' : '#888');
+          ctx.fillRect(x*cellPx, y*cellPx, cellPx, cellPx);
+        }
+      }
+    }
+  };
+  if(pendingLoad === 0){ draw(); }
+  else { imgs.forEach(i => i && (i.onload = () => { if(--pendingLoad <= 0) draw(); })); }
 }
 
 async function fetchTilesetMetadata(preset){
@@ -1178,12 +1343,100 @@ function sliceImage(imgEl, tileSize, gridCols){
   return tiles;
 }
 
+function renderRefGuide(){
+  const g = $("wangRefGrid");
+  g.innerHTML = '';
+  for(let bits=0; bits<16; bits++){
+    const c = bitsToCorners(bits);
+    const cell = document.createElement('div');
+    cell.className = 'wang-ref-cell';
+    cell.innerHTML = `<div class="ref-corners"><div class="${c.NW}"></div><div class="${c.NE}"></div><div class="${c.SW}"></div><div class="${c.SE}"></div></div><div>${bits}</div>`;
+    g.appendChild(cell);
+  }
+}
+
+let editorMode = false;
+
+function toggleEditorMode(){
+  editorMode = !editorMode;
+  $("btnEditorToggle").textContent = editorMode ? '👁 View only' : '✏️ Edit mode';
+  $("btnSaveCorrected").hidden = !editorMode;
+  $("btnResetCorrections").hidden = !editorMode;
+  $("wangRefSection").hidden = !editorMode;
+  $("editorHint").textContent = editorMode ? 'arrasta tile pra outra posição · ↻ rotate CW (top) · ↺ CCW (bottom) · ⇿ flip H (esq) · ⇕ flip V (dir)' : '';
+  renderTiles();
+}
+
+function initEditState(p, slicedTiles){
+  tileEditState = {
+    presetId: p.id,
+    cells: slicedTiles.map((src, i) => ({ src, current: src, transforms: [], origIdx: i })),
+  };
+}
+
+async function rerenderEditorGrid(){
+  const grid = $("wangGrid");
+  grid.innerHTML = '';
+  for(let i=0; i<16; i++){
+    const cell = tileEditState.cells[i];
+    const corners = bitsToCorners(i);
+    const div = document.createElement('div');
+    div.className = 'wang-cell editable';
+    div.draggable = true;
+    div.dataset.idx = i;
+    const corrected = (cell.transforms.length > 0 || cell.origIdx !== i) ? '<div class="corrected-mark">EDIT</div>' : '';
+    div.innerHTML = `
+      ${corrected}
+      <button class="tx-btn tx-cw" data-tx="rotate-cw" title="rotate CW">↻</button>
+      <button class="tx-btn tx-ccw" data-tx="rotate-ccw" title="rotate CCW">↺</button>
+      <button class="tx-btn tx-fh" data-tx="flip-h" title="flip H">⇿</button>
+      <button class="tx-btn tx-fv" data-tx="flip-v" title="flip V">⇕</button>
+      <img class="tile-canvas" src="${cell.current || ''}" draggable="false">
+      <div class="wlabel">${i} (orig: ${cell.origIdx}${cell.transforms.length ? ' +'+cell.transforms.length+'tx' : ''})</div>
+      <div class="wcorners">NW:${corners.NW[0].toUpperCase()} NE:${corners.NE[0].toUpperCase()} SE:${corners.SE[0].toUpperCase()} SW:${corners.SW[0].toUpperCase()}</div>
+      ${cornerSquare(corners)}`;
+    // transform handlers
+    div.querySelectorAll('.tx-btn').forEach(btn => {
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        cell.transforms.push(btn.dataset.tx);
+        await regenCellImage(cell);
+        rerenderEditorGrid();
+        renderTestMap();
+      };
+    });
+    // drag-drop
+    div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; });
+    div.addEventListener('dragover', (e) => { e.preventDefault(); div.classList.add('drag-over'); });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      if(fromIdx === i) return;
+      // swap cells
+      const tmp = tileEditState.cells[fromIdx];
+      tileEditState.cells[fromIdx] = tileEditState.cells[i];
+      tileEditState.cells[i] = tmp;
+      rerenderEditorGrid();
+      renderTestMap();
+    });
+    grid.appendChild(div);
+  }
+}
+
 async function renderTiles(){
   renderPresetList();
   const p = activePreset;
   $("tilesetTitle").textContent = p.name;
+  $("editorBar").hidden = false;
+  renderRefGuide();
   const grid = $("wangGrid");
   grid.innerHTML = '';
+  if(editorMode && tileEditState && tileEditState.presetId === p.id){
+    await rerenderEditorGrid();
+    return;
+  }
   const cells = [];
   for(let bits=0; bits<16; bits++){
     const corners = bitsToCorners(bits);
@@ -1197,14 +1450,27 @@ async function renderTiles(){
     grid.appendChild(cell);
     cells.push(cell);
   }
-  $("tilesetInfo").innerHTML = `Tileset <code>${p.id}</code> · ${p.meta}`;
+  let infoHTML = `Tileset <code>${p.id}</code> · ${p.meta}`;
+  if(p.info) infoHTML += `<br><br>${p.info}`;
+  if(p.docLink) infoHTML += `<br>📖 <a href="${p.docLink}" target="_blank" style="color:#9fcfe8;">${p.docTitle || p.docLink}</a>`;
+  $("tilesetInfo").innerHTML = infoHTML;
   if(p.sliced){
+    const slicedURLs = [];
+    let pending = 16;
     cells.forEach((cell, bits) => {
       const wtile = cell.querySelector('.wtile');
       const img = new Image();
       img.src = p.sliceFn(bits);
       img.style.width = '96px'; img.style.height = '96px'; img.style.imageRendering = 'pixelated';
-      img.onerror = () => { wtile.style.background = '#3a2d1e'; wtile.textContent = '?'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; };
+      img.onload = () => {
+        // converte pra dataURL pra editor
+        const cv = document.createElement('canvas');
+        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        cv.getContext('2d').drawImage(img, 0, 0);
+        try { slicedURLs[bits] = cv.toDataURL(); } catch(e){ slicedURLs[bits] = null; }
+        if(--pending === 0){ initEditState(p, slicedURLs); renderTestMap(); }
+      };
+      img.onerror = () => { wtile.style.background = '#3a2d1e'; wtile.textContent = '?'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; if(--pending === 0) initEditState(p, slicedURLs); };
       wtile.innerHTML = '';
       wtile.appendChild(img);
     });
@@ -1226,18 +1492,24 @@ async function renderTiles(){
     } else {
       for(let i=0;i<16;i++) mapping[i] = i;
     }
+    const orderedTiles = [];
     cells.forEach((cell, bits) => {
       const wtile = cell.querySelector('.wtile');
       wtile.innerHTML = '';
       const ti = mapping[bits];
       if(ti === undefined){
-        wtile.textContent = '—'; wtile.style.color='#666'; wtile.style.lineHeight='96px'; return;
+        wtile.textContent = '—'; wtile.style.color='#666'; wtile.style.lineHeight='96px';
+        orderedTiles[bits] = null;
+        return;
       }
+      orderedTiles[bits] = tiles[ti];
       const tileImg = new Image();
       tileImg.src = tiles[ti];
       tileImg.style.width = '96px'; tileImg.style.height = '96px'; tileImg.style.imageRendering = 'pixelated';
       wtile.appendChild(tileImg);
     });
+    initEditState(p, orderedTiles);
+    renderTestMap();
     if(!meta?.tiles){
       $("tilesetInfo").innerHTML += `<br>⚠ sem metadata — exibindo ordem natural do PNG (não-cr31)`;
     }
@@ -1254,6 +1526,47 @@ async function renderTiles(){
   };
   img.src = p.image + (p.image.includes('?') ? '&' : '?') + 't=' + Date.now();
 }
+
+// Test map controls
+function bindTestControls(){
+  const t = $("testThreshold"); const tv = $("testThresholdVal");
+  if(t){ t.oninput = () => { tv.textContent = t.value + '%'; renderTestMap(); }; }
+  const s = $("testSeed"); if(s) s.onchange = () => renderTestMap();
+  const sz = $("testSize"); if(sz) sz.onchange = () => renderTestMap();
+  const r = $("btnRandomSeed"); if(r) r.onclick = () => { $("testSeed").value = Math.floor(Math.random()*1e6); renderTestMap(); };
+  const re = $("btnRegenTest"); if(re) re.onclick = renderTestMap;
+}
+bindTestControls();
+
+// botões do editor
+document.addEventListener('click', (e) => {
+  if(e.target.id === 'btnEditorToggle') toggleEditorMode();
+  if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
+  if(e.target.id === 'btnSaveCorrected'){
+    if(!tileEditState) return;
+    const corrections = {
+      presetId: tileEditState.presetId,
+      timestamp: Date.now(),
+      cells: tileEditState.cells.map((c,i) => ({ position: i, origIdx: c.origIdx, transforms: c.transforms })),
+      tilesDataURL: tileEditState.cells.map(c => c.current),
+    };
+    fetch(API_BASE + '/save_wang_corrections', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(corrections)
+    }).then(r => r.json()).then(r => {
+      $("editorHint").textContent = r.ok ? `💾 Salvo em ${r.saved_to}` : `⚠ erro: ${JSON.stringify(r)}`;
+    }).catch(err => {
+      $("editorHint").textContent = `⚠ servidor offline (${err.message})`;
+    });
+  }
+  if(e.target.id === 'btnResetCorrections'){
+    if(!tileEditState) return;
+    if(!confirm('Reset todas as correções?')) return;
+    tileEditState.cells.forEach((c,i) => { c.transforms = []; c.current = c.src; c.origIdx = i; });
+    rerenderEditorGrid();
+  }
+});
 
 setInterval(()=>{
   refreshTimer--;
