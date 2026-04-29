@@ -298,6 +298,7 @@
       <div class="editor-bar" id="editorBar" hidden>
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
+        <button id="btnShuffleTiles" style="background:#a85ba8;color:#fff;" title="Embaralha tiles (não-canônicos) pra testar auto-sort">🎲 Shuffle</button>
         <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
         <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper">🔄 Flip L/U</button>
         <button id="btnRotPlaceCW" style="background:#a89368;color:#000;" title="Rotaciona TODAS as placements CW em bitmask space (1→2→4→8→1, 5↔10, etc)">↻ Rot+ </button>
@@ -1259,7 +1260,8 @@ let _lastAutoSortFlipped = false;
 let _autoSortSnapshot = null;  // snapshot pra Restore
 async function autoSortTiles(forceFlip){
   if(!tileEditState) return;
-  // snapshot antes de modificar (deep copy)
+  // Auto-entra em edit mode pra mostrar resultado completo
+  if(!editorMode){ toggleEditorMode(); }
   _autoSortSnapshot = tileEditState.cells.map(c => c ? {...c, transforms: c.transforms.slice()} : null);
   $("btnRestoreSnap").hidden = false;
   $("editorHint").textContent = '🔍 Analisando…';
@@ -1362,14 +1364,34 @@ async function autoSortTiles(forceFlip){
   });
 
   const filled = placed.filter(x => x !== null).length;
-  // Slots vazios mantem o tile que estava lá antes
   for(let i=0; i<16; i++){
     if(placed[i] === null) placed[i] = tileEditState.cells[i];
   }
+  // Conta quantas células trocaram de posição
+  const moved = placed.reduce((acc, cell, i) => acc + (cell !== _autoSortSnapshot[i] ? 1 : 0), 0);
   tileEditState.cells = placed;
   if(editorMode) await rerenderEditorGrid();
   renderTestMap();
-  $("editorHint").textContent = `🔍 Auto-sorted · ${filled}/16 classified · ${conflicts.length} conflicts · lower=rgb(${lowerRef.map(v=>Math.round(v)).join(',')})`;
+  const movedMsg = moved === 0 ? '✓ tudo já estava no lugar' : `${moved} tiles moveram`;
+  $("editorHint").textContent = `🔍 ${movedMsg} · ${filled}/16 classified · ${conflicts.length} conflicts · lower=rgb(${lowerRef.map(v=>Math.round(v)).join(',')})`;
+}
+
+// Re-pinta as wang-cells do modo VIEW com as imagens atuais do tileEditState
+function repaintViewCells(){
+  if(!tileEditState || editorMode) return;
+  const cellEls = document.querySelectorAll('.wang-grid .wang-cell');
+  cellEls.forEach(el => {
+    const wtile = el.querySelector('.wtile');
+    if(!wtile) return;
+    const bits = parseInt(wtile.dataset.bits);
+    const cell = tileEditState.cells[bits];
+    if(!cell?.current) return;
+    wtile.innerHTML = '';
+    const img = new Image();
+    img.src = cell.current;
+    img.style.width = '96px'; img.style.height = '96px'; img.style.imageRendering = 'pixelated';
+    wtile.appendChild(img);
+  });
 }
 
 // Aplica correções salvas em tools/saves/wang_corrections.json (se houver pra esse preset)
@@ -1381,13 +1403,11 @@ async function applyStoredCorrections(presetId){
     const registry = await res.json();
     const corr = registry?.[presetId];
     if(!corr) return;
-    // Reordena cells + reaplica transforms
     const original = tileEditState.cells.slice();
     const newCells = [];
     for(let i=0; i<16; i++){
       const c = corr.cells[i];
       if(!c) continue;
-      // procura cell cuja origIdx === c.origIdx no estado original
       const found = original.find(x => x.origIdx === c.origIdx);
       if(!found) continue;
       const cloned = { ...found, transforms: c.transforms.slice() };
@@ -1399,6 +1419,7 @@ async function applyStoredCorrections(presetId){
       tileEditState.cells = newCells;
       $("editorHint").textContent = `↪ correções salvas re-aplicadas (${corr.cells.length} cells)`;
       if(editorMode) rerenderEditorGrid();
+      else repaintViewCells();  // sincroniza visual em view mode
       renderTestMap();
     }
   } catch(e){ /* sem rede / sem registry */ }
@@ -1843,6 +1864,22 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnViewReduced'){ viewMode = 'reduced-r'; renderTiles(); }
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
   if(e.target.id === 'btnAutoSort') autoSortTiles();
+  if(e.target.id === 'btnShuffleTiles'){
+    if(!tileEditState) return;
+    _autoSortSnapshot = tileEditState.cells.map(c => c ? {...c, transforms: c.transforms.slice()} : null);
+    $("btnRestoreSnap").hidden = false;
+    // Embaralha apenas os 14 do meio (mantém 0 e 15 anchored como ref pro auto-sort)
+    const middle = [];
+    for(let i=1; i<15; i++) middle.push(tileEditState.cells[i]);
+    for(let i = middle.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [middle[i], middle[j]] = [middle[j], middle[i]];
+    }
+    for(let i=1; i<15; i++) tileEditState.cells[i] = middle[i-1];
+    if(editorMode) rerenderEditorGrid();
+    renderTestMap();
+    $("editorHint").textContent = '🎲 Embaralhado (0/15 anchored). Click 🔍 Auto-sort pra ver funcionar';
+  }
   if(e.target.id === 'btnFlipLU') autoSortTiles(!_lastAutoSortFlipped);
   if(e.target.id === 'btnRotPlaceCW' || e.target.id === 'btnRotPlaceCCW'){
     if(!tileEditState) return;
