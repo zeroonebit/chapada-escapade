@@ -234,13 +234,27 @@ class Jogo extends Phaser.Scene {
             this.textures.addCanvas('mobile_vignette', c);
             this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
                 .setScrollFactor(0).setDepth(190);
-            // 150% pra cobrir mesmo quando ship leva o spotlight pra borda
-            this.fxMobileVignette.setDisplaySize(this.scale.width * 1.5, this.scale.height * 1.5);
+            // Vignette fixa centralizada (tamanho exato pra cobrir tela)
+            this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
             this.scale.on('resize', () => {
                 if (this.fxMobileVignette?.scene) {
-                    this.fxMobileVignette.setDisplaySize(this.scale.width * 1.5, this.scale.height * 1.5);
+                    this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
+                    this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
                 }
             });
+
+            // Shuffle atmosferico recorrente: a cada 30-50s troca weather+TOD
+            const TODs = ['dusk','sunset','night','midnight'];   // sempre escuros
+            const WTHs = ['rain','fog','storm','snow'];          // sempre macabros
+            const shuffleAtmosphere = () => {
+                if (!this.dbg?.fx) return;
+                this.dbg.fx.timeOfDay = TODs[Math.floor(Math.random()*TODs.length)];
+                this.dbg.fx.weather   = WTHs[Math.floor(Math.random()*WTHs.length)];
+                if (this._applyAtmosphere) this._applyAtmosphere();
+                const next = Phaser.Math.Between(30000, 50000);
+                this.time.delayedCall(next, shuffleAtmosphere);
+            };
+            this.time.delayedCall(Phaser.Math.Between(30000, 50000), shuffleAtmosphere);
         }
 
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
@@ -462,14 +476,6 @@ class Jogo extends Phaser.Scene {
         this._updateLEDs(delta);
         if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
-
-        // MOBILE_MODE: dark vignette segue posicao da nave na tela
-        // (efeito de "luz de cima" acompanhando o disco)
-        if (this.fxMobileVignette && this.ship) {
-            const cam2 = this.cameras.main;
-            this.fxMobileVignette.x = this.ship.x - cam2.scrollX;
-            this.fxMobileVignette.y = this.ship.y - cam2.scrollY;
-        }
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
