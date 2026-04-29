@@ -15,10 +15,15 @@ Script Python+PIL detectou bbox da badge baked nos PNGs v2 e pintou solid black:
 - Graphics concentric circles + cross só ficam como **fallback** se sprite não carregar
 - Sweep + blips desenhados em depth 200 (acima do sprite frame)
 
-## 🚧 Pendente
+## ✅ Resolvido em 2026-04-29 (cont.)
 
-### 3. Barras posicionadas (alinhamento fino)
-Se ainda houver offset visual entre `combImg` (empty) e `combFillImg` (full com setCrop), revisar — pode ser que o source PNG tenha padding interno diferente entre as 2 versões. Não testado nesta sessão.
+### 3. Alinhamento fino das barras + radar
+Bug real achado: ENE_Y=h-60, PAC_Y=h-18 com bar height 68 → diff 42 (precisa ≥68) → PAC label cobria ENE bar fill em 13px. Corrigido pra ENE_Y=h-104, PAC_Y=h-36 (diff 68, gap 0). Bar bottoms agora em h-70 e h-2 (sem clipping).
+
+Radar v2 também conflitava: 240×240 invadia área das barras horizontal e verticalmente. Reduzido pra 160×160 (R=46 inner), PAD_BOTTOM=142 → gap de 4px com ENE bar top em h-138.
+
+## 🚧 Pendente
+Nada — todos itens deste TODO resolvidos.
 
 ## Arquivos relevantes
 - `js/05_hud.js`: criação e posicionamento das barras + radar
