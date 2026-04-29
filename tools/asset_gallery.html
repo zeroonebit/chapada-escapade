@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Chapada Escapade — Asset Gallery</title>
+<title>Chapada Escapade</title>
 <style>
   body{margin:0;background:#1a1410;color:#e8d9b8;font-family:monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
   h1{margin:12px 0 8px;font-size:18px;color:#f4c95d;}
@@ -86,7 +86,9 @@
   .thumb-group .group-popup{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:rgba(26,20,16,0.98);border:2px solid #f4c95d;border-radius:4px;padding:6px;z-index:200;grid-template-columns:repeat(auto-fit,38px);gap:3px;min-width:240px;max-width:520px;max-height:480px;overflow-y:auto;box-shadow:0 4px 18px rgba(0,0,0,0.6);}
   .thumb-group .group-popup .pop-title{grid-column:1/-1;font-size:10px;color:#f4c95d;text-align:center;padding:2px 0 4px;font-weight:bold;}
   .thumb-group .group-popup img{width:38px;height:38px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;}
-  .thumb-group:hover .group-popup{display:grid;}
+  .thumb-group:hover .group-popup, .thumb-group .group-popup:hover{display:grid;}
+  .thumb-group .group-popup img[data-click]{cursor:pointer;}
+  .thumb-group .group-popup img[data-click]:hover{outline:2px solid #f4c95d;}
   /* Tab Detail */
   .detail-wrap{display:flex;gap:14px;width:96vw;max-width:1400px;margin:20px auto;align-items:flex-start;}
   .detail-list{flex:0 0 320px;border:2px solid #4a3826;border-radius:6px;padding:8px;max-height:80vh;overflow-y:auto;background:rgba(0,0,0,0.2);}
@@ -142,7 +144,7 @@
 </head>
 <body>
 
-<h1>CHAPADA ESCAPADE — ASSET GALLERY MANAGER</h1>
+<h1>CHAPADA ESCAPADE</h1>
 
 <div class="tabs">
   <button class="tab" data-tab="gallery">📊 Gallery</button>
@@ -642,6 +644,102 @@ function groupByFolder(items){
   return groups;
 }
 
+// Classifica items de um grupo em: bases + anims (com rep + frames).
+// Ordem: parent (1ª base) → variações (outras bases) → anim reps → anim frames.
+function classifyGroup(items){
+  const bases = [];
+  const animsByName = new Map();
+  items.forEach(it => {
+    const m = it.path.match(/\/anims\/([^\/]+)\//);
+    if(m){
+      const animName = m[1];
+      if(!animsByName.has(animName)) animsByName.set(animName, []);
+      animsByName.get(animName).push(it);
+    } else {
+      bases.push(it);
+    }
+  });
+  // ordem de direções pra base sprites
+  const dirOrder = ['south','south-east','east','north-east','north','north-west','west','south-west'];
+  const dirRank = (p) => {
+    const fname = p.split('/').pop().replace('.png','').toLowerCase();
+    const idx = dirOrder.indexOf(fname);
+    return idx === -1 ? 999 : idx;
+  };
+  const isDeprecated = (p) => /\/_(old|deprecated|backup|_)_?/.test(p);
+  bases.sort((a,b) => (isDeprecated(a.path)-isDeprecated(b.path)) || dirRank(a.path) - dirRank(b.path) || a.path.localeCompare(b.path));
+  const anims = [];
+  for(const [name, frames] of animsByName){
+    frames.sort((a,b) => a.path.localeCompare(b.path));
+    const sFrame = frames.find(f => /\/(south|S)\//i.test(f.path)) || frames[0];
+    anims.push({name, rep: sFrame, frames: frames.filter(f => f !== sFrame)});
+  }
+  anims.sort((a,b) => a.name.localeCompare(b.name));
+  return {bases, anims};
+}
+
+function groupParent(classified){
+  return classified.bases[0] || classified.anims[0]?.rep;
+}
+
+// Lista ordenada com tipo de cada item: base/anim-rep/frame
+function classifiedFlat(classified){
+  const out = [];
+  classified.bases.forEach((it, i) => out.push({type: i===0?'parent':'base', item: it}));
+  classified.anims.forEach(a => out.push({type:'anim-rep', name:a.name, item:a.rep}));
+  classified.anims.forEach(a => a.frames.forEach(f => out.push({type:'frame', anim:a.name, item:f})));
+  return out;
+}
+
+// Posiciona popup orientado pro centro da pagina (usa-se em todos os thumb-groups)
+function attachPopupOrient(wrap){
+  wrap.addEventListener('mouseenter', () => {
+    const popup = wrap.querySelector('.group-popup');
+    if(!popup) return;
+    const r = wrap.getBoundingClientRect();
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    if(r.left + r.width/2 < cx){
+      popup.style.left = '100%'; popup.style.right = 'auto'; popup.style.transform = 'none';
+    } else {
+      popup.style.right = '100%'; popup.style.left = 'auto'; popup.style.transform = 'none';
+    }
+    if(r.top + r.height/2 > cy){
+      popup.style.bottom = '0'; popup.style.top = 'auto';
+    } else {
+      popup.style.top = '0'; popup.style.bottom = 'auto';
+    }
+  });
+}
+
+function buildGroupPopupHTML(folder, classified, opts={}){
+  const folderName = folder.split('/').pop() || folder || 'group';
+  const flat = classifiedFlat(classified);
+  const styleMap = {
+    parent: 'border-color:#f4c95d;outline:1px solid #f4c95d',
+    base: 'border-color:#a89368',
+    'anim-rep': 'border-color:#a85ba8',
+    frame: 'border-color:#4a3826;opacity:.7',
+  };
+  const labelMap = {
+    parent: '★ parent',
+    base: 'variação',
+    'anim-rep': (it) => `🎬 ${it.name}`,
+    frame: (it) => `frame ${it.anim}`,
+  };
+  const total = flat.length;
+  const baseCount = classified.bases.length;
+  const animCount = classified.anims.length;
+  const frameCount = classified.anims.reduce((s,a)=>s+a.frames.length, 0);
+  let html = `<div class="pop-title">${folderName} · ${total} items<br><span style="font-weight:normal;opacity:.6;font-size:9px;">${baseCount} bases · ${animCount} anims · ${frameCount} frames</span></div>`;
+  flat.forEach(entry => {
+    const tip = (typeof labelMap[entry.type] === 'function' ? labelMap[entry.type](entry) : labelMap[entry.type]) + ' · ' + entry.item.name;
+    const cls = opts.clickable ? ' data-click="1"' : '';
+    html += `<img src="${entry.item.path}" title="${tip}" style="${styleMap[entry.type]||''}" data-path="${entry.item.path}"${cls}>`;
+  });
+  return html;
+}
+
 function fillSumGrid(id, items){
   const el = $(id);
   el.innerHTML = '';
@@ -649,6 +747,8 @@ function fillSumGrid(id, items){
   let count = 0;
   for(const [folder, fitems] of groups){
     if(count >= 200) break;
+    const classified = classifyGroup(fitems);
+    const parent = groupParent(classified);
     if(fitems.length === 1){
       const it = fitems[0];
       const t = document.createElement('div');
@@ -660,47 +760,25 @@ function fillSumGrid(id, items){
       t.title = it.name;
       el.appendChild(t);
     } else {
-      // group: show first as representative + badge + hover popup
       const wrap = document.createElement('div');
       wrap.className = 'thumb-group';
       wrap.style.width = '42px'; wrap.style.height = '42px';
-      wrap.addEventListener('mouseenter', () => {
-        const popup = wrap.querySelector('.group-popup');
-        if(!popup) return;
-        const r = wrap.getBoundingClientRect();
-        const cx = window.innerWidth / 2;
-        const cy = window.innerHeight / 2;
-        // horizontal: se thumb na esquerda, abre direita; se na direita, abre esquerda
-        if(r.left + r.width/2 < cx){
-          popup.style.left = '100%'; popup.style.right = 'auto'; popup.style.transform = 'none';
-        } else {
-          popup.style.right = '100%'; popup.style.left = 'auto'; popup.style.transform = 'none';
-        }
-        // vertical: se thumb mais abaixo do centro, abre pra cima; se acima, abre pra baixo
-        if(r.top + r.height/2 > cy){
-          popup.style.bottom = '0'; popup.style.top = 'auto';
-        } else {
-          popup.style.top = '0'; popup.style.bottom = 'auto';
-        }
-      });
+      attachPopupOrient(wrap);
       const t = document.createElement('div');
       t.className = 'thumb';
       t.style.width = '42px'; t.style.height = '42px';
       t.style.borderColor = '#f4c95d';
       const img = document.createElement('img');
-      img.src = fitems[0].path;
+      img.src = parent.path;
       t.appendChild(img);
-      const folderName = folder.split('/').pop() || folder || 'group';
       t.title = `${folder} (${fitems.length} files)`;
       const badge = document.createElement('span');
       badge.className = 'group-badge';
       badge.textContent = fitems.length;
       const popup = document.createElement('div');
       popup.className = 'group-popup';
-      popup.innerHTML = `<div class="pop-title">${folderName}</div>` + fitems.map(f => `<img src="${f.path}" title="${f.name}">`).join('');
-      wrap.appendChild(t);
-      wrap.appendChild(badge);
-      wrap.appendChild(popup);
+      popup.innerHTML = buildGroupPopupHTML(folder, classified);
+      wrap.appendChild(t); wrap.appendChild(badge); wrap.appendChild(popup);
       el.appendChild(wrap);
     }
     count++;
@@ -826,16 +904,55 @@ function renderDetailList(){
     body.innerHTML = '<div style="opacity:.6;font-size:11px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
     return;
   }
-  list.forEach(a => {
-    const t = document.createElement('div');
-    t.className = 'thumb' + (detailSelected?.path === a.path ? ' active' : '');
-    const img = document.createElement('img');
-    img.src = a.path;
-    t.appendChild(img);
-    t.title = a.name + (a.target ? ' · ' + a.target : '');
-    t.onclick = () => { detailSelected = a; renderDetailList(); renderDetailMain(); };
-    body.appendChild(t);
-  });
+  const groups = groupByFolder(list);
+  for(const [folder, fitems] of groups){
+    const classified = classifyGroup(fitems);
+    const parent = groupParent(classified);
+    if(fitems.length === 1){
+      const a = fitems[0];
+      const t = document.createElement('div');
+      t.className = 'thumb' + (detailSelected?.path === a.path ? ' active' : '');
+      const img = document.createElement('img');
+      img.src = a.path;
+      t.appendChild(img);
+      t.title = a.name;
+      t.onclick = () => { detailSelected = a; renderDetailList(); renderDetailMain(); };
+      body.appendChild(t);
+    } else {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb-group';
+      wrap.style.width = '48px'; wrap.style.height = '48px';
+      attachPopupOrient(wrap);
+      const t = document.createElement('div');
+      t.className = 'thumb' + (detailSelected?.path === parent.path ? ' active' : '');
+      t.style.borderColor = '#f4c95d';
+      const img = document.createElement('img');
+      img.src = parent.path;
+      t.appendChild(img);
+      t.title = `${folder} · click pra selecionar parent (${fitems.length})`;
+      t.onclick = () => { detailSelected = {...parent, target: folder.split('/').pop()}; renderDetailList(); renderDetailMain(); };
+      const badge = document.createElement('span');
+      badge.className = 'group-badge';
+      badge.textContent = fitems.length;
+      const popup = document.createElement('div');
+      popup.className = 'group-popup';
+      popup.innerHTML = buildGroupPopupHTML(folder, classified, {clickable:true});
+      // click em qualquer img do popup seleciona aquele asset
+      popup.addEventListener('click', (e) => {
+        const tgt = e.target.closest('img[data-click]');
+        if(!tgt) return;
+        const path = tgt.dataset.path;
+        const it = fitems.find(x => x.path === path);
+        if(it){
+          detailSelected = {...it, target: folder.split('/').pop()};
+          renderDetailList();
+          renderDetailMain();
+        }
+      });
+      wrap.appendChild(t); wrap.appendChild(badge); wrap.appendChild(popup);
+      body.appendChild(wrap);
+    }
+  }
 }
 
 function renderDetailMain(){
