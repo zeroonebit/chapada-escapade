@@ -43,7 +43,7 @@ Object.assign(Jogo.prototype, {
         g.clear(); g.fillStyle(0x1a5c1a, 1); g.lineStyle(2, 0x0d3d0d, 1);
         g.beginPath(); g.moveTo(15,0); g.lineTo(0,28); g.lineTo(30,28); g.closePath(); g.fillPath(); g.strokePath();
         g.beginPath(); g.moveTo(15,10); g.lineTo(2,36); g.lineTo(28,36); g.closePath(); g.fillPath(); g.strokePath();
-        g.generateTexture('moita', 30, 40);
+        g.generateTexture('bush', 30, 40);
 
         // ATIRADOR — torre sentinela
         g.clear();

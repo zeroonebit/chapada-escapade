@@ -216,9 +216,9 @@ Object.assign(Jogo.prototype, {
                 const cy = Phaser.Math.Between(300, H-300);
                 if (!isLand(cx, cy)) continue;
                 if (Math.random() > 0.5) {
-                    for (let j = 0; j < 5; j++) tryPlace(cx, cy, 90, pickV() || 'moita', 'moita');
+                    for (let j = 0; j < 5; j++) tryPlace(cx, cy, 90, pickV() || 'bush', 'bush');
                 } else {
-                    for (let j = 0; j < 3; j++) tryPlace(cx, cy, 70, pickP() || 'rocha_organica', 'rocha');
+                    for (let j = 0; j < 3; j++) tryPlace(cx, cy, 70, pickP() || 'rocha_organica', 'rock');
                 }
                 break;
             }
@@ -323,7 +323,7 @@ Object.assign(Jogo.prototype, {
         this.add.rectangle(cx, cy, W2*1.6, H2*1.5, 0x8b6535, 0.22).setDepth(0.61);
 
         const place = (x, y, key, scale = SCALE, angle = 0) => {
-            this.add.image(x, y, `nat_cerca_${key}`).setScale(scale).setAngle(angle).setDepth(1.5);
+            this.add.image(x, y, `nat_fence_${key}`).setScale(scale).setAngle(angle).setDepth(1.5);
         };
 
         // Norte

@@ -36,14 +36,14 @@ class Jogo extends Phaser.Scene {
         // "run" reusa walk with fps maior (anim chubby não has run dedicado).
         const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
-            { prefix: 'vaca_walk',  frames: 4,  fps: 6  },
-            { prefix: 'vaca_eat',   frames: 11, fps: 4  },
-            { prefix: 'vaca_angry', frames: 8,  fps: 8  },
-            { prefix: 'faz_run',    frames: 4,  fps: 10 },
-            { prefix: 'boi_walk',   frames: 4,  fps: 6  },
+            { prefix: 'cow_walk',  frames: 4,  fps: 6  },
+            { prefix: 'cow_eat',   frames: 11, fps: 4  },
+            { prefix: 'cow_angry', frames: 8,  fps: 8  },
+            { prefix: 'farmer_run',    frames: 4,  fps: 10 },
+            { prefix: 'ox_walk',   frames: 4,  fps: 6  },
             { prefix: 'ufo_hover',  frames: 4,  fps: 8  },
-            // boi_idle: 7 dirs (without N) — fallback to static em N
-            { prefix: 'boi_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
+            // ox_idle: 7 dirs (without N) — fallback to static em N
+            { prefix: 'ox_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         DIRS8.forEach(d => {
             ANIM8.forEach(({prefix, frames, fps, dirs}) => {
@@ -54,11 +54,11 @@ class Jogo extends Phaser.Scene {
                 for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
                 this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
             });
-            // vaca_run is vaca_walk em fps×2 — registra as anim separado
-            const runKey = `vaca_run_${d}`;
+            // cow_run is cow_walk em fps×2 — registra as anim separado
+            const runKey = `cow_run_${d}`;
             if (!this.anims.exists(runKey)) {
                 const fr = [];
-                for (let i = 0; i < 4; i++) fr.push({ key: `vaca_walk_${d}_${i}` });
+                for (let i = 0; i < 4; i++) fr.push({ key: `cow_walk_${d}_${i}` });
                 this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
             }
         });

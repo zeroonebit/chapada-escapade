@@ -235,13 +235,13 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
                     <fieldset>
                         <legend data-i18n="escalas">ESCALAS</legend>
-                        <label><span data-i18n="vaca">Vaca</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
-                            <input type="number" class="val" data-show="scale.vaca" /></label>
-                        <label><span data-i18n="boi">Boi</span>
+                        <label><span data-i18n="cow">Vaca</span>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.cow">
+                            <input type="number" class="val" data-show="scale.cow" /></label>
+                        <label><span data-i18n="ox">Boi</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
                             <input type="number" class="val" data-show="scale.boi" /></label>
-                        <label><span data-i18n="fazendeiro">Fazendeiro</span>
+                        <label><span data-i18n="farmer">Fazendeiro</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
                             <input type="number" class="val" data-show="scale.faz" /></label>
                         <label><span data-i18n="beam_radius">Beam radius</span>
