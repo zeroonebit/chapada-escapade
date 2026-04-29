@@ -218,20 +218,20 @@
   <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
 </div>
 
-<!-- ====== TAB EDITOR (visualizador + módulos MCP) ====== -->
+<!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
 <div class="tab-content" id="tab-editor" hidden>
-  <div class="detail-wrap">
-    <div class="detail-list" id="editorAssetList">
-      <h3>✅ APPROVED ASSETS</h3>
-      <div id="editorAssetListBody">aguardando…</div>
-    </div>
-    <div class="detail-main" id="editorMain">
-      <h3 id="editorTitle">Selecione um asset à esquerda</h3>
-      <div id="editorBody">
-        <div style="opacity:.6;font-size:12px;line-height:1.6;">
-          Visualizador + módulos PixelLab MCP. Selecione um asset à esquerda pra abrir o painel.<br>
-          Hover no frame principal mostra slots das 8 direções — clique <strong>+</strong> nos vazios pra gerar via MCP.
-        </div>
+  <!-- Approved assets full-width topo (estilo Gallery) -->
+  <div class="summary-panel promoted" id="editorApprovedSection" style="width:96vw;max-width:1400px;margin:14px auto;min-height:auto;">
+    <h2>✅ APPROVED <span id="editorApprovedCount" style="margin-left:8px;color:#9fe89f;font-size:14px;">—</span></h2>
+    <div class="grid-thumbs" id="editorAssetListBody" style="max-height:240px;">aguardando…</div>
+  </div>
+  <!-- Main box com visualizer (center) -->
+  <div class="detail-main" id="editorMain" style="width:96vw;max-width:1400px;margin:14px auto;">
+    <h3 id="editorTitle">Selecione um asset acima</h3>
+    <div id="editorBody">
+      <div style="opacity:.6;font-size:12px;line-height:1.6;text-align:center;padding:40px;">
+        Visualizador + módulos PixelLab MCP. Click num asset acima pra abrir o painel.<br>
+        Hover no frame principal mostra slots das 8 direções — clique <strong>+</strong> nos vazios pra gerar via MCP.
       </div>
     </div>
   </div>
@@ -1154,9 +1154,11 @@ function renderDetailList(){
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderDetailList(); });
   }
   const body = $("editorAssetListBody") || $("detailListBody");
+  const countEl = $("editorApprovedCount");
   body.innerHTML = '';
   body.className = 'detail-list-grid';
   const list = approvedAssets();
+  if(countEl) countEl.textContent = list.length;
   if(list.length === 0){
     body.innerHTML = '<div style="opacity:.6;font-size:11px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
     return;
