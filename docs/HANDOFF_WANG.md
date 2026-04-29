@@ -80,6 +80,21 @@ const bit = (c) => c === 'upper' ? 1 : 0;
 const id = bit(NW)*1 + bit(NE)*2 + bit(SE)*4 + bit(SW)*8;
 ```
 
+## Boi rest_idle / attack anims (item adicional)
+
+Pendência herdada do roadmap geral, transferida pra esta sessão por estar ligada à pipeline PixelLab. Atualmente o boi tem só `walk` (8-dir) e `idle_head_shake` (7-dir, sem N). Faltam:
+
+- **rest_idle** — postura parada relaxada (oposto do idle_head_shake que é "comendo nervoso")
+- **attack** — investida agressiva quando provocado pelo player
+
+Workflow:
+1. `mcp__pixellab__animate_character` no character ID do boi
+2. 8 direções por anim
+3. Slice frames pra `assets/pixel_labs/chars/ox/anims/<anim>/<dir>/frame_NNN.png`
+4. Adicionar entry no array ANIM8 em `js/02_preload.js` (linhas 60-73)
+5. Adicionar key correspondente em `js/01_scene.js` ANIM8 do create()
+6. Hook na state machine de `js/07_vacas.js _atualizarIAVacas` — quando boi capturado/atacado, troca pra ox_attack_<dir>
+
 ## Não tocar
-- A sessão `claude/intelligent-euler-7a236d` está dormindo este item
+- A sessão `claude/intelligent-euler-7a236d` está dormindo estes itens
 - Se abrir esse arquivo de volta nessa sessão, esperar instrução explícita
