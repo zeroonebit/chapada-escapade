@@ -409,13 +409,19 @@ class Jogo extends Phaser.Scene {
         }
 
         const enePct = this.energiaLed / this.energiaMax;
-        // Redesenha gradiente azul→roxo proporcional
-        const eb = this._eneBar || { x: 0, y: 0, w: 0, h: 0 };
-        const eFill = Math.max(0, eb.w * enePct);
-        this.hud.eneFill.clear();
-        if (eFill > 0) {
-            this.hud.eneFill.fillGradientStyle(0x3399ff, 0xaa44ff, 0x1166cc, 0x7722cc, 1);
-            this.hud.eneFill.fillRect(eb.x, eb.y, eFill, eb.h);
+        // V2: setCrop no fillImg
+        if (this.hud.eneFillImg && this._updateFillCrop) {
+            this._updateFillCrop(this.hud.eneFillImg, enePct);
+        }
+        // Legacy fallback (Graphics gradient)
+        if (this.hud.eneFill) {
+            const eb = this._eneBar || { x: 0, y: 0, w: 0, h: 0 };
+            const eFill = Math.max(0, eb.w * enePct);
+            this.hud.eneFill.clear();
+            if (eFill > 0) {
+                this.hud.eneFill.fillGradientStyle(0x3399ff, 0xaa44ff, 0x1166cc, 0x7722cc, 1);
+                this.hud.eneFill.fillRect(eb.x, eb.y, eFill, eb.h);
+            }
         }
 
         if (beamAtivo) {
