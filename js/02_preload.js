@@ -122,13 +122,15 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_frame_combustivel', 'assets/pixel_labs/hud/combustivel.png');
         this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
+        this.load.image('hud_radar_frame_v2',    'assets/pixel_labs/hud/radar_frame_v2.png');
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
-        // v2: full + empty to setCrop dinâmico (fill bakeded, miolo preto)
-        this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v2.png');
-        this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v2.png');
-        this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v2.png');
-        this.load.image('hud_grav_empty_v2', 'assets/pixel_labs/hud/graviton_empty_v2.png');
+        // v3: label area limpa (preta) — Phaser overlay escreve FUEL/GRAVITON dinamico
+        // i18n volta a funcionar (PT: COMBUSTIVEL/GRAVITON, EN: FUEL/GRAVITON)
+        this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v3.png');
+        this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v3.png');
+        this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v3.png');
+        this.load.image('hud_grav_empty_v2', 'assets/pixel_labs/hud/graviton_empty_v3.png');
         // ── BURGERS (3 variantes) ────────────────────────────────────
         this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
         this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');
