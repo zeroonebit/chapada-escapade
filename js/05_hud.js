@@ -87,9 +87,11 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersBox.setPosition(265, 55);
         this.hud.burgersText.setPosition(300, 62);
 
-        // Barras empilhadas no centro-rodapé with gap visível
-        const ENE_Y = h - 60;
-        const PAC_Y = h - 18;
+        // Barras empilhadas no centro-rodape SEM overlap (cada PNG eh 68 tall em
+        // display, precisa de >=68 entre os dois centros). Antes tinha 42 de gap
+        // -> PAC label cobria ENE bar fill em 13px.
+        const ENE_Y = h - 104;
+        const PAC_Y = h - 36;
         this.hud.eneImg.setPosition(w/2, ENE_Y);
         this.hud.combImg.setPosition(w/2, PAC_Y);
         if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, ENE_Y);
@@ -114,10 +116,15 @@ Object.assign(Jogo.prototype, {
         }
 
         // Radar v2 — sprite steampunk (radar_frame_v2.png) + sweep/blips por cima
-        // Source 254x254, inner dial r=73, frame ring 73-108. Display 240x240
-        // → inner ~69px → uso R=68 pra blips ficarem dentro com folga.
-        const R = 68, FRAME_DISPLAY = 240, PAD = 14;
-        const rx = PAD + FRAME_DISPLAY/2, ry = h - FRAME_DISPLAY/2 - PAD - 58 + FRAME_DISPLAY/4;
+        // Source 254x254, inner dial r=73. Display 160x160 (proporcional pra
+        // nao invadir a area das barras: PAC_Y=h-18 com bar height 68 -> bar
+        // top em h-52). PAD_BOTTOM=110 garante bottom do radar em h-110 com
+        // 16px de gap pra ENE bar top (h-94).
+        const FRAME_DISPLAY = 160;
+        const R = Math.floor(FRAME_DISPLAY * 73 / 254);  // ~46 — proporcional ao inner dial
+        const PAD_X = 14, PAD_BOTTOM = 142;  // ENE bar top em h-138 -> 4px gap
+        const rx = PAD_X + FRAME_DISPLAY/2;
+        const ry = h - PAD_BOTTOM - FRAME_DISPLAY/2;
         this._mini = { cx: rx, cy: ry, r: R };
 
         // Cria sprite do radar v2 (lazy — primeira vez ou apos resize)
