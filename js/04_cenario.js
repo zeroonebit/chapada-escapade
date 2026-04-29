@@ -146,11 +146,33 @@ Object.assign(Jogo.prototype, {
         }
         this._noiseR = noise; // mantém compat (algumas funções consultam)
 
-        // MOBILE_MODE teaser: pula TUDO de obstaculos/landmarks/props/curral.
-        // Terreno + dry_turf patches ja estao desenhados. Nada mais.
+        // MOBILE_MODE teaser: pula a maioria dos itens. Mantem decoracao
+        // esparsa (~25 small rocks + small cactus/bush) pra nao ficar vazio.
+        // Sem matter physics — sao puramente visuais (player nao colide).
         if (window.__MOBILE_MODE) {
             this.corrals = [];
             this.driveThrus = this.corrals;
+            const smallRocks = ['nat_rock_rock_small_smooth', 'nat_rock_boulder_red_cluster'];
+            const smallVeg   = ['nat_veg_cactus_dead_dry', 'nat_veg_cactus_medium',
+                                'nat_veg_bush_round', 'nat_veg_bush_dry', 'nat_veg_agave_dark'];
+            const isLandMobile = (px, py) => {
+                const cx = Math.floor(px / CELL);
+                const cy = Math.floor(py / CELL);
+                if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
+                return grid[cy][cx] >= 1;
+            };
+            for (let i = 0; i < 30; i++) {
+                const x = Phaser.Math.Between(200, W - 200);
+                const y = Phaser.Math.Between(200, H - 200);
+                if (!isLandMobile(x, y)) continue;
+                const useRock = Math.random() < 0.45;
+                const arr = useRock ? smallRocks : smallVeg;
+                const key = arr[Math.floor(Math.random() * arr.length)];
+                const sc = useRock
+                    ? Phaser.Math.FloatBetween(0.6, 1.0)
+                    : Phaser.Math.FloatBetween(0.85, 1.2);
+                this.add.image(x, y, key).setScale(sc).setDepth(1);
+            }
             return;
         }
 
