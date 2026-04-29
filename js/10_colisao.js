@@ -70,8 +70,10 @@ Object.assign(Jogo.prototype, {
     _repopulate() {
         if (this.tutorialMode) return;
         const W=8000, H=6000;
-        if (this.cows.length >= 20) return;
-        let n = Math.min(4, 40 - this.cows.length);
+        // MOBILE_MODE teaser: cap em 5 cows
+        const cap = window.__MOBILE_MODE ? 5 : 20;
+        if (this.cows.length >= cap) return;
+        let n = Math.min(4, (window.__MOBILE_MODE ? 5 : 40) - this.cows.length);
         for (let i=0; i<n; i++) {
             let e = Math.floor(Math.random()*4);
             let x, y;

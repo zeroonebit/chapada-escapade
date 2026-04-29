@@ -29,13 +29,14 @@ class Jogo extends Phaser.Scene {
         // Loads config de debug ANTES de qualquer spawn (afeta scales/counts)
         this._loadDebugCfg();
 
-        // MOBILE_MODE: override pra experiencia "frustrante" — so movimentacao
-        // da nave + atmosfera pesada. Sem inimigos, sem cows, sem objetivos.
+        // MOBILE_MODE: override pra experiencia atmosferica — cap 5 cows,
+        // sem inimigos. Beam visual sem pull (so muda cone, nao puxa nada).
         if (window.__MOBILE_MODE && this.dbg) {
             this.dbg.enabled.fazendeiros = false;
             this.dbg.enabled.atiradores  = false;
-            this.dbg.enabled.vacas       = false;
+            this.dbg.enabled.vacas       = true;
             this.dbg.enabled.bois        = false;
+            this.dbg.counts.vacas        = 5;
             this.dbg.fx.weather          = 'storm';
             this.dbg.fx.timeOfDay        = 'midnight';
             this.dbg.fx.chuva            = true;
@@ -50,6 +51,10 @@ class Jogo extends Phaser.Scene {
             this.dbg.fx.ventoForca       = 0.04;
             // Sem game over no teaser — fuel congelado, sem drain
             this._tutCombustivelCongelado = true;
+            // Beam visual SEM pull (igual etapa BEAM_VISUAL do tutorial):
+            // cone aparece ao tocar mas nao abduz/arrasta cows
+            this._tutBeamNoPull  = true;
+            this._tutBeamNoDrain = true;
         }
 
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' usada below)
