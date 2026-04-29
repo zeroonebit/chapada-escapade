@@ -83,15 +83,17 @@ const QUIP_COOLDOWN_SOURCE = {
 };
 const QUIP_GLOBAL_COOLDOWN = 3000;
 
-// Quips exclusivos do mobile teaser (saem do disco voador, PT-BR, vibe gamer)
+// Quips exclusivos do mobile teaser (saem do disco voador)
 const MOBILE_QUIPS = [
-    'aliens não usam celular...',
-    'aliens preferem computadores, gamer!',
-    'WASD foi feito pra isso, parça',
-    'tela pequena, abdução pequena',
-    'mouse > swipe, sempre',
-    'nossa nave não cabe no seu bolso',
-    'no Marte, todo mundo joga no PC',
+    'Martians don\'t have phones. Only PCs',
+    'Venusians tried mobile. It didn\'t work.',
+    'No signal on Mercury.',
+    'Aliens don\'t text. They click.',
+    'PC only. Even off-world.',
+    'Mobile users were abducted first.',
+    'The Aliens from Jupiter prefer ultra settings.',
+    'Touchscreens don\'t survive reentry.',
+    'They crossed galaxies. Not platforms.',
 ];
 
 Object.assign(Jogo.prototype, {
