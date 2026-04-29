@@ -235,6 +235,8 @@
       </div>
     </div>
   </div>
+  <!-- 4 sections de tools full-width fora do box principal -->
+  <div id="editorToolsRow" style="width:96vw;max-width:1400px;margin:14px auto 30px;"></div>
 </div>
 
 <!-- ====== TAB GALLERY ====== -->
@@ -1231,6 +1233,7 @@ function renderDetailMain(){
     return `<div class="dir-slot dir-${dirShort[d]} ${cls}" data-dir="${d}" data-asset-path="${a.path}" title="${d}${path?' (existe)':' (gerar via MCP)'}">${inner}</div>`;
   }).join('');
 
+  // Header (visualizer + meta) vai pra editorBody/detailBody
   let html = `
     <div class="preview">
       <div class="visualizer">
@@ -1245,13 +1248,14 @@ function renderDetailMain(){
         <div style="margin-top:8px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Click <strong>+</strong> nos slots vazios pra enfileirar geração via MCP.</div>
       </div>
     </div>`;
-  html += `<div class="tool-sections-row">`;
+  // 4 sections de tools serão geradas em sectionsHtml separadamente
+  let sectionsHtml = '';
+  sectionsHtml += `<div class="tool-sections-row">`;
   cats.forEach((cat, ci) => {
     const tools = PIXELLAB_TOOLS.filter(t => t.cat === cat);
     if(!tools.length) return;
-    // todas as 4 expandidas por default (uma por coluna)
     const collapsed = 'false';
-    html += `<div class="tool-section" data-cat="${cat}" data-collapsed="${collapsed}">
+    sectionsHtml += `<div class="tool-section" data-cat="${cat}" data-collapsed="${collapsed}">
       <div class="sec-head" onclick="this.parentElement.dataset.collapsed = this.parentElement.dataset.collapsed === 'true' ? 'false' : 'true'; const t = this.querySelector('.toggle'); if(t) t.textContent = this.parentElement.dataset.collapsed === 'true' ? '▶' : '▼';">
         <span class="toggle">▼</span>
         <span>${catLabels[cat]}</span>
@@ -1259,29 +1263,35 @@ function renderDetailMain(){
       </div>
       <div class="sec-body"><div class="tools-grid">`;
     tools.forEach(t => {
-      html += `<div class="tool-card cat-${t.cat}"><div class="tname">${t.label}<br><span style="opacity:.5;font-weight:normal;">mcp__pixellab__${t.name}</span></div>`;
+      sectionsHtml += `<div class="tool-card cat-${t.cat}"><div class="tname">${t.label}<br><span style="opacity:.5;font-weight:normal;">mcp__pixellab__${t.name}</span></div>`;
       t.args.forEach(arg => {
         const id = `f-${t.name}-${arg.k}`;
         const auto = arg.autoFromAsset && a.id ? a.id : (arg.def !== undefined ? arg.def : '');
         if(arg.type === 'textarea'){
-          html += `<label>${arg.label}${arg.required?' *':''}</label><textarea id="${id}" data-tool="${t.name}" data-key="${arg.k}">${auto}</textarea>`;
+          sectionsHtml += `<label>${arg.label}${arg.required?' *':''}</label><textarea id="${id}" data-tool="${t.name}" data-key="${arg.k}">${auto}</textarea>`;
         } else if(arg.type === 'select'){
-          html += `<label>${arg.label}</label><select id="${id}" data-tool="${t.name}" data-key="${arg.k}">${arg.opts.map(o=>`<option value="${o}"${o===auto?' selected':''}>${o||'(none)'}</option>`).join('')}</select>`;
+          sectionsHtml += `<label>${arg.label}</label><select id="${id}" data-tool="${t.name}" data-key="${arg.k}">${arg.opts.map(o=>`<option value="${o}"${o===auto?' selected':''}>${o||'(none)'}</option>`).join('')}</select>`;
         } else if(arg.type === 'checkbox'){
-          html += `<label><input type="checkbox" id="${id}" data-tool="${t.name}" data-key="${arg.k}"${auto?' checked':''}> ${arg.label}</label>`;
+          sectionsHtml += `<label><input type="checkbox" id="${id}" data-tool="${t.name}" data-key="${arg.k}"${auto?' checked':''}> ${arg.label}</label>`;
         } else {
-          html += `<label>${arg.label}${arg.required?' *':''}</label><input type="${arg.type==='number'?'number':'text'}" id="${id}" data-tool="${t.name}" data-key="${arg.k}" value="${auto}">`;
+          sectionsHtml += `<label>${arg.label}${arg.required?' *':''}</label><input type="${arg.type==='number'?'number':'text'}" id="${id}" data-tool="${t.name}" data-key="${arg.k}" value="${auto}">`;
         }
       });
-      html += `<button class="qbtn" data-queue="${t.name}">+ Add to queue</button></div>`;
+      sectionsHtml += `<button class="qbtn" data-queue="${t.name}">+ Add to queue</button></div>`;
     });
-    html += `</div></div></div>`;
+    sectionsHtml += `</div></div></div>`;
   });
-  html += `</div>`; // fecha .tool-sections-row
+  sectionsHtml += `</div>`;
+  // Coloca tool sections em editorToolsRow se existir (Editor tab); senão dentro do bodyEl
+  const toolsContainer = $("editorToolsRow");
+  if(toolsContainer){ toolsContainer.innerHTML = sectionsHtml; }
+  else { html += sectionsHtml; }
   bodyEl.innerHTML = html;
-  bodyEl.querySelectorAll('.qbtn').forEach(b => {
+  // qbtn handlers — pesquisa em ambos editorBody e editorToolsRow
+  const containers = [bodyEl, $("editorToolsRow")].filter(Boolean);
+  containers.forEach(c => c.querySelectorAll('.qbtn').forEach(b => {
     b.onclick = () => queueTool(b.dataset.queue);
-  });
+  }));
   // Wire click nos dir-slots (missing → queue gen, existing → seleciona aquele asset)
   bodyEl.querySelectorAll('.dir-slot').forEach(slot => {
     slot.onclick = () => {
