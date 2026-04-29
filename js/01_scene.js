@@ -476,6 +476,7 @@ class Jogo extends Phaser.Scene {
         this._updateLEDs(delta);
         if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
+        if (this._updateActiveQuips) this._updateActiveQuips();
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
