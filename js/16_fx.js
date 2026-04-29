@@ -94,18 +94,25 @@ Object.assign(Jogo.prototype, {
     },
 
     _buildWindParticles() {
-        const N = 18;  // qtd de swirls visiveis
-        const w = this.scale.width, h = this.scale.height;
+        const N = 22;  // qtd de swirls visiveis
+        const h = this.scale.height;
         for (let i = 0; i < N; i++) {
-            // Swirl = curva de 3 pequenos arcos; aproximado por linha curta
-            // com leve rotacao + alpha bem baixo (efeito atmosferico sutil)
-            const p = this.add.line(0, 0, 0, 0, 28, 0, 0xddeeff, 0.18).setLineWidth(1.0);
-            p._speedScale = Phaser.Math.FloatBetween(0.7, 1.5);
-            p._yBob       = Phaser.Math.FloatBetween(-12, 12);
-            p._yOff       = Phaser.Math.Between(0, h);
-            p._xPhase     = Math.random() * Math.PI * 2;
-            this.fxWind.add(p);
-            this._windParticles.push(p);
+            // Cada swirl eh um Graphics que redesenha uma curva sinuosa cada
+            // frame -> efeito de "vortex" / wisp horizontal (mais organico
+            // que linha reta).
+            const g = this.add.graphics();
+            g._speedScale = Phaser.Math.FloatBetween(0.7, 1.7);
+            g._yBob       = Phaser.Math.FloatBetween(-14, 14);
+            g._yOff       = Phaser.Math.Between(0, h);
+            g._xPhase     = Math.random() * Math.PI * 2;
+            // Comprimento e amplitude da senoide do swirl
+            g._len        = Phaser.Math.Between(36, 64);
+            g._amp        = Phaser.Math.FloatBetween(2.2, 5.0);
+            g._alpha      = Phaser.Math.FloatBetween(0.10, 0.26);
+            g._curveSpeed = Phaser.Math.FloatBetween(2.0, 3.5);
+            g._curvePhase = Math.random() * Math.PI * 2;
+            this.fxWind.add(g);
+            this._windParticles.push(g);
         }
     },
 
@@ -123,20 +130,39 @@ Object.assign(Jogo.prototype, {
         // Lerp suave do angle atual ate ventoForca
         const target = Phaser.Math.Clamp(cfg.ventoForca ?? 0.03, -0.05, 0.05);
         this._windAngle = (this._windAngle ?? 0) + (target - (this._windAngle ?? 0)) * 0.04;
-        // Anima swirls horizontalmente segundo windAngle (escalado)
         const w = this.scale.width;
-        const h = this.scale.height;
         const speed = this._windAngle * 800;  // px/s lateral
         const dt = delta / 1000;
         this._windOscPhase = (this._windOscPhase + dt * 1.4) % (Math.PI * 2);
-        for (const p of this._windParticles) {
-            if (!p.scene) continue;
-            p.x += speed * dt * p._speedScale;
+
+        // Direcao do swirl segue o vento (positivo = right, espelha curve quando neg)
+        const dirSign = this._windAngle >= 0 ? 1 : -1;
+
+        for (const g of this._windParticles) {
+            if (!g.scene) continue;
+            // Avanca posicao + atualiza fase da curva (rotaciona o swirl)
+            g.x += speed * dt * g._speedScale;
+            g._curvePhase += dt * g._curveSpeed;
             // Wrap horizontal
-            if (speed > 0 && p.x > w + 40)  p.x = -40;
-            if (speed < 0 && p.x < -40)     p.x = w + 40;
-            // Bob vertical sutil (sin ondas)
-            p.y = p._yOff + Math.sin(this._windOscPhase + p._xPhase) * p._yBob;
+            if (speed > 0 && g.x > w + g._len + 20)  g.x = -g._len - 20;
+            if (speed < 0 && g.x < -g._len - 20)     g.x = w + g._len + 20;
+            // Bob vertical (eixo Y oscila no tempo)
+            g.y = g._yOff + Math.sin(this._windOscPhase + g._xPhase) * g._yBob;
+
+            // Redraw curva sinuosa usando 6 segmentos: y = amp * sin(t + phase)
+            // Resultado: linha ondulada que parece torcer/rolar (vortex feel)
+            g.clear();
+            g.lineStyle(1.2, 0xddeeff, g._alpha);
+            g.beginPath();
+            const SEG = 12;
+            for (let k = 0; k <= SEG; k++) {
+                const t = k / SEG;
+                const lx = (t - 0.5) * g._len * dirSign;
+                const ly = Math.sin(g._curvePhase + t * Math.PI * 2.2) * g._amp;
+                if (k === 0) g.moveTo(lx, ly);
+                else         g.lineTo(lx, ly);
+            }
+            g.strokePath();
         }
     },
 
