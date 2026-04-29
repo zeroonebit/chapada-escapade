@@ -134,35 +134,67 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Cleanup**: vaca_chubby/holstein/skinny removidas (457 arquivos duplicados)
 - **Workflow git automático** — sync worktree → main → push ao final de cada request
 
-### ✅ Pronto (cont. — sessão 2026-04-28 noite)
-- **Batch v2 — 36 assets** natureza/objetos em `chars/nature/v2/inbox/` (bromélias, palmeiras, pedras, cochos, fardos, moinho, satélite, radio tower, barris, caixas, flores, igrejinha, mesa rock, etc.)
-- **HUD bars v2** — `combustivel_v2.png` (red→orange) e `graviton_v2.png` (cyan→purple) via style transfer com crop de `refs/huds.jpg`
-- **Variações wrecked_truck**: red / blue / green / yellow
-- **Variações gas_can**: blue / green / yellow (+ red já existia)
-- **`tools/asset_gallery.html`** — galeria de preview com arrow nav, auto-refresh, grid thumbs, fundo xadrez (port 8081)
-- **`.claude/launch.json`** — config "gallery" porta 8081 adicionada
-
 ### 🛠 Pipeline PixelLab (novo)
 - `tools/pixellab_fetch_new.py` — baixa por ID via Backblaze CDN (sem API key)
 - `tools/pixellab_montage_new.py` — contact sheet pra ID visual
 - `tools/organize_cercas_v2.py` — copia inbox → chars/nature/cercas_v2 com nomes legíveis
 - Skill `~/.claude/skills/pixellab-asset-download/SKILL.md` documenta o padrão completo
 
+### ✅ Pronto (cont. — sessão 2026-04-29 madrugada / post-audit)
+- **Engineering audit 15/18 fixes** (Sprint 1+2+3) — `js/00_constants.js` novo, helpers `isAbducibleCow`/`distSq`, listener leak fix, scene shutdown handler, debounces, cap 100 balas, counter cows beam, etc
+- **HUD radar com sprite** + decay-based blips (cada blip acende quando sweep passa, fade 2.5s)
+- **HUD barras**: pintura preta sobre label baked + Phaser text overlay com i18n (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
+- **9 objects v3 PixelLab** (`chars/nature/objects/`): church, windmill, old_truck, satellite_dish_rusty (landmarks), gas_can, barrel_rusty (props industriais), bucket_milk, bucket_empty (curral random 50/50), dry_turf (8 patches)
+- **Debug overlay F3** (`js/19_debug_overlay.js`): FPS, heap MB, counts, errors, snapshots no console a cada 5s
+- **Splash multi-stage**: PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD; ESC abre CONFIGS desde splash
+- **Botão PREVIEW** (👁): 5s timeslice + esconde inimigos + checkbox shuffle weather/TOD
+- **Snow weather preset** (flocos brancos r=1-3.5px com drift sinuoso)
+- **Sliders editáveis** (digita valor direto, sync bidirecional)
+- **Sensibilidade discreto** 1/1.25/1.5
+- **Toggle Input WASD/Mouse + Language ENG/PTBR** no menu CONFIGS
+- **i18n menu CONFIGS** (~50 strings dict + data-i18n attrs + `_applyMenuI18n`)
+- **CONFIGS menu** (renomeado DEBUG MENU), aba VISUALS (renomeada LOOKS)
+- **Bugs críticos corrigidos**: SLOT_VALOR duplicado quebrava 08_curral inteiro (causa do trava reportado), atmosphere `isActive` crash, c.ready legacy struct em 2 arquivos, linha verde nos cantos
+- **`docs/AUDIT_2026-04-29.md`** documenta 18 issues + status (15 resolvidas, 3 pendentes)
+
+### ✅ Pronto (cont. — sessão 2026-04-29 noite)
+- **Atmosphere system** (`js/18_atmosphere.js`) — 6 TOD presets + auto-cycle + 5 weather (clear/rain/snow/fog/storm) + storm flash
+- **Snow weather** com flocos brancos r=1-3.5px com drift sinuoso
+- **Tutorial reorganização** completa: BEAM_VISUAL/GRAVITON_BAR/ABDUCT/DELIVER/BURGER/COMBUSTIVEL com flags separadas (`_tutBeamNoDrain` vs `_tutBeamNoPull`)
+- **Tutorial bug GRAVITON_BAR travado** corrigido (drain/regen estavam bloqueados)
+- **Vaca chubby sprite no curral** (mascote 68px com anim `vaca_eat_S` fixa + hay bale 84×76)
+- **3 slots fixos por curral** (classic/cheese/double, pontos progressivos 100/150/220)
+- **Coleta de hamburger via beam graviton** (atrai burgers ready dentro do raioCone)
+- **Curral variants** random (4 tipos: padrão / rústico fechado / grande aberto duplo / pequeno reto)
+- **Sliders editáveis** (digita valor direto no number input ao lado)
+- **Sensibilidade discreto** 1/1.25/1.5
+- **Toggle Input WASD/Mouse** no menu CONFIGS
+- **Toggle Language ENG/PTBR** no menu CONFIGS + sistema i18n
+- **CONFIGS menu acessível desde splash** (ESC funciona antes do jogo)
+- **Botão PREVIEW** (5s timeslice + esconde inimigos + checkbox shuffle)
+- **Splash multi-stage** (PLAY → ENG/PTBR → MOUSE/WASD; TUTORIAL → MOUSE/WASD)
+- **Splash fit-to-screen** + barrel ativo desde o loading
+- **Hit area expandida** dos botões (compensa barrel post-fx)
+- **Responsividade mobile** (`<meta viewport>` faltando + safe-area + media query 100% no celular)
+- **Mobile controls fade** (silhueta 0.25 → invisível 0.0 ao tocar)
+- **Beam capacity rework** (cap 5 vacas/bois OU 1 fazendeiro mutex; nave -10% velocidade por animal)
+- **Fazendeiro bounce 0.45** em vaca/boi/cacto (sem dano)
+- **HUD acima do atmosphere** (depth 100 → 200) + radar desce R/2
+- **Linha verde dos cantos** eliminada
+- **Skill `pixellab-asset-download`** + 3 memórias (perguntas explícitas, prompts complexos, heartbeat)
+
 ### 🚧 Em andamento
-- **Wang tiles** funcionalmente OK mas precisa de tiles "de verdade" (atualmente só palette de teste sólida)
-- **Tutorial reorganização**: separar BARS em GRAVITON (após BEAM) + COMBUSTIVEL (após BURGER) — pedido do usuário
-- **Curral variations**: portas abertas/fechadas, cantos retos/redondos usando os assets v2 — pedido do usuário
-- **Coleta de hamburger no tutorial**: highlight no burger + coleta na posição do burger (não em cima do curral) — pedido do usuário
-- **Vaca chubby sprite no curral**: substituir cima_sobe/cima_desce pelo chubby idle/walk/eat — pedido do usuário
-- **Integrar assets v2 no cenário**: adicionar os 36+ novos assets em `js/03_cenario.js` NATURE_ASSETS com SCALE_MAP e bounds-aware scatter
+- **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
+- **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
+- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida)
 
 ### 🔜 Próximos passos
-1. **Integrar assets v2 no cenário** — adicionar `wrecked_truck_*`, `gas_can_*`, bromélias, palmeiras, pedras etc. em `js/03_cenario.js` NATURE_ASSETS com escala e posicionamento corretos
-2. **Salvar configs do user como defaults no git** — pegar `localStorage.getItem('chapEscapadeDebug')` e fazer override de `DBG_DEFAULTS` em `js/15_debug_menu.js`
-3. **Toggle de input WASD + Space** na aba CONTROLES do debug menu
-4. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
-5. **Boi rest_idle/attack** anims (parcial — só S no disco)
-6. **Balde de leite** no curral (gerar via PixelLab MCP)
+1. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+2. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+3. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+4. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+5. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+6. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
