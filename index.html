@@ -93,7 +93,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260429j';
+    const V = '20260429k';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -101,13 +101,21 @@
     const blockMobile = smallScreen || touchSmall;
 
     if (blockMobile) {
-        // PALETA VERMELHA + icones no titulo
+        // ── MOBILE: mensagem vermelha de flavor + auto-PLAY ──
+        // Mostra "Aliens don't use phones" / "Aliens use cyberdecks" como
+        // intro/loading screen, depois carrega o jogo normalmente e pula a
+        // splash entrando direto em PLAY (movimentacao da nave funciona em
+        // mobile via 12_mobile.js — joystick + touch).
         const t = document.getElementById('pre-loader-title');
-        t.innerHTML = '<span style="font-size:42px;letter-spacing:14px;">📱🚫💻✅</span>';
+        t.innerHTML =
+            '<div style="font-size:22px;letter-spacing:3px;font-weight:bold;color:#ff5566;' +
+            'text-shadow:0 0 14px rgba(255,80,80,0.55);margin-bottom:14px;">' +
+            'Aliens don\'t use phones' +
+            '</div>' +
+            '<div style="font-size:46px;letter-spacing:18px;line-height:1;">📱🚫</div>';
         t.style.fontSize = '14px';
         t.style.letterSpacing = '0';
         t.style.marginBottom = '22px';
-        t.style.textShadow = '0 0 12px rgba(255,80,80,0.4)';
 
         const preLoader = document.getElementById('pre-loader');
         preLoader.style.color = '#ff5566';
@@ -121,24 +129,22 @@
         const bar = document.getElementById('pre-loader-bar');
         bar.style.background = 'linear-gradient(90deg, #cc1122, #ff5566)';
 
-        // Anima a barra ate 100% em ~2.5s sem carregar nada (failsafe puro)
-        let pct = 0;
-        const tick = setInterval(() => {
-            pct = Math.min(100, pct + 4);
-            bar.style.width = pct + '%';
-            document.getElementById('pre-loader-pct').textContent = pct + '%';
-            if (pct >= 100) {
-                clearInterval(tick);
-                setTimeout(() => {
-                    document.getElementById('pre-loader-pct').innerHTML =
-                        '<div style="margin-top:20px;font-size:13px;line-height:1.7;letter-spacing:1px;max-width:300px;text-align:center;">' +
-                        'TELA MUITO PEQUENA<br/>' +
-                        '<span style="opacity:0.7;font-size:11px;">jogue em desktop ou notebook</span>' +
-                        '</div>';
-                }, 250);
-            }
-        }, 80);
-        return;  // NAO carrega nenhum js/* — failsafe efetivo
+        const pct = document.getElementById('pre-loader-pct');
+        const below = document.createElement('div');
+        below.id = 'pre-loader-below';
+        below.style.cssText = 'margin-top:22px;text-align:center;';
+        below.innerHTML =
+            '<div style="font-size:46px;letter-spacing:18px;line-height:1;margin-bottom:14px;">💻✅</div>' +
+            '<div style="font-size:22px;letter-spacing:3px;font-weight:bold;color:#aaffcc;' +
+            'text-shadow:0 0 14px rgba(170,255,200,0.45);">' +
+            'Aliens use cyberdecks' +
+            '</div>';
+        pct.parentNode.insertBefore(below, pct.nextSibling);
+
+        // Flag pro 11_gameflow pular a splash e entrar direto em PLAY
+        window.__AUTO_PLAY = true;
+
+        // Continua execucao normal -> loader desktop carrega os modulos abaixo
     }
 
     // Desktop: load dinamico dos modulos na ordem correta
