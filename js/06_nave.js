@@ -79,6 +79,10 @@ Object.assign(Jogo.prototype, {
 
     _moveShip(c) {
         if (this._tutFreezeNave) return;
+        // MOBILE_MODE teaser: aplica forca somente com dedo segurado.
+        // Solta -> ship continua com inercia (frictionAir baixo) e bounce
+        // nas bordas (setBounce 1.0).
+        if (window.__MOBILE_MODE && !this.input.activePointer.isDown) return;
         let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;

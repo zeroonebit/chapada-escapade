@@ -47,6 +47,8 @@ class Jogo extends Phaser.Scene {
             this.dbg.fx.neblinaIntensidade = 0.92;
             this.dbg.fx.vento            = true;
             this.dbg.fx.ventoForca       = 0.04;
+            // Sem game over no teaser — fuel congelado, sem drain
+            this._tutCombustivelCongelado = true;
         }
 
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' usada below)
@@ -122,6 +124,12 @@ class Jogo extends Phaser.Scene {
         this.ship.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         const shipScale = this.dbg?.scale?.nave ?? 1.0;
         this.ship.setDisplaySize(80 * shipScale, 80 * shipScale);
+        // MOBILE_MODE: nave com inercia alta (frictionAir baixo) + bounce
+        // total nas bordas (matter combina restitution via Math.max — walls
+        // default=0, ship=1 -> bounce sem perda de energia).
+        if (window.__MOBILE_MODE) {
+            this.ship.setFrictionAir(0.005).setBounce(1.0);
+        }
         // Lock rotação física — disco não gira by colisão; rotação is feita manualmente
         // via discoRot slider no _updateBody
         this.ship.setFixedRotation();
@@ -159,6 +167,15 @@ class Jogo extends Phaser.Scene {
         this._createHUD();
         this._positionHUD();
         this.scale.on('resize', () => this._positionHUD());
+
+        // MOBILE_MODE teaser: esconde HUD inteiro pra player ver so terreno +
+        // ship + beam + smoke + weather (experiencia atmosferica pura).
+        if (window.__MOBILE_MODE) {
+            for (const k of Object.keys(this.hud)) {
+                const o = this.hud[k];
+                if (o && o.setVisible) o.setVisible(false);
+            }
+        }
 
         // ── CURSOR VIRTUAL ───────────────────────────────────────────
         this.virtualX = this.scale.width / 2;

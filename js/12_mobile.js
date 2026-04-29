@@ -5,6 +5,9 @@ Object.assign(Jogo.prototype, {
 
     _setupMobileControls() {
         if (!this.isMobile) return;
+        // MOBILE_MODE (teaser): pula joystick/beam button — touch direto
+        // controla cursor + beam via input.activePointer
+        if (window.__MOBILE_MODE) return;
 
         // Permitir até 3 pointers (joystick + botão + extras)
         this.input.addPointer(2);
