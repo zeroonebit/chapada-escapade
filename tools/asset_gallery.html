@@ -300,6 +300,7 @@
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
         <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
         <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper se classificou errado">🔄 Flip L/U</button>
+        <button id="btnRestoreSnap" style="background:#a89368;color:#000;" title="Volta pro estado antes do último auto-sort" hidden>↩ Restore</button>
         <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
         <label style="font-size:11px;color:#a89368;">VIEW:</label>
         <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
@@ -1253,8 +1254,12 @@ async function regenCellImage(cellState){
 
 // Auto-sort: classifica cada tile pelos 4 cantos e reordena automaticamente
 let _lastAutoSortFlipped = false;
+let _autoSortSnapshot = null;  // snapshot pra Restore
 async function autoSortTiles(forceFlip){
   if(!tileEditState) return;
+  // snapshot antes de modificar (deep copy)
+  _autoSortSnapshot = tileEditState.cells.map(c => c ? {...c, transforms: c.transforms.slice()} : null);
+  $("btnRestoreSnap").hidden = false;
   $("editorHint").textContent = '🔍 Analisando…';
   const flipped = forceFlip !== undefined ? forceFlip : false;
   _lastAutoSortFlipped = flipped;
@@ -1836,7 +1841,16 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnEditorToggle') toggleEditorMode();
   if(e.target.id === 'btnAutoSort') autoSortTiles();
   if(e.target.id === 'btnFlipLU') autoSortTiles(!_lastAutoSortFlipped);
-  if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; renderTiles(); }
+  if(e.target.id === 'btnRestoreSnap'){
+    if(!_autoSortSnapshot){ return; }
+    tileEditState.cells = _autoSortSnapshot.map(c => c ? {...c, transforms: c.transforms.slice()} : null);
+    if(editorMode) rerenderEditorGrid();
+    renderTestMap();
+    $("editorHint").textContent = '↩ Estado anterior restaurado (incluindo orientações)';
+    $("btnRestoreSnap").hidden = true;
+    _autoSortSnapshot = null;
+  }
+  if(e.target.id === 'btnReloadTileset'){ presetMetadata = {}; tileEditState = null; _autoSortSnapshot = null; $("btnRestoreSnap").hidden = true; renderTiles(); }
   if(e.target.id === 'btnSaveCorrected'){
     if(!tileEditState) return;
     // Fetch existing registry, merge this preset, save back
