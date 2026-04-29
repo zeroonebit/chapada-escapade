@@ -42,9 +42,11 @@ class Jogo extends Phaser.Scene {
             this.dbg.fx.chuvaIntensidade = 1.0;
             this.dbg.fx.chuvaCount       = 300;
             this.dbg.fx.chuvaVelocidade  = 1.8;
-            this.dbg.fx.chuvaAngulo      = 0.5;
+            this.dbg.fx.chuvaAngulo      = 0.04;
             this.dbg.fx.neblina          = true;
             this.dbg.fx.neblinaIntensidade = 0.92;
+            this.dbg.fx.vento            = true;
+            this.dbg.fx.ventoForca       = 0.04;
         }
 
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' usada below)
@@ -409,6 +411,7 @@ class Jogo extends Phaser.Scene {
         this._updateBarrel();
         this._atmoUpdate(delta);
         this._updateLEDs(delta);
+        if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)

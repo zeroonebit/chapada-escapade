@@ -66,23 +66,27 @@ Object.assign(Jogo.prototype, {
                 cfg.chuva = false;
                 cfg.neblina = false;
                 cfg.snow = false;
+                cfg.vento = false;
                 break;
             case 'rain':
                 cfg.chuva = true;
                 cfg.neblina = false;
                 cfg.snow = false;
+                cfg.vento = false;
                 cfg.chuvaIntensidade = Math.max(0.5, cfg.chuvaIntensidade ?? 0.5);
                 break;
             case 'fog':
                 cfg.chuva = false;
                 cfg.neblina = true;
                 cfg.snow = false;
+                cfg.vento = false;
                 cfg.neblinaIntensidade = Math.max(0.6, cfg.neblinaIntensidade ?? 0.5);
                 break;
             case 'snow':
                 cfg.chuva = false;
                 cfg.neblina = false;
                 cfg.snow = true;
+                cfg.vento = false;
                 cfg.snowCount = Math.max(80, cfg.snowCount ?? 100);
                 cfg.snowIntensidade = Math.max(0.7, cfg.snowIntensidade ?? 0.85);
                 break;
@@ -90,12 +94,14 @@ Object.assign(Jogo.prototype, {
                 cfg.chuva = true;
                 cfg.neblina = true;
                 cfg.snow = false;
+                cfg.vento = true;
                 cfg.chuvaIntensidade = 1.0;
                 cfg.neblinaIntensidade = 0.85;
                 cfg.chuvaCount = 250;
                 cfg.chuvaVelocidade = 1.8;
                 cfg.chuvaTamanho = 1.4;
-                cfg.chuvaAngulo = 0.5;
+                cfg.chuvaAngulo = 0.04;
+                cfg.ventoForca   = 0.04;
                 break;
         }
         if (this._applyFXVisibility) this._applyFXVisibility();
