@@ -176,9 +176,6 @@ Object.assign(Jogo.prototype, {
                     if (f.scene && f.body) f.setFrictionAir(0.08);
                 }
                 if (f.rotation !== 0) f.rotation = 0;
-                if (Math.abs(f.body.angle) > 0.001 && this.matter?.body) {
-                    this.matter.body.setAngle(f.body, 0);
-                }
             }
             // Skip IA + sprite update enquanto spinning (inercia leva ele)
             if (inSpin) continue;
