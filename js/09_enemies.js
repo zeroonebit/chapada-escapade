@@ -47,7 +47,7 @@ Object.assign(Jogo.prototype, {
             if (!emRange || at.cooldown > 0) continue;
 
             at.cooldown = Phaser.Math.Between(2000, 3500);
-            // M5: cap rígido de 100 balas — descarta a more antiga se full
+            // M5: cap rígido de 100 bullets — descarta a more antiga se full
             if (this.bullets.length >= 100) {
                 const oldest = this.bullets.shift();
                 if (oldest && oldest.sprite && oldest.sprite.scene) oldest.sprite.destroy();
@@ -69,7 +69,7 @@ Object.assign(Jogo.prototype, {
             b.dist += VEL;
 
             const dx = b.sprite.x - this.ufo.x, dy = b.sprite.y - this.ufo.y;
-            // Bala "armada" only após 25px — evita hit instantâneo se shooter estiver colado
+            // bullet "armada" only após 25px — avoids hit instantâneo se shooter estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
                 this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
                 this.cameras.main.shake(200, 0.013);
@@ -77,7 +77,7 @@ Object.assign(Jogo.prototype, {
                 b.sprite.destroy();
                 return false;
             }
-            // Bala segue até sair dos limites do world (não fade após MAX_DIST)
+            // bullet segue até sair dos limites do world (não fade após MAX_DIST)
             if (b.sprite.x < -50 || b.sprite.x > W+50 || b.sprite.y < -50 || b.sprite.y > H+50) {
                 b.sprite.destroy();
                 return false;
@@ -112,7 +112,7 @@ Object.assign(Jogo.prototype, {
             // versões do Phaser, deixando body do size da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
             f.setDisplaySize(farmerSize, farmerSize);
-            // Lock rotação física: without this, colisões with cows (que vêm pelo beam)
+            // Lock rotação física: without this, collisions with cows (que vêm pelo beam)
             // viravam o sprite de lado e ele aparecia "deitado" as humano de perfil
             f.setFixedRotation();
             f.setFrictionAir(0.1).setMass(2).setDepth(6)

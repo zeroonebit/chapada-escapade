@@ -1,8 +1,8 @@
 ﻿// 20_quips.js — Random funny one-liners que aparecem como floating text
 // when player abduz/mata/passa perto de coisas. Toggle em dbg.fx.quips.
 //
-// each linha now tem mood: r=angry(red) g=funny(green) y=ironic(yellow) b=factual(blue)
-// Format: { t: 'texto', m: 'g' }
+// each linha now has mood: r=angry(red) g=funny(green) y=ironic(yellow) b=factual(blue)
+// Format: { t: 'text', m: 'g' }
 
 const TONE_COLORS = {
     r: '#ff5566',  // angry / irritada
@@ -276,7 +276,7 @@ Object.assign(Jogo.prototype, {
         if (!pool || !pool.length) return false;
         const now = this.time?.now ?? 0;
 
-        // Global cooldown — evita spam
+        // Global cooldown — avoids spam
         if (now - this._lastQuipT < QUIP_GLOBAL_COOLDOWN) return false;
 
         // Per-source cooldown (target._lastQuipT)
@@ -318,7 +318,7 @@ Object.assign(Jogo.prototype, {
 
         const ship = this.ufo;
         if (!ship) return;
-        const PROX_R2 = 350 * 350;  // raio de 350px
+        const PROX_R2 = 350 * 350;  // radius de 350px
 
         // Landmarks (church, windmill, etc — todos compartilham pool 'church')
         if (this._landmarkPositions) {
@@ -332,9 +332,9 @@ Object.assign(Jogo.prototype, {
 
         // Cactus/vegetacao (sample 1 por proximity check to performance)
         // Pega aleatorio: itera primeira metade e dispara no primeiro proximo.
-        // Nao tem _vegePositions tracked — fallback: 5% chance de generic.
+        // Nao has _vegePositions tracked — fallback: 5% chance de generic.
         if (Math.random() < 0.04) {
-            // Quip generico aleatorio (sem source) — ancora na ship
+            // Quip generico aleatorio (without source) — ancora na ship
             this._showQuip({ x: ship.x, y: ship.y - 30 }, 'cactus');
         }
     },

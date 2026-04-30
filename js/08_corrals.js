@@ -1,6 +1,6 @@
 ﻿// 08_corrals.js — Corral with slots fixos: 3 cows max, 3 burgers max
 // Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
-// Constantes BURGER_TEXTURES, SLOT_VALOR, SLOT_FUEL vêm de 00_constants.js
+// Constantes BURGER_TEXTURES, SLOT_value, SLOT_FUEL vêm de 00_constants.js
 // (alias local to keep o código antigo lendo BURGER_SLOTS)
 const BURGER_SLOTS = BURGER_TEXTURES;
 
@@ -24,7 +24,7 @@ Object.assign(Jogo.prototype, {
             if (curral.mascotHay) curral.mascotHay.setVisible(true);
             return curral.mascot;
         }
-        // Size REAL da cow (igual _createCow: baseSize 68 * scale.cow)
+        // Size REAL da cow (equal _createCow: baseSize 68 * scale.cow)
         const SIZE = 68 * (this.dbg?.scale?.cow ?? 1.0);
 
         // Cow chubby comendo virada to sul (anim fixa eat_S)
@@ -161,7 +161,7 @@ Object.assign(Jogo.prototype, {
         this._ensureSlots(curral);
         const slot = curral.slots[slotIdx];
         if (!slot || slot.state !== 'loading' || !slot.icon || !slot.icon.scene) {
-            // Slot inválido (corral destruído mid-process?) → limpa to evitar leak
+            // Slot inválido (corral destruído mid-process?) → limpa to avoid leak
             if (curral && curral.slots) this._cleanSlot(curral, slotIdx);
             return;
         }

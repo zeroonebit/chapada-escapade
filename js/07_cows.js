@@ -6,7 +6,7 @@ Object.assign(Jogo.prototype, {
         const tex   = tipo === 'ox' ? 'ox_S' : 'cow_S';
         // matter.add.SPRITE (not image) — sprite supports .anims, image does not
         let v = this.matter.add.sprite(x, y, tex);
-        v.setFixedRotation();  // without this, colisão with beam/shooter deita o bicho de lado
+        v.setFixedRotation();  // without this, collision with beam/shooter deita o bicho de lado
         // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
         const baseSize = tipo === 'ox' ? 78 : 68;
         const sizeScale = tipo === 'ox' ? ((this.dbg?.scale?.ox) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
@@ -114,7 +114,7 @@ Object.assign(Jogo.prototype, {
         if (!entity || entity._dying || entity._destroyed) return;
         entity._dying = true;
         if (this.abductedCows.includes(entity)) this._releaseCow(entity);
-        // H4: limpa _timer/walkTimer to evitar timer orphan referenciando dead farmer
+        // H4: limpa _timer/walkTimer to avoid timer orphan referenciando dead farmer
         if (entity._timer && entity._timer.remove) { entity._timer.remove(); entity._timer = null; }
         if (entity.walkTimer && entity.walkTimer.remove) { entity.walkTimer.remove(); entity.walkTimer = null; }
         if (entity.isEnemy) {
@@ -131,7 +131,7 @@ Object.assign(Jogo.prototype, {
         if (this.dbg?.fx?.fancyExplosion && this._spawnExplosao) {
             this._spawnExplosao(entity.x, entity.y, color, 1.0);
         }
-        // Quip ao matar farmer (one-shot — sem cooldown source)
+        // Quip ao matar farmer (one-shot — without cooldown source)
         if (entity.isEnemy && this._showQuip) {
             this._showQuip(entity, 'farmer');
         }
@@ -195,7 +195,7 @@ Object.assign(Jogo.prototype, {
         const canCarryCows    = carryingFarmers === 0 && carryingCows < BEAM_CAP_VACAS;
         const canCarryFarmers  = carryingCows === 0 && carryingFarmers < BEAM_CAP_FARMERS;
 
-        const r2 = this.coneRadius * this.coneRadius;  // squared to evitar sqrt
+        const r2 = this.coneRadius * this.coneRadius;  // squared to avoid sqrt
         const tryAbduct = (v) => {
             if (v._dying || v._destroyed || v.stuckInBush || v._inCurral || this.abductedCows.includes(v)) return;
             if (v.isEnemy && !canCarryFarmers) return;
@@ -285,8 +285,8 @@ Object.assign(Jogo.prototype, {
     },
 
     _directionalTexture(v) {
-        // State machine + animation: cows têm walk/run/eat/angry × 4 dir.
-        // Oxen têm walk × 8 dir (anim) + rotations estáticas (when parado).
+        // State machine + animation: cows have walk/run/eat/angry × 4 dir.
+        // Oxen have walk × 8 dir (anim) + rotations estáticas (when parado).
         if (v.isBurger || v._inCurral) return;
 
         const body = v.body;
@@ -295,7 +295,7 @@ Object.assign(Jogo.prototype, {
         const speed = Math.sqrt(vx*vx + vy*vy);
 
         // Direction 8-dir (cow chubby now is 8-dir as o ox)
-        // Durante window de 3s pós-abdução, force south (independe de speed/wander)
+        // during window de 3s pós-abdução, force south (independe de speed/wander)
         const now = this.time?.now ?? 0;
         const returningSouth = v._returnSouthUntil && now < v._returnSouthUntil;
         let angRad = null;
@@ -395,14 +395,14 @@ Object.assign(Jogo.prototype, {
                 this._directionalTexture(v);
                 continue;
             }
-            // inside do raio de fuga: corre
+            // inside do radius de fuga: corre
             v._fleeing = true;
             v._eating = false;
             this._directionalTexture(v);
 
             // Fuga — quanto more perto a ship, more forte (fade-in suave)
             const intensidade = 1 - Math.sqrt(distSq) / FLEE_DIST;
-            // Mira grass; without grass, vai pro lado oposto da ship
+            // Mira grass; without grass, will pro lado oposto da ship
             let alvoX = null, alvoY = null, melhor = Infinity;
             for (let j = 0; j < this.grassPatches.length; j++) {
                 const g = this.grassPatches[j];
@@ -424,7 +424,7 @@ Object.assign(Jogo.prototype, {
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
         // window de 3s onde a cow/ox force orientação south e friction high to parar
-        // Picker e IA respeitam essa flag to ignorar wandering during esse período
+        // Picker e IA respeitam this flag to ignorar wandering during this período
         vaca._lastDir8 = 'S';
         vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.4); // freia rapido

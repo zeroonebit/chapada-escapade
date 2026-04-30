@@ -2,7 +2,7 @@
 // Usa Graphics + tweens (without textura) to ficar leve e without dependências.
 
 // ── BARREL POST-FX (distorção esférica sutil — efeito "superfície curva") ──
-// PostFX pipeline GLSL aplicado na camera principal. Strength 0=without efeito,
+// PostFX pipeline GLSL applied na camera principal. Strength 0=without efeito,
 // 0.3=sutil, 0.6=forte. Controlado via dbg.behavior.barrel slider.
 const BARREL_FRAG = `
 precision mediump float;
@@ -52,7 +52,7 @@ Object.assign(Jogo.prototype, {
         this._rebuildSnow();
 
         // ── fog (vinheta with gradiente radial) ────────────────────
-        // Gera uma textura canvas with radial gradient: centro transparente,
+        // Gera uma textura canvas with radial gradient: center transparente,
         // bordas brancas with alpha médio. same conceito da fumaça (camadas
         // alpha) mas em formato de vinheta full-screen.
         if (!this.textures.exists('vignette_fog')) {
@@ -84,7 +84,7 @@ Object.assign(Jogo.prototype, {
 
         // ── wind ──────────────────────────────────────────────────────
         // Particulas de swirl horizontal (curtas, semi-transparentes, drift
-        // lateral). _windAngle eh o valor atual used pela rain (lerp suave
+        // lateral). _windAngle eh o value atual used pela rain (lerp suave
         // de fx.windForce). Wind so eh "lateral" — Y nao eh afetado.
         this.fxWind = this.add.container(0, 0).setScrollFactor(0).setDepth(179).setVisible(false);
         this._windParticles = [];
@@ -98,7 +98,7 @@ Object.assign(Jogo.prototype, {
         const h = this.scale.height;
         for (let i = 0; i < N; i++) {
             // each swirl eh um Graphics que redesenha uma curva sinuosa each
-            // frame -> efeito de "vortex" / wisp horizontal (mais organico
+            // frame -> efeito de "vortex" / wisp horizontal (more organico
             // que linha reta).
             const g = this.add.graphics();
             g._speedScale = Phaser.Math.FloatBetween(0.7, 1.7);
@@ -181,7 +181,7 @@ Object.assign(Jogo.prototype, {
             const d = this._rainDrops.pop();
             if (d && d.scene) d.destroy();
         }
-        // Creates diferença — each drop tem variacao propria (depth fake)
+        // Creates diferença — each drop has variacao propria (depth fake)
         while (this._rainDrops.length < target) {
             const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
             // Variacao de comprimento ±25% do base + alpha aleatorio to depth
@@ -244,7 +244,7 @@ Object.assign(Jogo.prototype, {
             if (f && f.scene) f.destroy();
         }
         while (this._snowFlakes.length < target) {
-            // Size variado: 1-4px de raio
+            // Size variado: 1-4px de radius
             const r = Phaser.Math.FloatBetween(1.0, 3.5);
             const flake = this.add.circle(0, 0, r, 0xffffff, 0.85);
             flake._radius = r;
@@ -333,7 +333,7 @@ Object.assign(Jogo.prototype, {
             const visible = !!cfg.rain;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.rainIntensity ?? 0.5);
-            // H3: debounce 200ms to evitar churn em slider drag
+            // H3: debounce 200ms to avoid churn em slider drag
             const targetCount = Math.max(0, Math.round(cfg.rainCount ?? 80));
             if (targetCount !== this._rainCountAtual) this._scheduleRebuildRain();
         }
@@ -395,7 +395,7 @@ Object.assign(Jogo.prototype, {
                 dist: 30 + Math.random()*30 * intensity
             });
         }
-        // Flash branco no centro
+        // Flash branco no center
         const flash = this.add.circle(x, y, 14 * intensity, 0xffffff, 0.85).setDepth(51);
         this.tweens.add({ targets: flash, alpha: 0, scale: 2.2,
             duration: 260, onComplete: () => flash.destroy() });
@@ -432,7 +432,7 @@ Object.assign(Jogo.prototype, {
         const x = this.ufo.x + Math.cos(ang) * r;
         const y = this.ufo.y + Math.sin(ang) * r;
         const dot = this.add.circle(x, y, 2.5, 0xaaffcc, 0.95).setDepth(8);
-        // Move em direction ao centro da ship (efeito de absorção)
+        // Move em direction ao center da ship (efeito de absorção)
         this.tweens.add({
             targets: dot,
             x: this.ufo.x, y: this.ufo.y,

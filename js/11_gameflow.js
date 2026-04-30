@@ -71,7 +71,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // Hover handlers (dependem do estado, vão ser re-bound no toggleSelectInputMode)
+        // Hover handlers (dependem do estado, will ser re-bound no toggleSelectInputMode)
         const setHoverPlay = () => {
             btnL.removeAllListeners('pointerover');
             btnL.removeAllListeners('pointerout');
@@ -87,7 +87,7 @@ Object.assign(Jogo.prototype, {
         setHoverPlay(); setHoverTut();
 
         const allBtns = [this.splashBg, this.splashImg, btnL, lblL, btnR, lblR];
-        // Expõe to função PREVIEW poder hide/show temporariamente
+        // Expõe to function PREVIEW poder hide/show temporariamente
         this._splashElements = allBtns;
 
         const _startGame = (tutorial, inputMode) => {
@@ -258,7 +258,7 @@ Object.assign(Jogo.prototype, {
     // VT323 morphing red->green + barra simulando carregamento. Apos ~1.6s
     // chama scene.restart(). Splash eh pulado pq cep_played_once=1.
     _restartTransition(fromState) {
-        // Trava input — nada mais clicavel durante a transicao
+        // Trava input — nada more clicavel during a transicao
         if (this.input) this.input.enabled = false;
         const w = this.scale.width, h = this.scale.height;
 
@@ -356,7 +356,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Cinematic V2: hide tudo exceto ufo, postFX vignette + grayscale,
-    // Fibonacci spiral pro ufo morrer no centro da screen, fumaca + tremor
+    // Fibonacci spiral pro ufo morrer no center da screen, fumaca + tremor
     _cinematicGameOver() {
         const w = this.scale.width, h = this.scale.height;
         const cam = this.cameras.main;
@@ -389,8 +389,8 @@ Object.assign(Jogo.prototype, {
             onUpdate: function (tw, tgt) { grayFx.grayscale(tgt.g); },
         });
 
-        // ── 3. Fibonacci spiral: ufo converge pro centro da screen ──
-        // Centro da screen em world coords (camera nao move durante cinematic)
+        // ── 3. Fibonacci spiral: ufo converge pro center da screen ──
+        // center da screen em world coords (camera nao move during cinematic)
         const destX = cam.scrollX + w/2;
         const destY = cam.scrollY + h/2;
         const startX = ship.x, startY = ship.y;
@@ -402,7 +402,7 @@ Object.assign(Jogo.prototype, {
         const TOTAL_THETA = TURNS * Math.PI * 2;
         const SPIRAL_DUR = 2400;
 
-        // Fumaca cinza durante spiral (a each 70ms)
+        // Fumaca cinza during spiral (a each 70ms)
         const smokeEvent = this.time.addEvent({
             delay: 70,
             callback: () => this._spawnGameOverSmoke(ship.x, ship.y),
@@ -523,7 +523,7 @@ Object.assign(Jogo.prototype, {
         if (this.input) this.input.enabled = true;
         const D = 700;  // bem alto to ficar above de tudo
 
-        // GAME OVER: bem above do ufo (que ta no centro), gigante,
+        // GAME OVER: bem above do ufo (que ta no center), gigante,
         // entrada lenta com scale grow + alpha (1.4s)
         const goText = this.add.text(w/2, h/2 - 200, 'GAME OVER', {
             fontFamily: '"VT323", "Courier New", monospace',
@@ -541,7 +541,7 @@ Object.assign(Jogo.prototype, {
             duration: 1400, ease: 'Cubic.easeOut',
         });
 
-        // SCORE label + valor, below do ufo
+        // SCORE label + value, below do ufo
         const scoreLabel = this.add.text(w/2, h/2 + 130, 'SCORE', {
             fontFamily: '"Courier New", monospace',
             fontSize: '13px', fill: '#aaaaaa',

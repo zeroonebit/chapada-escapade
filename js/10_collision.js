@@ -1,4 +1,4 @@
-﻿// 10_collision.js — Setup do listener de colisões + handler + repovoamento
+﻿// 10_collision.js — Setup do listener de collisions + handler + repovoamento
 Object.assign(Jogo.prototype, {
 
     _setupCollisions() {

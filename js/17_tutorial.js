@@ -267,7 +267,7 @@ Object.assign(Jogo.prototype, {
                 if (!this.farmers || this.farmers.length === 0) {
                     this._tutSpawnFazendeiro();
                 }
-                // Seta apontando pro farmer vivo mais perto
+                // Seta apontando pro farmer vivo more perto
                 const target = this.farmers.find(f => f.scene && !f._dying && !f._destroyed);
                 if (target) this._tutDrawArrow(target.x, target.y);
                 const inBeam = this.abductedCows.some(e => e.isEnemy);
@@ -279,7 +279,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
-                // Seta to rocha mais perto do farmer abduzido
+                // Seta to rocha more perto do farmer abduzido
                 const farmer = this.abductedCows.find(e => e.isEnemy);
                 if (farmer) {
                     const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
@@ -296,7 +296,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Toast verde rapido no centro da screen ("✓ TIRO RECEBIDO" etc) — feedback
+    // Toast verde rapido no center da screen ("✓ shot RECEBIDO" etc) — feedback
     // de objetivo cumprido before do _tutAdvance disparar
     _tutShowSuccess(text) {
         const w = this.scale.width, h = this.scale.height;
@@ -474,7 +474,7 @@ Object.assign(Jogo.prototype, {
         const nextKey = TUT_STEPS[nextIdx].key;
 
         // Reset de flags by etapa (separadas: NoDrain != NoPull)
-        // BEAM_VISUAL: cone aparece, SEM pull, SEM drain
+        // BEAM_VISUAL: cone aparece, without pull, without drain
         if (nextKey === 'BEAM_VISUAL') {
             this._tutBeamNoDrain = true;
             this._tutBeamNoPull  = true;
@@ -508,15 +508,15 @@ Object.assign(Jogo.prototype, {
             this._tutAtiradorSpawned = false;
             this._tutVacasImortais = false;     // dano normal volta
             this._tutDamageTaken    = false;    // reset toast trigger
-            this._tutCombustivelCongelado = true;  // congela durante freeze to hit ser unico decremento visivel
+            this._tutCombustivelCongelado = true;  // congela during freeze to hit ser unico decremento visivel
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
     },
 
     // Quest log no canto superior direito — estetica de radar/console (verde
-    // fosforico, monospace, brackets). Lista todas as etapas; current expandida
-    // com texto + note; concluidas ●; pendentes ○; current ◉ pulsante.
+    // fosforico, monospace, brackets). list todas as etapas; current expandida
+    // com text + note; concluidas ●; pendentes ○; current ◉ pulsante.
     _tutShowStep(idx) {
         // Destroi quest log anterior
         if (this._tutBox) {
@@ -534,7 +534,7 @@ Object.assign(Jogo.prototype, {
         const PAD_Y  = 60;  // 60px do topo (above do score)
         const bx = w - BOX_W - 16;  // alinha right edge
 
-        // Calcula altura dinamica: header + N etapas + bloco expandido current
+        // Calcula height dinamica: header + N etapas + bloco expandido current
         const LINE_H = 14;
         const HEADER_H = 22;
         const EXPANDED_LINES = Math.ceil(step.text.length / 36) + 2;  // text + note
@@ -561,7 +561,7 @@ Object.assign(Jogo.prototype, {
 
         const items = [bg, border, header, sep];
 
-        // Lista de etapas
+        // list de etapas
         let cursorY = by + HEADER_H + 6;
         for (let i = 0; i < TUT_STEPS.length; i++) {
             const s = TUT_STEPS[i];
@@ -579,7 +579,7 @@ Object.assign(Jogo.prototype, {
             items.push(t);
             cursorY += LINE_H;
 
-            // Etapa atual: expande com texto + note
+            // Etapa atual: expande com text + note
             if (isCurrent) {
                 const tBody = this.add.text(bx + PAD_X + 14, cursorY + 2, step.text, {
                     fontSize: '10px', fill: '#88ddaa',
@@ -601,7 +601,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // Recalcula altura real do bg/border (textos podem ter wrap maior que estimado)
+        // Recalcula height real do bg/border (textos can ter wrap maior que estimado)
         const realH = cursorY - by + 8;
         bg.height = realH;
         border.height = realH;

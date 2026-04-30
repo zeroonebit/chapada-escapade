@@ -58,7 +58,7 @@ Object.assign(Jogo.prototype, {
             const CW = COLS + 1, CH = ROWS + 1;
             // Canto = 1 (UPPER, grass verde) only se a maioria dos 4 cells ao redor is
             // PURO grass (===2). Sand/water/dirt all contam as 0 (LOWER, sand).
-            // this evita o bug "tudo idx=15" when grass+dirt dominavam o grid.
+            // this avoids o bug "tudo idx=15" when grass+dirt dominavam o grid.
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
@@ -123,7 +123,7 @@ Object.assign(Jogo.prototype, {
         }
         // this._setupTerrainShader(W, H);  // re-habilitar when confirmar não trava
 
-        // Mantém função de noise to compat (algumas funções consultam this._noiseR)
+        // Mantém function de noise to compat (algumas funções consultam this._noiseR)
         const noise = (a, seed) =>
               Math.sin(a*3 + seed)        * 0.10
             + Math.sin(a*5 + seed*1.7)    * 0.06
@@ -147,8 +147,8 @@ Object.assign(Jogo.prototype, {
         this._noiseR = noise; // mantém compat (algumas funções consultam)
 
         // MOBILE_MODE teaser: pula a maioria dos itens. Mantem decoracao
-        // esparsa (~25 small rocks + small cactus/bush) to nao ficar vazio.
-        // Sem matter physics — sao puramente visuais (player nao colide).
+        // esparsa (~25 small rocks + small cactus/bush) to nao ficar empty.
+        // without matter physics — sao puramente visuais (player nao colide).
         if (window.__MOBILE_MODE) {
             this.corrals = [];
             this.driveThrus = this.corrals;
@@ -221,7 +221,7 @@ Object.assign(Jogo.prototype, {
         const placed = [];
         const tryPlace = (cx0, cy0, spread, tex, label) => {
             const sc = scaleFor(tex);
-            const myR = 32 * sc * 0.85;  // raio de bounding circle (source 64×64) — 0.85 permite leve overlap
+            const myR = 32 * sc * 0.85;  // radius de bounding circle (source 64×64) — 0.85 allows leve overlap
             for (let att = 0; att < 12; att++) {
                 const rr = Math.random() * spread, aa = Math.random() * Math.PI * 2;
                 const ox = cx0 + Math.cos(aa) * rr, oy = cy0 + Math.sin(aa) * rr;
@@ -257,7 +257,7 @@ Object.assign(Jogo.prototype, {
 
         // ── 5b. LANDMARKS V3 (objects) — 1 each, distantes between si
         // church, windmill, old_truck, satellite_dish_rusty
-        // Sem colisão (decorativos puros), depth 1.4 to ficar below de personagens
+        // without collision (decorativos puros), depth 1.4 to ficar below de personagens
         const landmarks = ['nat_obj_church', 'nat_obj_windmill', 'nat_obj_old_truck', 'nat_obj_satellite_dish_rusty'];
         const LM_SCALE = { nat_obj_church: 2.6, nat_obj_windmill: 2.4, nat_obj_old_truck: 2.0, nat_obj_satellite_dish_rusty: 2.0 };
         const lmPlaced = [];
@@ -364,7 +364,7 @@ Object.assign(Jogo.prototype, {
         for (let x = -W2 + SEG/2; x < W2; x += SEG)
             place(cx + x, cy - H2, v.side);
 
-        // Sul (gate always no centro, open ou closed)
+        // Sul (gate always no center, open ou closed)
         for (let x = -W2 + SEG/2; x < W2; x += SEG) {
             if (Math.abs(x) < SEG * 0.6) {
                 place(cx + x, cy + H2, v.gate, SCALE * 1.2);

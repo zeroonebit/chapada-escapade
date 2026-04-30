@@ -7,7 +7,7 @@ Object.assign(Jogo.prototype, {
             console.warn('[ASSET 404]', file.src || file.url || file.key);
         });
 
-        // Pre-loader DOM bar — atualiza durante carregamento + fade out ao end
+        // Pre-loader DOM bar — atualiza during carregamento + fade out ao end
         const preBar = document.getElementById('pre-loader-bar');
         const prePct = document.getElementById('pre-loader-pct');
         const preLoader = document.getElementById('pre-loader');
@@ -135,15 +135,15 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
         this.load.image('hud_radar_frame_v2',    'assets/pixel_labs/hud/radar_frame_v2.png');
         // Frames v1 atualizados pelo usuario: bar slot now preto = mascara
-        // de "vazio". Vai por cima do _full to cobrir o que ja foi gasto.
+        // de "empty". will por cima do _full to cobrir o que ja foi gasto.
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
-        // Combined HUD (COMBUSTIVEL+GRAVITON num PNG so) — labels traduzidos overlaid
+        // Combined HUD (fuel+GRAVITON num PNG so) — labels traduzidos overlaid
         this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty.png');
         this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
-        // v3 mantidos como fallback — nao sao mais o caminho default
+        // v3 mantidos como fallback — nao sao more o caminho default
         this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v3.png');
         this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v3.png');
         this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v3.png');
