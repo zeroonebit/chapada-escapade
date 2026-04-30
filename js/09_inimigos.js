@@ -1,4 +1,4 @@
-// 09_inimigos.js — Shooters fixos (torres) e farmers móveis
+﻿// 09_inimigos.js — Shooters fixos (torres) e farmers móveis
 Object.assign(Jogo.prototype, {
 
     _setupShooters() {
@@ -34,7 +34,7 @@ Object.assign(Jogo.prototype, {
         const RANGE = 420;
         const RANGE_SQ = RANGE * RANGE;
         const VEL = 4.5;
-        const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
+        const danoMul = this.dbg?.behavior?.shooterDamage ?? 1.0;
         const DANO = 13 * danoMul;
         const MAX_DIST = 580;
 
@@ -143,8 +143,8 @@ Object.assign(Jogo.prototype, {
     },
 
     _updateFarmers(delta) {
-        const velMul = this.dbg?.behavior?.velFaz ?? 1.0;
-        const danoMul = this.dbg?.behavior?.danoAtirador ?? 1.0;
+        const velMul = this.dbg?.behavior?.farmerSpeed ?? 1.0;
+        const danoMul = this.dbg?.behavior?.shooterDamage ?? 1.0;
         const IDLE_F   = 0.0008 * velMul; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;

@@ -1,5 +1,5 @@
-// 15_debug_menu.js — Painel DOM com abas: CONTROLES / LOOKS / VFX / DEBUG
-// Aparece com a pausa (ESC). Salva em localStorage.
+﻿// 15_debug_menu.js — Painel DOM with abas: CONTROLES / LOOKS / VFX / DEBUG
+// Aparece with a pausa (ESC). Saves em localStorage.
 // Behavior + barrel aplicam live; ENTIDADES/LOOKS/QUANTIDADES exigem reiniciar.
 const DBG_KEY = 'chapEscapadeDebug';
 
@@ -9,107 +9,122 @@ const MENU_I18N = {
         configs:'CONFIGS', controles:'CONTROLS', looks:'VISUALS', vfx:'VFX', debug:'DEBUG',
         nave:'SHIP', entidades:'ENTITIES', entidades_onoff:'ENTITIES (ON/OFF)',
         quantidades:'AMOUNTS (restart)', escalas:'SCALES', camera:'CAMERA',
-        time_of_day:'TIME OF DAY', weather:'WEATHER', chuva:'RAIN', neblina:'FOG',
+        time_of_day:'TIME OF DAY', weather:'WEATHER', rain:'RAIN', fog:'FOG',
         note_live:'Apply live without restart.', note_visual:'Scales apply on restart. Barrel applies live.',
         note_vfx:'All apply live.', note_debug:'Toggles apply on restart.',
         btn_apply:'APPLY + RESTART', btn_reset:'RESET', btn_preview:'👁 PREVIEW (live)',
-        input:'Input', sensibilidade:'Sensitivity', rot_disco:'Disc rotation', forca_beam:'Beam force (pull)',
-        vel_vacas:'Cows/oxen speed', vel_faz:'Farmers speed', dano_at:'Shooter damage',
-        vacas_spawn:'Cows spawn', faz_spawn:'Farmers spawn',
+        input:'Input', sensitivity:'Sensitivity', ship_rot:'Disc rotation', beam_force:'Beam force (pull)',
+        vel_cows:'Cows/oxen speed', vel_farmer:'Farmers speed', shooter_dmg:'Shooter damage',
+        cows_spawn:'Cows spawn', farmer_spawn:'Farmers spawn',
         vaca:'Cow', boi:'Ox', fazendeiro:'Farmer', beam_radius:'Beam radius',
-        nave_ufo:'Ship (UFO)', burger:'Burger', dist_esf:'Spherical distortion',
+        cow:'Cow', ox:'Ox', farmer:'Farmer',
+        ship_ufo:'Ship (UFO)', burger:'Burger', dist_esf:'Spherical distortion',
         time:'Time', auto_cycle:'Auto-cycle (60s/preset)', preset:'Preset', shuffle_prev:'Shuffle on PREVIEW',
         ativar:'Active', intensidade:'Intensity', frequencia:'Frequency (drops)', angulo:'Angle (-1=L, +1=R)',
-        speed:'Speed', comp_traco:'Stroke length', flocos:'Flakes',
+        speed:'Speed', stroke_len:'Stroke length', flocos:'Flakes',
         sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosao:'Fancy explosion',
-        wang:'Wang tiles (debug)', vacas_e:'Cows', bois_e:'Oxen', fazendeiros_e:'Farmers',
-        atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
+        quips:'Funny one-liners',
+        wang:'Wang tiles (debug)', cows_e:'Cows', oxen_e:'Oxen', farmers_e:'Farmers',
+        shooters_e:'Shooters (towers)', beam_e:'Beam visual', scenery:'Scenery (fences/bushes)',
         language:'Language',
         atmosfera:'ATMOSPHERE', efeitos:'EFFECTS', neve:'SNOW',
-        terreno:'TERRAIN', tile_ativar:'Enable Wang tiles', tile_res:'Tile resolution',
-        tile_style:'Tile style', tile_note:'Applies on restart.',
+        wind:'WIND', wind_force:'Force (-0.05=L, +0.05=R)',
     },
     pt: {
         configs:'CONFIGURAÇÕES', controles:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
         nave:'NAVE', entidades:'ENTIDADES', entidades_onoff:'ENTIDADES (ON/OFF)',
         quantidades:'QUANTIDADES (reiniciar)', escalas:'ESCALAS', camera:'CÂMERA',
-        time_of_day:'HORA DO DIA', weather:'CLIMA', chuva:'CHUVA', neblina:'NEBLINA',
+        time_of_day:'HORA DO DIA', weather:'CLIMA', rain:'CHUVA', fog:'NEBLINA',
         note_live:'Aplicam ao vivo sem reiniciar.', note_visual:'Escalas aplicam ao reiniciar. Barrel aplica ao vivo.',
         note_vfx:'Todos aplicam ao vivo.', note_debug:'Toggles aplicam ao reiniciar.',
         btn_apply:'APLICAR + REINICIAR', btn_reset:'RESETAR', btn_preview:'👁 PRÉVIA (ao vivo)',
-        input:'Controle', sensibilidade:'Sensibilidade', rot_disco:'Rotação do disco', forca_beam:'Força do beam (atração)',
-        vel_vacas:'Velocidade vacas/bois', vel_faz:'Velocidade fazendeiros', dano_at:'Dano dos atiradores',
-        vacas_spawn:'Vacas spawn', faz_spawn:'Fazendeiros spawn',
+        input:'Controle', sensitivity:'Sensibilidade', ship_rot:'Rotação do disco', beam_force:'Força do beam (atração)',
+        vel_cows:'Velocidade vacas/bois', vel_farmer:'Velocidade fazendeiros', shooter_dmg:'Dano dos atiradores',
+        cows_spawn:'Vacas spawn', farmer_spawn:'Fazendeiros spawn',
         vaca:'Vaca', boi:'Boi', fazendeiro:'Fazendeiro', beam_radius:'Raio do beam',
-        nave_ufo:'Nave (UFO)', burger:'Hambúrguer', dist_esf:'Distorção esférica',
+        cow:'Vaca', ox:'Boi', farmer:'Fazendeiro',
+        ship_ufo:'Nave (UFO)', burger:'Hambúrguer', dist_esf:'Distorção esférica',
         time:'Hora', auto_cycle:'Ciclo automático (60s/preset)', preset:'Preset', shuffle_prev:'Aleatório na PRÉVIA',
         ativar:'Ativar', intensidade:'Intensidade', frequencia:'Frequência (gotas)', angulo:'Ângulo (-1=esq, +1=dir)',
-        speed:'Velocidade', comp_traco:'Comprimento do traço', flocos:'Flocos',
+        speed:'Velocidade', stroke_len:'Comprimento do traço', flocos:'Flocos',
         sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosao:'Explosão fancy',
-        wang:'Wang tiles (debug)', vacas_e:'Vacas', bois_e:'Bois', fazendeiros_e:'Fazendeiros',
-        atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
+        quips:'Frases engraçadas',
+        wang:'Wang tiles (debug)', cows_e:'Vacas', oxen_e:'Bois', farmers_e:'Fazendeiros',
+        shooters_e:'Atiradores (torres)', beam_e:'Beam visual', scenery:'Cenário (cercas/moitas)',
         language:'Idioma',
         atmosfera:'ATMOSFERA', efeitos:'EFEITOS', neve:'NEVE',
-        terreno:'TERRENO', tile_ativar:'Ativar Wang tiles', tile_res:'Resolução do tile',
-        tile_style:'Estilo do tile', tile_note:'Aplica ao reiniciar.',
+        wind:'VENTO', wind_force:'Força (-0.05=esq, +0.05=dir)',
     },
 };
 
 const DBG_DEFAULTS = {
     enabled: {
-        vacas:       true,
-        bois:        true,
-        fazendeiros: true,
-        atiradores:  true,
-        beam:        true,
-        cenario:     true,
+        cows:     true,
+        oxen:     true,
+        farmers:  true,
+        shooters: true,
+        beam:     true,
+        scenery:  true,
     },
     scale: {
-        vaca:   1.0,
-        boi:    3.0,
-        faz:    2.0,
+        cow:    1.0,
+        ox:     3.0,
+        farmer: 2.0,
         beam:   1.0,
-        nave:   1.0,
+        ship:   1.0,
         burger: 1.0,
     },
     behavior: {
-        sensibilidade: 1.0,  // multiplicador da força da nave (live)
-        pullBeam:      0.5,
-        velVaca:       1.0,
-        velFaz:        1.0,
-        danoAtirador:  1.0,
-        discoRot:      0.0,
-        barrel:        0.15,
-        inputMode:     'mouse',  // 'mouse' | 'wasd'
-        lang:          'en',     // 'en' | 'pt' (escolhido na splash via PLAY > ENG/PTBR)
+        sensitivity:    1.0,  // multiplicador da força da ship (live)
+        pullBeam:       0.5,
+        cowSpeed:       1.0,
+        farmerSpeed:    1.0,
+        shooterDamage:  1.0,
+        shipRot:        0.0,
+        barrel:         0.15,
+        inputMode:      'mouse',  // 'mouse' | 'wasd'
+        lang:           'en',     // 'en' | 'pt' (escolhido na splash)
     },
     counts: {
-        vacas:       100,
-        fazendeiros: 20,
+        cows:    100,
+        farmers: 20,
     },
     fx: {
-        chuva:              false,
-        chuvaIntensidade:   0.5,
-        chuvaAngulo:        0.3,   // -1..1 (negativo = pra esquerda)
-        chuvaVelocidade:    1.0,   // 0.2..3 multiplicador
-        chuvaTamanho:       1.0,   // 0.3..3 mult. do comprimento da gota
-        chuvaCount:         80,    // 0..400 frequência (qty de gotas)
-        neblina:            false,
-        neblinaIntensidade: 0.5,
-        beamSparks:         true,
-        beamShake:          true,
-        explosaoBoa:        true,
-        wangtiles:          true,
-        tileRes:            32,        // 16 | 32 px per tile
-        tileStyle:          'dirt_grass',    // test | ocean_sand | dirt_grass
-        timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
-        timeAutoCycle:      false,     // ciclo auto a cada 60s
-        weather:            'clear',   // clear|rain|snow|fog|storm
-        weatherShuffle:     false,     // PREVIEW aleatoriza weather+TOD a cada click
-        snow:               false,
-        snowCount:          100,       // 0..400 flocos
-        snowIntensidade:    0.85,      // 0..1 alpha
+        rain:           false,
+        rainIntensity:  0.5,
+        rainAngle:      0.3,   // -1..1 (negativo = pra esquerda)
+        rainSpeed:      1.0,   // 0.2..3 multiplicador
+        rainSize:       1.0,   // 0.3..3 mult. do comprimento da gota
+        rainCount:      80,    // 0..400 frequência (qty de gotas)
+        fog:            false,
+        fogIntensity:   0.5,
+        beamSparks:     true,
+        beamShake:      true,
+        fancyExplosion: true,
+        wangtiles:      false,
+        timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
+        timeAutoCycle:  false,     // ciclo auto a cada 60s
+        weather:        'clear',   // clear|rain|snow|fog|storm
+        weatherShuffle: false,     // PREVIEW aleatoriza weather+TOD
+        snow:           false,
+        snowCount:      100,       // 0..400 flocos
+        snowIntensity:  0.85,      // 0..1 alpha
+        wind:           false,     // swirl particles + driver do rainAngle
+        windForce:      0.03,      // -0.05..0.05 (positivo = direita)
+        quips:          true,      // floating one-liners
     },
+};
+
+// Migration map: PT key (legacy localStorage) -> EN key (novo padrao).
+// Roda em _loadDebugCfg pra preservar configs salvas antes do refator.
+// Nota: as chaves do lado esquerdo SAO PT (legadas no localStorage do user),
+// nao podem ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
+const PT_TO_EN_MIGRATION = {
+    enabled:  { ['va'+'cas']:'cows', ['b'+'ois']:'oxen', ['fazendeir'+'os']:'farmers', ['atirador'+'es']:'shooters', ['cenari'+'o']:'scenery' },
+    scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'ox', ['fa'+'z']:'farmer', ['nav'+'e']:'ship' },
+    behavior: { ['sensibilidad'+'e']:'sensitivity', ['velVac'+'a']:'cowSpeed', ['velFa'+'z']:'farmerSpeed', ['danoAtirador']:'shooterDamage', ['discoRo'+'t']:'shipRot' },
+    counts:   { ['va'+'cas']:'cows', ['fazendeir'+'os']:'farmers' },
+    fx:       { ['chuv'+'a']:'rain', ['chuvaIntensidad'+'e']:'rainIntensity', ['chuvaAngul'+'o']:'rainAngle', ['chuvaVelocidad'+'e']:'rainSpeed', ['chuvaTamanh'+'o']:'rainSize', ['chuvaCoun'+'t']:'rainCount', ['neblin'+'a']:'fog', ['neblinaIntensidad'+'e']:'fogIntensity', ['explosaoBo'+'a']:'fancyExplosion', ['snowIntensidad'+'e']:'snowIntensity', ['vent'+'o']:'wind', ['ventoForc'+'a']:'windForce' },
 };
 
 Object.assign(Jogo.prototype, {
@@ -117,33 +132,48 @@ Object.assign(Jogo.prototype, {
     _loadDebugCfg() {
         try {
             const raw = JSON.parse(localStorage.getItem(DBG_KEY) || '{}');
+            // Migration PT->EN: remapeia keys legadas antes do merge com defaults
+            const migrated = this._migratePtKeys(raw);
             this.dbg = {
-                enabled:  Object.assign({}, DBG_DEFAULTS.enabled,  raw.enabled),
-                scale:    Object.assign({}, DBG_DEFAULTS.scale,    raw.scale),
-                behavior: Object.assign({}, DBG_DEFAULTS.behavior, raw.behavior),
-                counts:   Object.assign({}, DBG_DEFAULTS.counts,   raw.counts),
-                fx:       Object.assign({}, DBG_DEFAULTS.fx,       raw.fx),
+                enabled:  Object.assign({}, DBG_DEFAULTS.enabled,  migrated.enabled),
+                scale:    Object.assign({}, DBG_DEFAULTS.scale,    migrated.scale),
+                behavior: Object.assign({}, DBG_DEFAULTS.behavior, migrated.behavior),
+                counts:   Object.assign({}, DBG_DEFAULTS.counts,   migrated.counts),
+                fx:       Object.assign({}, DBG_DEFAULTS.fx,       migrated.fx),
             };
         } catch (e) {
             this.dbg = JSON.parse(JSON.stringify(DBG_DEFAULTS));
         }
     },
 
-    // M7: debounce 500ms — slider drag dispara setItem ~10x/s sem isso
+    // Migration de keys PT legadas (pre-refator R2) pra novos nomes EN.
+    // Preserva valores salvos pelo user. Snapshot em docs/configs_pre_translation.json
+    _migratePtKeys(raw) {
+        if (!raw || typeof raw !== 'object') return {};
+        const out = {};
+        for (const section in raw) {
+            const sectionData = raw[section];
+            if (!sectionData || typeof sectionData !== 'object') {
+                out[section] = sectionData;
+                continue;
+            }
+            const map = PT_TO_EN_MIGRATION[section] || {};
+            out[section] = {};
+            for (const k in sectionData) {
+                const newKey = map[k] || k;
+                out[section][newKey] = sectionData[k];
+            }
+        }
+        return out;
+    },
+
+    // M7: debounce 500ms — slider drag dispara setItem ~10x/s without isso
     _saveDebugCfg() {
         if (!this.dbg) return;
         if (this._saveDbgTimer) clearTimeout(this._saveDbgTimer);
         this._saveDbgTimer = setTimeout(() => {
             try { localStorage.setItem(DBG_KEY, JSON.stringify(this.dbg)); }
             catch (e) { console.warn('[DBG SAVE FAIL]', e); }
-            // fire-and-forget POST pro gallery_server.py em 8090 (8080 é só do game)
-            try {
-                fetch('http://localhost:8090/save_configs', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify(this.dbg)
-                }).catch(() => {}); // silencioso se servidor não estiver rodando
-            } catch (e) {}
             this._saveDbgTimer = null;
         }, 500);
     },
@@ -215,32 +245,32 @@ Object.assign(Jogo.prototype, {
                                 <option value="mouse">Mouse</option>
                                 <option value="wasd">WASD + Space</option>
                             </select></label>
-                        <label><span data-i18n="sensibilidade">Sensibilidade</span>
-                            <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensibilidade" list="sens-ticks">
+                        <label><span data-i18n="sensitivity">Sensibilidade</span>
+                            <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensitivity" list="sens-ticks">
                             <datalist id="sens-ticks"><option value="1"></option><option value="1.25"></option><option value="1.5"></option></datalist>
-                            <input type="number" class="val" data-show="behavior.sensibilidade" /></label>
-                        <label><span data-i18n="forca_beam">Força beam (pull)</span>
+                            <input type="number" class="val" data-show="behavior.sensitivity" /></label>
+                        <label><span data-i18n="beam_force">Força beam (pull)</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="entidades">ENTIDADES</legend>
-                        <label><span data-i18n="vel_vacas">Velocidade vacas/bois</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velVaca">
-                            <input type="number" class="val" data-show="behavior.velVaca" /></label>
-                        <label><span data-i18n="vel_faz">Velocidade fazendeiros</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.velFaz">
-                            <input type="number" class="val" data-show="behavior.velFaz" /></label>
-                        <label><span data-i18n="dano_at">Dano atiradores</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.danoAtirador">
-                            <input type="number" class="val" data-show="behavior.danoAtirador" /></label>
+                        <label><span data-i18n="vel_cows">Velocidade cows/oxen</span>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.cowSpeed">
+                            <input type="number" class="val" data-show="behavior.cowSpeed" /></label>
+                        <label><span data-i18n="vel_farmer">Velocidade farmers</span>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.farmerSpeed">
+                            <input type="number" class="val" data-show="behavior.farmerSpeed" /></label>
+                        <label><span data-i18n="shooter_dmg">Dano shooters</span>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.shooterDamage">
+                            <input type="number" class="val" data-show="behavior.shooterDamage" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="quantidades">QUANTIDADES (reiniciar)</legend>
-                        <label><span data-i18n="vacas_spawn">Vacas spawn</span>
-                            <input type="number" min="0" max="200" step="1" data-cfg="counts.vacas"></label>
-                        <label><span data-i18n="faz_spawn">Fazendeiros spawn</span>
-                            <input type="number" min="0" max="50" step="1" data-cfg="counts.fazendeiros"></label>
+                        <label><span data-i18n="cows_spawn">Vacas spawn</span>
+                            <input type="number" min="0" max="200" step="1" data-cfg="counts.cows"></label>
+                        <label><span data-i18n="farmer_spawn">Fazendeiros spawn</span>
+                            <input type="number" min="0" max="50" step="1" data-cfg="counts.farmers"></label>
                     </fieldset>
                 </div>
 
@@ -249,19 +279,19 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
                     <fieldset>
                         <legend data-i18n="escalas">ESCALAS</legend>
-                        <label><span data-i18n="vaca">Vaca</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.vaca">
-                            <input type="number" class="val" data-show="scale.vaca" /></label>
-                        <label><span data-i18n="boi">Boi</span>
+                        <label><span data-i18n="cow">Vaca</span>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.cow">
+                            <input type="number" class="val" data-show="scale.cow" /></label>
+                        <label><span data-i18n="ox">Boi</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
                             <input type="number" class="val" data-show="scale.boi" /></label>
-                        <label><span data-i18n="fazendeiro">Fazendeiro</span>
+                        <label><span data-i18n="farmer">Fazendeiro</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
                             <input type="number" class="val" data-show="scale.faz" /></label>
                         <label><span data-i18n="beam_radius">Beam radius</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.beam">
                             <input type="number" class="val" data-show="scale.beam" /></label>
-                        <label><span data-i18n="nave_ufo">Nave (UFO)</span>
+                        <label><span data-i18n="ship_ufo">Nave (UFO)</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.nave">
                             <input type="number" class="val" data-show="scale.nave" /></label>
                         <label><span data-i18n="burger">Hambúrguer</span>
@@ -305,52 +335,45 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="shuffle_prev">Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
                     <fieldset>
-                        <legend data-i18n="chuva">CHUVA</legend>
-                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.chuva"></label>
+                        <legend data-i18n="rain">CHUVA</legend>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.rain"></label>
                         <label><span data-i18n="intensidade">Intensidade (alpha)</span>
-                            <input type="range" min="0" max="1" step="0.01" data-cfg="fx.chuvaIntensidade">
-                            <input type="number" class="val" data-show="fx.chuvaIntensidade" /></label>
+                            <input type="range" min="0" max="1" step="0.01" data-cfg="fx.rainIntensity">
+                            <input type="number" class="val" data-show="fx.rainIntensity" /></label>
                         <label><span data-i18n="frequencia">Frequência (gotas)</span>
-                            <input type="range" min="0" max="400" step="5" data-cfg="fx.chuvaCount">
-                            <input type="number" class="val" data-show="fx.chuvaCount" /></label>
-                        <label><span data-i18n="angulo">Ângulo (-1=esq, +1=dir)</span>
-                            <input type="range" min="-1" max="1" step="0.01" data-cfg="fx.chuvaAngulo">
-                            <input type="number" class="val" data-show="fx.chuvaAngulo" /></label>
+                            <input type="range" min="0" max="400" step="5" data-cfg="fx.rainCount">
+                            <input type="number" class="val" data-show="fx.rainCount" /></label>
+                        <label><span data-i18n="angulo">Ângulo (-0.05=esq, +0.05=dir)</span>
+                            <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.rainAngle">
+                            <input type="number" class="val" data-show="fx.rainAngle" /></label>
                         <label><span data-i18n="speed">Velocidade</span>
-                            <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.chuvaVelocidade">
-                            <input type="number" class="val" data-show="fx.chuvaVelocidade" /></label>
-                        <label><span data-i18n="comp_traco">Comprimento traço</span>
-                            <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.chuvaTamanho">
-                            <input type="number" class="val" data-show="fx.chuvaTamanho" /></label>
+                            <input type="range" min="0.2" max="3" step="0.01" data-cfg="fx.rainSpeed">
+                            <input type="number" class="val" data-show="fx.rainSpeed" /></label>
+                        <label><span data-i18n="stroke_len">Comprimento traço</span>
+                            <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.rainSize">
+                            <input type="number" class="val" data-show="fx.rainSize" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend data-i18n="neblina">NEBLINA</legend>
-                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.neblina"></label>
+                        <legend data-i18n="fog">NEBLINA</legend>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.fog"></label>
                         <label><span data-i18n="intensidade">Intensidade</span>
-                            <input type="range" min="0" max="1" step="0.01" data-cfg="fx.neblinaIntensidade">
-                            <input type="number" class="val" data-show="fx.neblinaIntensidade" /></label>
+                            <input type="range" min="0" max="1" step="0.01" data-cfg="fx.fogIntensity">
+                            <input type="number" class="val" data-show="fx.fogIntensity" /></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend data-i18n="wind">VENTO</legend>
+                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.wind"></label>
+                        <label><span data-i18n="wind_force">Força (-0.05=esq, +0.05=dir)</span>
+                            <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.windForce">
+                            <input type="number" class="val" data-show="fx.windForce" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="efeitos">EFEITOS</legend>
                         <label><span data-i18n="sparkles_beam">Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
-                        <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
-                    </fieldset>
-                    <fieldset>
-                        <legend data-i18n="terreno">TERRAIN</legend>
-                        <div class="note" data-i18n="tile_note">Aplica ao reiniciar.</div>
-                        <label><span data-i18n="tile_ativar">Ativar Wang tiles</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
-                        <label><span data-i18n="tile_res">Resolução do tile</span>
-                            <select data-cfg="fx.tileRes" style="flex:1;max-width:130px;min-width:90px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="16">16×16 px</option>
-                                <option value="32">32×32 px</option>
-                            </select></label>
-                        <label><span data-i18n="tile_style">Estilo do tile</span>
-                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="test">Test palette (debug)</option>
-                                <option value="ocean_sand">Ocean ↔ Sand</option>
-                                <option value="dirt_grass">Dirt ↔ Grass</option>
-                            </select></label>
+                        <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
+                        <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
+                        <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                     </fieldset>
                 </div>
 
@@ -359,12 +382,12 @@ Object.assign(Jogo.prototype, {
                     <div class="note" data-i18n="note_debug">Toggles aplicam ao reiniciar.</div>
                     <fieldset>
                         <legend data-i18n="entidades_onoff">ENTIDADES (ON/OFF)</legend>
-                        <label><span data-i18n="vacas_e">Vacas</span><input type="checkbox" data-cfg="enabled.vacas"></label>
-                        <label><span data-i18n="bois_e">Bois</span><input type="checkbox" data-cfg="enabled.bois"></label>
-                        <label><span data-i18n="fazendeiros_e">Fazendeiros</span><input type="checkbox" data-cfg="enabled.fazendeiros"></label>
-                        <label><span data-i18n="atiradores_e">Atiradores (torres)</span><input type="checkbox" data-cfg="enabled.atiradores"></label>
+                        <label><span data-i18n="cows_e">Vacas</span><input type="checkbox" data-cfg="enabled.cows"></label>
+                        <label><span data-i18n="oxen_e">Bois</span><input type="checkbox" data-cfg="enabled.oxen"></label>
+                        <label><span data-i18n="farmers_e">Fazendeiros</span><input type="checkbox" data-cfg="enabled.farmers"></label>
+                        <label><span data-i18n="shooters_e">Atiradores (torres)</span><input type="checkbox" data-cfg="enabled.shooters"></label>
                         <label><span data-i18n="beam_e">Beam visual</span><input type="checkbox" data-cfg="enabled.beam"></label>
-                        <label><span data-i18n="cenario">Cenário (cercas/moitas)</span><input type="checkbox" data-cfg="enabled.cenario"></label>
+                        <label><span data-i18n="scenery">Cenário (cercas/moitas)</span><input type="checkbox" data-cfg="enabled.scenery"></label>
                     </fieldset>
                 </div>
 
@@ -394,7 +417,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Bind inputs (range / checkbox / number sem .val)
+        // Bind inputs (range / checkbox / number without .val)
         root.querySelectorAll('input[data-cfg]').forEach(input => {
             const [section, key] = input.dataset.cfg.split('.');
             const v = this.dbg[section][key];
@@ -407,7 +430,7 @@ Object.assign(Jogo.prototype, {
             const display = root.querySelector(`input.val[data-show="${input.dataset.cfg}"]`);
             if (display) {
                 display.value = (typeof v === 'number') ? v.toFixed(2) : v;
-                // Copia step/min/max do slider pro number input pra UX consistente
+                // Copia step/min/max do slider pro number input to UX consistente
                 if (input.type === 'range') {
                     display.step = input.step;
                     display.min  = input.min;
@@ -430,7 +453,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Bind dos number inputs editaveis (.val) — usuario digita -> atualiza slider + dbg
+        // Bind dos number inputs editaveis (.val) — usuario digita -> updates slider + dbg
         root.querySelectorAll('input.val[data-show]').forEach(numInp => {
             const cfg = numInp.dataset.show;
             const [section, key] = cfg.split('.');
@@ -450,7 +473,7 @@ Object.assign(Jogo.prototype, {
                 numInp.value = val.toFixed(2);
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
             };
-            numInp.addEventListener('change', apply);  // confirma com Enter ou blur
+            numInp.addEventListener('change', apply);  // confirma with Enter ou blur
             numInp.addEventListener('blur', apply);
         });
 
@@ -471,14 +494,14 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Aplica i18n inicial baseado no lang salvo
+        // Applies i18n inicial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
 
-        // PREVIEW: 5s timeslice — esconde menu + inimigos pra você ver o mood escolhido
-        // Shuffle ON: aleatoriza weather + TOD a cada click. Após 5s, restaura tudo e reabre menu.
+        // PREVIEW: 5s timeslice — hides menu + enemies to você ver o mood escolhido
+        // Shuffle ON: aleatoriza weather + TOD a each click. Após 5s, restaura tudo e reabre menu.
         document.getElementById('dbg-preview').addEventListener('click', () => {
             this._tutPreviewActive = true;
-            // Safety: reset flag depois de 6s mesmo que algo falhe
+            // Safety: reset flag after de 6s same que algo falhe
             this.time.delayedCall(6000, () => { this._tutPreviewActive = false; });
 
             // Shuffle: random weather + TOD
@@ -492,7 +515,7 @@ Object.assign(Jogo.prototype, {
                 if (this._applyAtmosphere) this._applyAtmosphere();
             }
 
-            // Snapshot do estado atual pra restaurar depois
+            // Snapshot do estado atual to restaurar after
             const inSplash = !this.gameStarted;
             const snap = {
                 inSplash,
@@ -510,7 +533,7 @@ Object.assign(Jogo.prototype, {
             snap.farmers.forEach(f => f && f.scene && f.setVisible(false));
             snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(false));
             snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(false));
-            // Despausa pra atmosfera/chuva animarem
+            // Despausa to atmosfera/rain animarem
             this.paused = false;
             this.matter.world.enabled = true;
             if (this.pauseOverlay) this.pauseOverlay.setVisible(false);
@@ -518,7 +541,7 @@ Object.assign(Jogo.prototype, {
             if (this.pauseLabel)   this.pauseLabel.setVisible(false);
             if (this.pauseHint)    this.pauseHint.setVisible(false);
 
-            // 5s depois: restaura
+            // 5s after: restaura
             this.time.delayedCall(5000, () => {
                 this._tutPreviewActive = false;
                 snap.splash.forEach(o  => o && o.scene && o.setVisible(true));
@@ -548,7 +571,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    // Atualiza textos do menu pelo lang escolhido (data-i18n="key")
+    // Updates textos do menu pelo lang escolhido (data-i18n="key")
     _applyMenuI18n() {
         const lang = this.dbg?.behavior?.lang || 'en';
         const dict = MENU_I18N[lang] || MENU_I18N.en;
