@@ -221,8 +221,29 @@
           <button class="tileset-btn placeholder" data-season="floracao">🌸 Floração</button>
         </div>
       </div>
-      <div style="font-size:12px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8 · biome+season tilesets em construção</div>
+      <div style="font-size:12px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8</div>
     </div>
+
+    <!-- 🌐 COMPARE ALL — overview de todos os 13 tilesets, filtrável por biome/season -->
+    <div class="tiles-main" style="border-color:#9fcfe8;background:rgba(29,58,74,0.10);">
+      <h3 style="color:#9fcfe8;">🌐 Compare All Tilesets <span id="compareAllCount" style="font-size:12px;color:#a89368;">—</span></h3>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px;font-size:12px;align-items:center;">
+        <span style="color:#a89368;letter-spacing:1px;">FILTER:</span>
+        <button class="cmp-filter active" data-filter-type="all" data-filter-val="all" style="padding:4px 10px;font-size:12px;background:#3a2d1e;color:#f4c95d;border:1px solid #f4c95d;border-radius:3px;cursor:pointer;">All</button>
+        <span style="opacity:.4;">|</span>
+        <span style="color:#a89368;">BIOME:</span>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="cerrado-verde" style="padding:4px 10px;font-size:12px;background:#2a3a2a;color:#9fe89f;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌾 verde</button>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="cerrado-seco" style="padding:4px 10px;font-size:12px;background:#3a3a2a;color:#dfa6df;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌵 seco</button>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="costa" style="padding:4px 10px;font-size:12px;background:#1d3a4a;color:#9fcfe8;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🏖️ costa</button>
+        <span style="opacity:.4;">|</span>
+        <span style="color:#a89368;">SEASON:</span>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="chuva" style="padding:4px 10px;font-size:12px;background:#2a3a4a;color:#9fcfe8;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌧 chuva</button>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="seca" style="padding:4px 10px;font-size:12px;background:#4a3a2a;color:#f4c95d;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">☀️ seca</button>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="universal" style="padding:4px 10px;font-size:12px;background:#3a2a4a;color:#dfa6df;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">∞ universal</button>
+      </div>
+      <div id="compareAllGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
+    </div>
+
     <div class="tiles-main">
       <h3 id="tilesetTitle">cr31 Wang Tiles</h3>
       <div class="tile-info" style="font-size:12px;opacity:.5;">Info detalhada + refs movidas pra <strong>Tab Detail</strong>.</div>

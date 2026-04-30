@@ -160,6 +160,7 @@ const WANG_PRESETS = [
   // ════════════════════════════════════════════════════════════
   {
     id: 'ground-truth',
+    biome: 'ref', season: 'ref',
     name: '[REF] Ground Truth (cr31 cores sólidas)',
     meta: 'cr31 corner-2-edge convention · 16 solid blocks · debug palette',
     sliced: true,
@@ -175,6 +176,7 @@ const WANG_PRESETS = [
   // ════════════════════════════════════════════════════════════
   {
     id: '6068781a-970c-4f9b-99fe-48ee90110038',
+    biome: 'costa', season: 'universal',
     name: '[GAME 32px] ocean ↔ sand',
     meta: 'PixelLab · 32×32 · sliced local · ATIVO IN-GAME',
     sliced: true,
@@ -185,6 +187,7 @@ const WANG_PRESETS = [
   },
   {
     id: '91c93294-a4fd-425e-8b10-eb1baf32890d',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[GAME 32px] dirt ↔ grass',
     meta: 'PixelLab · 32×32 · sliced local · ATIVO IN-GAME',
     sliced: true,
@@ -200,6 +203,7 @@ const WANG_PRESETS = [
   // ════════════════════════════════════════════════════════════
   {
     id: '267836d8-f211-4260-8917-938216d7e0f1',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[MAPA 1] cerrado_dirt ↔ cerrado_grass (BASE)',
     meta: 'PixelLab · 16×16 · base do bioma verde',
     image: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/image',
@@ -209,6 +213,7 @@ const WANG_PRESETS = [
   },
   {
     id: 'ff745b17-679f-4213-b8e8-ce08bd349e86',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[MAPA 1] ocean ↔ cerrado_dirt',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/ff745b17-679f-4213-b8e8-ce08bd349e86/image',
@@ -218,6 +223,7 @@ const WANG_PRESETS = [
   },
   {
     id: '70faa0d8-8c99-449c-9699-8d56175824c7',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[MAPA 1] ocean ↔ cerrado_grass',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/70faa0d8-8c99-449c-9699-8d56175824c7/image',
@@ -227,6 +233,7 @@ const WANG_PRESETS = [
   },
   {
     id: '448352c8-0e6e-4515-b860-e15f70e93722',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[MAPA 1] sand ↔ cerrado_dirt',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/448352c8-0e6e-4515-b860-e15f70e93722/image',
@@ -236,6 +243,7 @@ const WANG_PRESETS = [
   },
   {
     id: 'ac546645-a924-465e-b474-0b2ab10ecdd4',
+    biome: 'cerrado-verde', season: 'chuva',
     name: '[MAPA 1] sand ↔ cerrado_grass',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/ac546645-a924-465e-b474-0b2ab10ecdd4/image',
@@ -249,6 +257,7 @@ const WANG_PRESETS = [
   // ════════════════════════════════════════════════════════════
   {
     id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
+    biome: 'cerrado-seco', season: 'seca',
     name: '[MAPA 2] cerrado_dirt ↔ cerrado_grass v2 (BASE)',
     meta: 'PixelLab · 16×16 · base do bioma seco',
     image: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/image',
@@ -258,6 +267,7 @@ const WANG_PRESETS = [
   },
   {
     id: 'd395054a-5e3c-4e28-9b76-3d8ba82baec1',
+    biome: 'cerrado-seco', season: 'seca',
     name: '[MAPA 2] ocean ↔ cerrado_dirt v2',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/d395054a-5e3c-4e28-9b76-3d8ba82baec1/image',
@@ -267,6 +277,7 @@ const WANG_PRESETS = [
   },
   {
     id: '53598aae-b258-47c4-b3fc-6d8a33befe40',
+    biome: 'cerrado-seco', season: 'seca',
     name: '[MAPA 2] ocean ↔ cerrado_grass v2',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/53598aae-b258-47c4-b3fc-6d8a33befe40/image',
@@ -276,6 +287,7 @@ const WANG_PRESETS = [
   },
   {
     id: 'e8b56eea-c20e-4ab9-9dff-bab3231eb333',
+    biome: 'cerrado-seco', season: 'seca',
     name: '[MAPA 2] sand ↔ cerrado_dirt v2',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/e8b56eea-c20e-4ab9-9dff-bab3231eb333/image',
@@ -285,6 +297,7 @@ const WANG_PRESETS = [
   },
   {
     id: '43ac051b-7e0d-4c84-8575-4dbc269db8db',
+    biome: 'cerrado-seco', season: 'seca',
     name: '[MAPA 2] sand ↔ cerrado_grass v2',
     meta: 'PixelLab · 16×16 · transition cross-tileset',
     image: 'https://api.pixellab.ai/mcp/tilesets/43ac051b-7e0d-4c84-8575-4dbc269db8db/image',
@@ -298,6 +311,7 @@ const WANG_PRESETS = [
   // ════════════════════════════════════════════════════════════
   {
     id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
+    biome: 'costa', season: 'universal',
     name: '[SHARED] ocean ↔ sand (16px)',
     meta: 'PixelLab · 16×16 · costa universal (compartilhado Mapa 1 + 2)',
     image: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/image',

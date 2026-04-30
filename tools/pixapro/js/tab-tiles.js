@@ -273,6 +273,77 @@ function cornerSquare(c){
   return `<div class="corner-vis"><div class="${c.NW}"></div><div class="${c.NE}"></div><div class="${c.SW}"></div><div class="${c.SE}"></div></div>`;
 }
 
+// 🌐 Compare All — render grid com todos os 13 tilesets, filter biome/season
+let _compareFilter = { type: 'all', val: 'all' };
+function renderCompareAll(){
+  const grid = $("compareAllGrid");
+  if (!grid) return;
+
+  const filtered = WANG_PRESETS.filter(p => {
+    if (_compareFilter.type === 'all') return true;
+    return p[_compareFilter.type] === _compareFilter.val;
+  });
+
+  $("compareAllCount").textContent = `(${filtered.length}/${WANG_PRESETS.length})`;
+
+  const biomeColor = {
+    'cerrado-verde': '#9fe89f', 'cerrado-seco': '#dfa6df',
+    'costa': '#9fcfe8', 'ref': '#a89368'
+  };
+
+  grid.innerHTML = filtered.map(p => {
+    const isActive = p === activePreset;
+    // Imagem preview: prioriza p.image (URL PixelLab) ou sliceFn (local)
+    let imgSrc = '';
+    if (p.image) imgSrc = p.image;
+    else if (p.sliceFn) imgSrc = p.sliceFn(15);  // tile bits=15 (canto upper completo) como preview
+
+    const bColor = biomeColor[p.biome] || '#a89368';
+    return `<div class="cmp-card" data-preset-id="${p.id}" style="
+      border:2px solid ${isActive ? '#f4c95d' : '#4a3826'};
+      border-radius:6px;padding:8px;background:#1a1410;cursor:pointer;
+      ${isActive ? 'box-shadow:0 0 12px rgba(244,201,93,0.5);' : ''}
+    ">
+      <div style="display:flex;justify-content:center;background:#2a2218;border-radius:3px;padding:4px;margin-bottom:6px;height:96px;align-items:center;">
+        <img src="${imgSrc}" style="max-width:100%;max-height:90px;image-rendering:pixelated;" alt="">
+      </div>
+      <div style="font-size:12px;color:#f4c95d;font-weight:bold;line-height:1.3;margin-bottom:4px;">${p.name}</div>
+      <div style="font-size:12px;display:flex;gap:6px;flex-wrap:wrap;">
+        ${p.biome ? `<span style="color:${bColor};">🌿 ${p.biome}</span>` : ''}
+        ${p.season ? `<span style="color:#a89368;">${p.season}</span>` : ''}
+        <span style="opacity:.5;color:#a89368;">${p.tileSize || '32'}px</span>
+      </div>
+    </div>`;
+  }).join('') || `<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.5;font-size:12px;">Nenhum tileset com ${_compareFilter.type}=${_compareFilter.val}</div>`;
+
+  // Click no card → set active preset
+  grid.querySelectorAll('.cmp-card').forEach(card => {
+    card.onclick = () => {
+      const id = card.dataset.presetId;
+      const p = WANG_PRESETS.find(x => x.id === id);
+      if (p && p !== activePreset) {
+        activePreset = p;
+        tileEditState = null;
+        renderTiles();
+      }
+    };
+  });
+}
+
+// Filter buttons (biome/season/all)
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.cmp-filter');
+  if (!b) return;
+  _compareFilter = { type: b.dataset.filterType, val: b.dataset.filterVal };
+  document.querySelectorAll('.cmp-filter').forEach(x => {
+    const active = (x === b);
+    x.classList.toggle('active', active);
+    x.style.borderColor = active ? '#f4c95d' : '#4a3826';
+    x.style.color = active ? '#f4c95d' : x.style.color;  // mantém a cor atual se não-active
+  });
+  renderCompareAll();
+});
+
 function renderPresetList(){
   const cont = $("tilesetPresetButtons");
   if(!cont) return;
@@ -562,6 +633,7 @@ async function rerenderEditorGrid(){
 
 async function renderTiles(){
   renderPresetList();
+  renderCompareAll();   // 🌐 overview de todos os 13 tilesets, com filter biome/season
   const p = activePreset;
   $("tilesetTitle").textContent = p.name;
   $("editorBar").hidden = false;
