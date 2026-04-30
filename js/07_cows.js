@@ -432,12 +432,24 @@ Object.assign(Jogo.prototype, {
     _releaseCow(vaca) {
         this.abductedCows = this.abductedCows.filter(v => v !== vaca);
         this._updateBeamCounters();
-        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
-        // window de 3s onde a cow/ox force orientação south e friction high to parar
-        // Picker e IA respeitam this flag to ignorar wandering during this período
+        const now = this.time?.now ?? 0;
+
+        // Farmer solto: mantem inercia + spin por 3s (efeito arremessado)
+        if (vaca.isEnemy) {
+            if (vaca.scene && vaca.body && !vaca._dying) {
+                vaca.setFrictionAir(0.01).setDepth(5);  // friction baixa = inercia continua
+            }
+            vaca._releaseSpinUntil = now + 3000;
+            // Random spin direction + speed (rad/sec)
+            vaca._spinRate = (Math.random() < 0.5 ? -1 : 1) * Phaser.Math.FloatBetween(8, 14);
+            return;
+        }
+
+        // Cow/bull: comportamento original (force south + friction high pra freiar)
+        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         vaca._lastDir8 = 'S';
-        vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;
+        vaca._returnSouthUntil = now + 3000;
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.4); // freia rapido
         if (vaca.scene && vaca.tipo === 'bull' && this.textures.exists('ox_S')) {
             if (vaca.anims?.isPlaying) vaca.anims.stop();

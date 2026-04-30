@@ -30,24 +30,18 @@ Object.assign(Jogo.prototype, {
         const now = this.time?.now ?? 0;
         if (entity._lastHitT && (now - entity._lastHitT) < 120) return;
 
-        // ROCHA: única forma de morte do farmer. Cow/ox has hp 3-5
+        // ROCHA: SO farmer (isEnemy) explode. Cow/bull bounce sem dano.
         if (otherLabel === 'rock') {
+            if (!entityIsEnemy) return;      // cow/bull: bounce fisico sem dano
             if (!isHighImpact) return;
             entity._lastHitT = now;
             entity._hp = (entity._hp ?? 1) - 1;
-            this._hitFlash(entity, entityIsEnemy ? 0xff8800 : 0xffaa00);
-            if (entity._hp <= 0) {
-                this._explode(entity, entityIsEnemy ? 0xff8800 : 0xff2222);
-            }
+            this._hitFlash(entity, 0xff8800);
+            if (entity._hp <= 0) this._explode(entity, 0xff8800);
         }
-        // cow-cow / cow-ox / ox-ox: dano only with impacto de alta speed
+        // cow-cow / cow-bull / bull-bull: bounce fisico, sem dano
         else if (otherLabel === 'cow' || otherLabel === 'bull') {
-            if (entityIsEnemy) return;       // farmer: bounce físico, without dano
-            if (!isHighImpact) return;
-            entity._lastHitT = now;
-            entity._hp = (entity._hp ?? 1) - 1;
-            this._hitFlash(entity, 0xffcc44);
-            if (entity._hp <= 0) this._explode(entity, 0xff2222);
+            return;
         }
         // CACTO/MOITA: farmer only quica, without dano. Cow/ox also não toma dano.
         else if (otherLabel === 'bush') {
