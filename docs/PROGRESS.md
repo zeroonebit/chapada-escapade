@@ -4,50 +4,93 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
-## Sessão 2026-04-30 — Refator D+R2 (PT→EN) + ship→ufo + game over cinematic V2 + L6 FSM
+## Sessão 2026-04-30 (madrugada) — PixaPro refactor modular completo (10 sprints)
 
-**~25 commits, ~8h**
+**Continuação direta da sessão da noite anterior. Foco: refactor de `tools/asset_gallery.html` de monolito 121kb → 13 módulos.**
 
-### Game over cinematic V2 (+ HUD bars + radar polish)
-- **Cinematic completo**: hide HUD/enemies/beam/corral decor, vignette+grayscale via camera.postFX, Fibonacci spiral (φ=1.618, 2.5 turns, 2.4s) convergindo no centro da tela em world coords, tremor crescente + smoke contínuo, crash bounce + 18 fumaças, GAME OVER 128px scale grow 1.4s, score+botão delay 1.1s
-- **HUD combinado**: PNG único `combustivel-graviton_full-nameless.png` + `_empty.png` com 2 fillImg apontando pro mesmo full, cada um com `_cropRegion` (medido via Pillow no PNG 1536×1024: COMB fx=0.235/fy=0.528, GRAV fx=0.278/fy=0.662)
-- **Radar**: GeometryMask elíptica clipa leak embaixo do frame, alien green vibrante (#003322 base + #00ff66 glow), quadrantes (E-W/N-S) + 3 anéis concêntricos (33/66/100% raio)
-- **Quips coloridos por tom** (r=angry/g=funny/y=ironic/b=factual) + seguem target a cada frame (não fixos no mundo)
-- **HUD bars frame-as-mask**: combustivel/graviton frames v1 (bar slot preto) por baixo, full por cima cropado from left
+### Code review inicial
+- Análise dos 2778 linhas de single-file (CSS+HTML+JS misturados)
+- Identificados 10 problemas: estado global solto (13+ vars), sem separação data↔render, monkey-patching do `switchTab`, `fillSumGrid` com 4 modos em 100 linhas, etc.
+- Plano de 10 sprints com ordem de extração, regras (zero HTML inline, ES script-globals em vez de modules, store/api centralizados)
 
-### Refator D+R2: PT→EN completo
-- **Snapshot localStorage** salvo em `docs/configs_pre_translation.json` (chave `chapEscapadeDebug`)
-- **Migration code** `_migratePtKeys` em 15_debug_menu.js: PT_TO_EN_MIGRATION map com computed keys (`['va'+'cas']`) imune a bulk replace, preserva configs PT do user
-- **DBG_DEFAULTS** todo EN: `chuva→rain`, `neblina→fog`, `vento→wind`, `vacas→cows`, `bois→oxen`, `fazendeiros→farmers`, `atiradores→shooters`, `cenario→scenery`, `velVaca→cowSpeed`, etc (~20 keys)
-- **i18n labels** EN: `entidades→entities`, `quantidades→amounts`, `escalas→scales`, `intensidade→intensity`, `frequencia→frequency`, `angulo→angle`, etc (~20)
-- **File renames** (git mv preserva history): `04_cenario→04_scenery`, `06_nave→06_ufo`, `07_vacas→07_cows`, `08_curral→08_corrals`, `09_inimigos→09_enemies`, `10_colisao→10_collision`
-- **Comentários PT→EN** via `tools/translate_comments.py` — Python regex em comments only (não strings), 2 passes, ~130 palavras mapeadas
-- **data-i18n nas options** (TOD/weather/input dropdowns) + traduções PT (Amanhecer/Dia/Crepúsculo/Noite/Limpo/Chuva/Tempestade/etc)
+### Sprint 1 — CSS extraído (7 arquivos)
+- `tools/pixapro/styles/{base,components,manager,gallery,editor,tiles,detail}.css`
+- 295 linhas inline → 7 arquivos por componente
+- HTML perdeu -10kb, validado via `getComputedStyle` no preview
 
-### ship → ufo (terminologia)
-- User: "ship me lembra navios vamos de ufo"
-- `this.ship` → `this.ufo` (Phaser sprite + `this.shipShadow→ufoShadow`, `shipBaseX→ufoBaseX`, etc)
-- `dbg.scale.ship→ufo`, `dbg.behavior.shipRot→ufoRot`
-- `_naveDir8→_ufoDir8`
-- Migration map atualizado: `nave→ufo`, `discoRot→ufoRot`
+### Sprint 2 — Constants extraídos
+- `tools/pixapro/js/constants.js` com MANIFEST (68 entries), PIXELLAB_TOOLS (19), WANG_PRESETS (5)
+- Total ~20kb de dados extraídos do `<script>` inline
 
-### Audit pendentes resolvidos
-- **M3** ✅ `_sceneCleanup` agora itera todos corrals e chama `_cleanSlot` pra cada slot ativo (cleanup pisca/bounce tweens + icons órfãos no shutdown)
-- **L5** ✅ `isMobile` detection mais conservadora — exige 3 sinais simultaneos (touch + pointer:coarse + viewport<1024). Hybrid laptops/2-in-1 não disparam mais false-positive
-- **L6** ✅ FSM tutorial state: `TUT_MODES` dict com 11 modes (NONE/INIT/BEAM_VISUAL/GRAVITON_BAR/ABDUCT/DELIVER/BURGER/COMBUSTIVEL/TAKE_DAMAGE/FARMER/FARMER_KILL), `_tutSetMode(name)` aplica todas as 6 flags do mode num call. `_tutAdvance`, `_tutConcluir`, `_sceneCleanup` refatorados.
+### Sprint 3 — I/O centralizado (api.js + store.js)
+- `api.js` com 10 wrappers de fetch (Api.saveDecisions, Api.listAssets, Api.mcpStatus, etc.)
+- `store.js` com STORE_KEYS + 8 wrappers de localStorage (Store.loadDecisions, Store.saveQueue, etc.)
+- 9 fetch sites + 4 localStorage sites convertidos
+- API_BASE/MCP_SERVER duplicados removidos do inline
 
-### Game flow polish
-- **Restart transition**: red→green loading bar + CHAPADA ESCAPADE VT323 + barra fake fill 0→100% em 1.4s antes do `scene.restart()`
-- **Skip splash on restart**: `window.__cepPlayedOnce` in-memory flag (sobrevive scene.restart, reseta no F5/reload — semantics que o user pediu)
-- **Splash v4** integrado (`splashv4.png` substitui v3) — nova arte landscape com fazendeiro+escopeta+burger, vaca abducted, igreja, moedor de carne, tagline "Intergalactic hunger management"
+### Sprint 4 — Funções puras (4 módulos)
+- `utils.js` (`$`, escHtml, timeAgo, suggestTargetFolder, getAssetType, TYPE_ICONS, mulberry32)
+- `popup.js` (showFloatingPopup, hideFloatingPopup, attachPopupOrient + self-handlers)
+- `classify.js` (groupBy, classifyGroup, classifiedFlat, buildGroupPopupHTML, findDirectionVariants)
+- `thumb.js` (makeThumb, thumbBadge, fillSumGrid 4 modos + `_simpleThumb` DRY helper)
+- **Bug encontrado:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente.
 
-### Chuva fix
-- Bug: linha tiltava esquerda mas chuva caía pra direita (sinais opostos no `dx` e `driftX`)
-- Fix: ambos usam mesmo multiplicador (8×0.45) e mesmo sinal — chuva agora cai no sentido do tilt visual
+### Sprints 5-10 — Tab modules
+- `tab-manager.js` (S5): idx, decisions, render, side grids, keyboard shortcuts, setInterval refresh, initial render
+- `tab-gallery.js` (S6): summaryData, renderGallery, filter bar (folders/files/type/tags), refresh button
+- `tab-editor.js` (S7): detailSelected, mcpQueue, saveQueue, approvedAssets, renderDetailMain (visualizer 8-dir + tool forms), queueTool, popup click handler
+- `tab-detail.js` (S8): renderDetailDashboard (stats cards + queue cards) + 4 dashboard buttons + MCP Live polling completo (pollMcpStatus, startMcpPolling, stopMcpPolling, switchTab hook)
+- `tab-tiles.js` (S9): tileEditState, autoSortTiles (color sampling), transforms (rotate/flip), generateTerrainGrid (white/CA/value noise), renderTestMap, renderTiles + todos os 14 button handlers
+- `tabs.js` (S10): activeTab, switchTab orchestrator, scroll handlers, tab buttons wiring
 
-### Ferramentas criadas
-- `tools/translate_comments.py` — Python regex pra traduzir comentarios PT→EN sem tocar strings (~130 palavras mapeadas)
-- `docs/configs_pre_translation.json` — snapshot do localStorage do user antes do refator
+### Resultado final
+- `asset_gallery.html`: 121kb → **17kb** (-86%)
+- Inline `<script>` totalmente eliminado (era ~2778 linhas)
+- 13 external scripts JS (~70kb) + 7 stylesheets
+- Validação via preview_eval: 68 thumbs renderizando, todas 5 tabs trocam sem erro, todos os globals expostos
+
+### Workflow
+- Worktree: `nostalgic-mclaren-1f61ba` (renomeado de `intelligent-euler-7a236d` em sessão anterior)
+- 6 commits durante o refactor (1 por sprint), todos sincronizados via worktree → main → GitHub Pages
+
+### Pendente
+- Game preview na worktree continua quebrado (`_setupGeometricTextures is not a function`, pré-existente)
+- Refactor não tocou no game (`js/01_scene.js` etc.) — só no PixaPro tool
+
+---
+
+## Sessão 2026-04-30 — Wang 32px tilesets + MCP Live Status + PixaPro evolution
+
+**~4 commits, sessão noturna**
+
+### Wang tilesets 32×32
+- Regenerados ocean↔sand e dirt↔grass via PixelLab MCP a 32×32 (16px eram muito pequenos pro mapa 8000×6000)
+- Primeiro attempt com base_tile_ids falhou (403 cross-size); retry sem base IDs OK
+- Spritesheets baixados via Backblaze CDN (User-Agent header necessário), sliced em 16 tiles individuais por cr31 index
+- Novos folders: `assets/terrain/ocean_sand_32/` e `assets/terrain/dirt_grass_32/`
+- `WANG_PRESETS` atualizado: 32px como primário, 16px legacy arquivado
+
+### Game wiring
+- `02_preload.js`: lê `tileStyle` do localStorage no preload, carrega folder correto
+- Defaults mudados: `wangtiles=true`, `tileRes=32`, `tileStyle=dirt_grass`
+- Menu TERRAIN no CONFIGS (aba VFX): toggle, selector res 16/32, selector estilo
+- cr31 convention fix: game code + test palette corrigidos pra NW=1 NE=2 SE=4 SW=8
+
+### PixaPro (tools/asset_gallery.html)
+- **Detail dashboard evolution**: stats cards, progress bar, category chips, queue cards com ações individuais
+- **5 bug fixes**: popup stuck on tab switch, gallery refresh duplicates, wang canvas gray after reload, tag input value lost, dashboard stale data
+- **Test render 4:3**: canvas 640×480 matching game map ratio, grid retangular, info tile size
+- **Font-size clamped** 12px–17px pra legibilidade
+- **MCP Live Status panel**: polling 4s, cards expandíveis com inspect banner (ID, type, params, preview, error/log)
+
+### gallery_server.py
+- `GET/POST /mcp_status`: Claude posta status de jobs, dashboard faz polling
+- `POST /mcp_clear`: limpa todos os jobs
+- Persist em `tools/saves/mcp_live.json`
+
+### Auto-sort validation
+- Provado que algoritmo funciona sem corrections salvas (bloqueou `applyStoredCorrections`)
+- 16/16 classificações corretas, 0 conflitos, determinístico em ambos tilesets
 
 ---
 

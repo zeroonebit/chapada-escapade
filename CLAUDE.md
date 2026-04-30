@@ -33,6 +33,18 @@
 - **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
 - **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
+### 💾 Servidor de tools (`tools/gallery_server.py`) — porta 8090
+**8080 é reservada pro game.** Tools (gallery, persistência) rodam em **8090** por default. O server bloqueia se tentar 8080.
+
+Endpoints POST que gravam JSON em disco:
+- `POST /save_decisions` → `tools/saves/decisions.json` (+ history). Botão **Export** do `tools/asset_gallery.html` posta same-origin (gallery aberto em 8090).
+- `POST /save_configs` → `tools/saves/configs.json` (+ history). Auto-salvo pelo `_saveDebugCfg()` no `js/15_debug_menu.js` via cross-origin fetch pra `http://localhost:8090` (CORS habilitado, fire-and-forget, debounce 500ms — silencioso se 8090 não estiver rodando).
+- Histórico timestamped em `tools/saves/history/`.
+
+**Rodar 2 servers em paralelo:**
+- `python -m http.server 8080` (raiz) → game em http://localhost:8080
+- `python tools/gallery_server.py` (raiz, default 8090) → gallery em http://localhost:8090/tools/asset_gallery.html + endpoints
+
 ### ⚡ No INÍCIO de toda sessão, rodar:
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
 2. Não esperar o usuário pedir — fazer automático na primeira mensagem
@@ -184,37 +196,55 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Skill `pixellab-asset-download`** + 3 memórias (perguntas explícitas, prompts complexos, heartbeat)
 
 ### ✅ Pronto (cont. — sessão 2026-04-30)
-- **Game over cinematic V2** — hide HUD/enemies/decor + camera.postFX (vignette+grayscale) + Fibonacci spiral (φ=1.618, 2.5 turns) convergindo no centro da tela + tremor crescente + smoke contínuo + crash bounce + 18 fumaças + GAME OVER 128px scale-grow lento
-- **Refator D+R2 completo (PT→EN)**:
-  - Snapshot localStorage em `docs/configs_pre_translation.json`
-  - Migration code (`_migratePtKeys` + `PT_TO_EN_MIGRATION` map com computed keys imunes a bulk replace)
-  - DBG_DEFAULTS todo EN (chuva→rain, neblina→fog, vento→wind, vacas→cows, etc)
-  - i18n labels EN (entidades→entities, intensidade→intensity, etc)
-  - File renames: `04_scenery`, `06_ufo`, `07_cows`, `08_corrals`, `09_enemies`, `10_collision`
-  - Comentários traduzidos via `tools/translate_comments.py` (~130 palavras, 2 passes)
-  - data-i18n nas options (TOD/weather/input dropdowns + traduções PT)
-- **ship → ufo terminology** — `this.ship→this.ufo`, `scale.ship→scale.ufo`, `behavior.shipRot→behavior.ufoRot`
-- **HUD combinado** — PNG único `combustivel-graviton_full-nameless.png` + 2 fillImg com `_cropRegion` (medido via Pillow)
-- **Radar polish** — GeometryMask clipa leak, alien green vibrante, quadrantes + 3 anéis concêntricos
-- **Quips coloridos** por tom (r=angry/g=funny/y=ironic/b=factual) + seguem target a cada frame
-- **Restart transition** red→green loading bar + skip splash on restart (`window.__cepPlayedOnce` in-memory)
-- **Splash v4** integrado (`splashv4.png` — fazendeiro+escopeta+burger+vaca abducted+igreja+moedor)
-- **Audit pendentes resolvidos**:
-  - M3: `_sceneCleanup` itera corrals e limpa slots órfãos
-  - L5: `isMobile` detection com 3 sinais simultaneos (touch + pointer:coarse + viewport<1024)
-  - L6: FSM tutorial state via `TUT_MODES` dict + `_tutSetMode(name)` consolida flag writes
-- **Chuva angle fix** — line tilt agora coincide com drift direction (mesmo multiplicador, mesmo sinal)
-- **HUD bars frame-as-mask** — combustivel/graviton frames v1 (bar slot preto) por baixo + full cropado por cima
+- **Wang tilesets 32×32 via PixelLab** — ocean↔sand e dirt↔grass regenerados a 32px, sliced em `assets/terrain/ocean_sand_32/` e `assets/terrain/dirt_grass_32/` (16 tiles cada, cr31 index)
+- **Wang tiles habilitados no jogo** — `wangtiles=true` por default, `tileStyle=dirt_grass`, preload lê config do localStorage
+- **Menu TERRAIN no CONFIGS** (aba VFX): toggle on/off, selector resolução 16/32, selector estilo (test/ocean_sand/dirt_grass). Nota "Aplica ao reiniciar"
+- **cr31 convention fix** — game code e test palette corrigidos pra NW=1 NE=2 SE=4 SW=8 (standard)
+- **PixaPro font-size** clamped 12px–17px pra legibilidade
+- **PixaPro Detail dashboard** evolution: stats cards, progress bar, category chips, queue cards com ações por card
+- **PixaPro 5 bug fixes**: popup stuck, gallery refresh duplica, wang canvas gray, tag input perde valor, dashboard stale
+- **PixaPro test render 4:3** — canvas 640×480, grid retangular, info de tile size + game map total
+- **MCP Live Status endpoint** — `gallery_server.py` com `GET/POST /mcp_status` + `POST /mcp_clear` + persist em `mcp_live.json`
+- **MCP Live dashboard no PixaPro** — painel na tab Detail com polling 4s, cards expandíveis (inspect banner com ID, type, params, preview images, error/log)
+- **WANG_PRESETS atualizados** — 32px sliced local como primário, 16px arquivados como legacy
+- **Auto-sort validado** — algoritmo funciona sem corrections salvas, 0 conflitos nos 2 tilesets PixelLab
+- **`docs/REFS_WANG.md`** atualizado com novos IDs 32px e base tile IDs
+
+### ✅ Pronto (cont. — sessão 2026-04-30 madrugada · PixaPro refactor 10 sprints)
+- **PixaPro modularizado** — `tools/asset_gallery.html` 121kb → 17kb (-86%), zero `<script>` inline (era 2778 linhas)
+- **Estrutura final** `tools/pixapro/`:
+  - `styles/` (S1): 7 CSS por componente — base, components, manager, gallery, editor, tiles, detail
+  - `js/constants.js` (S2): MANIFEST (68), PIXELLAB_TOOLS (19), WANG_PRESETS (5)
+  - `js/store.js` + `js/api.js` (S3): localStorage wrappers + fetch wrappers
+  - `js/utils.js` (S4): `$`, escHtml, timeAgo, suggestTargetFolder, getAssetType, mulberry32
+  - `js/popup.js` (S4): floating popup global (show/hide/attachOrient + self-handlers)
+  - `js/classify.js` (S4): groupBy, classifyGroup, classifiedFlat, buildGroupPopupHTML, findDirectionVariants
+  - `js/thumb.js` (S4): makeThumb, thumbBadge, fillSumGrid (4 modos)
+  - `js/tabs.js` (S10): switchTab, activeTab, API_URL, scroll handlers
+  - `js/tab-manager.js` (S5): idx, decisions, render, keyboard shortcuts, setInterval, initial render
+  - `js/tab-gallery.js` (S6): summaryData, renderGallery, filter bar, refresh button
+  - `js/tab-editor.js` (S7): visualizer 8-dir + tool forms, mcpQueue, queueTool
+  - `js/tab-detail.js` (S8): renderDetailDashboard + MCP live polling 4s
+  - `js/tab-tiles.js` (S9): Wang editor + auto-sort visual + terrain gen + 14 button handlers
+- **Padrão usado:** ES script-globals (não module), top-level `let`/`function` visíveis script-wide entre `<script src>` tags
+- **Bug encontrado e corrigido durante o refactor:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente
+- **Validação:** preview_eval com 68 thumbs renderizando + todas 5 tabs trocam sem erro
 
 ### 🚧 Em andamento
+- **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
 - **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
-- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida) — handoff pra outra sessão
+- **Game preview na worktree** — `_setupGeometricTextures is not a function` (pré-existente, não investigado)
 
 ### 🔜 Próximos passos
-1. **Testar game over cinematic V2** — validar timing/look (Fibonacci spiral, tremor, vignette intensity)
-2. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço (FSM já em vigor, fica mais fácil)
-3. **Tileset Wang real** com transição grass↔sand↔dirt (handoff outra sessão)
-4. **Comentários PT→EN pass 3** se necessário (palavras restantes não cobertas pelas 2 passes)
+1. **Verificar PixaPro modularizado** — abrir gallery via `python tools/gallery_server.py` e testar todas as funcionalidades end-to-end (Manager P/D/R/C, Gallery filtros, Editor 8-dir slots, Detail dashboard, Tiles auto-sort)
+2. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
+3. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+4. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+5. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+6. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+7. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+8. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
+9. **PixaPro futuras melhorias** (opcional): converter pra ES modules reais (import/export) se módulos crescerem; criar `Store.subscribe` pattern pra reatividade; DRY mais o `fillSumGrid`
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
@@ -222,21 +252,18 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - `tools/clean_hud.py` — remove dígitos baked-in dos frames HUD
 - `tools/slice_hud_frames.py` — extrai frames GRAVITON/COMBUSTÍVEL de `refs/hud-vazia.png`
 - `tools/slice_cow_burger.py` — extrai boxes COWS/BURGERS de `refs/cow-burgers.png`
-- `tools/slice_tilesets.py` — augmenta tileset base via mirror/rotação
+- `tools/slice_tilesets.py` — augmenta tileset base via mirror/rotação (naming `TLTRBLBR` antigo, refatorar pra cr31)
 - `tools/wang_test_palette.py` — gera 16 PNGs cor sólida em `assets/terrain/test/`
-- `tools/wang_playground/index.html` — playground standalone single-file
-- `tools/translate_comments.py` — Python regex pra traduzir comentários PT→EN (só comments, não strings) — usado no refator D+R2
-- `tools/pixellab_fetch_new.py` + `pixellab_montage_new.py` — pipeline PixelLab via Backblaze CDN (sem API key)
+- `tools/wang_playground/index.html` — playground standalone single-file (PRNG + corner grid + lookup cr31 + canvas)
 - `tools/migrate_to_projects.py` — migrou de N: pra H: (one-shot, mantido por referência)
 
 ## Convenções de código
 
-- **Idioma:** identificadores em inglês (refator D+R2 fez PT→EN em 2026-04-30). `cow`, `ufo`, `corral`, `fuel`, `rain`, `fog`, `wind`. Migration code preserva configs PT salvas em localStorage. Termo preferido: `ufo` (não `ship`).
+- **Idioma:** identificadores em português onde já estão (`vaca`, `nave`, `curral`, `paciencia`) — não anglicizar
 - **Sem build step** — tudo inline no HTML, scripts via CDN
-- **Comentários em EN** após refator (parcial — `tools/translate_comments.py` cobriu ~130 palavras em 2 passes; resto pode ficar misto)
+- **Comentários em PT-BR** seguindo o padrão existente
 - **Edits cirúrgicos** com a tool Edit, evitar reescrever blocos grandes
 - **Validar no preview** após cada mudança visual
-- **Workflow git automático**: worktree → commit → push → main merge → push (após cada request)
 
 ## Skills úteis pra este projeto (`C:\Users\thiag\.claude\skills\`)
 
