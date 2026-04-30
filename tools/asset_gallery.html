@@ -26,7 +26,7 @@
 <div class="tabs">
   <button class="tab" data-tab="gallery">📊 Gallery</button>
   <button class="tab" data-tab="editor">✏️ Editor</button>
-  <button class="tab active" data-tab="manager">🎨 Manager</button>
+  <button class="tab active" data-tab="manager">🔍 Audit</button>
   <button class="tab" data-tab="tiles">🧩 Tiles</button>
   <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
 </div>
@@ -66,12 +66,6 @@
       <div class="breakdown" id="sumPromotedBd">aguardando scan…</div>
       <div class="grid-thumbs" id="sumPromotedGrid"></div>
     </div>
-    <!-- 🎮 IN-GAME audit panel — assets em uso pelo game mas sem decisão -->
-    <div class="summary-panel promoted" style="border-color:#9fcfe8;background:rgba(29,58,74,0.15);">
-      <h2 style="color:#9fcfe8;">🎮 IN-GAME (auditar) <span id="sumInGame" style="margin-left:8px;color:#9fcfe8;">—</span></h2>
-      <div class="breakdown" id="sumInGameBd" style="opacity:.85;">Assets em uso provável pelo game (em pastas categorizadas, não em inbox) que ainda não passaram pelo Manager. Prioridade alta pra sorting + decisão.</div>
-      <div class="grid-thumbs" id="sumInGameGrid"></div>
-    </div>
     <div class="summary-row">
       <div class="summary-panel discarded">
         <h2>❌ DISCARDED <span id="sumDiscarded" style="margin-left:8px;color:#e89f9f;">—</span></h2>
@@ -94,8 +88,17 @@
 <!-- popup flutuante global (compartilhado por todas as tabs) -->
 <div id="floatingPopup"></div>
 
-<!-- ====== TAB MANAGER (curadoria atual) ====== -->
+<!-- ====== TAB AUDIT (curadoria + IN-GAME priority panel) ====== -->
 <div class="tab-content" id="tab-manager">
+
+<!-- 🎮 IN-GAME audit panel — assets em uso pelo game sem decisão.
+     Click num thumb foca o asset no stage abaixo pra decidir P/D/R rapidamente. -->
+<div class="summary-panel promoted" id="auditInGamePanel" style="width:96vw;max-width:1400px;margin:14px auto 8px;border-color:#9fcfe8;background:rgba(29,58,74,0.15);min-height:auto;">
+  <h2 style="color:#9fcfe8;">🎮 IN-GAME (priorizar audit) <span id="sumInGame" style="margin-left:8px;color:#9fcfe8;font-size:14px;">—</span></h2>
+  <div class="breakdown" id="sumInGameBd" style="opacity:.85;font-size:12px;">Assets em uso provável pelo game (em pastas categorizadas, não em inbox) que ainda não passaram pelo Manager.</div>
+  <div class="grid-thumbs" id="sumInGameGrid" style="max-height:160px;"></div>
+</div>
+
 <div class="workspace">
   <div class="side-grid left" id="gridLeft">
     <div class="side-title">❌ DISCARDED (0)</div>
