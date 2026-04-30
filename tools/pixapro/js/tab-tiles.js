@@ -53,6 +53,19 @@ async function regenCellImage(cellState){
 // Auto-sort: classifica cada tile pelos 4 cantos e reordena automaticamente
 let _lastAutoSortFlipped = false;
 let _autoSortSnapshot = null;  // snapshot pra Restore
+// Helper: aplica auto-sort logo após tileset carregar, exceto Ground Truth
+// (palette de teste já está em ordem cr31 canônica). Evita re-sort se já
+// aplicado neste preset (controle por _autoSortedPresetIds).
+const _autoSortedPresetIds = new Set();
+function _maybeAutoSort(preset){
+  if (!preset || !tileEditState) return;
+  if (preset.id === 'ground-truth') return;          // ref já correta
+  if (_autoSortedPresetIds.has(preset.id)) return;   // já sorted nesta sessão
+  _autoSortedPresetIds.add(preset.id);
+  // Pequeno delay pra DOM settle antes de re-render do auto-sort
+  setTimeout(() => { autoSortTiles(); }, 100);
+}
+
 async function autoSortTiles(forceFlip){
   if(!tileEditState) return;
   // Auto-entra em edit mode pra mostrar resultado completo
@@ -593,7 +606,7 @@ async function renderTiles(){
     // Sempre carrega os 16 pra alimentar tileEditState/renderTestMap. Renderiza só os visíveis (filtrados por viewMode).
     const slicedURLs = [];
     let pending = 16;
-    const onAll = () => { initEditState(p, slicedURLs); renderTestMap(); };
+    const onAll = () => { initEditState(p, slicedURLs); renderTestMap(); _maybeAutoSort(p); };
     for(let bits=0; bits<16; bits++){
       const visibleCell = cells.find(c => c.bits === bits);
       const wtile = visibleCell ? visibleCell.el.querySelector('.wtile') : null;
@@ -653,6 +666,7 @@ async function renderTiles(){
     }
     // tenta aplicar correção salva por cima do default
     applyStoredCorrections(p.id);
+    _maybeAutoSort(p);
   };
   img.onerror = () => {
     $("tilesetInfo").innerHTML += `<br>⚠ erro ao carregar imagem (tileset talvez ainda em geração no PixelLab)`;
