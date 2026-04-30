@@ -69,8 +69,8 @@ function renderGallery(){
   }
 }
 
-// 🎮 IN-GAME panel — render no Audit tab (chamado por tab-manager quando tab Audit
-// está ativa). Lista PNGs em pastas categorizadas (não inbox) sem decisão registrada.
+// 🎮 IN-GAME + ⏳ PENDING panels — render no Audit tab (chamado por tab-manager).
+// Click num thumb chama loadAuditAsset(path, name) que carrega no stage central.
 function renderInGamePanel(){
   if (!$("sumInGame")) return;
   if (!summaryData) {
@@ -83,12 +83,39 @@ function renderInGamePanel(){
     const p = decisions[k]?.path;
     if (p) decidedPaths.add(p.replace(/^\.\.\//, ''));
   }
-  const inGameUnaudited = fsAssets.filter(a => {
+
+  // Split: in-game (em pastas categorizadas) vs pending (inbox + outros)
+  const inGameUnaudited = [];
+  const pendingUnaudited = [];
+  for (const a of fsAssets) {
     const path = a.abs || a.path.replace(/^\.\.\//, '');
-    if (/inbox/.test(path)) return false;
-    if (decidedPaths.has(path)) return false;
-    return true;
-  });
+    if (decidedPaths.has(path)) continue;
+    if (/inbox/.test(path)) pendingUnaudited.push(a);
+    else                    inGameUnaudited.push(a);
+  }
+
+  // Helper: render grid com click handler que carrega no stage
+  const renderGrid = (gridId, list) => {
+    const el = $(gridId);
+    if (!el) return;
+    el.innerHTML = '';
+    list.forEach(a => {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb';
+      wrap.style.width = '42px'; wrap.style.height = '42px'; wrap.style.cursor = 'pointer';
+      wrap.title = a.path.split(/[\\/]/).pop();
+      const img = document.createElement('img');
+      img.src = a.path;
+      wrap.appendChild(img);
+      wrap.onclick = () => {
+        const name = a.path.split(/[\\/]/).pop().replace('.png','');
+        if (typeof loadAuditAsset === 'function') loadAuditAsset(a.path, name);
+      };
+      el.appendChild(wrap);
+    });
+  };
+
+  // 🎮 IN-GAME panel
   $("sumInGame").textContent = inGameUnaudited.length;
   const byCat = {};
   for (const a of inGameUnaudited) {
@@ -108,7 +135,14 @@ function renderInGamePanel(){
   $("sumInGameBd").innerHTML = sorted.slice(0, 8)
     .map(([c, n]) => `<span style="color:#9fcfe8;margin-right:10px;">${c}: <strong>${n}</strong></span>`)
     .join('') + (sorted.length > 8 ? ` <span style="opacity:.5">+ ${sorted.length-8} cats</span>` : '');
-  fillSumGrid('sumInGameGrid', inGameUnaudited.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})));
+  renderGrid('sumInGameGrid', inGameUnaudited);
+
+  // ⏳ PENDING panel (inbox + sem uso)
+  if ($("sumAuditPending")) {
+    $("sumAuditPending").textContent = pendingUnaudited.length;
+    $("sumAuditPendingBd").innerHTML = `📁 ${pendingUnaudited.length} sem decisão fora do game (inbox + uncategorized)`;
+    renderGrid('sumAuditPendingGrid', pendingUnaudited);
+  }
 }
 
 // === Filter bar do PROMOTED ===

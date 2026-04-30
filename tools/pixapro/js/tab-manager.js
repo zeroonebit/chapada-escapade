@@ -187,6 +187,30 @@ setInterval(()=>{
   $("refreshInfo").textContent = "próximo refresh em " + refreshTimer + "s";
 }, 1000);
 
+// === Carregar asset arbitrário no stage (pelos painéis IN-GAME / PENDING) ===
+// Estende MANIFEST dinâmicamente com entry sintética. ID estável (slug do path)
+// pra decisões persistirem em decisions.json normalmente.
+function loadAuditAsset(path, name){
+  if (!path) return;
+  const cleanPath = path.replace(/^\.\.\//, '');
+  // Synthetic id baseado em path (estável)
+  const id = 'audit_' + cleanPath.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
+  // Se já existe no MANIFEST (real ou audit), reusa
+  let i = MANIFEST.findIndex(m => m.id === id || m.path === path);
+  if (i === -1) {
+    MANIFEST.push({
+      id, name: name || path.split(/[/\\]/).pop().replace('.png',''),
+      status: 'ready', path, _audit: true
+    });
+    i = MANIFEST.length - 1;
+  }
+  idx = i;
+  render();
+  // Scroll suave pro stage
+  const stage = document.getElementById('stage');
+  if (stage) stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 // === Initial render ===
 render();
 
