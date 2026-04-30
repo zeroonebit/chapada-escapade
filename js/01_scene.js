@@ -1,5 +1,5 @@
-﻿// 01_scene.js — Classe principal e orquestração de create() / update()
-// Os métodos da Scene estão distribuídos nos arquivos js/0X_*.js seguintes,
+﻿// 01_scene.js — class principal e orquestração de create() / update()
+// Os métodos da Scene are distribuídos nos arquivos js/0X_*.js seguintes,
 // each um adicionado via Object.assign(Game.prototype, {...}).
 
 class Jogo extends Phaser.Scene {
@@ -30,7 +30,7 @@ class Jogo extends Phaser.Scene {
         this._loadDebugCfg();
 
         // MOBILE_MODE: override to experiencia atmosferica — cap 5 cows,
-        // sem enemies. Beam visual sem pull (so muda cone, nao puxa nada).
+        // without enemies. Beam visual without pull (so muda cone, nao puxa nada).
         if (window.__MOBILE_MODE && this.dbg) {
             this.dbg.enabled.farmers = false;
             this.dbg.enabled.shooters  = false;
@@ -41,17 +41,17 @@ class Jogo extends Phaser.Scene {
             this.dbg.fx.timeOfDay        = 'midnight';
             this.dbg.fx.rain            = true;
             this.dbg.fx.rainIntensity = 1.0;
-            this.dbg.fx.rainCount       = 450;   // mais densidade
-            this.dbg.fx.rainSpeed  = 1.4;   // um pouco mais lenta -> visivel mais tempo
+            this.dbg.fx.rainCount       = 450;   // more densidade
+            this.dbg.fx.rainSpeed  = 1.4;   // um pouco more lenta -> visivel more tempo
             this.dbg.fx.rainSize     = 2.2;   // gotas maiores
             this.dbg.fx.rainAngle      = 0.04;
             this.dbg.fx.fog          = true;
             this.dbg.fx.fogIntensity = 1.0;
             this.dbg.fx.wind            = true;
             this.dbg.fx.windForce       = 0.04;
-            // Sem game over no teaser — fuel congelado, sem drain
+            // without game over no teaser — fuel congelado, without drain
             this._tutCombustivelCongelado = true;
-            // Beam visual SEM pull (igual etapa BEAM_VISUAL do tutorial):
+            // Beam visual without pull (equal etapa BEAM_VISUAL do tutorial):
             // cone aparece ao tocar mas nao abduz/arrasta cows
             this._tutBeamNoPull  = true;
             this._tutBeamNoDrain = true;
@@ -121,7 +121,7 @@ class Jogo extends Phaser.Scene {
         const CONE_R = (40*5.55/2) * beamScale;
         this.coneRadius = CONE_R;
         // Beam: Graphics with círculos concêntricos de alpha variável (without PNG → without
-        // artefato de mask). Desenhado em _desenharCone(raio) chamado em _updateBody.
+        // artefato de mask). Desenhado em _desenharCone(radius) chamado em _updateBody.
         this.lightCone = this.add.graphics().setDepth(2).setVisible(false);
         this._desenharCone(CONE_R);
         if (!this.dbg.enabled.beam) this.lightCone.setAlpha(0);  // beam invisível se OFF
@@ -132,11 +132,11 @@ class Jogo extends Phaser.Scene {
         this.ufo.setDisplaySize(80 * ufoScale, 80 * ufoScale);
         // MOBILE_MODE: ufo com inercia alta (frictionAir baixo) + bounce
         // total nas bordas (matter combina restitution via Math.max — walls
-        // default=0, ship=1 -> bounce sem perda de energia).
+        // default=0, ship=1 -> bounce without perda de energia).
         if (window.__MOBILE_MODE) {
             this.ufo.setFrictionAir(0.005).setBounce(1.0);
         }
-        // Lock rotação física — ufo não gira by colisão; rotação is feita manualmente
+        // Lock rotação física — ufo não gira by collision; rotação is feita manualmente
         // via ufoRot slider no _updateBody
         this.ufo.setFixedRotation();
         this._ufoDir8 = 'S';
@@ -167,7 +167,13 @@ class Jogo extends Phaser.Scene {
         this.energiaRegen = 30;
 
         // ── HUD ──────────────────────────────────────────────────────
-        this.isMobile = this.sys.game.device.input.touch;
+        // L5: detection mais conservadora pra evitar false-positive em hybrid
+        // (touchscreen laptop, 2-in-1, tablet com mouse). So vira true se for
+        // touch-coarse-pointer-pequeno simultaneamente. Hybrid usa desktop mode
+        // (mouse default) — pode togglar pra WASD via CONFIGS sem quebrar.
+        this.isMobile = !!this.sys.game.device.input.touch
+            && window.matchMedia('(pointer: coarse)').matches
+            && window.innerWidth < 1024;
         this.input.addPointer(1);
         this.hud = {};
         this._createHUD();
@@ -217,7 +223,7 @@ class Jogo extends Phaser.Scene {
         this._setupCollisions();              // 10_colisao.js
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (only mobile)
 
-        // MOBILE_MODE: dark vignette overlay (canvas radial preto) — mais
+        // MOBILE_MODE: dark vignette overlay (canvas radial preto) — more
         // forte que o vignette branco do fog. Depth 190 -> above das FX
         // mas below do HUD (que ja esta escondido em mobile).
         if (window.__MOBILE_MODE) {
@@ -234,7 +240,7 @@ class Jogo extends Phaser.Scene {
             this.textures.addCanvas('mobile_vignette', c);
             this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
                 .setScrollFactor(0).setDepth(190);
-            // Vignette fixa centralizada (tamanho exato to cobrir screen)
+            // Vignette fixa centralizada (size exato to cobrir screen)
             this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
             this.scale.on('resize', () => {
                 if (this.fxMobileVignette?.scene) {
@@ -319,13 +325,23 @@ class Jogo extends Phaser.Scene {
         this._tutFreezeNave = false;
         this._tutCombustivelCongelado = false;
         this._tutGravitonDrain2x = false;
+        // M3: cleanup todos slots dos currais (pisca/bounce tweens + icons orfãos)
+        if (this.corrals && this._cleanSlot) {
+            for (const c of this.corrals) {
+                if (c?.slots) {
+                    for (let i = 0; i < c.slots.length; i++) {
+                        if (c.slots[i]) this._cleanSlot(c, i);
+                    }
+                }
+            }
+        }
     }
 
     update(time, delta) {
-        // F3 + debug overlay funcionam desde o splash
+        // F3 + debug overlay funcionam since o splash
         if (this._updateDebugOverlay) this._updateDebugOverlay();
 
-        // ESC funciona desde o splash to abrir CONFIGS before do game iniciar
+        // ESC funciona since o splash to abrir CONFIGS before do game iniciar
         if (!this.gameStarted) {
             if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
                 this._splashConfigsOpen = !this._splashConfigsOpen;
@@ -392,7 +408,7 @@ class Jogo extends Phaser.Scene {
                     y: this.ufo.y + (dy/len) * REACH
                 };
             } else {
-                // Sem input: cursor na ship (não move)
+                // without input: cursor na ship (não move)
                 cursor = { x: this.ufo.x, y: this.ufo.y };
             }
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)

@@ -128,7 +128,7 @@ const DBG_DEFAULTS = {
 // Migration map: PT key (legacy localStorage) -> EN key (novo padrao).
 // Roda em _loadDebugCfg to preservar configs salvas before do refator.
 // Nota: as chaves do lado esquerdo SAO PT (legadas no localStorage do user),
-// nao podem ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
+// nao can ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
 const PT_TO_EN_MIGRATION = {
     enabled:  { ['va'+'cas']:'cows', ['b'+'ois']:'oxen', ['fazendeir'+'os']:'farmers', ['atirador'+'es']:'shooters', ['cenari'+'o']:'scenery' },
     scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'ox', ['fa'+'z']:'farmer', ['nav'+'e']:'ufo' },

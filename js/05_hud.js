@@ -21,8 +21,8 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido to _turnIntoBurger
 
-        // ── Barras combinadas (PNG unico c/ COMBUSTIVEL+GRAVITON) ───────
-        // Mais simples: um empty PNG + um full PNG, dois fillImg apontando pro
+        // ── Barras combinadas (PNG unico c/ fuel+GRAVITON) ───────
+        // more simples: um empty PNG + um full PNG, dois fillImg apontando pro
         // same full mas each um com crop region da sua bar (independencia)
         const useCombined = this.textures.exists('hud_combined_empty') && this.textures.exists('hud_combined_full');
         if (useCombined) {
@@ -34,8 +34,8 @@ Object.assign(Jogo.prototype, {
             this.hud.eneFillImg = this.add.image(0, 0, 'hud_combined_full')
                 .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
             // Bar regions em fractions da texture (refinar visualmente)
-            this.hud.combFillImg._cropRegion = { fx: 0.252, fy: 0.490, fw: 0.498, fh: 0.085 };
-            this.hud.eneFillImg._cropRegion  = { fx: 0.305, fy: 0.640, fw: 0.395, fh: 0.078 };
+            this.hud.combFillImg._cropRegion = { fx: 0.235, fy: 0.528, fw: 0.521, fh: 0.073 };
+            this.hud.eneFillImg._cropRegion  = { fx: 0.278, fy: 0.662, fw: 0.434, fh: 0.064 };
             // Aliases to _setBarsVisibility / outros consumidores
             this.hud.combImg = this.hud.combinedBg;
             this.hud.eneImg  = this.hud.combinedBg;
@@ -106,7 +106,7 @@ Object.assign(Jogo.prototype, {
     _positionHUD() {
         const w = this.scale.width, h = this.scale.height;
 
-        // Score — centro-topo
+        // Score — center-topo
         this.hud.scoreBg.setPosition(w/2, 28);
         this.hud.scoreText.setPosition(w/2, 32);
 
@@ -119,11 +119,11 @@ Object.assign(Jogo.prototype, {
         // Barras: combined PNG OU 2 separados
         if (this.hud._combinedHud && this.hud.combinedBg) {
             const HUD_W = 460, HUD_H = 306;
-            const cy = h - HUD_H/2 + 30;  // bottom (alguns 30px do fundo cortados pq PNG tem area transparente embaixo)
+            const cy = h - HUD_H/2 + 30;  // bottom (alguns 30px do fundo cortados pq PNG has area transparente embaixo)
             this.hud.combinedBg.setPosition(w/2, cy);
             if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, cy);
             if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, cy);
-            // Labels overlay no centro de each bar (offset = (fy + fh/2 - 0.5) * HUD_H)
+            // Labels overlay no center de each bar (offset = (fy + fh/2 - 0.5) * HUD_H)
             const combR = this.hud.combFillImg?._cropRegion;
             const eneR  = this.hud.eneFillImg?._cropRegion;
             if (combR && this.hud.combLabel) {
@@ -196,7 +196,7 @@ Object.assign(Jogo.prototype, {
         // to que nada do radar (fill, sweep, blips) vaze outside da abertura.
         const MASK_RX = INNER_RX * 0.92;
         const MASK_RY = INNER_RY * 0.88;
-        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica above do centro do frame
+        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica above do center do frame
         if (!this._radarMaskShape) {
             this._radarMaskShape = this.make.graphics({ x: 0, y: 0, add: false });
             this._radarMask = this._radarMaskShape.createGeometryMask();
@@ -212,7 +212,7 @@ Object.assign(Jogo.prototype, {
         this._mini.maskRx = MASK_RX;
         this._mini.maskRy = MASK_RY;
 
-        // Pool de sprites: aplica mesma mascara (segue clipping do leak)
+        // Pool de sprites: applies mesma mascara (segue clipping do leak)
         if (this._radarHoloPool && this._radarHoloPool.length) {
             for (const s of this._radarHoloPool) {
                 if (s && s.scene) s.setMask(this._radarMask);
@@ -267,7 +267,7 @@ Object.assign(Jogo.prototype, {
         if (this.hud.eneLabel)    this.hud.eneLabel.setVisible(gravVisible);
     },
 
-    // Updates fill v2 via setCrop — chamado pelos updaters de combustivel/graviton
+    // Updates fill v2 via setCrop — chamado pelos updaters de fuel/graviton
     // pct: 0..1 (proporção atual da barra)
     _updateFillCrop(fillImg, pct) {
         if (!fillImg || !fillImg.scene) return;
@@ -300,7 +300,7 @@ Object.assign(Jogo.prototype, {
     _updateMinimap() {
         const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ufo) return;
         // Coords da CAVIDADE (mascara) — sweep e blips renderizam aqui to
-        // ficar inside do clip do GeometryMask, sem leak embaixo do frame.
+        // ficar inside do clip do GeometryMask, without leak embaixo do frame.
         const cx = m.maskCx ?? m.cx;
         const cy = m.maskCy ?? m.cy;
         const rx = m.maskRx ?? m.rx;
@@ -343,7 +343,7 @@ Object.assign(Jogo.prototype, {
         const FADE_MS = 2500;
         const fades = this._radarBlipFades;
 
-        // Helper: testa se sweep line passou pelo angulo do blip nesse frame
+        // Helper: testa se sweep line passou pelo angulo do blip in this frame
         const sweptThis = (blipAng) => {
             // Normaliza ambos to [0, 2π)
             let prev = ((prevAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
@@ -425,7 +425,7 @@ Object.assign(Jogo.prototype, {
         g.strokeCircle(cx, cy, 6 + pulse * 3);
     },
 
-    // Cleanup do map de blip fades when entidades morrem (evita leak)
+    // Cleanup do map de blip fades when entidades morrem (avoids leak)
     _cleanRadarFades() {
         if (!this._radarBlipFades) return;
         for (const entity of this._radarBlipFades.keys()) {

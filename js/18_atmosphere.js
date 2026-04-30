@@ -1,6 +1,6 @@
 ﻿// 18_atmosphere.js — Time of day overlay (gradient vertical) + weather presets
 // 6 TOD presets (dawn/day/dusk/sunset/night/midnight) + auto-cycle opcional
-// Weather: clear / rain / fog / storm (storm has flash de raio aleatório)
+// Weather: clear / rain / fog / storm (storm has flash de radius aleatório)
 // Tutorial always em "day" + "clear" (não confunde o player)
 
 const TOD_PRESETS = {
@@ -24,7 +24,7 @@ Object.assign(Jogo.prototype, {
     _setupAtmosphere() {
         // Gradient overlay (depth 195 = below do HUD em 100+ mas above de rain 180)
         this._atmoGfx = this.add.graphics().setScrollFactor(0).setDepth(195);
-        // Flash de raio (storm)
+        // Flash de radius (storm)
         this._atmoFlashGfx = this.add.graphics().setScrollFactor(0).setDepth(196).setVisible(false);
         this._atmoCycleTimer = 0;
         this._atmoCycleDuration = 60000;  // 60s by preset → ciclo de 6min
@@ -148,7 +148,7 @@ Object.assign(Jogo.prototype, {
             duration: 220, ease: 'Cubic.easeIn',
             onComplete: () => { if (f.scene) f.setVisible(false); }
         });
-        // Eco curto pro segundo flash do raio
+        // Eco curto pro segundo flash do radius
         this.time.delayedCall(280, () => {
             if (this.dbg?.fx?.weather !== 'storm') return;
             f.clear(); f.fillStyle(0xffffff, 0.55); f.fillRect(0, 0, w, h);

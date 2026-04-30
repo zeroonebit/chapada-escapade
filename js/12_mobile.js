@@ -9,7 +9,7 @@ Object.assign(Jogo.prototype, {
         // controla cursor + beam via input.activePointer
         if (window.__MOBILE_MODE) return;
 
-        // Permitir até 3 pointers (joystick + botão + extras)
+        // allow até 3 pointers (joystick + botão + extras)
         this.input.addPointer(2);
 
         this._joyVec = { x: 0, y: 0, active: false };
@@ -20,7 +20,7 @@ Object.assign(Jogo.prototype, {
         const D = 150, D2 = 151;
         const COR_VERDE = 0x00ff55;
         const COR_VERMELHO = 0xff3366;
-        // Alpha defaults: silhueta discreta no canto, vai to 0 ao tocar
+        // Alpha defaults: silhueta discreta no canto, will to 0 ao tocar
         const IDLE_ALPHA = 0.25;
         const HIDE_ALPHA = 0.0;
 

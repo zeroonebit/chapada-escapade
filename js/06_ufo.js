@@ -12,7 +12,7 @@ Object.assign(Jogo.prototype, {
 
     _desenharCone(r) {
         this.lightCone.clear();
-        // Camadas concêntricas, alpha crescente do exterior pro centro — gera halo suave
+        // Camadas concêntricas, alpha crescente do exterior pro center — gera halo suave
         this.lightCone.fillStyle(0x66ff99, 0.05); this.lightCone.fillCircle(0, 0, r * 1.10);
         this.lightCone.fillStyle(0x66ff99, 0.08); this.lightCone.fillCircle(0, 0, r * 0.92);
         this.lightCone.fillStyle(0x88ffaa, 0.12); this.lightCone.fillCircle(0, 0, r * 0.72);
@@ -22,7 +22,7 @@ Object.assign(Jogo.prototype, {
 
     _updateLEDs(delta) {
         const N = this.leds.length;
-        // Raio do anel = ~48% do displayWidth da ship (edge visual exterior)
+        // radius do anel = ~48% do displayWidth da ship (edge visual exterior)
         // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se ship escalar.
         const LED_R = (this.ufo?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
@@ -72,14 +72,14 @@ Object.assign(Jogo.prototype, {
         // Núcleo vermelho intenso
         this.trailGraphic.fillStyle(0xff1111, 1);
         this.trailGraphic.fillCircle(c.x, c.y, 2.5);
-        // Pequeno reflexo branco no centro (efeito laser)
+        // Pequeno reflexo branco no center (efeito laser)
         this.trailGraphic.fillStyle(0xffffff, 0.85);
         this.trailGraphic.fillCircle(c.x, c.y, 1);
     },
 
     _moveShip(c) {
         if (this._tutFreezeNave) return;
-        // MOBILE_MODE teaser: aplica forca somente com dedo segurado.
+        // MOBILE_MODE teaser: applies forca somente com dedo segurado.
         // Solta -> ship continua com inercia (frictionAir baixo) e bounce
         // nas bordas (setBounce 1.0).
         if (window.__MOBILE_MODE && !this.input.activePointer.isDown) return;
