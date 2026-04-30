@@ -4,6 +4,107 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-30 (tarde·noite) — Polish in-game + sync/merge fix + 8 tilesets unblocked + HUD coluna + game over fixes
+
+**~30 commits, sessão longa pós-merge da outra sessão**
+
+### Fix do merge cataclísmico (start)
+- Outra sessão (`nostalgic-mclaren-1f61ba`) mergeou 148 commits que clobbed o D+R2 refactor — código voltou a referenciar paths PT (`chars/vaca/`, `nature/pedras/`) que não existem mais → game não carregava
+- Fix: restaurei `js/01..20` do meu último commit bom + reapliquei integração do Currais V2 sprite (preload + `_buildCorral` + `_slotPos` slotOffsetY)
+
+### Currais V2 — mascote cenográfico per-variante
+- `_buildCorral` push agora salva `mascotCenografico=true` + `mascotCfg` por variante
+- `_ensureCowMascot` lê `cfg.tipo`/`anim`/`dx`/`dy` (cow/bull, cow_eat_S/cow_eat_N/cow_angry_S/ox_walk_S, posição offset)
+- `_updateMascoteVisibilidade`: mascot+balde sempre visíveis (cenográfico) vs counter+feno só com delivery real
+- 5 variantes configuradas: 01 pequeno (cow eat S + balde), 02 redondo (igual), 03 hexagonal (cow drinking N — alinha com coxo, sem balde), 04 rustico (cow lie_down S, sem balde), 05 abandonado (ox walk S, sem balde)
+
+### Tutorial polish massivo
+- **Box maior**: BOX_W 280→360, LINE_H 14→18, HEADER_H 22→30, fontes 11→14/13, body/note 10→12
+- **Nomes engraçados PT-BR**: PILOTANDO A NAVE, TESTANDO O FEIXE (merge 02+03), ROUBANDO VACAS, ENTREGA EXPRESSA, HORA DO LANCHE, REVIDE (era LEVANDO TIRO), PEGANDO O FAZENDEIRO, ARREMESSO NAS PEDRAS
+- **+2 steps**: 09 ESQUIVA DE TORPEDOS, 10 ABATER ESPANTALHO (lógica de completion ainda placeholder)
+- **TUT_MODES**: 2 entradas novas (DODGE_TORPEDOS, KILL_SHOOTER) com flags default tipo FARMER
+- **Tutorial highlights desalinhados**: `_combBar`/`_eneBar.y` agora top-left (era center) — `_tutGlowAtScreenRect` espera top-left, V2 calculava como center
+
+### HUD scores nameless V2 + radar V2
+- 6 boxes sliced via `tools/slice_hud_scores.py` (score/burgers/cows/oxen/farmers/shooters_v2)
+- `radar_dome_v2` + `radar_ring_v2` sliced manualmente do `refs/hudradarv2.png`
+- Sandwich layering radar: ring (depth 199) → conteúdo (199.5-200.5) → dome glass (200.8 alpha 0.4)
+- Mobile force landscape: `#rotate-prompt` overlay CSS @media (orientation:portrait)
+- Dome alignment iterado: DOME_DY -0.32 → -0.18 do height (dome alto demais)
+
+### HUD reorg + ox→bull rename + cleanup assets
+- User editou transparência dos 8 PNGs de score boxes — synced
+- Rename `oxen_v2.png` → `bulls_v2.png` + bulk replace `ox`→`bull` em todos refs
+- Cleanup: 18 PNGs deletados (frames v1/v2/v3, `radar_frame.png`, etc) — preload simplificado
+- Combined HUD: `combustivel-graviton_empty_nameless.png` (substitui `_empty.png`)
+
+### 8 tilesets 16px UNBLOCKED (Mapa1 verde + Mapa2 seco)
+- URL pattern descoberto: `https://api.pixellab.ai/mcp/tilesets/{id}/{image,metadata}` (sem auth)
+- Download 8 PNGs + 8 metadata JSONs
+- Slice cr31: `name=wang_X` row-major no grid 4×4 + `corners` dict explicit
+- Mapping: PixelLab usa NW=8 NE=4 SW=2 SE=1, nosso código usa NW=1 NE=2 SE=4 SW=8 — convertido
+- Salvos em `assets/terrain/{mapa1,mapa2}_{ocean_dirt,ocean_grass,sand_dirt,sand_grass}/wang_NN.png`
+- Preload `WANG_STYLES` expandida 3→11 styles
+- Dropdown CONFIGS VFX → "Tile style" com 11 opções traduzidas EN/PT
+
+### Wang tiles ON por default
+- `DBG_DEFAULTS.fx.wangtiles = true` (era false) — render ativo no spawn
+
+### Gas can spawn rules
+- Antes: gas_can + barrel_rusty random pelo mapa
+- Agora: gas_can SÓ atrelado a truck (`truckSpots` tracked no landmark loop), 1-3 cans em raio 60-100px, scale = `truck.scale * 0.35`, tint `0xc88a5a` (marrom-laranja casa com truck enferrujado)
+- barrel_rusty mantém cluster random separado (3 spots)
+
+### HUD coluna left + counters wired
+- 5 boxes empilhados verticalmente: BULLS / COWS / FARMERS / SHOOTERS / BURGERS
+- Score mantido top-center
+- COL_X=100, GAP_Y=62, FIRST_Y centralizado vertical (`Math.max(36, h/2 - 2*GAP_Y)`)
+- Counters cumulativos: `bullsTotal`/`cowsTotal`/`farmersTotal`/`shootersTotal` + `burgerCount` (já existia)
+- Increment: `_dropCowsAtCorral` (cow/bull conforme tipo), `_explode` com isEnemy (farmer), `_destroyShooter` (shooter)
+- i18n PT-BR: BOIS/VACAS/FAZENDEIROS/ESPANTALHOS/HAMBURGUERES
+
+### Wind swirls cartoon style
+- `_buildWindParticles`: + `_curlR` (5-10px) + `_trails` (1 ou 2 paralelas), len 60-110, alpha 0.18-0.42
+- `_updateWind` redesenhado: trail bezier (taper amp 1→0.4) + curl spiral 1.6 voltas no leading edge
+- Estilo cartoon (referências Adobe Stock/Vectorstock que user mostrou)
+
+### Rotation lock cows/farmers
+- User: "as animações de caminhar/correr não devem ter rotação"
+- `_directionalTexture` (cows): força `v.rotation=0` exceto se `abductedCows.includes(v)`
+- `_updateFarmers`: força `f.rotation=0` exceto se `isAbducted` ou `inSpin` (release window)
+
+### Cow/bull sem explosão em colisões
+- User: "tirar a explosão delas em colisões"
+- `_environmentCollision` rocha branch: agora SÓ `entityIsEnemy` (farmer) toma dano + explode
+- cow-cow / cow-bull / bull-bull: bounce físico, zero dano (era 1 hit em high-impact)
+
+### Farmer release-spin 3s
+- User: "quando soltar fazendeiro deve continuar movimento com inércia + spin 3s"
+- `_releaseCow` detecta `isEnemy`: `setFrictionAir(0.01)` + `_releaseSpinUntil = now + 3000` + `_spinRate = ±8 a 14 rad/s` random
+- `_updateFarmers`: durante `inSpin`, `f.rotation += spinRate * delta` + skip IA/sprite update; após 3s reset
+
+### Fuel drain por movimento
+- Antes: drain fixo 2.2/s × difficulty (igual parado e voando)
+- Agora: `(0.4 + 3.1 × speedNorm) × difficulty` onde `speedNorm = min(1, |velocity|/8)`
+- Parado: ~0.4/s (~250s pra esgotar). Full speed: ~3.5/s (~28s)
+
+### Bug fix de loading
+- `this.matter.body.setAngle(body, 0)` quebrava — `this.matter.body` é factory, não tem `setAngle` estático
+- Removido — `v.rotation = 0` (Phaser MatterSprite setter) já sincroniza body angle
+
+### Outros
+- Splash skip on restart (`window.__cepPlayedOnce` in-memory, reseta no F5)
+- Restart transition red→green loading bar (1.4s) antes de scene.restart
+- Game over cinematic V2: vinheta + Fibonacci spiral + tremor + smoke + crash crooked + GAME OVER VT323 grow
+- Quips coloridos por tom (r=angry/g=funny/y=ironic/b=factual) + seguem target
+- Radar v2: GeometryMask cavidade + alien green + quadrantes + 3 anéis concêntricos
+
+### Ferramentas criadas/usadas
+- `tools/slice_hud_scores.py` — slice 6 score boxes do `refs/hud scores nameless.png`
+- Probe URLs PixelLab CDN (revelou pattern api.pixellab.ai/mcp/tilesets sem auth)
+
+---
+
 ## Sessão 2026-04-30 (manhã) — PixelLab gen sprint: currais V2 + grass blades + tilesets + balance + handoff PixaPro
 
 ### Currais V2 (substitui sistema procedural)
