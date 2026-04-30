@@ -23,6 +23,22 @@
 .refresh{font-size:17px;opacity:.6;margin-top:8px;font-weight:bold;}
 .stats{font-size:12px;opacity:.7;margin:4px 0;}
 
+/* Dark scrollbars (sutis) — aplica em side-grid, grid-thumbs e popup */
+.side-grid::-webkit-scrollbar,
+.grid-thumbs::-webkit-scrollbar,
+#floatingPopup::-webkit-scrollbar { width:8px; height:8px; }
+.side-grid::-webkit-scrollbar-track,
+.grid-thumbs::-webkit-scrollbar-track,
+#floatingPopup::-webkit-scrollbar-track { background:#1a1410; }
+.side-grid::-webkit-scrollbar-thumb,
+.grid-thumbs::-webkit-scrollbar-thumb,
+#floatingPopup::-webkit-scrollbar-thumb { background:#3a2d1e; border-radius:4px; }
+.side-grid::-webkit-scrollbar-thumb:hover,
+.grid-thumbs::-webkit-scrollbar-thumb:hover,
+#floatingPopup::-webkit-scrollbar-thumb:hover { background:#5a4226; }
+/* Firefox */
+.side-grid, .grid-thumbs, #floatingPopup { scrollbar-color:#3a2d1e #1a1410; scrollbar-width:thin; }
+
 /* Action button color variants — alpha 0.55 ambient · 0.92 hover (deixa stage por trás visível) */
 .btn-promote{background:rgba(61,209,61,0.55)!important;color:#000!important;border-color:rgba(29,138,29,0.85)!important;}
 .btn-promote:hover{background:rgba(94,232,94,0.92)!important;}
