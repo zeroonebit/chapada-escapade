@@ -343,49 +343,185 @@ Object.assign(Jogo.prototype, {
 
     // ── GAME OVER ─────────────────────────────────────────────────────────
     _gameOver() {
+        if (this.gameOver) return;
         this.gameOver = true;
         this._releaseAll();
 
+        // Trava input + congela mundo + para camera follow pra cinematic
+        if (this.input) this.input.enabled = false;
+        this.matter.world.enabled = false;
+        this.cameras.main.stopFollow();
+
+        this._cinematicGameOver();
+    },
+
+    // Cinematic: vinheta radial fechando no disco + tremor + fumaca + queda
+    // crooked + UI vermelha de game over apos. Botao -> _restartTransition.
+    _cinematicGameOver() {
         const w = this.scale.width, h = this.scale.height;
+        const cam = this.cameras.main;
+        const ship = this.ship;
+        if (!ship || !ship.scene) { this._showGameOverUI(); return; }
 
-        // Splash de fundo desaturado em vermelho — repete o look do início
-        const bgImg = this.add.image(w/2, h/2, 'splash')
-            .setScrollFactor(0).setDepth(199).setTint(0x441111);
-        const texGO = bgImg.texture.getSourceImage();
-        bgImg.setScale(Math.max(w / texGO.width, h / texGO.height));
-        bgImg.setAlpha(0.55);
+        const shipBaseX = ship.x;
+        const shipBaseY = ship.y;
+        const shipBaseScale = ship.scaleX || 1;
 
-        this.add.rectangle(w/2, h/2, w, h, 0x050000, 0.55)
-            .setScrollFactor(0).setDepth(200);
+        // ── 1. Vinheta radial: rect preto fullscreen com hole mask shrinking ──
+        const vignette = this.add.rectangle(w/2, h/2, w, h, 0x000000, 1)
+            .setScrollFactor(0).setDepth(190).setAlpha(0);
+        const holeMaskG = this.make.graphics({ x: 0, y: 0, add: false });
+        const holeMask = holeMaskG.createGeometryMask();
+        holeMask.invertAlpha = true;  // branco = hole transparente no rect preto
+        vignette.setMask(holeMask);
 
-        // Linha decorativa
-        this.add.rectangle(w/2, h/2 - 130, 260, 2, 0xff2222, 0.5)
-            .setScrollFactor(0).setDepth(201);
+        const drawHole = (r) => {
+            const sx = ship.x - cam.scrollX;
+            const sy = ship.y - cam.scrollY;
+            holeMaskG.clear();
+            holeMaskG.fillStyle(0xffffff);
+            holeMaskG.fillCircle(sx, sy, r);
+        };
 
-        this.add.text(w/2, h/2 - 96, 'GAME OVER', {
-            fontSize: '50px', fill: '#ff2222', fontStyle: 'bold',
-            stroke: '#440000', strokeThickness: 4
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        const startR = Math.max(w, h);
+        const endR = 110;
+        drawHole(startR);
 
-        this.add.rectangle(w/2, h/2 - 44, 260, 2, 0xff2222, 0.25)
-            .setScrollFactor(0).setDepth(201);
+        this.tweens.add({ targets: vignette, alpha: 1, duration: 280 });
+        const holeObj = { r: startR };
+        this.tweens.add({
+            targets: holeObj, r: endR,
+            duration: 1400, ease: 'Cubic.easeIn',
+            onUpdate: () => drawHole(holeObj.r),
+        });
 
-        this.add.text(w/2, h/2 - 14, 'SCORE', {
-            fontSize: '11px', fill: '#555555', fontStyle: 'bold', letterSpacing: 4
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        // ── 2. Tremor do disco (intensifica ao longo do tempo) ──
+        const SHAKE_DUR = 1400;
+        let shakeT = 0;
+        const shakeEvent = this.time.addEvent({
+            delay: 30,
+            callback: () => {
+                shakeT += 30;
+                if (shakeT > SHAKE_DUR) { shakeEvent.remove(); return; }
+                const k = shakeT / SHAKE_DUR;
+                const I = 1 + k * 6;
+                ship.x = shipBaseX + (Math.random() - 0.5) * I * 2.2;
+                ship.y = shipBaseY + (Math.random() - 0.5) * I * 2.2;
+                ship.rotation = (Math.random() - 0.5) * 0.06 * I;
+                drawHole(holeObj.r);  // refresh hole pra acompanhar shake
+            },
+            loop: true,
+        });
 
-        this.add.text(w/2, h/2 + 28, this.score, {
-            fontSize: '52px', fill: '#00dd44', fontStyle: 'bold'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        // ── 3. Fumaca cinza saindo do disco durante shake + queda ──
+        const smokeEvent = this.time.addEvent({
+            delay: 90,
+            callback: () => this._spawnGameOverSmoke(ship.x, ship.y),
+            loop: true,
+        });
 
-        let btn = this.add.rectangle(w/2, h/2 + 100, 220, 42, 0x00dd44)
-            .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true });
-        this.add.text(w/2, h/2 + 100, 'JOGAR NOVAMENTE', {
-            fontSize: '13px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 2
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
-        btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
-        btn.on('pointerout',  () => btn.setFillStyle(0x00dd44));
-        btn.on('pointerdown', () => this._restartTransition('gameover'));
+        // ── 4. Apos shake, queda crooked: tilt + drop ──
+        this.time.delayedCall(SHAKE_DUR, () => {
+            shakeEvent.remove();
+            const fallObj = { y: shipBaseY, rot: 0, scale: shipBaseScale };
+            this.tweens.add({
+                targets: fallObj,
+                y: shipBaseY + 95,
+                rot: 0.6,
+                scale: shipBaseScale * 0.9,
+                duration: 780,
+                ease: 'Cubic.easeIn',
+                onUpdate: () => {
+                    ship.x = shipBaseX;
+                    ship.y = fallObj.y;
+                    ship.rotation = fallObj.rot;
+                    ship.setScale(fallObj.scale);
+                    drawHole(holeObj.r);
+                },
+                onComplete: () => {
+                    smokeEvent.remove();
+                    // Burst de fumaca no impacto
+                    for (let i = 0; i < 14; i++) {
+                        this._spawnGameOverSmoke(shipBaseX, ship.y, true);
+                    }
+                    // Beat antes da UI
+                    this.time.delayedCall(520, () => this._showGameOverUI());
+                },
+            });
+        });
+    },
+
+    _spawnGameOverSmoke(x, y, big) {
+        const sz = big ? (8 + Math.random() * 10) : (5 + Math.random() * 7);
+        const c = this.add.circle(
+            x + (Math.random() - 0.5) * (big ? 70 : 40),
+            y + (Math.random() - 0.5) * (big ? 40 : 25),
+            sz,
+            0x555555,
+            0.7
+        ).setDepth(180);  // acima do mundo, abaixo da vinheta
+        this.tweens.add({
+            targets: c,
+            x: c.x + (Math.random() - 0.5) * 70,
+            y: c.y - 40 - Math.random() * 60,
+            scale: 2 + Math.random() * 2,
+            alpha: 0,
+            duration: 1600 + Math.random() * 600,
+            ease: 'Quad.easeOut',
+            onComplete: () => c.destroy(),
+        });
+    },
+
+    _showGameOverUI() {
+        const w = this.scale.width, h = this.scale.height;
+        if (this.input) this.input.enabled = true;
+        const D = 201;
+
+        const goText = this.add.text(w/2, h/2 - 70, 'GAME OVER', {
+            fontFamily: '"VT323", "Courier New", monospace',
+            fontSize: '76px',
+            fill: '#ff2222',
+            stroke: '#440000',
+            strokeThickness: 4,
+            letterSpacing: 8,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
+
+        const scoreLabel = this.add.text(w/2, h/2 + 6, 'SCORE', {
+            fontFamily: '"Courier New", monospace',
+            fontSize: '11px', fill: '#777777',
+            fontStyle: 'bold', letterSpacing: 4,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
+
+        const scoreVal = this.add.text(w/2, h/2 + 44, this.score, {
+            fontFamily: '"VT323", "Courier New", monospace',
+            fontSize: '52px', fill: '#ffaaaa',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
+
+        const btn = this.add.rectangle(w/2, h/2 + 116, 240, 46, 0xcc1122)
+            .setScrollFactor(0).setDepth(D)
+            .setStrokeStyle(2, 0xff5566, 0.85)
+            .setInteractive({ useHandCursor: true })
+            .setAlpha(0);
+        const btnLbl = this.add.text(w/2, h/2 + 116, 'JOGAR NOVAMENTE', {
+            fontFamily: '"Courier New", monospace',
+            fontSize: '13px', fill: '#fff5f5',
+            fontStyle: 'bold', letterSpacing: 2,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 1).setAlpha(0);
+
+        btn.on('pointerover', () => btn.setFillStyle(0xff3344));
+        btn.on('pointerout',  () => btn.setFillStyle(0xcc1122));
+        btn.on('pointerdown', () => {
+            this.tweens.add({
+                targets: [btn, btnLbl, goText, scoreLabel, scoreVal],
+                alpha: 0, duration: 220,
+                onComplete: () => this._restartTransition('gameover'),
+            });
+        });
+
+        this.tweens.add({
+            targets: [goText, scoreLabel, scoreVal, btn, btnLbl],
+            alpha: 1, duration: 480, delay: 220, ease: 'Cubic.easeOut',
+        });
     }
 
 });
