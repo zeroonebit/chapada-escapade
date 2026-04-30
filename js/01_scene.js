@@ -112,11 +112,11 @@ class Jogo extends Phaser.Scene {
 
         // ── NAVE ─────────────────────────────────────────────────────
         // Sombra blur fake (3 elipses stacked) — substituiu o tinted ship clone
-        this.shipShadow = this.add.container(0, 0);
-        this.shipShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
-        this.shipShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
-        this.shipShadow.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
-        this.shipShadow.setDepth(1);
+        this.ufoShadow = this.add.container(0, 0);
+        this.ufoShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
+        this.ufoShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
+        this.ufoShadow.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
+        this.ufoShadow.setDepth(1);
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
         this.coneRadius = CONE_R;
@@ -126,21 +126,21 @@ class Jogo extends Phaser.Scene {
         this._desenharCone(CONE_R);
         if (!this.dbg.enabled.beam) this.lightCone.setAlpha(0);  // beam invisível se OFF
         // matter.add.SPRITE (not image) — sprite suporta .anims to hovering_idle 8-dir
-        this.ship = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
-        this.ship.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
-        const shipScale = this.dbg?.scale?.nave ?? 1.0;
-        this.ship.setDisplaySize(80 * shipScale, 80 * shipScale);
+        this.ufo = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
+        this.ufo.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
+        const ufoScale = this.dbg?.scale?.ufo ?? 1.0;
+        this.ufo.setDisplaySize(80 * ufoScale, 80 * ufoScale);
         // MOBILE_MODE: nave com inercia alta (frictionAir baixo) + bounce
         // total nas bordas (matter combina restitution via Math.max — walls
         // default=0, ship=1 -> bounce sem perda de energia).
         if (window.__MOBILE_MODE) {
-            this.ship.setFrictionAir(0.005).setBounce(1.0);
+            this.ufo.setFrictionAir(0.005).setBounce(1.0);
         }
         // Lock rotação física — disco não gira by colisão; rotação is feita manualmente
-        // via shipRot slider no _updateBody
-        this.ship.setFixedRotation();
-        this._naveDir8 = 'S';
-        if (this.anims.exists('ufo_hover_S')) this.ship.play('ufo_hover_S');
+        // via ufoRot slider no _updateBody
+        this.ufo.setFixedRotation();
+        this._ufoDir8 = 'S';
+        if (this.anims.exists('ufo_hover_S')) this.ufo.play('ufo_hover_S');
 
         this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da ship
 
@@ -199,7 +199,7 @@ class Jogo extends Phaser.Scene {
             if(this.hud.hintBg) { this.hud.hintBg.destroy(); this.hud.hintBg = null; }
         });
 
-        this.cameras.main.startFollow(this.ship, true, 0.05, 0.05);
+        this.cameras.main.startFollow(this.ufo, true, 0.05, 0.05);
 
         // Repovoamento periódico (desabilitado em experiment mode)
         if (!this.EXPERIMENT_MODE) {
@@ -388,12 +388,12 @@ class Jogo extends Phaser.Scene {
                 const len = Math.hypot(dx, dy);
                 const REACH = 220;
                 cursor = {
-                    x: this.ship.x + (dx/len) * REACH,
-                    y: this.ship.y + (dy/len) * REACH
+                    x: this.ufo.x + (dx/len) * REACH,
+                    y: this.ufo.y + (dy/len) * REACH
                 };
             } else {
                 // Sem input: cursor na ship (não move)
-                cursor = { x: this.ship.x, y: this.ship.y };
+                cursor = { x: this.ufo.x, y: this.ufo.y };
             }
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
             this._beamHeld = this._keysWASD.SPACE.isDown;
@@ -401,8 +401,8 @@ class Jogo extends Phaser.Scene {
             // Joystick — vetor vira "alvo virtual" 220px à frente da ship
             const REACH = 220;
             cursor = {
-                x: this.ship.x + this._joyVec.x * REACH,
-                y: this.ship.y + this._joyVec.y * REACH
+                x: this.ufo.x + this._joyVec.x * REACH,
+                y: this.ufo.y + this._joyVec.y * REACH
             };
         } else {
             const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
@@ -413,20 +413,20 @@ class Jogo extends Phaser.Scene {
         this._moveShip(cursor);
         this._updateArrow();
 
-        this.shipShadow.setPosition(this.ship.x+8, this.ship.y+24);
+        this.ufoShadow.setPosition(this.ufo.x+8, this.ufo.y+24);
         this._updateShadows();
-        this.lightCone.setPosition(this.ship.x, this.ship.y);
+        this.lightCone.setPosition(this.ufo.x, this.ufo.y);
 
         // Disco: rotação base (slider) + tilt baseado em mudança de speed lateral
-        const shipRot = this.dbg?.behavior?.shipRot ?? 0;
-        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + shipRot * (delta / 1000);
-        const navVx = this.ship.body.velocity.x;
-        const navVy = this.ship.body.velocity.y;
+        const ufoRot = this.dbg?.behavior?.ufoRot ?? 0;
+        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + ufoRot * (delta / 1000);
+        const navVx = this.ufo.body.velocity.x;
+        const navVy = this.ufo.body.velocity.y;
         const vAxDelta = navVx - (this._lastNavVx ?? navVx);
         this._lastNavVx = navVx;
         const tiltTarget = Phaser.Math.Clamp(-vAxDelta * 8, -0.4, 0.4);
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
-        this.ship.rotation = this._discoBaseAngle + this._tiltCurrent;
+        this.ufo.rotation = this._discoBaseAngle + this._tiltCurrent;
 
         // ── UFO directional hover anim ───────────────────────────────
         // Acima de threshold, escolhe dir8 do vetor speed; below, mantém última dir
@@ -434,11 +434,11 @@ class Jogo extends Phaser.Scene {
         if (navSpeedAnim > 0.5) {
             const deg = (Math.atan2(navVy, navVx) * 180 / Math.PI + 360) % 360;
             const i = Math.round(deg / 45) % 8;
-            this._naveDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
+            this._ufoDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
         }
-        const hoverKey = `ufo_hover_${this._naveDir8 || 'S'}`;
-        if (this.ship.anims && this.anims.exists(hoverKey) && this.ship.anims.currentAnim?.key !== hoverKey) {
-            this.ship.play(hoverKey, true);
+        const hoverKey = `ufo_hover_${this._ufoDir8 || 'S'}`;
+        if (this.ufo.anims && this.anims.exists(hoverKey) && this.ufo.anims.currentAnim?.key !== hoverKey) {
+            this.ufo.play(hoverKey, true);
         }
 
         // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
@@ -450,8 +450,8 @@ class Jogo extends Phaser.Scene {
             if (this._smokeTimer > 100) {
                 this._smokeTimer = 0;
                 const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
-                const px = this.ship.x + ux * 30;
-                const py = this.ship.y + uy * 30;
+                const px = this.ufo.x + ux * 30;
+                const py = this.ufo.y + uy * 30;
                 this._spawnSmoke(px, py, {
                     color: 0xbbbbcc, alpha: 0.75, size: 4,
                     dur: 1400, drift: 26

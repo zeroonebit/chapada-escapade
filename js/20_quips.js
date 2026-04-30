@@ -230,7 +230,7 @@ Object.assign(Jogo.prototype, {
             const t = elapsed / q.duration;
             // Target sumiu (entidade morta) -> destroi quip junto
             if (!q.txt || !q.txt.scene) { list.splice(i, 1); continue; }
-            if (!q.target || (q.target.scene === undefined && q.target !== this.ship)) {
+            if (!q.target || (q.target.scene === undefined && q.target !== this.ufo)) {
                 q.txt.destroy(); list.splice(i, 1); continue;
             }
             if (t >= 1) { q.txt.destroy(); list.splice(i, 1); continue; }
@@ -247,12 +247,12 @@ Object.assign(Jogo.prototype, {
     _scheduleMobileQuip() {
         const delay = Phaser.Math.Between(10000, 15000);
         this.time.delayedCall(delay, () => {
-            if (!this.ship || !this.ship.scene) return;
+            if (!this.ufo || !this.ufo.scene) return;
             const lang = this.dbg?.behavior?.lang || 'en';
             const pool = MOBILE_QUIPS[lang] || MOBILE_QUIPS.en;
             const entry = pool[Math.floor(Math.random() * pool.length)];
             const color = TONE_COLORS[entry.m] || TONE_COLORS.y;
-            const txt = this.add.text(this.ship.x, this.ship.y - 60, entry.t, {
+            const txt = this.add.text(this.ufo.x, this.ufo.y - 60, entry.t, {
                 fontSize: '24px',
                 fill: color,
                 fontStyle: 'bold',
@@ -262,7 +262,7 @@ Object.assign(Jogo.prototype, {
                 shadow: { color: color, fill: false, blur: 10 },
             }).setOrigin(0.5).setDepth(195);
             // Segue a nave: baseOffset -60, sobe +80 ao longo de 5500ms
-            this._registerQuip(txt, this.ship, -60, 80, 5500);
+            this._registerQuip(txt, this.ufo, -60, 80, 5500);
             this._scheduleMobileQuip();  // re-schedule
         });
     },
@@ -288,8 +288,8 @@ Object.assign(Jogo.prototype, {
 
         const entry = pool[Math.floor(Math.random() * pool.length)];
         const color = TONE_COLORS[entry.m] || TONE_COLORS.y;
-        const x = target?.x ?? this.ship?.x ?? 0;
-        const y = (target?.y ?? this.ship?.y ?? 0) - 40;
+        const x = target?.x ?? this.ufo?.x ?? 0;
+        const y = (target?.y ?? this.ufo?.y ?? 0) - 40;
 
         const txt = this.add.text(x, y, entry.t, {
             fontSize: '26px',
@@ -316,7 +316,7 @@ Object.assign(Jogo.prototype, {
         if (this._quipProxTimer < 500) return;
         this._quipProxTimer = 0;
 
-        const ship = this.ship;
+        const ship = this.ufo;
         if (!ship) return;
         const PROX_R2 = 350 * 350;  // raio de 350px
 

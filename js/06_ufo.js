@@ -1,4 +1,4 @@
-﻿// 06_nave.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
+﻿// 06_ufo.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
 Object.assign(Jogo.prototype, {
 
     _setupLEDs() {
@@ -24,7 +24,7 @@ Object.assign(Jogo.prototype, {
         const N = this.leds.length;
         // Raio do anel = ~48% do displayWidth da ship (borda visual exterior)
         // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se ship escalar.
-        const LED_R = (this.ship?.displayWidth || 80) * 0.48;
+        const LED_R = (this.ufo?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
         const fullRevs = Math.floor(this._ledHead / N);
         const corBase = (fullRevs % 2 === 0)
@@ -36,8 +36,8 @@ Object.assign(Jogo.prototype, {
         for (let i = 0; i < N; i++) {
             const led = this.leds[i];
             const halo = this.ledHalos[i];
-            const x = this.ship.x + Math.cos(led._ang) * LED_R;
-            const y = this.ship.y + Math.sin(led._ang) * LED_R;
+            const x = this.ufo.x + Math.cos(led._ang) * LED_R;
+            const y = this.ufo.y + Math.sin(led._ang) * LED_R;
             led.setPosition(x, y);
             halo.setPosition(x, y);
 
@@ -83,7 +83,7 @@ Object.assign(Jogo.prototype, {
         // Solta -> ship continua com inercia (frictionAir baixo) e bounce
         // nas bordas (setBounce 1.0).
         if (window.__MOBILE_MODE && !this.input.activePointer.isDown) return;
-        let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
+        let dist = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
         if (dist > 50) {
             const sens = this.dbg?.behavior?.sensitivity ?? 1.0;
             // Carga: -10% speed by cow/ox abduzido (max -50% with 5 animais)
@@ -91,11 +91,11 @@ Object.assign(Jogo.prototype, {
             const carryingCows = (this.abductedCows || [])
                 .filter(v => !v.isBurger && !v.isEnemy).length;
             const carryingMul = Math.max(0.5, 1 - 0.10 * carryingCows);
-            const ang = Phaser.Math.Angle.Between(this.ship.x, this.ship.y, c.x, c.y);
+            const ang = Phaser.Math.Angle.Between(this.ufo.x, this.ufo.y, c.x, c.y);
             // MOBILE_MODE teaser: half speed (terminal velocity baixa)
             const modeMul = window.__MOBILE_MODE ? 0.5 : 1.0;
             const mag = Math.min(dist*0.0001, 0.0035) * sens * carryingMul * modeMul;
-            this.ship.applyForce({
+            this.ufo.applyForce({
                 x: Math.cos(ang) * mag,
                 y: Math.sin(ang) * mag,
             });
@@ -110,7 +110,7 @@ Object.assign(Jogo.prototype, {
         let alvo = null, dMin = Infinity, cor = 0xffcc00;
         if (cowsInBeam > 0) {
             for (const c of this.corrals) {
-                const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
+                const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }
         } else if (this._anyCorralReady && this._anyCorralReady()) {
@@ -119,7 +119,7 @@ Object.assign(Jogo.prototype, {
                 // Estrutura nova (slots fixos): checa se algum slot has burger ready
                 const hasReady = c.slots && c.slots.some(s => s && s.state === 'ready' && !s._sendoColetado);
                 if (!hasReady) continue;
-                const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
+                const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
                 if (d < dMin) { dMin = d; alvo = c; }
             }
         }

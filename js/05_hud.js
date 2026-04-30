@@ -1,4 +1,4 @@
-// 05_hud.js — HUD: criação e posicionamento dos elementos da interface
+﻿// 05_hud.js — HUD: criação e posicionamento dos elementos da interface
 
 Object.assign(Jogo.prototype, {
 
@@ -298,7 +298,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _updateMinimap() {
-        const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ship) return;
+        const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ufo) return;
         // Coords da CAVIDADE (mascara) — sweep e blips renderizam aqui pra
         // ficar dentro do clip do GeometryMask, sem leak embaixo do frame.
         const cx = m.maskCx ?? m.cx;
@@ -308,8 +308,8 @@ Object.assign(Jogo.prototype, {
         const W = 8000, H = 6000;
         const RANGE = Math.max(W, H) * 0.6;
         // Mapa world -> elipse da cavidade
-        const wx = (vx) => cx + (vx - this.ship.x) / RANGE * rx;
-        const wy = (vy) => cy + (vy - this.ship.y) / RANGE * ry;
+        const wx = (vx) => cx + (vx - this.ufo.x) / RANGE * rx;
+        const wy = (vy) => cy + (vy - this.ufo.y) / RANGE * ry;
         const inRadar = (x, y) => {
             const u = (x - cx) / rx, v = (y - cy) / ry;
             return u*u + v*v <= 1;
