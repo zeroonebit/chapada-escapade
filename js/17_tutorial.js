@@ -23,74 +23,74 @@ const TUT_MODES = {
 const TUT_STEPS = [
     {
         key: 'MOVE',
-        shortLabel: 'MOVER',
-        title: '01. MOVER A NAVE',
-        text: 'Use o mouse (clique e arraste) ou joystick para mover a nave pela tela.',
-        note: 'Mova pelo menos 200 pixels.',
+        shortLabel: 'PILOTANDO A NAVE',
+        title: '01. PILOTANDO A NAVE',
+        text: 'Voa por aí. Mouse arrasta ou WASD pra mover.',
+        note: 'Move uns 200 px.',
         highlight: ['nave'],
     },
     {
         key: 'BEAM_VISUAL',
-        shortLabel: 'FEIXE (visual)',
-        title: '02. ATIVAR O FEIXE',
-        text: 'Segure o botão pra ativar o feixe gravitacional. Por enquanto ele NÃO puxa nada — só sente a ativação.',
-        note: 'Ative o feixe ao menos uma vez.',
+        shortLabel: 'TESTANDO O FEIXE',
+        title: '02. TESTANDO O FEIXE',
+        text: 'Segura o botão. O feixe ativa mas ainda não puxa nada.',
+        note: 'Aciona o feixe.',
         highlight: ['nave'],
     },
     {
         key: 'GRAVITON_BAR',
-        shortLabel: 'GRAVITON',
-        title: '03. ENERGIA GRAVITON',
-        text: 'A barra azul no rodapé é o GRAVITON. Segurar o feixe drena (2x neste tutorial). Soltar recarrega.',
-        note: 'Drene <50%, solte e espere 100%.',
+        shortLabel: 'ENERGIA ALIENÍGENA',
+        title: '03. ENERGIA ALIENÍGENA',
+        text: 'Barra azul = GRAVITON. Segurar drena, soltar recarrega.',
+        note: 'Drena <50% e espera recarregar.',
         highlight: ['graviton'],
     },
     {
         key: 'ABDUCT',
-        shortLabel: 'ABDUZIR VACA',
-        title: '04. ABDUZIR UMA VACA',
-        text: 'O feixe agora puxa de verdade! Posicione a nave sobre uma vaca e ative o feixe.',
-        note: 'Abduza pelo menos 1 vaca.',
+        shortLabel: 'ROUBANDO VACAS',
+        title: '04. ROUBANDO VACAS',
+        text: 'Agora puxa de verdade! Centra o feixe na vaca e segura.',
+        note: 'Abduz 1 vaca.',
         highlight: ['cows'],
     },
     {
         key: 'DELIVER',
-        shortLabel: 'ENTREGAR',
-        title: '05. LEVAR AO CURRAL',
-        text: 'Com a vaca no feixe, leve até o curral. A seta verde indica o caminho.',
-        note: 'Entregue a vaca no curral.',
+        shortLabel: 'ENTREGA EXPRESSA',
+        title: '05. ENTREGA EXPRESSA',
+        text: 'Leva pro curral. A seta verde aponta o caminho.',
+        note: 'Entrega no curral.',
         highlight: ['curral'],
     },
     {
         key: 'BURGER',
-        shortLabel: 'COLETAR BURGER',
-        title: '06. COLETAR O HAMBÚRGUER',
-        text: 'Aguarde a vaca virar burger (3s), depois ative o feixe perto dele pra absorver. Sua barra de COMBUSTÍVEL está em 15% — cada burger reabastece.',
-        note: 'Colete um burger pra reabastecer.',
+        shortLabel: 'HORA DE FAZER HAMBÚRGUER',
+        title: '06. HORA DO HAMBÚRGUER',
+        text: 'Espera virar burger (3s) e absorve com o feixe. Recarrega COMBUSTÍVEL.',
+        note: 'Coleta um burger.',
         highlight: ['burger_pronto', 'combustivel'],
     },
     {
         key: 'TAKE_DAMAGE',
-        shortLabel: 'TOMAR DANO',
-        title: '07. TOMAR DANO',
-        text: 'Um fazendeiro apareceu e vai atirar! Sua nave está CONGELADA até tomar um hit — pra você ver o combustível cair em ação.',
-        note: 'Aguarde levar um tiro.',
+        shortLabel: 'LEVANDO TIRO',
+        title: '07. LEVANDO TIRO',
+        text: 'Fazendeiro chegou e vai atirar! Você fica congelado pra sentir o dano.',
+        note: 'Leva um tiro.',
         highlight: ['farmer', 'combustivel'],
     },
     {
         key: 'FARMER',
-        shortLabel: 'CAPTURAR FAZENDEIRO',
-        title: '08. CAPTURAR FAZENDEIROS',
-        text: 'Fazendeiros patrulham o mapa. Use o FEIXE GRAVITON sobre eles igual numa vaca — o feixe os arrasta.',
-        note: 'Capture um fazendeiro no feixe.',
+        shortLabel: 'PEGANDO O FAZENDEIRO',
+        title: '08. PEGANDO O FAZENDEIRO',
+        text: 'Joga o feixe nele igual numa vaca — ele vem junto.',
+        note: 'Captura um fazendeiro.',
         highlight: ['farmer'],
     },
     {
         key: 'FARMER_KILL',
-        shortLabel: 'ARREMESSAR NA PEDRA',
-        title: '09. ARREMESSAR NAS ROCHAS',
-        text: 'Com o fazendeiro preso, voe em alta velocidade em direção a uma PEDRA mantendo o feixe ativo. O impacto elimina o fazendeiro!',
-        note: 'Mate um fazendeiro batendo numa pedra.',
+        shortLabel: 'ARREMESSO NAS PEDRAS',
+        title: '09. ARREMESSO NAS PEDRAS',
+        text: 'Com ele preso, voa rápido contra uma PEDRA. KO instantâneo!',
+        note: 'Mata batendo numa rocha.',
         highlight: ['farmer', 'rock'],
     },
 ];
@@ -540,14 +540,14 @@ Object.assign(Jogo.prototype, {
         this._tutStepShownAt = this.time?.now ?? 0;
 
         const w = this.scale.width;
-        const BOX_W  = 280;
+        const BOX_W  = 360;
         const PAD_X  = 16;
         const PAD_Y  = 60;  // 60px do topo (above do score)
         const bx = w - BOX_W - 16;  // alinha right edge
 
         // Calcula height dinamica: header + N etapas + bloco expandido current
-        const LINE_H = 14;
-        const HEADER_H = 22;
+        const LINE_H = 18;
+        const HEADER_H = 30;
         const EXPANDED_LINES = Math.ceil(step.text.length / 36) + 2;  // text + note
         const totalH = HEADER_H + (TUT_STEPS.length * LINE_H) + (EXPANDED_LINES * 12) + 18;
         const by = PAD_Y;
@@ -563,9 +563,10 @@ Object.assign(Jogo.prototype, {
             .setScrollFactor(0).setDepth(509);
         // Header com brackets
         const header = this.add.text(bx + PAD_X, by + 6, '[ MISSION LOG ]', {
-            fontSize: '11px', fill: '#66ff99', fontStyle: 'bold',
+            fontSize: '14px', fill: '#66ff99', fontStyle: 'bold',
             fontFamily: FONT, letterSpacing: 2
         }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
+        // (header maior — ver fontSize abaixo)
         // Linha divisoria
         const sep = this.add.rectangle(bx + 8, by + HEADER_H, BOX_W - 16, 1, 0x00ff55, 0.4)
             .setOrigin(0, 0).setScrollFactor(0).setDepth(510);
@@ -583,7 +584,7 @@ Object.assign(Jogo.prototype, {
             const num   = String(i + 1).padStart(2, '0');
             const label = `${icon} ${num}. ${s.shortLabel}`;
             const t = this.add.text(bx + PAD_X, cursorY, label, {
-                fontSize: '11px', fill: color,
+                fontSize: '13px', fill: color,
                 fontStyle: isCurrent ? 'bold' : 'normal',
                 fontFamily: FONT
             }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
@@ -593,7 +594,7 @@ Object.assign(Jogo.prototype, {
             // Etapa atual: expande com text + note
             if (isCurrent) {
                 const tBody = this.add.text(bx + PAD_X + 14, cursorY + 2, step.text, {
-                    fontSize: '10px', fill: '#88ddaa',
+                    fontSize: '12px', fill: '#88ddaa',
                     fontFamily: FONT,
                     wordWrap: { width: BOX_W - PAD_X*2 - 14 }
                 }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
@@ -601,7 +602,7 @@ Object.assign(Jogo.prototype, {
                 cursorY += tBody.height + 4;
 
                 const tNote = this.add.text(bx + PAD_X + 14, cursorY, '▸ ' + step.note, {
-                    fontSize: '10px', fill: '#66aa88', fontStyle: 'italic',
+                    fontSize: '12px', fill: '#66aa88', fontStyle: 'italic',
                     fontFamily: FONT,
                     wordWrap: { width: BOX_W - PAD_X*2 - 14 }
                 }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
