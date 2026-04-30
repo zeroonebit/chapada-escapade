@@ -12,9 +12,10 @@
 |---|---|---|---|---|
 | `grass-blades-integration` | in-game | 🔒 blocked | 🔴 high | Integrar 5 grass blades wind_sway in-game |
 | `tilesets-16px-slice-and-group` | in-game | 🔒 blocked | 🔴 high | Slice + agrupar 8 tilesets 16px (Mapa 1/2) |
+| `scarecrow-droid-turrets-missile` | in-game | ⏳ pending | 🔴 high | Scarecrow turrets (3 cores × 8-dir) + missile (8 frames) |
 | `currais-v2-test-and-tune` | test | ⏳ pending | 🟡 medium | Testar currais V2 in-game + ajustar slotOffsetY |
-| `pixapro-spinoff-standalone` | refactor | ⏳ pending | 🟢 low | Migrar PixaPro pra repo standalone |
 | `tutorial-7-9-finish` | in-game | ⏳ pending | 🟡 medium | Concluir tutorial etapas 7-9 |
+| `pixapro-spinoff-standalone` | refactor | ⏳ pending | 🟢 low | Migrar PixaPro pra repo standalone |
 
 **Legenda status:**
 - ⏳ pending — disponível pra pegar
