@@ -25,3 +25,8 @@ assets/pixel_labs/_inbox/
 
 # Saves locais do gallery_server.py (decisions/configs + history) — dados do user, não código
 tools/saves/
+
+# Credentials locais (PixelLab API secret, etc.)
+tools/secrets/
+tools/pixellab_secret.txt
+

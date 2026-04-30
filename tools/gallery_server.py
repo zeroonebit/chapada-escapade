@@ -19,8 +19,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SAVES_DIR = ROOT / "tools" / "saves"
 HISTORY_DIR = SAVES_DIR / "history"
-
 _mcp_jobs = {}  # in-memory: {id: {id, type, description, status, result, ts}}
+_balance_cache = {"data": None, "ts": 0}  # populado pelo bookmarklet via POST /pixellab_balance
+
+# Carrega saldo persistido do disk (sobrevive restart)
+_balance_path = SAVES_DIR / "pixellab_balance.json"
+if _balance_path.exists():
+    try:
+        _balance_cache["data"] = json.loads(_balance_path.read_text(encoding="utf-8"))
+    except Exception:
+        pass
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -51,7 +59,56 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/mcp_status":
             self.handle_get_mcp_status()
             return
+        if self.path == "/pixellab_balance":
+            self.handle_pixellab_balance()
+            return
         super().do_GET()
+
+    def handle_pixellab_balance(self):
+        """Retorna o último saldo postado via POST /pixellab_balance (bookmarklet).
+        Saldo é populado pelo bookmarklet rodando na página pixellab.ai/account
+        (usa session cookies do user, nada de tokens armazenados no servidor)."""
+        if not _balance_cache["data"]:
+            self._send_json({
+                "error": "no_data",
+                "msg": "Saldo ainda não foi capturado. Vá em pixellab.ai/account e use o bookmarklet PixaPro Balance.",
+            }, status=404)
+            return
+        self._send_json(_balance_cache["data"])
+
+    def handle_post_pixellab_balance(self):
+        """Recebe saldo postado pelo bookmarklet rodando em pixellab.ai/account.
+        Body esperado: { used: 812, total: 2000, plan: "Tier 1: Pixel Apprentice",
+                         resets: "May 26", credits_usd: 0.0 }"""
+        import time
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self.send_error(400, f"JSON invalido: {e}")
+            return
+        data["fetched_at"] = datetime.now().isoformat()
+        _balance_cache["data"] = data
+        _balance_cache["ts"] = time.time()
+        # Persistir pra sobreviver restart do server
+        try:
+            SAVES_DIR.mkdir(parents=True, exist_ok=True)
+            with open(SAVES_DIR / "pixellab_balance.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[balance] warn: persist falhou: {e}")
+        self._send_json({"ok": True, "saved": data})
+        used = data.get("used", "?")
+        total = data.get("total", "?")
+        print(f"[balance] {used}/{total} ({data.get('plan', '?')})")
+
+    def _send_json(self, data, status=200):
+        body = json.dumps(data).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(body)
 
     def handle_get_mcp_status(self):
         jobs = list(_mcp_jobs.values())
@@ -108,6 +165,9 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/mcp_status":
             self.handle_post_mcp_status()
             return
+        if self.path == "/pixellab_balance":
+            self.handle_post_pixellab_balance()
+            return
         if self.path == "/mcp_clear":
             _mcp_jobs.clear()
             mcp_path = SAVES_DIR / "mcp_live.json"
@@ -162,7 +222,7 @@ def main():
     print(f"Serving {ROOT} at http://localhost:{port}")
     print(f"  Game:    http://localhost:{port}/")
     print(f"  Gallery: http://localhost:{port}/tools/asset_gallery.html")
-    print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status")
+    print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status, GET /pixellab_balance")
     print(f"  Saves:   {SAVES_DIR.relative_to(ROOT)}/")
     server = ThreadingHTTPServer(("", port), Handler)
     try:

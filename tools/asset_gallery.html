@@ -15,6 +15,14 @@
 
 <h1>PixaPro</h1>
 
+<!-- PixelLab Balance Badge — populado via /pixellab_balance (bookmarklet posta) -->
+<div id="pixellabBalanceBadge" class="balance-badge" title="Click pra copiar bookmarklet · arraste pros bookmarks da Brave">
+  <span id="balanceText">PixelLab: —</span>
+  <span id="balanceMeta"></span>
+  <button id="btnBalanceRefresh" title="Refresh do server">↻</button>
+  <button id="btnBalanceBookmarklet" title="Copia bookmarklet (cola na barra de bookmarks)">📋 Bookmarklet</button>
+</div>
+
 <div class="tabs">
   <button class="tab" data-tab="gallery">📊 Gallery</button>
   <button class="tab" data-tab="editor">✏️ Editor</button>
@@ -287,6 +295,7 @@
 <script src="pixapro/js/tab-editor.js"></script>
 <script src="pixapro/js/tab-detail.js"></script>
 <script src="pixapro/js/tab-tiles.js"></script>
+<script src="pixapro/js/balance.js"></script>
 
 </body>
 </html>

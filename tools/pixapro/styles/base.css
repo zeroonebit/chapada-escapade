@@ -15,3 +15,11 @@ button:disabled{opacity:.3;cursor:not-allowed;}
 
 .queue-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(26,20,16,0.96);border-top:2px solid #6b5234;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;align-items:center;z-index:100;}
 .queue-bar button{padding:6px 14px;font-size:12px;}
+
+/* PixelLab balance badge (header) */
+.balance-badge{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#2a2218;border:1px solid #4a3826;border-radius:6px;font-size:13px;margin:4px 0 10px;color:#a89368;}
+.balance-badge #balanceText{color:#f4c95d;font-weight:bold;}
+.balance-badge #balanceMeta{font-size:12px;opacity:.7;}
+.balance-badge button{padding:4px 10px;font-size:12px;background:#3a2d1e;color:#a89368;border:1px solid #4a3826;border-radius:3px;cursor:pointer;}
+.balance-badge button:hover{background:#4a3826;color:#f4c95d;}
+.balance-badge.low #balanceText{color:#e89f9f;}
