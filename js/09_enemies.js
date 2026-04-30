@@ -17,6 +17,9 @@ Object.assign(Jogo.prototype, {
         if (this.cameras.main.worldView.contains(at.x, at.y)) {
             this.cameras.main.shake(180, 0.012);
         }
+        // HUD counter: shooter destruido
+        this.shootersTotal = (this.shootersTotal || 0) + 1;
+        if (this.hud?.shootersText) this.hud.shootersText.setText(this.shootersTotal);
         const flash = this.add.circle(at.x, at.y, 30, 0xff8800, 0.9).setDepth(50);
         this.tweens.add({ targets: flash, scale: 2.6, alpha: 0, duration: 420, onComplete: () => flash.destroy() });
         this.tweens.add({

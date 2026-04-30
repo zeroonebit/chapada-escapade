@@ -159,6 +159,11 @@ class Jogo extends Phaser.Scene {
         this.score = 0;
         this.fuelMax   = 100;
         this.fuelCurrent = 100;
+        // Counters cumulativos pra HUD coluna left
+        this.bullsTotal    = 0;  // bois entregues no curral
+        this.cowsTotal     = 0;  // vacas entregues no curral
+        this.farmersTotal  = 0;  // farmers eliminados (rocha/explosao)
+        this.shootersTotal = 0;  // shooters destruidos
         this.difficulty = 1;
         this.gameOver = false;
         this.energiaMax = 100;

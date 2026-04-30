@@ -199,7 +199,16 @@ Object.assign(Jogo.prototype, {
     },
 
     _updateFuel(delta) {
-        this.fuelCurrent -= 2.2 * this.difficulty * (delta/1000);
+        // Drain proporcional a velocidade — quanto mais voa, mais gasta.
+        // Idle (parado) = drain minimo (~0.4/s). Voando full = ~3.5/s.
+        const vx = this.ufo?.body?.velocity?.x || 0;
+        const vy = this.ufo?.body?.velocity?.y || 0;
+        const speed = Math.sqrt(vx*vx + vy*vy);   // matter speed: 0..~10+ em uso normal
+        const speedNorm = Math.min(1, speed / 8); // normaliza pra 0..1
+        const baseIdle  = 0.4;                    // drain minimo (idle)
+        const baseMove  = 3.1;                    // drain extra em movimento
+        const rate = (baseIdle + baseMove * speedNorm) * this.difficulty;
+        this.fuelCurrent -= rate * (delta/1000);
         if (this.fuelCurrent <= 0) { this.fuelCurrent = 0; this._gameOver(); }
         const pct = this.fuelCurrent / this.fuelMax;
 

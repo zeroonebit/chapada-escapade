@@ -124,9 +124,16 @@ Object.assign(Jogo.prototype, {
             const slotIdx = curral.slots.findIndex(s => s === null);
             if (slotIdx === -1) break;  // sanity check
 
-            // Counter +1
+            // Counter +1 (curral) + cumulativo HUD coluna left
             curral.mascotCount += 1;
             curral.mascotCountTxt.setText('x' + curral.mascotCount);
+            if (v.tipo === 'bull') {
+                this.bullsTotal = (this.bullsTotal || 0) + 1;
+                if (this.hud?.bullsText) this.hud.bullsText.setText(this.bullsTotal);
+            } else {
+                this.cowsTotal = (this.cowsTotal || 0) + 1;
+                if (this.hud?.cowsText) this.hud.cowsText.setText(this.cowsTotal);
+            }
             this._updateMascoteVisibilidade(curral);
             this.tweens.add({
                 targets: curral.mascotCountTxt, scale: { from: 1.6, to: 1 },
