@@ -210,19 +210,41 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Auto-sort validado** — algoritmo funciona sem corrections salvas, 0 conflitos nos 2 tilesets PixelLab
 - **`docs/REFS_WANG.md`** atualizado com novos IDs 32px e base tile IDs
 
+### ✅ Pronto (cont. — sessão 2026-04-30 madrugada · PixaPro refactor 10 sprints)
+- **PixaPro modularizado** — `tools/asset_gallery.html` 121kb → 17kb (-86%), zero `<script>` inline (era 2778 linhas)
+- **Estrutura final** `tools/pixapro/`:
+  - `styles/` (S1): 7 CSS por componente — base, components, manager, gallery, editor, tiles, detail
+  - `js/constants.js` (S2): MANIFEST (68), PIXELLAB_TOOLS (19), WANG_PRESETS (5)
+  - `js/store.js` + `js/api.js` (S3): localStorage wrappers + fetch wrappers
+  - `js/utils.js` (S4): `$`, escHtml, timeAgo, suggestTargetFolder, getAssetType, mulberry32
+  - `js/popup.js` (S4): floating popup global (show/hide/attachOrient + self-handlers)
+  - `js/classify.js` (S4): groupBy, classifyGroup, classifiedFlat, buildGroupPopupHTML, findDirectionVariants
+  - `js/thumb.js` (S4): makeThumb, thumbBadge, fillSumGrid (4 modos)
+  - `js/tabs.js` (S10): switchTab, activeTab, API_URL, scroll handlers
+  - `js/tab-manager.js` (S5): idx, decisions, render, keyboard shortcuts, setInterval, initial render
+  - `js/tab-gallery.js` (S6): summaryData, renderGallery, filter bar, refresh button
+  - `js/tab-editor.js` (S7): visualizer 8-dir + tool forms, mcpQueue, queueTool
+  - `js/tab-detail.js` (S8): renderDetailDashboard + MCP live polling 4s
+  - `js/tab-tiles.js` (S9): Wang editor + auto-sort visual + terrain gen + 14 button handlers
+- **Padrão usado:** ES script-globals (não module), top-level `let`/`function` visíveis script-wide entre `<script src>` tags
+- **Bug encontrado e corrigido durante o refactor:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente
+- **Validação:** preview_eval com 68 thumbs renderizando + todas 5 tabs trocam sem erro
+
 ### 🚧 Em andamento
 - **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
 - **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
 - **Game preview na worktree** — `_setupGeometricTextures is not a function` (pré-existente, não investigado)
 
 ### 🔜 Próximos passos
-1. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
-2. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
-3. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
-4. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-5. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
-6. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
-7. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
+1. **Verificar PixaPro modularizado** — abrir gallery via `python tools/gallery_server.py` e testar todas as funcionalidades end-to-end (Manager P/D/R/C, Gallery filtros, Editor 8-dir slots, Detail dashboard, Tiles auto-sort)
+2. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
+3. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+4. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+5. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+6. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+7. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+8. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
+9. **PixaPro futuras melhorias** (opcional): converter pra ES modules reais (import/export) se módulos crescerem; criar `Store.subscribe` pattern pra reatividade; DRY mais o `fillSumGrid`
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)

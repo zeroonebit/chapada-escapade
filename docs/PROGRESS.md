@@ -4,6 +4,61 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-30 (madrugada) — PixaPro refactor modular completo (10 sprints)
+
+**Continuação direta da sessão da noite anterior. Foco: refactor de `tools/asset_gallery.html` de monolito 121kb → 13 módulos.**
+
+### Code review inicial
+- Análise dos 2778 linhas de single-file (CSS+HTML+JS misturados)
+- Identificados 10 problemas: estado global solto (13+ vars), sem separação data↔render, monkey-patching do `switchTab`, `fillSumGrid` com 4 modos em 100 linhas, etc.
+- Plano de 10 sprints com ordem de extração, regras (zero HTML inline, ES script-globals em vez de modules, store/api centralizados)
+
+### Sprint 1 — CSS extraído (7 arquivos)
+- `tools/pixapro/styles/{base,components,manager,gallery,editor,tiles,detail}.css`
+- 295 linhas inline → 7 arquivos por componente
+- HTML perdeu -10kb, validado via `getComputedStyle` no preview
+
+### Sprint 2 — Constants extraídos
+- `tools/pixapro/js/constants.js` com MANIFEST (68 entries), PIXELLAB_TOOLS (19), WANG_PRESETS (5)
+- Total ~20kb de dados extraídos do `<script>` inline
+
+### Sprint 3 — I/O centralizado (api.js + store.js)
+- `api.js` com 10 wrappers de fetch (Api.saveDecisions, Api.listAssets, Api.mcpStatus, etc.)
+- `store.js` com STORE_KEYS + 8 wrappers de localStorage (Store.loadDecisions, Store.saveQueue, etc.)
+- 9 fetch sites + 4 localStorage sites convertidos
+- API_BASE/MCP_SERVER duplicados removidos do inline
+
+### Sprint 4 — Funções puras (4 módulos)
+- `utils.js` (`$`, escHtml, timeAgo, suggestTargetFolder, getAssetType, TYPE_ICONS, mulberry32)
+- `popup.js` (showFloatingPopup, hideFloatingPopup, attachPopupOrient + self-handlers)
+- `classify.js` (groupBy, classifyGroup, classifiedFlat, buildGroupPopupHTML, findDirectionVariants)
+- `thumb.js` (makeThumb, thumbBadge, fillSumGrid 4 modos + `_simpleThumb` DRY helper)
+- **Bug encontrado:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente.
+
+### Sprints 5-10 — Tab modules
+- `tab-manager.js` (S5): idx, decisions, render, side grids, keyboard shortcuts, setInterval refresh, initial render
+- `tab-gallery.js` (S6): summaryData, renderGallery, filter bar (folders/files/type/tags), refresh button
+- `tab-editor.js` (S7): detailSelected, mcpQueue, saveQueue, approvedAssets, renderDetailMain (visualizer 8-dir + tool forms), queueTool, popup click handler
+- `tab-detail.js` (S8): renderDetailDashboard (stats cards + queue cards) + 4 dashboard buttons + MCP Live polling completo (pollMcpStatus, startMcpPolling, stopMcpPolling, switchTab hook)
+- `tab-tiles.js` (S9): tileEditState, autoSortTiles (color sampling), transforms (rotate/flip), generateTerrainGrid (white/CA/value noise), renderTestMap, renderTiles + todos os 14 button handlers
+- `tabs.js` (S10): activeTab, switchTab orchestrator, scroll handlers, tab buttons wiring
+
+### Resultado final
+- `asset_gallery.html`: 121kb → **17kb** (-86%)
+- Inline `<script>` totalmente eliminado (era ~2778 linhas)
+- 13 external scripts JS (~70kb) + 7 stylesheets
+- Validação via preview_eval: 68 thumbs renderizando, todas 5 tabs trocam sem erro, todos os globals expostos
+
+### Workflow
+- Worktree: `nostalgic-mclaren-1f61ba` (renomeado de `intelligent-euler-7a236d` em sessão anterior)
+- 6 commits durante o refactor (1 por sprint), todos sincronizados via worktree → main → GitHub Pages
+
+### Pendente
+- Game preview na worktree continua quebrado (`_setupGeometricTextures is not a function`, pré-existente)
+- Refactor não tocou no game (`js/01_scene.js` etc.) — só no PixaPro tool
+
+---
+
 ## Sessão 2026-04-30 — Wang 32px tilesets + MCP Live Status + PixaPro evolution
 
 **~4 commits, sessão noturna**
