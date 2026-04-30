@@ -208,7 +208,7 @@ Object.assign(Jogo.prototype, {
             // Y offset: alinha o BASE do dome com center do ring pra ele "sair"
             // do ring como hemisferio. Base = bottom do dome -> dome center y =
             // cy - DOME_H/2 + (DOME_H * 0.18) (bottom rim do dome PNG tem 18% de altura).
-            const DOME_DY = -DOME_H * 0.32;
+            const DOME_DY = -DOME_H * 0.18;  // base do dome sentando no ring (era 0.32 — alto demais)
             if (!this.hud.radarDome) {
                 this.hud.radarDome = this.add.image(cx, cy + DOME_DY, 'hud_radar_dome_v2')
                     .setScrollFactor(0).setDepth(200.8).setDisplaySize(DOME_W, DOME_H).setAlpha(0.4);
