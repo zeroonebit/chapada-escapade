@@ -152,59 +152,157 @@ const PIXELLAB_TOOLS = [
 ];
 
 // Wang tile presets — biome+season tilesets (cr31 corner-2-edge convention)
+// 13 tilesets organizados em 3 grupos visuais (PixaPro lê o array flat,
+// agrupamento por prefixo no name pra ordenação visual).
 const WANG_PRESETS = [
+  // ════════════════════════════════════════════════════════════
+  // GROUND TRUTH (cores sólidas pra debug)
+  // ════════════════════════════════════════════════════════════
   {
     id: 'ground-truth',
-    name: 'Ground Truth (cr31 reference)',
-    meta: 'cr31 corner-2-edge convention · 16 solid blocks',
+    name: '[REF] Ground Truth (cr31 cores sólidas)',
+    meta: 'cr31 corner-2-edge convention · 16 solid blocks · debug palette',
     sliced: true,
     sliceFn: (i) => `../assets/terrain/test/wang_${String(i).padStart(2,'0')}.png`,
-    info: "Canonical reference de Wang tiles 2-edge corner-based. Cada tile = bitmask 4 bits dos 4 cantos (NW=1, NE=2, SE=4, SW=8). 16 tiles total cobrem todas as combinações lower/upper. Originalmente publicado por <strong>cr31</strong> (Charles Rector) em ~2009 no contexto de Stagecast Creator. Hoje é a convenção padrão usada em Tiled, Godot, e várias engines.",
+    info: "Canonical reference de Wang tiles 2-edge corner-based. Cada tile = bitmask 4 bits dos 4 cantos (NW=1, NE=2, SE=4, SW=8). 16 tiles total cobrem todas as combinações lower/upper.",
     refs: [
       { url: 'http://www.cr31.co.uk/stagecast/wang/2corn.html', title: 'cr31 — Corner Wang Tiles (2-edge)' },
-      { url: 'https://www.boristhebrave.com/permanent/23/03/tileset-creator/?autotile=Corner&cellType=Square&rotation=None&terrainCount=2&overlay=False&skipCornerTiles=False&drawStyle=Circle', title: 'Boris the Brave — Tileset Creator (interactive, Corner/Square/2-terrain config)' },
-      { url: 'https://www.boristhebrave.com/2021/11/14/classification-of-tilesets/', title: 'Boris the Brave — Classification of Tilesets (theory, 2021)' },
     ],
   },
+
+  // ════════════════════════════════════════════════════════════
+  // GAME ATIVOS (32×32, in-game agora)
+  // ════════════════════════════════════════════════════════════
   {
     id: '6068781a-970c-4f9b-99fe-48ee90110038',
-    name: 'ocean ↔ sand (32px)',
-    meta: 'PixelLab · 32×32 tiles · sliced local',
+    name: '[GAME 32px] ocean ↔ sand',
+    meta: 'PixelLab · 32×32 · sliced local · ATIVO IN-GAME',
     sliced: true,
     sliceFn: (i) => `../assets/terrain/ocean_sand_32/wang_${String(i).padStart(2,'0')}.png`,
     tileSize: 32,
-    info: 'deep blue ocean water → warm sandy beach. Medium detail/shading, high top-down. Base tile IDs: lower=ffb24a7a upper=331870a5.',
-    refs: [
-      { url: 'https://api.pixellab.ai/mcp/tilesets/6068781a-970c-4f9b-99fe-48ee90110038/metadata', title: 'PixelLab metadata JSON' },
-    ],
+    info: 'Base IDs: lower=ffb24a7a (ocean) upper=331870a5 (sand). Em uso no game.',
+    refs: [{ url: 'https://api.pixellab.ai/mcp/tilesets/6068781a-970c-4f9b-99fe-48ee90110038/metadata', title: 'metadata' }],
   },
   {
     id: '91c93294-a4fd-425e-8b10-eb1baf32890d',
-    name: 'dirt ↔ grass (32px)',
-    meta: 'PixelLab · 32×32 tiles · sliced local',
+    name: '[GAME 32px] dirt ↔ grass',
+    meta: 'PixelLab · 32×32 · sliced local · ATIVO IN-GAME',
     sliced: true,
     sliceFn: (i) => `../assets/terrain/dirt_grass_32/wang_${String(i).padStart(2,'0')}.png`,
     tileSize: 32,
-    info: 'dry brown dirt path → green grass field. Medium detail/shading, high top-down. Base tile IDs: lower=15201074 upper=c92163d3.',
-    refs: [
-      { url: 'https://api.pixellab.ai/mcp/tilesets/91c93294-a4fd-425e-8b10-eb1baf32890d/metadata', title: 'PixelLab metadata JSON' },
-    ],
+    info: 'Base IDs: lower=15201074 (dirt) upper=c92163d3 (grass). Em uso no game.',
+    refs: [{ url: 'https://api.pixellab.ai/mcp/tilesets/91c93294-a4fd-425e-8b10-eb1baf32890d/metadata', title: 'metadata' }],
   },
-  // Archived 16×16 versions
-  {
-    id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
-    name: 'ocean ↔ sand (16px legacy)',
-    meta: 'PixelLab · 16×16 tiles · superseded by 32px',
-    image: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/image',
-    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/metadata',
-    tileSize: 16,
-  },
+
+  // ════════════════════════════════════════════════════════════
+  // MAPA OPÇÃO 1 — CERRADO VERDE (16×16, v1)
+  // 4 materiais (ocean, sand, cerrado_dirt, cerrado_grass) · 6 transitions
+  // ════════════════════════════════════════════════════════════
   {
     id: '267836d8-f211-4260-8917-938216d7e0f1',
-    name: 'dirt ↔ grass (16px legacy)',
-    meta: 'PixelLab · 16×16 tiles · superseded by 32px',
+    name: '[MAPA 1] cerrado_dirt ↔ cerrado_grass (BASE)',
+    meta: 'PixelLab · 16×16 · base do bioma verde',
     image: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/image',
     metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/metadata',
     tileSize: 16,
+    info: 'Base IDs: lower=bf4bf323 (cerrado_dirt_v1) upper=e8ede5e5 (cerrado_grass_v1). Tileset BASE do Mapa 1 verde.',
+  },
+  {
+    id: 'ff745b17-679f-4213-b8e8-ce08bd349e86',
+    name: '[MAPA 1] ocean ↔ cerrado_dirt',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/ff745b17-679f-4213-b8e8-ce08bd349e86/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/ff745b17-679f-4213-b8e8-ce08bd349e86/metadata',
+    tileSize: 16,
+    info: 'Conecta ocean (2a7b28cc) ↔ cerrado_dirt_v1 (bf4bf323). Praia → terra.',
+  },
+  {
+    id: '70faa0d8-8c99-449c-9699-8d56175824c7',
+    name: '[MAPA 1] ocean ↔ cerrado_grass',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/70faa0d8-8c99-449c-9699-8d56175824c7/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/70faa0d8-8c99-449c-9699-8d56175824c7/metadata',
+    tileSize: 16,
+    info: 'Conecta ocean (2a7b28cc) ↔ cerrado_grass_v1 (e8ede5e5). Margem de lago.',
+  },
+  {
+    id: '448352c8-0e6e-4515-b860-e15f70e93722',
+    name: '[MAPA 1] sand ↔ cerrado_dirt',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/448352c8-0e6e-4515-b860-e15f70e93722/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/448352c8-0e6e-4515-b860-e15f70e93722/metadata',
+    tileSize: 16,
+    info: 'Conecta sand (343965f3) ↔ cerrado_dirt_v1 (bf4bf323). Areia → terra firme.',
+  },
+  {
+    id: 'ac546645-a924-465e-b474-0b2ab10ecdd4',
+    name: '[MAPA 1] sand ↔ cerrado_grass',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/ac546645-a924-465e-b474-0b2ab10ecdd4/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/ac546645-a924-465e-b474-0b2ab10ecdd4/metadata',
+    tileSize: 16,
+    info: 'Conecta sand (343965f3) ↔ cerrado_grass_v1 (e8ede5e5). Praia → savana.',
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // MAPA OPÇÃO 2 — CERRADO SECO (16×16, v2)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
+    name: '[MAPA 2] cerrado_dirt ↔ cerrado_grass v2 (BASE)',
+    meta: 'PixelLab · 16×16 · base do bioma seco',
+    image: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/metadata',
+    tileSize: 16,
+    info: 'Base IDs: lower=bf54c09f (cerrado_dirt_v2) upper=b18eb30d (cerrado_grass_v2). Bioma mais seco/dourado.',
+  },
+  {
+    id: 'd395054a-5e3c-4e28-9b76-3d8ba82baec1',
+    name: '[MAPA 2] ocean ↔ cerrado_dirt v2',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/d395054a-5e3c-4e28-9b76-3d8ba82baec1/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/d395054a-5e3c-4e28-9b76-3d8ba82baec1/metadata',
+    tileSize: 16,
+    info: 'Conecta ocean ↔ cerrado_dirt_v2 (bf54c09f).',
+  },
+  {
+    id: '53598aae-b258-47c4-b3fc-6d8a33befe40',
+    name: '[MAPA 2] ocean ↔ cerrado_grass v2',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/53598aae-b258-47c4-b3fc-6d8a33befe40/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/53598aae-b258-47c4-b3fc-6d8a33befe40/metadata',
+    tileSize: 16,
+    info: 'Conecta ocean ↔ cerrado_grass_v2 (b18eb30d).',
+  },
+  {
+    id: 'e8b56eea-c20e-4ab9-9dff-bab3231eb333',
+    name: '[MAPA 2] sand ↔ cerrado_dirt v2',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/e8b56eea-c20e-4ab9-9dff-bab3231eb333/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/e8b56eea-c20e-4ab9-9dff-bab3231eb333/metadata',
+    tileSize: 16,
+    info: 'Conecta sand ↔ cerrado_dirt_v2.',
+  },
+  {
+    id: '43ac051b-7e0d-4c84-8575-4dbc269db8db',
+    name: '[MAPA 2] sand ↔ cerrado_grass v2',
+    meta: 'PixelLab · 16×16 · transition cross-tileset',
+    image: 'https://api.pixellab.ai/mcp/tilesets/43ac051b-7e0d-4c84-8575-4dbc269db8db/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/43ac051b-7e0d-4c84-8575-4dbc269db8db/metadata',
+    tileSize: 16,
+    info: 'Conecta sand ↔ cerrado_grass_v2.',
+  },
+
+  // ════════════════════════════════════════════════════════════
+  // SHARED 16×16 (compartilhado entre Mapa 1 e Mapa 2)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
+    name: '[SHARED] ocean ↔ sand (16px)',
+    meta: 'PixelLab · 16×16 · costa universal (compartilhado Mapa 1 + 2)',
+    image: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/image',
+    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/metadata',
+    tileSize: 16,
+    info: 'Base IDs: lower=2a7b28cc (ocean) upper=343965f3 (sand). Costa que serve pros 2 biomas (verde/seco).',
   },
 ];
