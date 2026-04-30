@@ -117,7 +117,7 @@ const DBG_DEFAULTS = {
         beamSparks:     true,
         beamShake:      true,
         fancyExplosion: true,
-        wangtiles:      false,
+        wangtiles:      true,
         tileStyle:      'dirt_grass_32',  // 'test' | 'dirt_grass_32' | 'ocean_sand_32'
         timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:  false,     // ciclo auto a each 60s
