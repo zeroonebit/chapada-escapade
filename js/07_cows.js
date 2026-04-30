@@ -1,18 +1,18 @@
-// 07_vacas.js — Vacas/bois: criação, IA, abdução, física no feixe, virar burger
+﻿// 07_cows.js — Cows/oxen: criação, IA, abdução, física no beam, virar burger
 Object.assign(Jogo.prototype, {
 
     _createCow(x, y, tipo = 'holstein') {
-        const label = tipo === 'boi' ? 'boi' : 'vaca';
-        const tex   = tipo === 'boi' ? 'boi_S' : 'vaca_S';
-        // matter.add.SPRITE (não image) — sprite suporta .anims, image não
+        const label = tipo === 'bull' ? 'ox' : 'cow';
+        const tex   = tipo === 'bull' ? 'ox_S' : 'cow_S';
+        // matter.add.SPRITE (not image) — sprite supports .anims, image does not
         let v = this.matter.add.sprite(x, y, tex);
-        v.setFixedRotation();  // sem isso, colisão com beam/atirador deita o bicho de lado
-        // setDisplaySize força size visual fixo (anim frames 68px e static 180px viram mesma scale)
-        const baseSize = tipo === 'boi' ? 78 : 68;
-        const sizeScale = tipo === 'boi' ? ((this.dbg?.scale?.boi) ?? 3.0) : ((this.dbg?.scale?.vaca) ?? 1.0);
+        v.setFixedRotation();  // without this, collision with beam/shooter deita o bicho de lado
+        // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
+        const baseSize = tipo === 'bull' ? 78 : 68;
+        const sizeScale = tipo === 'bull' ? ((this.dbg?.scale?.bull) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
         v.setDisplaySize(size, size);
-        const mass = tipo === 'boi' ? 3.2 : 2;
+        const mass = tipo === 'bull' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(mass).setDepth(5).setCollisionCategory(2);
         v.body.label = label;
         v.isBurger = false;
@@ -22,11 +22,11 @@ Object.assign(Jogo.prototype, {
         v._dying = false;
         v.tipo = tipo;
         v.valorBurger = 100;
-        v.tempoAbducao = tipo === 'boi' ? 4500 : 3000;
-        v.burgerYield = tipo === 'boi' ? (Math.random() < 0.5 ? 2 : 3) : 1;
+        v.tempoAbducao = tipo === 'bull' ? 4500 : 3000;
+        v.burgerYield = tipo === 'bull' ? (Math.random() < 0.5 ? 2 : 3) : 1;
         v.wanderAngle = Math.random() * Math.PI * 2;
         v._wandering = true;
-        // Sistema de saúde colisional: 3-5 hits antes de explodir
+        // Sistema de saúde colisional: 3-5 hits before de explodir
         v._hpMax = Phaser.Math.Between(3, 5);
         v._hp    = v._hpMax;
         v.setBounce(0.5);  // bola que quica e perde energia (matter handles decay)
@@ -37,16 +37,16 @@ Object.assign(Jogo.prototype, {
             callback: () => {
                 if (!v.scene || !v.body || v._dying) return;
                 if (this.abductedCows.includes(v) || v.isBurger || v.stuckInBush || v.stuckInGrass || v._inCurral) return;
-                // 20% de chance de parar pra "pastar", senão escolhe novo rumo
+                // 20% de chance de parar to "pastar", senão escolhe novo rumo
                 if (Math.random() < 0.2) { v._wandering = false; return; }
                 v.wanderAngle = Math.random() * Math.PI * 2;
                 v._wandering = true;
             }
         });
 
-        // Sombra blur abaixo
-        const shRx = tipo === 'boi' ? 28 : 22;
-        const shRy = tipo === 'boi' ? 10 : 8;
+        // shadow blur below
+        const shRx = tipo === 'bull' ? 28 : 22;
+        const shRy = tipo === 'bull' ? 10 : 8;
         this._attachSombra(v, { rx: shRx, ry: shRy, alpha: 0.42, offY: shRy*1.6, offX: 4 });
 
         this.cows.push(v);
@@ -54,7 +54,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _createBurgerEntity(x, y) {
-        // Variantes random: classic, cheese, double — ponderado pra classic mais comum
+        // Variantes random: classic, cheese, double — ponderado to classic more comum
         const variants = ['burger_classic','burger_classic','burger_cheese','burger_double'];
         const tex = variants[Phaser.Math.Between(0, variants.length-1)];
         const b = this.matter.add.image(x, y, tex, null, { shape: { type: 'circle', radius: 10 } });
@@ -71,28 +71,28 @@ Object.assign(Jogo.prototype, {
         b.tipo = 'burger';
         b.tempoAbducao = 0;
         b.burgerYield = 1;
-        b.body.label = 'hamburguer';
+        b.body.label = 'burger';
         return b;
     },
 
     _spawnVacas(n) {
         const W=8000, H=6000;
-        const okVaca = this.dbg?.enabled?.vacas !== false;
-        const okBoi  = this.dbg?.enabled?.bois  !== false;
+        const okVaca = this.dbg?.enabled?.cows !== false;
+        const okBoi  = this.dbg?.enabled?.bulls  !== false;
         for(let i=0; i<n; i++) {
             let tipo;
             if (okVaca && okBoi) {
                 const r = Math.random();
-                if (r < 0.20) tipo = 'boi';
+                if (r < 0.20) tipo = 'ox';
                 else          tipo = 'holstein';
             } else if (okVaca) tipo = 'holstein';
-            else if (okBoi)    tipo = 'boi';
+            else if (okBoi)    tipo = 'ox';
             else return;
             this._createCow(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
         }
     },
 
-    // Idempotente — seguro chamar múltiplas vezes
+    // Idempotente — seguro chamar múltiplas times
     _destroyCow(v) {
         if (!v || v._destroyed) return;
         v._destroyed = true;
@@ -109,17 +109,19 @@ Object.assign(Jogo.prototype, {
         if (v.scene) v.destroy();
     },
 
-    // Animação + cleanup unificado de explosão (vaca, boi, fazendeiro)
+    // Animation + cleanup unificado de explosão (cow, ox, farmer)
     _explode(entity, color = 0xff2222) {
         if (!entity || entity._dying || entity._destroyed) return;
         entity._dying = true;
         if (this.abductedCows.includes(entity)) this._releaseCow(entity);
-        // H4: limpa _timer/walkTimer pra evitar timer orphan referenciando dead farmer
+        // H4: limpa _timer/walkTimer to avoid timer orphan referenciando dead farmer
         if (entity._timer && entity._timer.remove) { entity._timer.remove(); entity._timer = null; }
         if (entity.walkTimer && entity.walkTimer.remove) { entity.walkTimer.remove(); entity.walkTimer = null; }
         if (entity.isEnemy) {
+            // HUD counter: farmer eliminado
+            this.farmersTotal = (this.farmersTotal || 0) + 1;
+            if (this.hud?.farmersText) this.hud.farmersText.setText(this.farmersTotal);
             this.farmers = this.farmers.filter(f => f !== entity);
-            this.farmerKills = (this.farmerKills || 0) + 1;  // HUD counter
         } else {
             this.cows = this.cows.filter(v => v !== entity);
         }
@@ -128,9 +130,13 @@ Object.assign(Jogo.prototype, {
         if (this.cameras.main.worldView.contains(entity.x, entity.y)) {
             this.cameras.main.shake(120, 0.007);
         }
-        // FX upgrade: shockwave + sparks (toggle via dbg.fx.explosaoBoa)
-        if (this.dbg?.fx?.explosaoBoa && this._spawnExplosao) {
+        // FX upgrade: shockwave + sparks (toggle via dbg.fx.fancyExplosion)
+        if (this.dbg?.fx?.fancyExplosion && this._spawnExplosao) {
             this._spawnExplosao(entity.x, entity.y, color, 1.0);
+        }
+        // Quip ao matar farmer (one-shot — without cooldown source)
+        if (entity.isEnemy && this._showQuip) {
+            this._showQuip(entity, 'farmer');
         }
         this.tweens.add({
             targets: entity,
@@ -154,12 +160,12 @@ Object.assign(Jogo.prototype, {
         if (cy < 0 || cy >= this.terrainGrid.length) return false;
         const row = this.terrainGrid[cy];
         if (cx < 0 || cx >= row.length) return false;
-        return row[cx] === 2; // 2 = grama
+        return row[cx] === 2; // 2 = grass
     },
 
-    // 1 = cell de grama com 4 cardinais também grama (deep grass)
-    // 0.5 = grama de borda (1+ cardinal não-grama)
-    // 0 = não é grama
+    // 1 = cell de grass with 4 cardinais also grass (deep grass)
+    // 0.5 = grass de edge (1+ cardinal não-grass)
+    // 0 = não is grass
     _grassDepth(x, y) {
         if (!this._isOverGrass(x, y)) return 0;
         const CELL = this.terrainCell;
@@ -183,7 +189,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // ── ABDUÇÃO E FÍSICA NO FEIXE ────────────────────────────────────
+    // ── ABDUÇÃO E FÍSICA NO beam ────────────────────────────────────
     _tryAbduct() {
         // Conta carga atual usando contador (em vez de filter — perf)
         const carryingCows    = this._cowsInBeamCount  || 0;
@@ -192,12 +198,12 @@ Object.assign(Jogo.prototype, {
         const canCarryCows    = carryingFarmers === 0 && carryingCows < BEAM_CAP_VACAS;
         const canCarryFarmers  = carryingCows === 0 && carryingFarmers < BEAM_CAP_FARMERS;
 
-        const r2 = this.coneRadius * this.coneRadius;  // squared pra evitar sqrt
+        const r2 = this.coneRadius * this.coneRadius;  // squared to avoid sqrt
         const tryAbduct = (v) => {
             if (v._dying || v._destroyed || v.stuckInBush || v._inCurral || this.abductedCows.includes(v)) return;
             if (v.isEnemy && !canCarryFarmers) return;
             if (!v.isEnemy && !canCarryCows) return;
-            if (distSq(this.ship.x, this.ship.y, v.x, v.y) > r2) return;
+            if (distSq(this.ufo.x, this.ufo.y, v.x, v.y) > r2) return;
             if (v.stuckInGrass) {
                 v.stuckInGrass = false;
                 if (v.scene && v.body) {
@@ -210,49 +216,47 @@ Object.assign(Jogo.prototype, {
             v.setAngularVelocity((Math.random() - 0.5) * 0.4);
             if (v.walkTimer) v.walkTimer.paused = true;
             if (this._spawnCaptureRings) this._spawnCaptureRings(v);
+            // Quip random ao abduzir (cow ou farmer pool conforme tipo)
+            if (this._showQuip) this._showQuip(v, v.isEnemy ? 'farmer' : 'cow');
         };
         this.cows.forEach(tryAbduct);
         this.farmers.forEach(tryAbduct);
         this._updateBeamCounters();
     },
 
-    // H5: reconciler — atualiza _cowsInBeamCount / _boisInBeamCount / _farmersInBeamCount após mutação
-    // Eliminou o filter() por frame em _updateBody (era 2 iter por update tick)
+    // H5: reconciler — updates _cowsInBeamCount / _farmersInBeamCount após mutação
+    // Eliminou o filter() by frame em _updateBody (was 2 iter by update tick)
     _updateBeamCounters() {
-        let cows = 0, bois = 0, farmers = 0;
+        let cows = 0, farmers = 0;
         for (const v of this.abductedCows) {
             if (v.isEnemy) farmers++;
-            else if (!v.isBurger) {
-                if (v.tipo === 'boi') bois++;
-                else cows++;
-            }
+            else if (!v.isBurger) cows++;
         }
         this._cowsInBeamCount    = cows;
-        this._boisInBeamCount    = bois;
         this._farmersInBeamCount = farmers;
     },
 
     _basinPhysics(v) {
         if (!v.scene || !v.body || v._dying) return;
-        // Não re-prende em grama enquanto abduzida (bug: vaca grudava de novo no frame seguinte)
-        // Atrito baixo enquanto no feixe — pra deslizar livre até a nave
+        // Não re-prende em grass while abduzida (bug: cow grudava de novo no frame seguinte)
+        // friction low while no beam — to deslizar livre até a ship
         if (!v.isBurger && !v.isEnemy) {
             v.setFrictionAir(0.015);
         }
         const pullMul = this.dbg?.behavior?.pullBeam ?? 1.0;
-        let dx = this.ship.x-v.x, dy = this.ship.y-v.y;
+        let dx = this.ufo.x-v.x, dy = this.ufo.y-v.y;
         let dist = Math.sqrt(dx*dx+dy*dy), ang = Math.atan2(dy, dx);
         v.applyForce({x: Math.cos(ang)*0.0008*pullMul, y: Math.sin(ang)*0.0008*pullMul});
         if (dist > this.coneRadius*0.7) v.applyForce({x: Math.cos(ang)*0.003*pullMul, y: Math.sin(ang)*0.003*pullMul});
         if (dist > 10) v.applyForce({x: (Math.random()-0.5)*0.001, y: (Math.random()-0.5)*0.001});
-        // sem reset de angular velocity — deixa girar com a física pra dar glissagem
+        // without reset de angular velocity — deixa girar with a física to dar glissagem
     },
 
     _turnIntoBurger(v) {
         if (!v.scene || v._destroyed || v.isBurger) return;
 
-        if (v.tipo === 'boi') {
-            // Boi vira 2-3 burgers (spawna entidades extras)
+        if (v.tipo === 'bull') {
+            // Ox vira 2-3 burgers (spawns entidades extras)
             const yld = v.burgerYield || 2;
             const px = v.x, py = v.y;
             this.abductedCows = this.abductedCows.filter(x => x !== v);
@@ -284,17 +288,25 @@ Object.assign(Jogo.prototype, {
     },
 
     _directionalTexture(v) {
-        // State machine + animação: vacas têm walk/run/eat/angry × 4 dir.
-        // Bois têm walk × 8 dir (anim) + rotations estáticas (quando parado).
+        // State machine + animation: cows have walk/run/eat/angry × 4 dir.
+        // Oxen have walk × 8 dir (anim) + rotations estáticas (when parado).
         if (v.isBurger || v._inCurral) return;
+        // Sprite directional ja indica direcao via texture — nunca rotaciona,
+        // EXCETO when abduzido (beam permite girar livre).
+        if (!this.abductedCows.includes(v)) {
+            if (v.rotation !== 0) v.rotation = 0;
+            if (v.body && Math.abs(v.body.angle) > 0.001 && this.matter?.body) {
+                this.matter.body.setAngle(v.body, 0);
+            }
+        }
 
         const body = v.body;
         const vx = body?.velocity?.x || 0;
         const vy = body?.velocity?.y || 0;
         const speed = Math.sqrt(vx*vx + vy*vy);
 
-        // Direção 8-dir (vaca chubby agora é 8-dir como o boi)
-        // Durante janela de 3s pós-abdução, força south (independe de speed/wander)
+        // Direction 8-dir (cow chubby now is 8-dir as o ox)
+        // during window de 3s pós-abdução, force south (independe de speed/wander)
         const now = this.time?.now ?? 0;
         const returningSouth = v._returnSouthUntil && now < v._returnSouthUntil;
         let angRad = null;
@@ -309,36 +321,36 @@ Object.assign(Jogo.prototype, {
         }
         if (returningSouth) dir8 = 'S';
 
-        // Boi: walk quando movendo, idle_head_shake quando parado (fallback static se N)
-        if (v.tipo === 'boi') {
+        // Ox: walk when movendo, idle_head_shake when parado (fallback static se N)
+        if (v.tipo === 'bull') {
             const moving = speed > 0.08;
             if (moving) {
-                const animKey = `boi_walk_${dir8}`;
+                const animKey = `ox_walk_${dir8}`;
                 if (v.anims.currentAnim?.key !== animKey && this.anims.exists(animKey)) {
                     v.play(animKey, true);
                 }
             } else {
-                const idleKey = `boi_idle_${dir8}`;
+                const idleKey = `ox_idle_${dir8}`;
                 if (this.anims.exists(idleKey)) {
                     if (v.anims.currentAnim?.key !== idleKey) v.play(idleKey, true);
                 } else {
-                    // dir sem idle (ex: N) — usa frame estático
+                    // dir without idle (ex: N) — usa frame estático
                     if (v.anims?.isPlaying) v.anims.stop();
-                    const key = `boi_${dir8}`;
+                    const key = `ox_${dir8}`;
                     if (v.texture.key !== key) v.setTexture(key);
                 }
             }
             return;
         }
 
-        // Vaca chubby: state machine 4 estados × 8 dir
+        // Cow chubby: state machine 4 estados × 8 dir
         let state;
         if (this.abductedCows.includes(v))     state = 'angry';
         else if (v._fleeing)                       state = 'run';
         else if (v._eating)                        state = 'eat';
         else                                       state = 'walk';
 
-        const animKey = `vaca_${state}_${dir8}`;
+        const animKey = `cow_${state}_${dir8}`;
         const cur = v.anims.currentAnim?.key;
         if (cur !== animKey && this.anims.exists(animKey)) {
             v.play(animKey, true);
@@ -347,39 +359,39 @@ Object.assign(Jogo.prototype, {
 
     _updateCowsAI() {
         // FLEE_DIST/FLEE_DIST_SQ vêm de 00_constants.js
-        const velMul = this.dbg?.behavior?.velVaca ?? 1.0;
+        const velMul = this.dbg?.behavior?.cowSpeed ?? 1.0;
         const now = this.time?.now ?? 0;
         for (let i = 0; i < this.cows.length; i++) {
             const v = this.cows[i];
             if (!v.scene || !v.body || v._dying) continue;
             if (v.isBurger || v.stuckInBush || v.stuckInGrass || v._inCurral) continue;
-            // Abduzidas tocam anim "angry" mas não rodam IA de movimento (beam controla)
+            // Abduzidas tocam anim "angry" mas não rodam IA de movement (beam controla)
             if (this.abductedCows.includes(v)) {
                 this._directionalTexture(v);
                 continue;
             }
-            // Janela pós-soltar: trava IA, deixa atrito alto frear, força south
+            // window pós-soltar: trava IA, deixa friction high frear, force south
             if (v._returnSouthUntil && now < v._returnSouthUntil) {
                 this._directionalTexture(v);
                 continue;
             }
-            // Saiu da janela: restaura atrito padrão se ainda estiver alto
+            // Saiu da window: restaura friction padrão se still estiver high
             if (v._returnSouthUntil && now >= v._returnSouthUntil && v.body) {
                 v.setFrictionAir(0.08);
                 v._returnSouthUntil = 0;
             }
 
-            const dx = v.x - this.ship.x, dy = v.y - this.ship.y;
+            const dx = v.x - this.ufo.x, dy = v.y - this.ufo.y;
             const distSq = dx*dx + dy*dy;
-            // Bumpou o boi pra 0.0030 (era 0.0010) — antes força/mass não vencia atrito,
-            // boi parecia preso e picker caía no wanderAngle (random) em vez do vetor speed
-            const baseF = (v.tipo === 'boi' ? 0.0030 : 0.0016) * velMul;
+            // Bumpou o ox to 0.0030 (was 0.0010) — before force/mass não vencia friction,
+            // ox parecia preso e picker caía no wanderAngle (random) em vez do vetor speed
+            const baseF = (v.tipo === 'bull' ? 0.0030 : 0.0016) * velMul;
 
             if (distSq >= FLEE_DIST_SQ) {
-                // Far do player: alterna entre comer e andar com timer
+                // Far do player: alterna between comer e andar with timer
                 v._fleeing = false;
                 if (v._eatTimer === undefined) v._eatTimer = 0;
-                v._eatTimer -= 16; // ~16ms por frame approx
+                v._eatTimer -= 16; // ~16ms by frame approx
                 if (v._eatTimer <= 0) {
                     // 60% chance de comer, 40% de andar
                     v._eating = Math.random() < 0.60;
@@ -394,14 +406,14 @@ Object.assign(Jogo.prototype, {
                 this._directionalTexture(v);
                 continue;
             }
-            // Dentro do raio de fuga: corre
+            // inside do radius de fuga: corre
             v._fleeing = true;
             v._eating = false;
             this._directionalTexture(v);
 
-            // Fuga — quanto mais perto a nave, mais forte (fade-in suave)
+            // Fuga — quanto more perto a ship, more forte (fade-in suave)
             const intensidade = 1 - Math.sqrt(distSq) / FLEE_DIST;
-            // Mira grama; sem grama, vai pro lado oposto da nave
+            // Mira grass; without grass, will pro lado oposto da ship
             let alvoX = null, alvoY = null, melhor = Infinity;
             for (let j = 0; j < this.grassPatches.length; j++) {
                 const g = this.grassPatches[j];
@@ -420,16 +432,28 @@ Object.assign(Jogo.prototype, {
     _releaseCow(vaca) {
         this.abductedCows = this.abductedCows.filter(v => v !== vaca);
         this._updateBeamCounters();
-        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
-        // Janela de 3s onde a vaca/boi força orientação south e atrito alto pra parar
-        // Picker e IA respeitam essa flag pra ignorar wandering durante esse período
+        const now = this.time?.now ?? 0;
+
+        // Farmer solto: mantem inercia + spin por 3s (efeito arremessado)
+        if (vaca.isEnemy) {
+            if (vaca.scene && vaca.body && !vaca._dying) {
+                vaca.setFrictionAir(0.01).setDepth(5);  // friction baixa = inercia continua
+            }
+            vaca._releaseSpinUntil = now + 3000;
+            // Random spin direction + speed (rad/sec)
+            vaca._spinRate = (Math.random() < 0.5 ? -1 : 1) * Phaser.Math.FloatBetween(8, 14);
+            return;
+        }
+
+        // Cow/bull: comportamento original (force south + friction high pra freiar)
+        if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         vaca._lastDir8 = 'S';
-        vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;
+        vaca._returnSouthUntil = now + 3000;
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.4); // freia rapido
-        if (vaca.scene && vaca.tipo === 'boi' && this.textures.exists('boi_S')) {
+        if (vaca.scene && vaca.tipo === 'bull' && this.textures.exists('ox_S')) {
             if (vaca.anims?.isPlaying) vaca.anims.stop();
-            vaca.setTexture('boi_S');
+            vaca.setTexture('ox_S');
         }
     },
 

@@ -161,14 +161,27 @@ Object.assign(Jogo.prototype, {
             if (f._wandering && !isAbducted) {
                 f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
             }
-            // Sprite directional ja indica direcao — sem rotation EXCETO se abduzido.
-            // (matter pode girar a body apesar de setFixedRotation em colisoes lateriais)
-            if (!isAbducted) {
+            // Sprite directional ja indica direcao — sem rotation EXCETO se abduzido
+            // OU se acabou de ser solto (release-spin window de 3s, mantem inercia + spin).
+            const now = this.time?.now ?? 0;
+            const inSpin = f._releaseSpinUntil && now < f._releaseSpinUntil;
+            if (inSpin) {
+                // Spin continuo a _spinRate rad/s (delta em ms -> /1000)
+                f.rotation += (f._spinRate || 10) * (delta / 1000);
+            } else if (!isAbducted) {
+                if (f._releaseSpinUntil) {
+                    // Janela acabou — reset rotation + friction normal
+                    f._releaseSpinUntil = 0;
+                    f.rotation = 0;
+                    if (f.scene && f.body) f.setFrictionAir(0.08);
+                }
                 if (f.rotation !== 0) f.rotation = 0;
                 if (Math.abs(f.body.angle) > 0.001 && this.matter?.body) {
                     this.matter.body.setAngle(f.body, 0);
                 }
             }
+            // Skip IA + sprite update enquanto spinning (inercia leva ele)
+            if (inSpin) continue;
             // Sprite direcional 8-dir baseado em speed
             if (!isAbducted) {
                 const vx = f.body.velocity.x, vy = f.body.velocity.y;
