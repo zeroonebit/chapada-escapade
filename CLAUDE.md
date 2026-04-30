@@ -183,18 +183,38 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Linha verde dos cantos** eliminada
 - **Skill `pixellab-asset-download`** + 3 memórias (perguntas explícitas, prompts complexos, heartbeat)
 
+### ✅ Pronto (cont. — sessão 2026-04-30)
+- **Game over cinematic V2** — hide HUD/enemies/decor + camera.postFX (vignette+grayscale) + Fibonacci spiral (φ=1.618, 2.5 turns) convergindo no centro da tela + tremor crescente + smoke contínuo + crash bounce + 18 fumaças + GAME OVER 128px scale-grow lento
+- **Refator D+R2 completo (PT→EN)**:
+  - Snapshot localStorage em `docs/configs_pre_translation.json`
+  - Migration code (`_migratePtKeys` + `PT_TO_EN_MIGRATION` map com computed keys imunes a bulk replace)
+  - DBG_DEFAULTS todo EN (chuva→rain, neblina→fog, vento→wind, vacas→cows, etc)
+  - i18n labels EN (entidades→entities, intensidade→intensity, etc)
+  - File renames: `04_scenery`, `06_ufo`, `07_cows`, `08_corrals`, `09_enemies`, `10_collision`
+  - Comentários traduzidos via `tools/translate_comments.py` (~130 palavras, 2 passes)
+  - data-i18n nas options (TOD/weather/input dropdowns + traduções PT)
+- **ship → ufo terminology** — `this.ship→this.ufo`, `scale.ship→scale.ufo`, `behavior.shipRot→behavior.ufoRot`
+- **HUD combinado** — PNG único `combustivel-graviton_full-nameless.png` + 2 fillImg com `_cropRegion` (medido via Pillow)
+- **Radar polish** — GeometryMask clipa leak, alien green vibrante, quadrantes + 3 anéis concêntricos
+- **Quips coloridos** por tom (r=angry/g=funny/y=ironic/b=factual) + seguem target a cada frame
+- **Restart transition** red→green loading bar + skip splash on restart (`window.__cepPlayedOnce` in-memory)
+- **Splash v4** integrado (`splashv4.png` — fazendeiro+escopeta+burger+vaca abducted+igreja+moedor)
+- **Audit pendentes resolvidos**:
+  - M3: `_sceneCleanup` itera corrals e limpa slots órfãos
+  - L5: `isMobile` detection com 3 sinais simultaneos (touch + pointer:coarse + viewport<1024)
+  - L6: FSM tutorial state via `TUT_MODES` dict + `_tutSetMode(name)` consolida flag writes
+- **Chuva angle fix** — line tilt agora coincide com drift direction (mesmo multiplicador, mesmo sinal)
+- **HUD bars frame-as-mask** — combustivel/graviton frames v1 (bar slot preto) por baixo + full cropado por cima
+
 ### 🚧 Em andamento
-- **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
 - **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
-- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida)
+- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida) — handoff pra outra sessão
 
 ### 🔜 Próximos passos
-1. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
-2. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
-3. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-4. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
-5. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
-6. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+1. **Testar game over cinematic V2** — validar timing/look (Fibonacci spiral, tremor, vignette intensity)
+2. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço (FSM já em vigor, fica mais fácil)
+3. **Tileset Wang real** com transição grass↔sand↔dirt (handoff outra sessão)
+4. **Comentários PT→EN pass 3** se necessário (palavras restantes não cobertas pelas 2 passes)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
@@ -202,18 +222,21 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - `tools/clean_hud.py` — remove dígitos baked-in dos frames HUD
 - `tools/slice_hud_frames.py` — extrai frames GRAVITON/COMBUSTÍVEL de `refs/hud-vazia.png`
 - `tools/slice_cow_burger.py` — extrai boxes COWS/BURGERS de `refs/cow-burgers.png`
-- `tools/slice_tilesets.py` — augmenta tileset base via mirror/rotação (naming `TLTRBLBR` antigo, refatorar pra cr31)
+- `tools/slice_tilesets.py` — augmenta tileset base via mirror/rotação
 - `tools/wang_test_palette.py` — gera 16 PNGs cor sólida em `assets/terrain/test/`
-- `tools/wang_playground/index.html` — playground standalone single-file (PRNG + corner grid + lookup cr31 + canvas)
+- `tools/wang_playground/index.html` — playground standalone single-file
+- `tools/translate_comments.py` — Python regex pra traduzir comentários PT→EN (só comments, não strings) — usado no refator D+R2
+- `tools/pixellab_fetch_new.py` + `pixellab_montage_new.py` — pipeline PixelLab via Backblaze CDN (sem API key)
 - `tools/migrate_to_projects.py` — migrou de N: pra H: (one-shot, mantido por referência)
 
 ## Convenções de código
 
-- **Idioma:** identificadores em português onde já estão (`vaca`, `nave`, `curral`, `paciencia`) — não anglicizar
+- **Idioma:** identificadores em inglês (refator D+R2 fez PT→EN em 2026-04-30). `cow`, `ufo`, `corral`, `fuel`, `rain`, `fog`, `wind`. Migration code preserva configs PT salvas em localStorage. Termo preferido: `ufo` (não `ship`).
 - **Sem build step** — tudo inline no HTML, scripts via CDN
-- **Comentários em PT-BR** seguindo o padrão existente
+- **Comentários em EN** após refator (parcial — `tools/translate_comments.py` cobriu ~130 palavras em 2 passes; resto pode ficar misto)
 - **Edits cirúrgicos** com a tool Edit, evitar reescrever blocos grandes
 - **Validar no preview** após cada mudança visual
+- **Workflow git automático**: worktree → commit → push → main merge → push (após cada request)
 
 ## Skills úteis pra este projeto (`C:\Users\thiag\.claude\skills\`)
 

@@ -4,6 +4,53 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-30 — Refator D+R2 (PT→EN) + ship→ufo + game over cinematic V2 + L6 FSM
+
+**~25 commits, ~8h**
+
+### Game over cinematic V2 (+ HUD bars + radar polish)
+- **Cinematic completo**: hide HUD/enemies/beam/corral decor, vignette+grayscale via camera.postFX, Fibonacci spiral (φ=1.618, 2.5 turns, 2.4s) convergindo no centro da tela em world coords, tremor crescente + smoke contínuo, crash bounce + 18 fumaças, GAME OVER 128px scale grow 1.4s, score+botão delay 1.1s
+- **HUD combinado**: PNG único `combustivel-graviton_full-nameless.png` + `_empty.png` com 2 fillImg apontando pro mesmo full, cada um com `_cropRegion` (medido via Pillow no PNG 1536×1024: COMB fx=0.235/fy=0.528, GRAV fx=0.278/fy=0.662)
+- **Radar**: GeometryMask elíptica clipa leak embaixo do frame, alien green vibrante (#003322 base + #00ff66 glow), quadrantes (E-W/N-S) + 3 anéis concêntricos (33/66/100% raio)
+- **Quips coloridos por tom** (r=angry/g=funny/y=ironic/b=factual) + seguem target a cada frame (não fixos no mundo)
+- **HUD bars frame-as-mask**: combustivel/graviton frames v1 (bar slot preto) por baixo, full por cima cropado from left
+
+### Refator D+R2: PT→EN completo
+- **Snapshot localStorage** salvo em `docs/configs_pre_translation.json` (chave `chapEscapadeDebug`)
+- **Migration code** `_migratePtKeys` em 15_debug_menu.js: PT_TO_EN_MIGRATION map com computed keys (`['va'+'cas']`) imune a bulk replace, preserva configs PT do user
+- **DBG_DEFAULTS** todo EN: `chuva→rain`, `neblina→fog`, `vento→wind`, `vacas→cows`, `bois→oxen`, `fazendeiros→farmers`, `atiradores→shooters`, `cenario→scenery`, `velVaca→cowSpeed`, etc (~20 keys)
+- **i18n labels** EN: `entidades→entities`, `quantidades→amounts`, `escalas→scales`, `intensidade→intensity`, `frequencia→frequency`, `angulo→angle`, etc (~20)
+- **File renames** (git mv preserva history): `04_cenario→04_scenery`, `06_nave→06_ufo`, `07_vacas→07_cows`, `08_curral→08_corrals`, `09_inimigos→09_enemies`, `10_colisao→10_collision`
+- **Comentários PT→EN** via `tools/translate_comments.py` — Python regex em comments only (não strings), 2 passes, ~130 palavras mapeadas
+- **data-i18n nas options** (TOD/weather/input dropdowns) + traduções PT (Amanhecer/Dia/Crepúsculo/Noite/Limpo/Chuva/Tempestade/etc)
+
+### ship → ufo (terminologia)
+- User: "ship me lembra navios vamos de ufo"
+- `this.ship` → `this.ufo` (Phaser sprite + `this.shipShadow→ufoShadow`, `shipBaseX→ufoBaseX`, etc)
+- `dbg.scale.ship→ufo`, `dbg.behavior.shipRot→ufoRot`
+- `_naveDir8→_ufoDir8`
+- Migration map atualizado: `nave→ufo`, `discoRot→ufoRot`
+
+### Audit pendentes resolvidos
+- **M3** ✅ `_sceneCleanup` agora itera todos corrals e chama `_cleanSlot` pra cada slot ativo (cleanup pisca/bounce tweens + icons órfãos no shutdown)
+- **L5** ✅ `isMobile` detection mais conservadora — exige 3 sinais simultaneos (touch + pointer:coarse + viewport<1024). Hybrid laptops/2-in-1 não disparam mais false-positive
+- **L6** ✅ FSM tutorial state: `TUT_MODES` dict com 11 modes (NONE/INIT/BEAM_VISUAL/GRAVITON_BAR/ABDUCT/DELIVER/BURGER/COMBUSTIVEL/TAKE_DAMAGE/FARMER/FARMER_KILL), `_tutSetMode(name)` aplica todas as 6 flags do mode num call. `_tutAdvance`, `_tutConcluir`, `_sceneCleanup` refatorados.
+
+### Game flow polish
+- **Restart transition**: red→green loading bar + CHAPADA ESCAPADE VT323 + barra fake fill 0→100% em 1.4s antes do `scene.restart()`
+- **Skip splash on restart**: `window.__cepPlayedOnce` in-memory flag (sobrevive scene.restart, reseta no F5/reload — semantics que o user pediu)
+- **Splash v4** integrado (`splashv4.png` substitui v3) — nova arte landscape com fazendeiro+escopeta+burger, vaca abducted, igreja, moedor de carne, tagline "Intergalactic hunger management"
+
+### Chuva fix
+- Bug: linha tiltava esquerda mas chuva caía pra direita (sinais opostos no `dx` e `driftX`)
+- Fix: ambos usam mesmo multiplicador (8×0.45) e mesmo sinal — chuva agora cai no sentido do tilt visual
+
+### Ferramentas criadas
+- `tools/translate_comments.py` — Python regex pra traduzir comentarios PT→EN sem tocar strings (~130 palavras mapeadas)
+- `docs/configs_pre_translation.json` — snapshot do localStorage do user antes do refator
+
+---
+
 ## Sessão 2026-04-29 (madrugada) — Audit fixes + HUD assets + Objects v3 + debug overlay
 
 **~30 commits, ~6h, das 00:00 às 06:00+**
