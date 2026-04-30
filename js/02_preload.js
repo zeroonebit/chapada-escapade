@@ -154,7 +154,7 @@ Object.assign(Jogo.prototype, {
         this.load.image('burger_double',  'assets/pixel_labs/items/burger_double.png');
 
         // ── SPLASH + ICON ────────────────────────────────────────────
-        this.load.image('splash', 'splashv3.png');
+        this.load.image('splash', 'splashv4.png');
         this.load.image('game_icon', 'icon.png');
 
         // ── WANG TILES (16 tiles cr31 colors sólidas to debug) ──────

@@ -318,13 +318,8 @@ class Jogo extends Phaser.Scene {
         if (this._atmoFlashGfx?.destroy)  this._atmoFlashGfx.destroy();
         if (this._tutGfx?.destroy)        this._tutGfx.destroy();
         if (this._tutGlowWorld?.destroy)  this._tutGlowWorld.destroy();
-        // H2: reset flags de tutorial to nao vazar
-        this._tutBeamNoDrain = false;
-        this._tutBeamNoPull  = false;
-        this._tutVacasImortais = false;
-        this._tutFreezeNave = false;
-        this._tutCombustivelCongelado = false;
-        this._tutGravitonDrain2x = false;
+        // H2 + L6: reset flags de tutorial via FSM (TUT_MODES.NONE)
+        if (this._tutSetMode) this._tutSetMode('NONE');
         // M3: cleanup todos slots dos currais (pisca/bounce tweens + icons orfãos)
         if (this.corrals && this._cleanSlot) {
             for (const c of this.corrals) {

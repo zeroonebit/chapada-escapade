@@ -2,6 +2,24 @@
 // Ativado when tutorialMode=true (botão TUTORIAL na splash).
 // 8 etapas sequenciais with hint overlay + setas + condições de avanço.
 
+// L6 FSM: cada step do tutorial tem um conjunto de flags ativas. _tutSetMode(key)
+// aplica todas de uma vez (vs scattered flag assignments). Event flags
+// (FarmerAbducted, GravitonDrained, etc) NAO sao aqui — sao marcadores
+// de evento setados pelo gameplay, nao parte do mode.
+const TUT_MODES = {
+    NONE:         { beamNoDrain: false, beamNoPull: false, vacasImortais: false, combustivelCongelado: false, gravitonDrain2x: false, freezeNave: false },
+    INIT:         { beamNoDrain: false, beamNoPull: false, vacasImortais: false, combustivelCongelado: true,  gravitonDrain2x: false, freezeNave: false },
+    BEAM_VISUAL:  { beamNoDrain: true,  beamNoPull: true,  vacasImortais: false, combustivelCongelado: true,  gravitonDrain2x: false, freezeNave: false },
+    GRAVITON_BAR: { beamNoDrain: false, beamNoPull: true,  vacasImortais: false, combustivelCongelado: true,  gravitonDrain2x: true,  freezeNave: false },
+    ABDUCT:       { beamNoDrain: false, beamNoPull: false, vacasImortais: true,  combustivelCongelado: true,  gravitonDrain2x: false, freezeNave: false },
+    DELIVER:      { beamNoDrain: false, beamNoPull: false, vacasImortais: true,  combustivelCongelado: true,  gravitonDrain2x: false, freezeNave: false },
+    BURGER:       { beamNoDrain: false, beamNoPull: false, vacasImortais: true,  combustivelCongelado: false, gravitonDrain2x: false, freezeNave: false },
+    COMBUSTIVEL:  { beamNoDrain: false, beamNoPull: false, vacasImortais: true,  combustivelCongelado: false, gravitonDrain2x: false, freezeNave: false },
+    TAKE_DAMAGE:  { beamNoDrain: false, beamNoPull: false, vacasImortais: false, combustivelCongelado: true,  gravitonDrain2x: false, freezeNave: false },
+    FARMER:       { beamNoDrain: false, beamNoPull: false, vacasImortais: false, combustivelCongelado: false, gravitonDrain2x: false, freezeNave: false },
+    FARMER_KILL:  { beamNoDrain: false, beamNoPull: false, vacasImortais: false, combustivelCongelado: false, gravitonDrain2x: false, freezeNave: false },
+};
+
 const TUT_STEPS = [
     {
         key: 'MOVE',
@@ -115,14 +133,24 @@ Object.assign(Jogo.prototype, {
             this._buildCorral(cx + 480, cy + 300);
         }
 
-        // Estado initial: barras escondidas, beam visual only desligado, drains normal
-        this._tutCombustivelCongelado = true;
+        // Estado initial via FSM (ver TUT_MODES no topo)
+        this._tutSetMode('INIT');
         this._tutBeamVisualOnly = false;          // only liga em BEAM_VISUAL
-        this._tutGravitonDrain2x  = false;
-        this._tutVacasImortais    = false;
-        this._setBarsVisibility(false, false);  // ambas escondidas
+        this._setBarsVisibility(false, false);    // ambas escondidas
 
         this._tutShowStep(0);
+    },
+
+    // L6 FSM: aplica TODAS as flags do mode de uma vez (single source of truth)
+    _tutSetMode(name) {
+        const m = TUT_MODES[name] || TUT_MODES.NONE;
+        this._tutMode = name;
+        this._tutBeamNoDrain          = m.beamNoDrain;
+        this._tutBeamNoPull           = m.beamNoPull;
+        this._tutVacasImortais        = m.vacasImortais;
+        this._tutCombustivelCongelado = m.combustivelCongelado;
+        this._tutGravitonDrain2x      = m.gravitonDrain2x;
+        this._tutFreezeNave           = m.freezeNave;
     },
 
     // Spawn de 50 cows espalhadas uniformemente pelo map global (8000x6000)
@@ -473,42 +501,25 @@ Object.assign(Jogo.prototype, {
         }
         const nextKey = TUT_STEPS[nextIdx].key;
 
-        // Reset de flags by etapa (separadas: NoDrain != NoPull)
-        // BEAM_VISUAL: cone aparece, without pull, without drain
-        if (nextKey === 'BEAM_VISUAL') {
-            this._tutBeamNoDrain = true;
-            this._tutBeamNoPull  = true;
-            this._tutGravitonDrain2x = false;
-        }
-        // GRAVITON_BAR: barra aparece, drain ATIVO (2x), pull AINDA OFF
+        // FSM: aplica todos flags do mode de uma vez (ver TUT_MODES no topo)
+        this._tutSetMode(nextKey);
+
+        // Side effects especificos por etapa (UI/spawns/event flag resets)
         if (nextKey === 'GRAVITON_BAR') {
-            this._tutBeamNoDrain = false;          // drain liga pro player ver consumo
-            this._tutBeamNoPull  = true;           // still without abduzir
-            this._tutGravitonDrain2x = true;       // 2x didático
             this._setBarsVisibility(false, true);
-            this._tutGravitonDrained = false;
+            this._tutGravitonDrained = false;       // event flag
         }
-        // ABDUCT: pull liga, drain volta normal, cows imortais, spawns 50 globais
         if (nextKey === 'ABDUCT') {
-            this._tutBeamNoDrain = false;
-            this._tutBeamNoPull  = false;
-            this._tutGravitonDrain2x = false;
-            this._tutVacasImortais = true;
-            this._tutVacasGlobalSpawned = false;
+            this._tutVacasGlobalSpawned = false;    // event flag
         }
-        // BURGER: fuel starts em 15%, barra fuel aparece, fuel DESCONGELA
-        // (player needs ver drain to entender que needs coletar burger)
         if (nextKey === 'BURGER') {
             this.fuelCurrent = this.fuelMax * 0.15;
             this._setBarsVisibility(true, true);
-            this._tutCombustivelCongelado = false;
             this._tutScoreBurgerAntes = this.score || 0;
         }
         if (nextKey === 'TAKE_DAMAGE') {
-            this._tutAtiradorSpawned = false;
-            this._tutVacasImortais = false;     // dano normal volta
-            this._tutDamageTaken    = false;    // reset toast trigger
-            this._tutCombustivelCongelado = true;  // congela during freeze to hit ser unico decremento visivel
+            this._tutAtiradorSpawned = false;       // event flag
+            this._tutDamageTaken    = false;        // event flag
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -651,12 +662,8 @@ Object.assign(Jogo.prototype, {
         }
         this._tutGfx?.clear();
         this._tutGlowWorld?.clear();
-        this._tutFreezeNave = false;
-        this._tutBeamNoDrain = false;
-        this._tutBeamNoPull  = false;
-        this._tutGravitonDrain2x = false;
-        this._tutVacasImortais = false;
-        this._tutCombustivelCongelado = false;
+        // FSM reset: NONE limpa todas as flags de mode
+        this._tutSetMode('NONE');
         // Resets visibilidade das barras (game normal always shows)
         if (this._setBarsVisibility) this._setBarsVisibility(true, true);
 
