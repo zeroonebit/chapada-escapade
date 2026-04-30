@@ -66,6 +66,10 @@ const MENU_I18N = {
         opt_storm:'Tempestade (chuva+neblina+raios)',
         tile_style:'Estilo do tile', opt_tile_test:'Paleta de teste', opt_tile_dirt:'Grama / Terra', opt_tile_ocean:'Oceano / Areia',
         opt_mouse:'Mouse', opt_wasd:'WASD + Espaço',
+        opt_tile_m1_od:'Mapa 1: Oceano+Terra', opt_tile_m1_og:'Mapa 1: Oceano+Grama',
+        opt_tile_m1_sd:'Mapa 1: Areia+Terra', opt_tile_m1_sg:'Mapa 1: Areia+Grama',
+        opt_tile_m2_od:'Mapa 2: Oceano+Terra seco', opt_tile_m2_og:'Mapa 2: Oceano+Grama seco',
+        opt_tile_m2_sd:'Mapa 2: Areia+Terra seco', opt_tile_m2_sg:'Mapa 2: Areia+Grama seco',
     },
 };
 
@@ -388,10 +392,18 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
                         <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                         <label><span data-i18n="tile_style">Tile style</span>
-                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:200px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="test" data-i18n="opt_tile_test">Test palette</option>
-                                <option value="dirt_grass_32" data-i18n="opt_tile_dirt">Grass / Dirt</option>
-                                <option value="ocean_sand_32" data-i18n="opt_tile_ocean">Ocean / Sand</option>
+                                <option value="dirt_grass_32" data-i18n="opt_tile_dirt">Grass / Dirt (32)</option>
+                                <option value="ocean_sand_32" data-i18n="opt_tile_ocean">Ocean / Sand (32)</option>
+                                <option value="mapa1_ocean_dirt"  data-i18n="opt_tile_m1_od">Mapa 1: Ocean+Dirt</option>
+                                <option value="mapa1_ocean_grass" data-i18n="opt_tile_m1_og">Mapa 1: Ocean+Grass</option>
+                                <option value="mapa1_sand_dirt"   data-i18n="opt_tile_m1_sd">Mapa 1: Sand+Dirt</option>
+                                <option value="mapa1_sand_grass"  data-i18n="opt_tile_m1_sg">Mapa 1: Sand+Grass</option>
+                                <option value="mapa2_ocean_dirt"  data-i18n="opt_tile_m2_od">Mapa 2: Ocean+Dirt seco</option>
+                                <option value="mapa2_ocean_grass" data-i18n="opt_tile_m2_og">Mapa 2: Ocean+Grass seco</option>
+                                <option value="mapa2_sand_dirt"   data-i18n="opt_tile_m2_sd">Mapa 2: Sand+Dirt seco</option>
+                                <option value="mapa2_sand_grass"  data-i18n="opt_tile_m2_sg">Mapa 2: Sand+Grass seco</option>
                             </select></label>
                     </fieldset>
                 </div>

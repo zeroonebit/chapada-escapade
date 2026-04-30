@@ -164,7 +164,7 @@ Object.assign(Jogo.prototype, {
         // 'dirt_grass_32' = grass <-> dirt transitions (32px, gerado outra sessao)
         // 'ocean_sand_32' = ocean <-> sand transitions (32px)
         // _wangStyles fica disponivel pro 04_scenery escolher por nome
-        const WANG_STYLES = ['test', 'dirt_grass_32', 'ocean_sand_32'];
+        const WANG_STYLES = ['test', 'dirt_grass_32', 'ocean_sand_32', 'mapa1_ocean_dirt', 'mapa1_ocean_grass', 'mapa1_sand_dirt', 'mapa1_sand_grass', 'mapa2_ocean_dirt', 'mapa2_ocean_grass', 'mapa2_sand_dirt', 'mapa2_sand_grass'];
         for (const style of WANG_STYLES) {
             for (let i = 0; i < 16; i++) {
                 const f = String(i).padStart(2, '0');
