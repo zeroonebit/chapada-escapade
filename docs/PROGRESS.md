@@ -4,6 +4,57 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-30 (manhã) — PixelLab gen sprint: currais V2 + grass blades + tilesets + balance + handoff PixaPro
+
+### Currais V2 (substitui sistema procedural)
+- 5 sprites PixelLab 200×200 gerados (~25 generations): pequeno_quadrado / redondo_feno / hexagonal_ornamental / rustico_pedra / abandonado_caveira
+- Salvos em `assets/pixel_labs/chars/nature/objects/curral_*.png`
+- `js/04_scenery.js` `_buildCorral`: substituiu ~50 linhas de procedural fences (norte/sul/leste/oeste/cantos+lanternas) → 1 sprite single random com `slotOffsetY` por variante
+- `js/08_corrals.js` `_slotPos`: lê `curral.slotOffsetY` (fallback 110)
+- Mantido (Option C): cow mascot, hay bale, bucket, 3 burger slots, beam attract, counter "xN" — só visual de fundo mudou
+- `js/02_preload.js`: 5 novos texture keys `nat_obj_curral_01..05`, expostos via `this._curralKeys`
+
+### Cercas scatter decoração
+- Reaproveitamento dos assets antigos (24 cercas em `nature/cercas/` e `cercas_v2/` continuam carregadas no preload)
+- `js/04_scenery.js`: nova section 5e — 14 spots aleatórios pelo mapa
+- 10 cercas deco: fence_broken, fence_corner, post_single/thin/double_rope/lantern_low/lantern_thin/carved/thin_simple, plank_v
+- 60% spot único / 40% mini-cluster 2-3 peças, rotação random ±90°, alpha 0.85-1.0
+- Sem colisão (depth 1.4, decorativo puro) — vibe rural abandonado
+
+### Grass blades
+- 5 base sprites 64×64 PixelLab gerados (~7 generations: 5 + 2 retries pq olive saiu com vaso e yellow com lanterna)
+- Salvos em `assets/pixel_labs/chars/nature/grass_v2/grass_*.png`
+- 5 wind_sway anims (4 frames cada × 5 = 20 generations) disparadas
+- Anim IDs: `585e0ba3` `6d62f51f` `03e4527b` `7af3a658` `b2354dc2`
+- Integração in-game pendente quando frames completarem
+
+### 8 tilesets 16px transitions (Mapa 1 vs Mapa 2)
+- 5 tilesets já existiam (3 16px + 2 32px), faltavam transitions cross-material
+- 4 disparados pra Mapa Opção 1 (cerrado verde v1): `ff745b17` `70faa0d8` `448352c8` `ac546645`
+- 4 disparados pra Mapa Opção 2 (cerrado seco v2): `d395054a` `53598aae` `e8b56eea` `43ac051b`
+- Todos com `lower_base_tile_id` + `upper_base_tile_id` dos materiais existentes pra consistência visual cross-tileset
+- 2 já confirmados completed (ff745b17 + d395054a), outros 6 cooking
+- Slice + WANG_PRESETS com headers de grupo pendente
+
+### PixelLab balance via bookmarklet (PixaPro)
+- Tentativa inicial: usar Secret da página `/account` (UUID `45609581-...`) como Bearer token. Resultado: **403 Invalid token**. Secret é pra Aseprite/Pixelorama plugin, não pra `api.pixellab.ai/get-account-data` (JWT real é da session Supabase do browser)
+- Solução: pattern bookmarklet
+  - `tools/gallery_server.py`: `GET/POST /pixellab_balance` (cache + persiste em `tools/saves/pixellab_balance.json`)
+  - `tools/pixapro/js/balance.js` (novo): badge no header com auto-refresh 60s, vermelho se < 200 restantes
+  - Botão "📋 Bookmarklet" copia code pra clipboard → user cola na barra de bookmarks
+  - Bookmarklet em `pixellab.ai/account`: regex no `innerText` pra parse de "Generations 812 / 2,000" + plano + reset date → POST localhost:8090
+- Validado end-to-end: 812/2000 · Tier 1 · resets May 26
+
+### Handoff PixaPro pra repo próprio
+- `docs/PIXAPRO_HANDOFF.md` (novo): plano completo de migração standalone (estrutura, deps, mudanças, server config)
+
+### Conflito merge resolvido
+- Worktree (`nostalgic-mclaren-1f61ba`) ainda usa nomes PT (`04_cenario.js`, `08_curral.js`)
+- Main já tem nomes EN (`04_scenery.js`, `08_corrals.js`) do refactor D+R2
+- Conflict resolvido com `--theirs` (worktree wins) — meus updates de currais V2 aplicados nos files renomeados
+
+---
+
 ## Sessão 2026-04-30 (madrugada) — PixaPro refactor modular completo (10 sprints)
 
 **Continuação direta da sessão da noite anterior. Foco: refactor de `tools/asset_gallery.html` de monolito 121kb → 13 módulos.**

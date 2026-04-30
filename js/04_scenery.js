@@ -271,6 +271,44 @@ Object.assign(Jogo.prototype, {
             }
         }
 
+        // ── 5e. CERCAS DECORATIVAS (ruínas/postes esquecidos) — sem colisão
+        // 14 spots aleatórios, com peças "broken/post" pra dar vibe rural abandonado
+        // (assets ainda existem do sistema antigo de curral, agora reaproveitados como deco)
+        const DECO_CERCAS = [
+            'nat_cerca_fence_broken',     'nat_cerca_fence_corner',
+            'nat_cerca_post_single',      'nat_cerca_post_thin',
+            'nat_cerca_plank_v',          'nat_cerca_post_lantern_low',
+            'nat_cerca_post_lantern_thin','nat_cerca_post_carved',
+            'nat_cerca_post_thin_simple', 'nat_cerca_post_double_rope',
+        ];
+        const cercasAvail = DECO_CERCAS.filter(k => this.textures.exists(k));
+        if (cercasAvail.length > 0) {
+            for (let i = 0; i < 14; i++) {
+                for (let tries = 0; tries < 8; tries++) {
+                    const cx = Phaser.Math.Between(400, W-400);
+                    const cy = Phaser.Math.Between(400, H-400);
+                    if (!isLand(cx, cy)) continue;
+                    // 60% spot único · 40% mini cluster de 2-3 peças
+                    const isCluster = Math.random() < 0.4;
+                    const n = isCluster ? Phaser.Math.Between(2, 3) : 1;
+                    for (let j = 0; j < n; j++) {
+                        const ang = Math.random() * Math.PI * 2;
+                        const rr  = isCluster ? Math.random() * 36 : 0;
+                        const px = cx + Math.cos(ang) * rr;
+                        const py = cy + Math.sin(ang) * rr;
+                        const tex = cercasAvail[Phaser.Math.Between(0, cercasAvail.length - 1)];
+                        const angle = Math.random() < 0.5 ? 0 : (Math.random() < 0.5 ? 90 : -90);
+                        this.add.image(px, py, tex)
+                            .setScale(0.8 + Math.random()*0.4)
+                            .setAngle(angle)
+                            .setAlpha(0.85 + Math.random()*0.15)
+                            .setDepth(1.4);
+                    }
+                    break;
+                }
+            }
+        }
+
         // ── 6. CURRAIS (em terra firme)
         this.corrals = [];
         this.driveThrus = this.corrals;
