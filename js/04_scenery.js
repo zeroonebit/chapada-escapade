@@ -265,6 +265,7 @@ Object.assign(Jogo.prototype, {
         const landmarks = ['nat_obj_church', 'nat_obj_windmill', 'nat_obj_old_truck', 'nat_obj_satellite_dish_rusty'];
         const LM_SCALE = { nat_obj_church: 2.6, nat_obj_windmill: 2.4, nat_obj_old_truck: 2.0, nat_obj_satellite_dish_rusty: 2.0 };
         const lmPlaced = [];
+        const truckSpots = [];  // pra spawnar gas_cans atrelados ao truck (5c)
         for (const lm of landmarks) {
             for (let tries = 0; tries < 20; tries++) {
                 const cx = Phaser.Math.Between(800, W-800);
@@ -273,7 +274,9 @@ Object.assign(Jogo.prototype, {
                 const tooClose = lmPlaced.some(p => Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < 1500);
                 if (tooClose) continue;
                 lmPlaced.push({x: cx, y: cy});
-                this.add.image(cx, cy, lm).setScale(LM_SCALE[lm] || 2.0).setDepth(1.4);
+                const lmScale = LM_SCALE[lm] || 2.0;
+                this.add.image(cx, cy, lm).setScale(lmScale).setDepth(1.4);
+                if (lm === 'nat_obj_old_truck') truckSpots.push({ x: cx, y: cy, scale: lmScale });
                 // Track to sistema de quips (proximity check em 20_quips.js)
                 if (!this._landmarkPositions) this._landmarkPositions = [];
                 this._landmarkPositions.push({ x: cx, y: cy, key: lm });
@@ -281,9 +284,26 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 5c. PROPS INDUSTRIAIS (gas_can, barrel_rusty) em cluster small
-        // 3-4 spots no map, each um with 2-3 props
-        for (let i = 0; i < 4; i++) {
+        // ── 5c. GAS CANS — sempre atrelados a um truck (visualmente associados)
+        // Tamanho proporcional ao truck (~35% do scale do truck) + tint marrom
+        // pra harmonizar com a paleta do old_truck (cor enferrujada)
+        for (const t of truckSpots) {
+            const n = Phaser.Math.Between(1, 3);
+            const gasScale = t.scale * 0.35;
+            for (let j = 0; j < n; j++) {
+                const angj = Math.random() * Math.PI * 2;
+                const rr   = 60 + Math.random() * 40;  // 60-100px do truck
+                const px = t.x + Math.cos(angj) * rr;
+                const py = t.y + Math.sin(angj) * rr;
+                this.add.image(px, py, 'nat_obj_gas_can')
+                    .setScale(gasScale * (0.9 + Math.random() * 0.2))
+                    .setTint(0xc88a5a)  // marrom-laranja pra casar com truck enferrujado
+                    .setDepth(1.5);
+            }
+        }
+
+        // ── 5c-2. BARRELS RUSTY — cluster random independente (mantem variedade)
+        for (let i = 0; i < 3; i++) {
             for (let tries = 0; tries < 8; tries++) {
                 const cx = Phaser.Math.Between(500, W-500);
                 const cy = Phaser.Math.Between(500, H-500);
@@ -292,10 +312,8 @@ Object.assign(Jogo.prototype, {
                 for (let j = 0; j < n; j++) {
                     const angj = Math.random() * Math.PI * 2;
                     const rr   = Math.random() * 50;
-                    const px = cx + Math.cos(angj) * rr;
-                    const py = cy + Math.sin(angj) * rr;
-                    const k = Math.random() < 0.5 ? 'nat_obj_gas_can' : 'nat_obj_barrel_rusty';
-                    this.add.image(px, py, k).setScale(0.9 + Math.random()*0.3).setDepth(1.5);
+                    this.add.image(cx + Math.cos(angj)*rr, cy + Math.sin(angj)*rr, 'nat_obj_barrel_rusty')
+                        .setScale(0.9 + Math.random()*0.3).setDepth(1.5);
                 }
                 break;
             }
