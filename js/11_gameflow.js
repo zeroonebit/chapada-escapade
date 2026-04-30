@@ -18,17 +18,17 @@ Object.assign(Jogo.prototype, {
             return;
         }
 
-        // Sessao anterior ja escolheu lang+input -> pula splash entirely.
-        // Tutorial fica disabled (so aparece no primeiro jogo). Pode resetar
-        // limpando o localStorage 'cep_played_once'.
-        try {
-            if (localStorage.getItem('cep_played_once') === '1') {
-                this.gameStarted = true;
-                this.tutorialMode = false;
-                this.matter.world.enabled = true;
-                return;
-            }
-        } catch (e) { /* localStorage indisponivel — segue splash normal */ }
+        // Skip splash apenas em restart in-session (game over -> jogar de novo).
+        // Flag eh in-memory (window.__cepPlayedOnce) -> reset no F5/reload, mas
+        // sobrevive a scene.restart(). Lang+input ficam persistidos no localStorage
+        // via _saveDebugCfg, entao mesmo que o splash apareca de novo, basta passar
+        // por ele -- o jogo ja sabe a preferencia.
+        if (window.__cepPlayedOnce) {
+            this.gameStarted = true;
+            this.tutorialMode = false;
+            this.matter.world.enabled = true;
+            return;
+        }
 
         const w = this.scale.width, h = this.scale.height;
 
@@ -97,8 +97,8 @@ Object.assign(Jogo.prototype, {
                 this.dbg.behavior.inputMode = inputMode;
                 if (this._saveDebugCfg) this._saveDebugCfg();
             }
-            // Marca pra pular splash em sessoes futuras (lang+input ja escolhidos)
-            try { localStorage.setItem('cep_played_once', '1'); } catch (e) {}
+            // Marca pra pular splash em restarts in-session (reseta no F5)
+            window.__cepPlayedOnce = true;
             this.matter.world.enabled = true;
             allBtns.forEach(o => o.destroy());
             this._splashStartGame = null;
