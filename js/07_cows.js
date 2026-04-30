@@ -295,9 +295,6 @@ Object.assign(Jogo.prototype, {
         // EXCETO when abduzido (beam permite girar livre).
         if (!this.abductedCows.includes(v)) {
             if (v.rotation !== 0) v.rotation = 0;
-            if (v.body && Math.abs(v.body.angle) > 0.001 && this.matter?.body) {
-                this.matter.body.setAngle(v.body, 0);
-            }
         }
 
         const body = v.body;
