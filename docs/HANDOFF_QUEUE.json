@@ -221,6 +221,69 @@
       ],
       "verification": "Visual via Pages: ver 4-6 torres scarecrow giarndo conforme player se move, atirando missiles que voam até player e explodem. Hit dá dano à barra COMBUSTÍVEL similar aos atiradores antigos.",
       "verified": false
+    },
+    {
+      "id": "audit-cleanup-old-geometric-textures",
+      "title": "Cleanup js/03_textures.js — remover sprites geométricos legados não usados",
+      "type": "refactor",
+      "status": "pending",
+      "priority": "high",
+      "created_at": "2026-04-30T13:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "context": {
+        "summary": "_setupGeometricTextures() ainda gera 5 sprites Phaser.Graphics que provavelmente não são mais usados (substituídos por PixelLab PNGs): curral (chão circular procedural), gaiola_recusa (gaiola vermelha), rocha_organica (fallback), moita (fallback), atirador (torre laranja). User reportou ver in-game um asset 'cubo marrom rachado' que parece ser de origem geométrica antiga.",
+        "discarded_assets_still_loaded": [
+          "hud_comb_full_v2 (assets/pixel_labs/hud/combustivel_v2.png) — discarded mas ainda em preload linha 118",
+          "hud_grav_full_v2 (assets/pixel_labs/hud/graviton_v2.png) — discarded mas ainda em preload linha 120"
+        ]
+      },
+      "spec": [
+        "1. Auditar js/03_textures.js geometric textures: pra cada (curral/gaiola_recusa/rocha_organica/moita/atirador), grep no projeto pra ver se algum código atual ainda usa",
+        "2. Remover textures não usadas + reduce file pra mínimo (deixar só as ainda em uso)",
+        "3. Verificar se hud_comb_full_v2 + hud_grav_full_v2 são usados (já carregados em preload mas marcados discarded). Se sim, repromover; se não, remover do preload e disk",
+        "4. Identificar visualmente o 'cubo marrom rachado' (foto do user) — se for de _setupGeometricTextures, remover; se for de Wang test palette, garantir que test palette só renderiza em PixaPro Tiles tab"
+      ],
+      "files_to_touch": [
+        "js/03_textures.js — possivelmente esvaziar ou remover (inline na 01_scene)",
+        "js/02_preload.js — remover hud_v2 loads se não usar"
+      ],
+      "verification": "Game funciona normalmente sem os 5 sprites geométricos. Visualmente, 0 'cubos marrom rachados' aparecem no mapa.",
+      "verified": false
+    },
+    {
+      "id": "pixapro-mark-in-game-assets",
+      "title": "Sort + decidir 626 PNGs sem decisão (em uso pelo game)",
+      "type": "docs",
+      "status": "pending",
+      "priority": "medium",
+      "created_at": "2026-04-30T13:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "context": {
+        "summary": "Audit revelou 626 PNGs em assets/pixel_labs/ que estão sendo carregados pelo game (em pastas categorizadas) mas nunca passaram pelo PixaPro Manager. Maior parte são frames de anim (vaca 232, boi 176, fazendeiro 32, ufo 32). Categorizar pra ter histórico de decisão visível na PixaPro.",
+        "breakdown": {
+          "232 frames": "chars/vaca/anims/* — 4 anims × 8 dirs × 11 frames",
+          "176 frames": "chars/boi/anims/* — 3 anims × 7-8 dirs × 4-11 frames",
+          "32 frames": "chars/ufo/anims/hovering_idle/*",
+          "14 sprites": "chars/nature/objects/* — landmarks + currais V2 + props",
+          "12 sprites": "chars/nature/vegetacao/*",
+          "10 sprites": "chars/nature/cercas/* — v1",
+          "24 sprites": "chars/scarecrow_droid/{blue,red,green,missile_anim}/* — novos",
+          "5 sprites": "chars/nature/grass_v2/* — base sprites (anims separadas)",
+          "outros": "miscellaneous"
+        },
+        "feature_added": "PixaPro Gallery tab agora tem panel '🎮 IN-GAME (auditar)' que lista esses sem decisão, agrupados por sub-categoria pra priorizar sorting"
+      },
+      "spec": [
+        "1. Abrir PixaPro Gallery tab → ver painel '🎮 IN-GAME' com breakdown por categoria",
+        "2. Promover em batch via Manager (ou direto editando decisions.json) cada categoria. Atalho: marcar todos os anim frames como 'promote' rapidamente (são auto-organizados em folders)",
+        "3. Goal: zerar (ou quase) o painel '🎮 IN-GAME' — todos os 626 com decisão registrada (mesmo que automática)",
+        "4. Considerar adicionar feature na PixaPro: 'Promote folder recursively' que marca todas as imagens dentro de uma pasta de uma vez"
+      ],
+      "files_to_touch": [
+        "tools/saves/decisions.json — populado via Manager UI"
+      ],
+      "verification": "Painel '🎮 IN-GAME' mostra 0 ou poucos items pendentes",
+      "verified": false
     }
   ],
   "log": [
@@ -236,6 +299,16 @@
       "by": "asset-gen-session-2026-04-30",
       "id": "scarecrow-droid-turrets-missile",
       "note": "32 sprites sliced (24 scarecrows + 8 missile frames). Static turret enemy."
+    },
+    {
+      "ts": "2026-04-30T13:00:00-03:00",
+      "action": "added",
+      "by": "asset-gen-session-2026-04-30",
+      "ids": [
+        "audit-cleanup-old-geometric-textures",
+        "pixapro-mark-in-game-assets"
+      ],
+      "note": "Audit revelou 2 HUDs discarded ainda em uso + 626 PNGs sem decisão + sprites geométricos legados em 03_textures.js"
     }
   ]
 }
