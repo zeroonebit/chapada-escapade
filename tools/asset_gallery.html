@@ -274,10 +274,13 @@
   </div>
 </div><!-- /tab-tiles -->
 
-
 <script src="pixapro/js/constants.js"></script>
 <script src="pixapro/js/store.js"></script>
 <script src="pixapro/js/api.js"></script>
+<script src="pixapro/js/utils.js"></script>
+<script src="pixapro/js/popup.js"></script>
+<script src="pixapro/js/classify.js"></script>
+<script src="pixapro/js/thumb.js"></script>
 <script>
 // MANIFEST, PIXELLAB_TOOLS, WANG_PRESETS → constants.js
 // API_BASE, MCP_SERVER, Api.* → api.js
@@ -291,18 +294,7 @@ let refreshTimer = 8;
 let decisions = Store.loadDecisions();
 const saveDecisions = () => Store.saveDecisions(decisions);
 
-const $ = id => document.getElementById(id);
-
 // Sugere pasta destino baseado no prefixo do nome (pra Promote)
-function suggestTargetFolder(name) {
-    if (/^bucket_|^milk_|^feed_|^water_trough/.test(name)) return 'objects';
-    if (/^gas_can_|^barrel_|^crate_|^radio_tower|^meat_grinder|^windmill|^wrecked_truck|^satellite/.test(name)) return 'objects';
-    if (/^palm_|^tree_|^flower_|^bromelia_|^grass_|^burned_|^mesa_/.test(name)) return 'vegetation';
-    if (/^rock_|^crop_circle_|^bone_|^alien_|^lantern_|^church_|^hay_/.test(name)) return 'objects';
-    if (/^scarecrow/.test(name)) return 'enemies';
-    if (/^\[HUD\]/.test(name)) return 'hud';
-    return 'objects';
-}
 
 function updateStats(){
   let p=0, d=0, r=0, w=0;
@@ -325,14 +317,6 @@ function renderBadge(assetId, el){
   else if(dec.action==='rename'){ el.textContent='✏️ →'+dec.newName; el.className='decision renamed'; }
 }
 
-function thumbBadge(assetId){
-  const dec = decisions[assetId];
-  if(!dec) return '';
-  const colors = {promote:'#1d4a1d',discard:'#4a1d1d',rename:'#1d3a4a'};
-  const icons = {promote:'✓',discard:'✗',rename:'✎'};
-  return `<span class="thumb-decision" style="background:${colors[dec.action]};color:#fff;">${icons[dec.action]}</span>`;
-}
-
 function pendingIndices(){
   const out = [];
   MANIFEST.forEach((m,i) => { if(!decisions[m.id] || decisions[m.id].action === 'rename') out.push(i); });
@@ -348,20 +332,6 @@ function nextPendingIdx(from, dir){
     return da - db;
   });
   return futureSorted[0];
-}
-
-function makeThumb(m, i){
-  const t = document.createElement("div");
-  t.className = "thumb" + (i===idx?" active":"") + (m.status==="pending"?" pending":"");
-  if(m.status === "ready"){
-    const img = document.createElement("img");
-    img.src = m.path || API_URL(m.id);
-    t.appendChild(img);
-  }else{
-    t.textContent = "…";
-  }
-  t.title = m.name;
-  return t;
 }
 
 function renderSide(targetId, action, label){
@@ -566,150 +536,16 @@ function renderGallery(){
 }
 
 // Type detector baseado no path (auto, sem metadata)
-function getAssetType(path){
-  const m = path.match(/pixel_labs\/(.+)$/);
-  if(!m) return 'unknown';
-  const parts = m[1].split('/');
-  if(parts[0] === 'hud') return 'hud';
-  if(parts[0] === 'chars'){
-    if(parts[1] === 'nature'){
-      const cat = parts[2] || '';
-      if(/^cercas/.test(cat)) return 'fences';
-      if(/vegeta/i.test(cat)) return 'vegetation';
-      if(cat === 'objects') return 'objects';
-      if(/pedra|rock/i.test(cat)) return 'rocks';
-      if(/plac|sign/i.test(cat)) return 'signs';
-      if(cat === 'v2') return 'inbox';
-      if(cat === 'outros' || cat === 'misc') return 'misc';
-      return cat || 'nature';
-    }
-    return 'characters';
-  }
-  return parts[0] || 'unknown';
-}
-
-const TYPE_ICONS = {
-  characters: '🧍', objects: '📦', vegetation: '🌳', fences: '🪵',
-  rocks: '🪨', signs: '🪧', hud: '📺', inbox: '📥', misc: '🔮', unknown: '❓'
-};
 
 // Pega chave de grupo "natural": personagem inteiro (chars/boi) ou categoria (chars/nature/objects)
-function groupKeyForPath(path){
-  const m = path.match(/pixel_labs\/(.+)$/);
-  if(!m) return path;
-  const parts = m[1].split('/');
-  parts.pop(); // tira filename
-  if(parts.length === 0) return 'root';
-  if(parts[0] === 'chars'){
-    if(parts[1] === 'nature' && parts.length >= 3) return 'chars/nature/' + parts[2];
-    if(parts[1]) return 'chars/' + parts[1];
-  }
-  return parts.slice(0, 2).join('/') || parts[0];
-}
-
-function groupByFolder(items){
-  const groups = new Map();
-  items.forEach(it => {
-    const key = groupKeyForPath(it.path);
-    if(!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(it);
-  });
-  return groups;
-}
 
 // Classifica items de um grupo em: bases + anims (com rep + frames).
 // Ordem: parent (1ª base) → variações (outras bases) → anim reps → anim frames.
-function classifyGroup(items){
-  const bases = [];
-  const animsByName = new Map();
-  items.forEach(it => {
-    const m = it.path.match(/\/anims\/([^\/]+)\//);
-    if(m){
-      const animName = m[1];
-      if(!animsByName.has(animName)) animsByName.set(animName, []);
-      animsByName.get(animName).push(it);
-    } else {
-      bases.push(it);
-    }
-  });
-  // ordem de direções pra base sprites
-  const dirOrder = ['south','south-east','east','north-east','north','north-west','west','south-west'];
-  const dirRank = (p) => {
-    const fname = p.split('/').pop().replace('.png','').toLowerCase();
-    const idx = dirOrder.indexOf(fname);
-    return idx === -1 ? 999 : idx;
-  };
-  const isDeprecated = (p) => /\/_(old|deprecated|backup|_)_?/.test(p);
-  bases.sort((a,b) => (isDeprecated(a.path)-isDeprecated(b.path)) || dirRank(a.path) - dirRank(b.path) || a.path.localeCompare(b.path));
-  const anims = [];
-  for(const [name, frames] of animsByName){
-    frames.sort((a,b) => a.path.localeCompare(b.path));
-    const sFrame = frames.find(f => /\/(south|S)\//i.test(f.path)) || frames[0];
-    anims.push({name, rep: sFrame, frames: frames.filter(f => f !== sFrame)});
-  }
-  anims.sort((a,b) => a.name.localeCompare(b.name));
-  return {bases, anims};
-}
-
-function groupParent(classified){
-  return classified.bases[0] || classified.anims[0]?.rep;
-}
 
 // Lista ordenada com tipo de cada item: base/anim-rep/frame
-function classifiedFlat(classified){
-  const out = [];
-  classified.bases.forEach((it, i) => out.push({type: i===0?'parent':'base', item: it}));
-  classified.anims.forEach(a => out.push({type:'anim-rep', name:a.name, item:a.rep}));
-  classified.anims.forEach(a => a.frames.forEach(f => out.push({type:'frame', anim:a.name, item:f})));
-  return out;
-}
 
 // Popup flutuante global (#floatingPopup). Position fixed = nunca clipa overflow:auto dos painéis.
-let _popupHideTimer = null;
-function showFloatingPopup(wrap, html, opts={}){
-  const popup = document.getElementById('floatingPopup');
-  popup.innerHTML = html;
-  popup.dataset.context = opts.context || '';
-  popup.classList.add('show');
-  // posicionar orientado pro centro
-  const r = wrap.getBoundingClientRect();
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-  // medir após render
-  requestAnimationFrame(() => {
-    const pr = popup.getBoundingClientRect();
-    const margin = 6;
-    let left, top;
-    if(r.left + r.width/2 < cx){ left = r.right + margin; }
-    else { left = r.left - pr.width - margin; }
-    if(r.top + r.height/2 > cy){ top = r.bottom - pr.height; }
-    else { top = r.top; }
-    // clamp pra não sair da viewport
-    left = Math.max(8, Math.min(left, window.innerWidth - pr.width - 8));
-    top = Math.max(8, Math.min(top, window.innerHeight - pr.height - 8));
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-  });
-}
-function hideFloatingPopup(){
-  document.getElementById('floatingPopup').classList.remove('show');
-}
-function attachPopupOrient(wrap, htmlFn, opts={}){
-  wrap.addEventListener('mouseenter', () => {
-    if(_popupHideTimer){ clearTimeout(_popupHideTimer); _popupHideTimer = null; }
-    showFloatingPopup(wrap, htmlFn(), opts);
-  });
-  wrap.addEventListener('mouseleave', () => {
-    _popupHideTimer = setTimeout(hideFloatingPopup, 180);
-  });
-}
-// manter popup aberto enquanto mouse está nele
-document.getElementById('floatingPopup')?.addEventListener('mouseenter', () => {
-  if(_popupHideTimer){ clearTimeout(_popupHideTimer); _popupHideTimer = null; }
-});
-document.getElementById('floatingPopup')?.addEventListener('mouseleave', () => {
-  _popupHideTimer = setTimeout(hideFloatingPopup, 180);
-});
+
 // click numa img clicável do popup → seleciona no Detail
 document.getElementById('floatingPopup')?.addEventListener('click', (e) => {
   const tgt = e.target.closest('img[data-click]');
@@ -728,141 +564,7 @@ document.getElementById('floatingPopup')?.addEventListener('click', (e) => {
   }
 });
 
-function buildGroupPopupHTML(folder, classified, opts={}){
-  const folderName = folder.split('/').pop() || folder || 'group';
-  const flat = classifiedFlat(classified);
-  const styleMap = {
-    parent: 'border-color:#f4c95d;outline:1px solid #f4c95d',
-    base: 'border-color:#a89368',
-    'anim-rep': 'border-color:#a85ba8',
-    frame: 'border-color:#4a3826;opacity:.7',
-  };
-  const labelMap = {
-    parent: '★ parent',
-    base: 'variação',
-    'anim-rep': (it) => `🎬 ${it.name}`,
-    frame: (it) => `frame ${it.anim}`,
-  };
-  const total = flat.length;
-  const baseCount = classified.bases.length;
-  const animCount = classified.anims.length;
-  const frameCount = classified.anims.reduce((s,a)=>s+a.frames.length, 0);
-  let html = `<div class="pop-title">${folderName} · ${total} items<br><span style="font-weight:normal;opacity:.6;font-size:12px;">${baseCount} bases · ${animCount} anims · ${frameCount} frames</span></div>`;
-  flat.forEach(entry => {
-    const tip = (typeof labelMap[entry.type] === 'function' ? labelMap[entry.type](entry) : labelMap[entry.type]) + ' · ' + entry.item.name;
-    const cls = opts.clickable ? ' data-click="1"' : '';
-    html += `<img src="${entry.item.path}" title="${tip}" style="${styleMap[entry.type]||''}" data-path="${entry.item.path}"${cls}>`;
-  });
-  return html;
-}
-
 // mode: 'folders' (default) | 'files' (flat individual) | 'type' (group by asset type) | 'tags'
-function fillSumGrid(id, items, mode='folders'){
-  const el = $(id);
-  el.innerHTML = '';
-  if(mode === 'files'){
-    items.slice(0, 600).forEach(it => {
-      const t = document.createElement('div');
-      t.className = 'thumb';
-      t.style.width = '42px'; t.style.height = '42px';
-      const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
-      t.title = it.path.split('/').pop();
-      el.appendChild(t);
-    });
-    return;
-  }
-  if(mode === 'type'){
-    const byType = {};
-    items.forEach(it => { const t = getAssetType(it.path); (byType[t] = byType[t] || []).push(it); });
-    const sorted = Object.entries(byType).sort((a,b) => b[1].length - a[1].length);
-    sorted.forEach(([type, list]) => {
-      const sec = document.createElement('div');
-      sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
-      sec.innerHTML = `<div style="font-size:12px;color:#a89368;letter-spacing:2px;margin-bottom:4px;">${TYPE_ICONS[type]||'•'} ${type.toUpperCase()} <span style="opacity:.5;font-size:12px;">${list.length}</span></div>`;
-      const sub = document.createElement('div');
-      sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
-      list.slice(0, 100).forEach(it => {
-        const t = document.createElement('div'); t.className = 'thumb';
-        t.style.width = '42px'; t.style.height = '42px';
-        const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
-        t.title = it.path.split('/').pop();
-        sub.appendChild(t);
-      });
-      sec.appendChild(sub);
-      el.appendChild(sec);
-    });
-    return;
-  }
-  if(mode === 'tags'){
-    const allTags = collectAssetTags();
-    const tagsByName = {};
-    items.forEach(it => {
-      const tags = assetTags[it.path] || [];
-      if(tags.length === 0){ (tagsByName['(untagged)'] = tagsByName['(untagged)'] || []).push(it); return; }
-      tags.forEach(t => { (tagsByName[t] = tagsByName[t] || []).push(it); });
-    });
-    const sorted = Object.entries(tagsByName).sort((a,b) => b[1].length - a[1].length);
-    if(sorted.length === 1 && sorted[0][0] === '(untagged)'){
-      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.6;font-size:12px;">Nenhum asset taggeado ainda.<br>Vá no Editor → asset selecionado → adicione tags.</div>';
-      return;
-    }
-    sorted.forEach(([tag, list]) => {
-      const sec = document.createElement('div');
-      sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
-      const isUntagged = tag === '(untagged)';
-      sec.innerHTML = `<div style="font-size:12px;color:${isUntagged?'#666':'#9fcfe8'};letter-spacing:2px;margin-bottom:4px;">🔖 ${tag} <span style="opacity:.5;font-size:12px;">${list.length}</span></div>`;
-      const sub = document.createElement('div');
-      sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
-      list.slice(0, 100).forEach(it => {
-        const t = document.createElement('div'); t.className = 'thumb';
-        t.style.width = '42px'; t.style.height = '42px';
-        const img = document.createElement('img'); img.src = it.path; t.appendChild(img);
-        t.title = it.path.split('/').pop();
-        sub.appendChild(t);
-      });
-      sec.appendChild(sub);
-      el.appendChild(sec);
-    });
-    return;
-  }
-  const groups = groupByFolder(items);
-  let count = 0;
-  for(const [folder, fitems] of groups){
-    if(count >= 200) break;
-    const classified = classifyGroup(fitems);
-    const parent = groupParent(classified);
-    if(fitems.length === 1){
-      const it = fitems[0];
-      const t = document.createElement('div');
-      t.className = 'thumb';
-      t.style.width = '42px'; t.style.height = '42px';
-      const img = document.createElement('img');
-      img.src = it.path;
-      t.appendChild(img);
-      t.title = it.name;
-      el.appendChild(t);
-    } else {
-      const wrap = document.createElement('div');
-      wrap.className = 'thumb-group';
-      wrap.style.width = '42px'; wrap.style.height = '42px';
-      attachPopupOrient(wrap, () => buildGroupPopupHTML(folder, classified));
-      const t = document.createElement('div');
-      t.className = 'thumb';
-      t.style.width = '42px'; t.style.height = '42px';
-      t.style.borderColor = '#f4c95d';
-      const img = document.createElement('img');
-      img.src = parent.path;
-      t.appendChild(img);
-      t.title = `${folder} (${fitems.length} files)`;
-      const badge = document.createElement('span');
-      badge.className = 'group-badge';
-      badge.textContent = fitems.length;
-      wrap.appendChild(t); wrap.appendChild(badge);
-      el.appendChild(wrap);
-    }
-    count++;
-  }
-}
 
 // Filter bar do PROMOTED
 document.querySelectorAll('#promotedFilterBar button').forEach(b => {
@@ -1097,21 +799,6 @@ function renderDetailList(){
 }
 
 // Detecta sprites em todas 8 direções pra um asset (chars/{name}/{dir}.png)
-function findDirectionVariants(asset){
-  if(!summaryData?.filesystem) return {};
-  // extrai folder do asset
-  const m = asset.path.match(/^(.*\/)([^\/]+\.png)$/);
-  if(!m) return {};
-  const folder = m[1];
-  const dirs = ['north','north-east','east','south-east','south','south-west','west','north-west'];
-  const found = {};
-  dirs.forEach(d => {
-    const candidate = folder + d + '.png';
-    const exists = summaryData.filesystem.some(f => f.path === candidate);
-    found[d] = exists ? candidate : null;
-  });
-  return found;
-}
 
 function renderDetailMain(){
   const a = detailSelected;
@@ -1624,14 +1311,6 @@ function renderPresetList(){
 }
 
 // PRNG simples (mulberry32)
-function mulberry32(seed){
-  return function(){
-    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
 
 // Gera grid binário (lower=0, upper=1) com diferentes biases
 // NW×NH = colunas × linhas de cells (vertices = NW+1 × NH+1)
@@ -2214,12 +1893,6 @@ async function pollMcpStatus() {
   }
 }
 
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
 // Toggle inspect banner on click
 $('mcpLiveCards').addEventListener('click', e => {
   const row = e.target.closest('.mj-row');
@@ -2227,13 +1900,6 @@ $('mcpLiveCards').addEventListener('click', e => {
   const job = row.closest('.mcp-job');
   if (job) job.classList.toggle('open');
 });
-
-function timeAgo(iso) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return Math.floor(diff) + 's';
-  if (diff < 3600) return Math.floor(diff/60) + 'min';
-  return Math.floor(diff/3600) + 'h';
-}
 
 function startMcpPolling() {
   if (_mcpPollInterval) return;
