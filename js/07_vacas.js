@@ -119,6 +119,7 @@ Object.assign(Jogo.prototype, {
         if (entity.walkTimer && entity.walkTimer.remove) { entity.walkTimer.remove(); entity.walkTimer = null; }
         if (entity.isEnemy) {
             this.farmers = this.farmers.filter(f => f !== entity);
+            this.farmerKills = (this.farmerKills || 0) + 1;  // HUD counter
         } else {
             this.cows = this.cows.filter(v => v !== entity);
         }
@@ -215,15 +216,19 @@ Object.assign(Jogo.prototype, {
         this._updateBeamCounters();
     },
 
-    // H5: reconciler — atualiza _cowsInBeamCount / _farmersInBeamCount após mutação
+    // H5: reconciler — atualiza _cowsInBeamCount / _boisInBeamCount / _farmersInBeamCount após mutação
     // Eliminou o filter() por frame em _updateBody (era 2 iter por update tick)
     _updateBeamCounters() {
-        let cows = 0, farmers = 0;
+        let cows = 0, bois = 0, farmers = 0;
         for (const v of this.abductedCows) {
             if (v.isEnemy) farmers++;
-            else if (!v.isBurger) cows++;
+            else if (!v.isBurger) {
+                if (v.tipo === 'boi') bois++;
+                else cows++;
+            }
         }
         this._cowsInBeamCount    = cows;
+        this._boisInBeamCount    = bois;
         this._farmersInBeamCount = farmers;
     },
 

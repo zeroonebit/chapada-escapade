@@ -122,6 +122,9 @@ class Jogo extends Phaser.Scene {
 
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
+        this.farmerKills = 0;     // fazendeiros destruídos (HUD coluna esquerda)
+        this.scarecrowKills = 0;  // espantalhos droids destruídos (placeholder até integrar inimigo)
+        this._boisInBeamCount = 0;
         this.score = 0;
         this.fuelMax   = 100;
         this.fuelCurrent = 100;
@@ -194,7 +197,12 @@ class Jogo extends Phaser.Scene {
 
         // ── Em debug mode: esconde HUD e mostra badge "DEBUG"
         if (this.EXPERIMENT_MODE) {
-            const hudKeys = ['scoreBg','scoreText','cowsBox','cowsText','burgersBox','burgersText',
+            const hudKeys = ['scoreBg','scoreText',
+                             'boiBox','boiIcon','boiText',
+                             'cowsBox','cowsText',
+                             'fazBox','fazIcon','fazText',
+                             'scareBox','scareIcon','scareText',
+                             'burgersBox','burgersText',
                              'combImg','combFill','eneImg','eneFill','hint','hintBg'];
             for (const k of hudKeys) if (this.hud[k]) this.hud[k].setVisible(false);
             // Badge debug
@@ -285,9 +293,13 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
-        // COWS counter: usa _cowsInBeamCount mantido por _updateBeamCounters
-        // (era for-loop por frame antes — H5 do audit)
+        // 5 counters da coluna esquerda — _updateBeamCounters mantém _cowsInBeamCount,
+        // _boisInBeamCount e _farmersInBeamCount. farmerKills + scarecrowKills são
+        // contadores acumulados de inimigos destruídos (incrementados em colisão).
+        this.hud.boiText.setText(this._boisInBeamCount || 0);
         this.hud.cowsText.setText(this._cowsInBeamCount || 0);
+        this.hud.fazText.setText(this.farmerKills || 0);
+        this.hud.scareText.setText(this.scarecrowKills || 0);
         this.hud.burgersText.setText(this.burgerCount);
 
         const cam = this.cameras.main;

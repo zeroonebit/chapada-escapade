@@ -11,13 +11,48 @@ Object.assign(Jogo.prototype, {
         this.hud.scoreText = this.add.text(0,12,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.scoreText    = this.hud.scoreText;
 
-        // ── COWS box (vacas + bois abduzidos no feixe) ─────────────────
-        this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 80).setScrollFactor(0).setDepth(D);
-        this.hud.cowsText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // ── Coluna esquerda: BOI · VACA · FAZENDEIRO · ESPANTALHO · BURGERS ─
+        // Posicionamento real em _positionHUD. Tamanho box 160×56, ícones 44×44.
+        const TXT_STYLE = {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3};
 
-        // ── BURGERS box (total entregue) ───────────────────────────────
-        this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(176, 80).setScrollFactor(0).setDepth(D);
-        this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // Cria box genérica (fundo verde escuro + border neon) — usada pra boi/farmer/scarecrow
+        const makeGenericBox = () => {
+            const bg = this.add.graphics().setScrollFactor(0).setDepth(D);
+            bg.fillStyle(0x0a1f0a, 0.85).fillRoundedRect(-80, -28, 160, 56, 6);
+            bg.lineStyle(2, 0x00ff55, 0.85).strokeRoundedRect(-80, -28, 160, 56, 6);
+            return bg;
+        };
+
+        // BOI (novo) — sprite boi_S como ícone
+        this.hud.boiBox  = makeGenericBox();
+        this.hud.boiIcon = this.add.image(0, 0, 'boi_S').setScrollFactor(0).setDepth(D2).setDisplaySize(44, 44);
+        this.hud.boiText = this.add.text(0, 0, '0', TXT_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+
+        // VACA (já existia como hud_cows_box) — manter PNG
+        this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 56).setScrollFactor(0).setDepth(D);
+        this.hud.cowsText = this.add.text(0, 0, '0', TXT_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+
+        // FAZENDEIRO (novo) — sprite faz_S
+        this.hud.fazBox  = makeGenericBox();
+        this.hud.fazIcon = this.add.image(0, 0, 'faz_S').setScrollFactor(0).setDepth(D2).setDisplaySize(44, 44);
+        this.hud.fazText = this.add.text(0, 0, '0', TXT_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+
+        // ESPANTALHO (novo) — sprite scarecrow blue (placeholder até integrar in-game)
+        // Texture key TBD: o asset existe em /chars/scarecrow_droid/blue/S.png mas ainda não foi
+        // adicionado ao preload. Fallback usa retângulo cinza se textura ausente.
+        const scareKey = this.textures.exists('scarecrow_blue_S') ? 'scarecrow_blue_S' : null;
+        this.hud.scareBox  = makeGenericBox();
+        if (scareKey) {
+            this.hud.scareIcon = this.add.image(0, 0, scareKey).setScrollFactor(0).setDepth(D2).setDisplaySize(44, 44);
+        } else {
+            // fallback ASCII enquanto sprite não carrega
+            this.hud.scareIcon = this.add.text(0, 0, '🤖', {fontSize:'30px'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        }
+        this.hud.scareText = this.add.text(0, 0, '0', TXT_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+
+        // BURGERS (já existia como hud_burgers_box) — manter PNG
+        this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(160, 56).setScrollFactor(0).setDepth(D);
+        this.hud.burgersText = this.add.text(0, 0, '0', TXT_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
         // ── Barra Combustível (v2: empty base + full com setCrop dinâmico) ─
@@ -78,11 +113,28 @@ Object.assign(Jogo.prototype, {
         this.hud.scoreBg.setPosition(w/2, 28);
         this.hud.scoreText.setPosition(w/2, 32);
 
-        // COWS + BURGERS boxes lado a lado no canto superior esquerdo
-        this.hud.cowsBox.setPosition(90, 55);
-        this.hud.cowsText.setPosition(122, 62);   // ao lado direito do ícone vaca
-        this.hud.burgersBox.setPosition(265, 55);
-        this.hud.burgersText.setPosition(300, 62);
+        // Coluna esquerda: 5 contadores empilhados verticalmente
+        // BOI · VACA · FAZENDEIRO · ESPANTALHO · BURGERS
+        const COL_X = 90;        // x center da coluna
+        const TOP_Y = 30;        // primeiro box (BOI)
+        const STEP  = 64;        // gap vertical entre boxes
+        const ICON_DX = -38;     // ícone à esquerda do center
+        const TEXT_DX = 30;      // número à direita do center
+
+        const positionRow = (idx, box, icon, text) => {
+            const y = TOP_Y + idx * STEP;
+            box.setPosition(COL_X, y);
+            if (icon) icon.setPosition(COL_X + ICON_DX, y);
+            text.setPosition(COL_X + TEXT_DX, y);
+        };
+
+        positionRow(0, this.hud.boiBox,     this.hud.boiIcon,   this.hud.boiText);
+        positionRow(1, this.hud.cowsBox,    null,               this.hud.cowsText);  // ícone baked no PNG
+        this.hud.cowsText.setPosition(COL_X + TEXT_DX + 5, TOP_Y + 1*STEP);  // ajuste fino p/ alinhar com PNG
+        positionRow(2, this.hud.fazBox,     this.hud.fazIcon,   this.hud.fazText);
+        positionRow(3, this.hud.scareBox,   this.hud.scareIcon, this.hud.scareText);
+        positionRow(4, this.hud.burgersBox, null,               this.hud.burgersText);
+        this.hud.burgersText.setPosition(COL_X + TEXT_DX + 8, TOP_Y + 4*STEP);  // ajuste fino p/ PNG
 
         // Barras empilhadas no centro-rodapé com gap visível
         const ENE_Y = h - 60;

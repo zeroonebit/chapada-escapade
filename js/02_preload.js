@@ -94,6 +94,9 @@ Object.assign(Jogo.prototype, {
                          'curral_04_rustico', 'curral_05_abandonado'];
         CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
         this._curralKeys = CURRAIS.map(n => `nat_obj_${n}`);
+
+        // Scarecrow droid: sprite blue/S pra HUD (load mínimo, restante via handoff)
+        this.load.image('scarecrow_blue_S', 'assets/pixel_labs/chars/scarecrow_droid/blue/S.png');
         // Expor pra cenario
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);
