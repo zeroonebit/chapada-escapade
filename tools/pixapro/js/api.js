@@ -80,4 +80,10 @@ const Api = {
   mcpClear() {
     return fetch(MCP_SERVER + '/mcp_clear', { method: 'POST' });
   },
+
+  // === PixelLab balance (populado via bookmarklet, lido aqui) ===
+  pixellabBalance() {
+    return fetch(API_BASE + '/pixellab_balance', { signal: AbortSignal.timeout(3000) })
+      .then(r => r.json());
+  },
 };
