@@ -44,19 +44,30 @@
 
 ## Tilesets PixelLab gerados (orbit deste projeto)
 
+### Ativos (32×32)
+| ID | Nome | Tiles | Status |
+|---|---|---|---|
+| `6068781a-970c-4f9b-99fe-48ee90110038` | ocean ↔ sand (32px) | `assets/terrain/ocean_sand_32/` | ✅ sliced |
+| `91c93294-a4fd-425e-8b10-eb1baf32890d` | dirt ↔ grass (32px) | `assets/terrain/dirt_grass_32/` | ✅ sliced |
+
+Base tile IDs (32px):
+- `ffb24a7a-cf6f-46bc-93ae-a458d0de07c8` — ocean lower (32px)
+- `331870a5-d4ec-462a-b0d8-712dce1a3086` — sand upper (32px)
+- `15201074-efb7-48ce-8056-bf9f73120961` — dirt lower (32px)
+- `c92163d3-2f05-4ec9-adf7-925d72790530` — grass upper (32px)
+
+### Archived (16×16, superseded)
 | ID | Nome | Status |
 |---|---|---|
-| `2640e1f9-1e20-464d-b4ca-f700357733ee` | ocean ↔ sand | ✅ pronto |
-| `5398c10b-52b2-45b3-b6ab-dac141249b1f` | dirt ↔ grass cerrado v1 | ❌ image 404 (falhou) |
-| `267836d8-f211-4260-8917-938216d7e0f1` | dirt ↔ grass cerrado v2 | 🟡 em geração (~100s) |
+| `2640e1f9-1e20-464d-b4ca-f700357733ee` | ocean ↔ sand (16px) | superseded by 32px |
+| `5398c10b-52b2-45b3-b6ab-dac141249b1f` | dirt ↔ grass cerrado v1 (16px) | ❌ image 404 |
+| `267836d8-f211-4260-8917-938216d7e0f1` | dirt ↔ grass cerrado v2 (16px) | superseded by 32px |
 
-Base tile IDs disponíveis pra chain (handoff `HANDOFF_WANG.md`):
-- `bf54c09f-0003-469b-bf40-9317c548a91f` — dirt lower (v1, possivelmente reusável)
-- `b18eb30d-e007-4e66-8a31-9d5d9099cd7c` — grass upper (v1)
-- `bf4bf323-8369-46fa-9974-1fe68a7edac9` — dirt lower (v2)
-- `e8ede5e5-355c-4cac-9d69-1954567c7bc2` — grass upper (v2)
-- `2a7b28cc-4663-43c2-95dd-0055b2f03c55` — ocean lower
-- `343965f3-fa23-4e42-99ca-edd909e04a07` — sand upper
+Legacy base tile IDs (16px):
+- `bf4bf323-8369-46fa-9974-1fe68a7edac9` — dirt lower (v2, 16px)
+- `e8ede5e5-355c-4cac-9d69-1954567c7bc2` — grass upper (v2, 16px)
+- `2a7b28cc-4663-43c2-95dd-0055b2f03c55` — ocean lower (16px)
+- `343965f3-fa23-4e42-99ca-edd909e04a07` — sand upper (16px)
 
 ## 🔬 Boris Classification Findings (síntese 2026-04-29)
 

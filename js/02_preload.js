@@ -120,14 +120,24 @@ Object.assign(Jogo.prototype, {
         this.load.image('splash', 'splashv3.png');
         this.load.image('game_icon', 'icon.png');
 
-        // ── WANG TILES (16 tiles cr31 cores sólidas pra debug) ──────
+        // ── WANG TILES (16 tiles cr31) ──────────────────────────────
+        // Lê config de tile diretamente do localStorage (preload roda antes de create)
+        const TILE_FOLDERS = {
+            test:       'assets/terrain/test',
+            ocean_sand: 'assets/terrain/ocean_sand_32',
+            dirt_grass: 'assets/terrain/dirt_grass_32',
+        };
+        let _tileStyle = 'dirt_grass';
+        try {
+            const raw = JSON.parse(localStorage.getItem('chapEscapadeDebug') || '{}');
+            if (raw.fx && raw.fx.tileStyle && TILE_FOLDERS[raw.fx.tileStyle])
+                _tileStyle = raw.fx.tileStyle;
+        } catch(e) {}
+        const tileFolder = TILE_FOLDERS[_tileStyle];
         for (let i = 0; i < 16; i++) {
             const f = String(i).padStart(2, '0');
-            this.load.image(`wang_${f}`, `assets/terrain/test/wang_${f}.png`);
+            this.load.image(`wang_${f}`, `${tileFolder}/wang_${f}.png`);
         }
-
-        // (Wang tileset PNGs removidos — terreno agora é renderizado pelo
-        //  fragment shader cell-shaded em js/13_terrain_shader.js)
     }
 
 });

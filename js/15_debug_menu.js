@@ -99,9 +99,9 @@ const DBG_DEFAULTS = {
         beamSparks:         true,
         beamShake:          true,
         explosaoBoa:        true,
-        wangtiles:          false,
-        tileRes:            16,        // 16 | 32 px per tile
-        tileStyle:          'test',    // test | ocean_sand | dirt_grass
+        wangtiles:          true,
+        tileRes:            32,        // 16 | 32 px per tile
+        tileStyle:          'dirt_grass',    // test | ocean_sand | dirt_grass
         timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:      false,     // ciclo auto a cada 60s
         weather:            'clear',   // clear|rain|snow|fog|storm
