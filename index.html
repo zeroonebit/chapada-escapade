@@ -94,6 +94,33 @@
             0%, 100% { opacity: 1; }
             50%      { opacity: 0.42; }
         }
+        /* Mobile portrait: força mensagem ROTATE pra landscape */
+        #rotate-prompt {
+            display: none;
+            position: fixed; inset: 0;
+            background: #0a0404;
+            color: #ff5566;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            font-family: 'VT323','Courier New',monospace;
+            text-shadow: 0 0 14px rgba(255,80,80,0.65);
+            text-align: center;
+            padding: 20px;
+        }
+        #rotate-prompt .icon { font-size: 64px; margin-bottom: 18px;
+            animation: rotate-pulse 1.6s ease-in-out infinite; }
+        #rotate-prompt .title { font-size: 36px; letter-spacing: 4px;
+            margin-bottom: 8px; }
+        #rotate-prompt .sub { font-size: 18px; opacity: 0.75; max-width: 280px; line-height: 1.3; }
+        @keyframes rotate-pulse {
+            0%, 100% { transform: rotate(0deg); }
+            50%      { transform: rotate(90deg); }
+        }
+        @media (orientation: portrait) and (max-width: 900px) {
+            #rotate-prompt { display: flex; }
+        }
     </style>
 </head>
 <body>
@@ -107,13 +134,20 @@
 </div>
 <div id="wrap"><div id="game-host"></div></div>
 
+<!-- Mobile portrait overlay: pede pra rotacionar pra landscape (CSS auto-hide quando vira) -->
+<div id="rotate-prompt">
+    <div class="icon">📱</div>
+    <div class="title">ROTATE</div>
+    <div class="sub">Better in landscape — but really, this game is for PC.</div>
+</div>
+
 <!-- ── FAILSAFE MOBILE ─────────────────────────────────────────────── -->
 <!-- Tela pequena/touch: bloqueia load dos modulos do jogo, pinta preloader
      vermelho com icones (proibido celular / permitido PC). Desktop: load
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260430q';
+    const V = '20260430r';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;

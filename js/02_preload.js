@@ -130,6 +130,15 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
         this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');
         this.load.image('hud_burgers_box',       'assets/pixel_labs/hud/burgers.png');
+        // V2 nameless boxes + radar v2 (dome+ring) — labels overlay via Phaser i18n
+        this.load.image('hud_score_v2',          'assets/pixel_labs/hud/score_v2.png');
+        this.load.image('hud_burgers_v2',        'assets/pixel_labs/hud/burgers_v2.png');
+        this.load.image('hud_cows_v2',           'assets/pixel_labs/hud/cows_v2.png');
+        this.load.image('hud_oxen_v2',           'assets/pixel_labs/hud/oxen_v2.png');
+        this.load.image('hud_farmers_v2',        'assets/pixel_labs/hud/farmers_v2.png');
+        this.load.image('hud_shooters_v2',       'assets/pixel_labs/hud/shooters_v2.png');
+        this.load.image('hud_radar_dome_v2',     'assets/pixel_labs/hud/radar_dome_v2.png');
+        this.load.image('hud_radar_ring_v2',     'assets/pixel_labs/hud/radar_ring_v2.png');
         this.load.image('hud_frame_combustivel', 'assets/pixel_labs/hud/combustivel.png');
         this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
