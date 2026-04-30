@@ -4,6 +4,41 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-04-30 — Wang 32px tilesets + MCP Live Status + PixaPro evolution
+
+**~4 commits, sessão noturna**
+
+### Wang tilesets 32×32
+- Regenerados ocean↔sand e dirt↔grass via PixelLab MCP a 32×32 (16px eram muito pequenos pro mapa 8000×6000)
+- Primeiro attempt com base_tile_ids falhou (403 cross-size); retry sem base IDs OK
+- Spritesheets baixados via Backblaze CDN (User-Agent header necessário), sliced em 16 tiles individuais por cr31 index
+- Novos folders: `assets/terrain/ocean_sand_32/` e `assets/terrain/dirt_grass_32/`
+- `WANG_PRESETS` atualizado: 32px como primário, 16px legacy arquivado
+
+### Game wiring
+- `02_preload.js`: lê `tileStyle` do localStorage no preload, carrega folder correto
+- Defaults mudados: `wangtiles=true`, `tileRes=32`, `tileStyle=dirt_grass`
+- Menu TERRAIN no CONFIGS (aba VFX): toggle, selector res 16/32, selector estilo
+- cr31 convention fix: game code + test palette corrigidos pra NW=1 NE=2 SE=4 SW=8
+
+### PixaPro (tools/asset_gallery.html)
+- **Detail dashboard evolution**: stats cards, progress bar, category chips, queue cards com ações individuais
+- **5 bug fixes**: popup stuck on tab switch, gallery refresh duplicates, wang canvas gray after reload, tag input value lost, dashboard stale data
+- **Test render 4:3**: canvas 640×480 matching game map ratio, grid retangular, info tile size
+- **Font-size clamped** 12px–17px pra legibilidade
+- **MCP Live Status panel**: polling 4s, cards expandíveis com inspect banner (ID, type, params, preview, error/log)
+
+### gallery_server.py
+- `GET/POST /mcp_status`: Claude posta status de jobs, dashboard faz polling
+- `POST /mcp_clear`: limpa todos os jobs
+- Persist em `tools/saves/mcp_live.json`
+
+### Auto-sort validation
+- Provado que algoritmo funciona sem corrections salvas (bloqueou `applyStoredCorrections`)
+- 16/16 classificações corretas, 0 conflitos, determinístico em ambos tilesets
+
+---
+
 ## Sessão 2026-04-29 (madrugada) — Audit fixes + HUD assets + Objects v3 + debug overlay
 
 **~30 commits, ~6h, das 00:00 às 06:00+**
