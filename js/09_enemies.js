@@ -158,6 +158,14 @@ Object.assign(Jogo.prototype, {
             if (f._wandering && !isAbducted) {
                 f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
             }
+            // Sprite directional ja indica direcao — sem rotation EXCETO se abduzido.
+            // (matter pode girar a body apesar de setFixedRotation em colisoes lateriais)
+            if (!isAbducted) {
+                if (f.rotation !== 0) f.rotation = 0;
+                if (Math.abs(f.body.angle) > 0.001 && this.matter?.body) {
+                    this.matter.body.setAngle(f.body, 0);
+                }
+            }
             // Sprite direcional 8-dir baseado em speed
             if (!isAbducted) {
                 const vx = f.body.velocity.x, vy = f.body.velocity.y;
