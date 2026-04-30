@@ -155,10 +155,53 @@ Object.assign(Jogo.prototype, {
         // Hide o sprite radar antigo se existir (radar_frame.png v1)
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
-        // Fundo verde escuro dentro da elipse (sem dome 3D)
+        // ── Mascara da cavidade (clipa leak embaixo do frame perspectivo) ──
+        // Cavidade visivel fica deslocada pra cima por causa da perspectiva.
+        // Mask shape eh uma elipse menor + shift pra cima -> clipa miniBg+miniGfx
+        // pra que nada do radar (fill, sweep, blips) vaze fora da abertura.
+        const MASK_RX = INNER_RX * 0.92;
+        const MASK_RY = INNER_RY * 0.88;
+        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica acima do centro do frame
+        if (!this._radarMaskShape) {
+            this._radarMaskShape = this.make.graphics({ x: 0, y: 0, add: false });
+            this._radarMask = this._radarMaskShape.createGeometryMask();
+            this.hud.miniBg.setMask(this._radarMask);
+            if (this.hud.miniGfx) this.hud.miniGfx.setMask(this._radarMask);
+        }
+        this._radarMaskShape.clear();
+        this._radarMaskShape.fillStyle(0xffffff);
+        this._radarMaskShape.fillEllipse(cx, cy + MASK_DY, MASK_RX * 2, MASK_RY * 2);
+        // Salva pos da cavidade pro _updateMinimap usar (sweep + quadrantes)
+        this._mini.maskCx = cx;
+        this._mini.maskCy = cy + MASK_DY;
+        this._mini.maskRx = MASK_RX;
+        this._mini.maskRy = MASK_RY;
+
+        // Pool de sprites: aplica mesma mascara (segue clipping do leak)
+        if (this._radarHoloPool && this._radarHoloPool.length) {
+            for (const s of this._radarHoloPool) {
+                if (s && s.scene) s.setMask(this._radarMask);
+            }
+        }
+
+        // ── Fundo alien green vibrante + quadrantes ─────────────────────
+        const fcx = cx, fcy = cy + MASK_DY;
         this.hud.miniBg.clear();
-        this.hud.miniBg.fillStyle(0x002211, 0.55);
-        this.hud.miniBg.fillEllipse(cx, cy, INNER_RX * 2, INNER_RY * 2);
+        // Base verde-alien escura
+        this.hud.miniBg.fillStyle(0x003322, 0.7);
+        this.hud.miniBg.fillEllipse(fcx, fcy, MASK_RX * 2, MASK_RY * 2);
+        // Glow interno verde vibrante
+        this.hud.miniBg.fillStyle(0x00ff66, 0.12);
+        this.hud.miniBg.fillEllipse(fcx, fcy, MASK_RX * 2, MASK_RY * 2);
+        // Quadrantes: horizontal (E-W) + vertical (N-S) semi-transparente
+        this.hud.miniBg.lineStyle(1, 0x66ffaa, 0.45);
+        this.hud.miniBg.lineBetween(fcx - MASK_RX, fcy, fcx + MASK_RX, fcy);
+        this.hud.miniBg.lineBetween(fcx, fcy - MASK_RY, fcx, fcy + MASK_RY);
+        // Aneis concentricos (escala radial)
+        this.hud.miniBg.lineStyle(1, 0x66ffaa, 0.25);
+        this.hud.miniBg.strokeEllipse(fcx, fcy, MASK_RX * 1.0, MASK_RY * 1.0);
+        this.hud.miniBg.strokeEllipse(fcx, fcy, MASK_RX * 0.66, MASK_RY * 0.66);
+        this.hud.miniBg.strokeEllipse(fcx, fcy, MASK_RX * 0.33, MASK_RY * 0.33);
         if (this.hud.miniGfx) this.hud.miniGfx.setDepth(200);
 
         // Pool de mini sprites holograficos pros blips (segue elipse plana)
@@ -214,14 +257,17 @@ Object.assign(Jogo.prototype, {
 
     _updateMinimap() {
         const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ship) return;
-        const { cx, cy, rx, ry } = m;
-        const r = rx;  // compat (sweep usa raio horizontal)
+        // Coords da CAVIDADE (mascara) — sweep e blips renderizam aqui pra
+        // ficar dentro do clip do GeometryMask, sem leak embaixo do frame.
+        const cx = m.maskCx ?? m.cx;
+        const cy = m.maskCy ?? m.cy;
+        const rx = m.maskRx ?? m.rx;
+        const ry = m.maskRy ?? m.ry;
         const W = 8000, H = 6000;
         const RANGE = Math.max(W, H) * 0.6;
-        // Mapa world -> elipse: x usa rx, y usa ry (perspective squash baked)
+        // Mapa world -> elipse da cavidade
         const wx = (vx) => cx + (vx - this.ship.x) / RANGE * rx;
         const wy = (vy) => cy + (vy - this.ship.y) / RANGE * ry;
-        // Teste elipse: u² + v² <= 1 com u=(x-cx)/rx, v=(y-cy)/ry
         const inRadar = (x, y) => {
             const u = (x - cx) / rx, v = (y - cy) / ry;
             return u*u + v*v <= 1;
@@ -235,17 +281,9 @@ Object.assign(Jogo.prototype, {
         this._radarAngle = (prevAngle + 0.018) % (Math.PI * 2);
         const sa = this._radarAngle;
 
-        // Se o dome shader esta ativo, fundo verde + concentric circles ja vem
-        // dele -> pula o desenho do graphics. Senao desenha fallback.
-        if (!this._radarHoloDome) {
-            g.fillStyle(0x002211, 0.45);
-            g.fillCircle(cx, cy, r);
-        }
-
-        // Triângulo de varredura (leque de ~50°) — fica acima do dome shader.
-        // Sweep usa rx/ry pra varredura ellipse (acompanha tilt do frame)
+        // Triângulo de varredura (leque de ~50°) — alien green vibrante
         const SWEEP = Math.PI * 0.28;
-        g.fillStyle(0x55ff99, 0.18);
+        g.fillStyle(0x00ff66, 0.22);
         g.beginPath();
         g.moveTo(cx, cy);
         for (let i = 0; i <= 16; i++) {
@@ -253,8 +291,8 @@ Object.assign(Jogo.prototype, {
             g.lineTo(cx + Math.cos(a)*rx, cy + Math.sin(a)*ry);
         }
         g.closePath(); g.fillPath();
-        // Linha de scan brilhante
-        g.lineStyle(1.5, 0x99ffcc, 1.0);
+        // Linha de scan brilhante alien
+        g.lineStyle(1.5, 0xaaffcc, 1.0);
         g.lineBetween(cx, cy, cx + Math.cos(sa)*rx, cy + Math.sin(sa)*ry);
 
         // Decay-based blips: each entidade only "acende" when a sweep line passa by ela.
