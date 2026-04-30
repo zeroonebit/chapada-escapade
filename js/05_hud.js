@@ -108,7 +108,9 @@ Object.assign(Jogo.prototype, {
         this.hud.scoreText.setPosition(w/2, 32 + VAL_OFF);
 
         // 5 boxes em coluna LEFT — bull/cow/farmer/shooter/burgers
-        const COL_X = 100, FIRST_Y = 36, GAP_Y = 62;  // 58 + 4 spacing
+        // Coluna HUD centralizada verticalmente (5 boxes × GAP_Y = 248px span)
+        const COL_X = 100, GAP_Y = 62;  // BOX_H 58 + 4 spacing
+        const FIRST_Y = Math.max(36, Math.round(h/2 - 2*GAP_Y));  // centro vertical (h/2 = mid box)
         const VAL_X_OFF = 35;  // value text a direita do icon (icon ocupa half left)
         const stackOrder = [
             { box: 'bullsBox',    lbl: 'bullsLabel',    val: 'bullsText' },
