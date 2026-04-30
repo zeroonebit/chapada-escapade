@@ -140,6 +140,9 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
+        // Combined HUD (COMBUSTIVEL+GRAVITON num PNG so) — labels traduzidos overlaid
+        this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty.png');
+        this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
         // v3 mantidos como fallback — nao sao mais o caminho default
         this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v3.png');
         this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v3.png');

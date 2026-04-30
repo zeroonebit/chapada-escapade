@@ -212,13 +212,16 @@ Object.assign(Jogo.prototype, {
             const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. speed)
             // Per-drop variacao: comprimento ±25% individual + alpha 0.45-1.0
             const baseLen = 18 * lenMul * (drop._lenScale || 1.0);
-            const dx      = -ang * baseLen * 8;  // amplifica visualmente o tilt (ang max 0.05)
+            // FIX: line tilt e drift agora usam MESMO multiplicador e MESMO sinal
+            // (antes: dx negativo + drift positivo = linha tilta pra um lado e
+            // chuva cai pro outro). Agora a gota cai no sentido do tilt da linha.
+            const VISUAL_MUL = 8 * 0.45;  // 3.6
+            const dx      = ang * baseLen * VISUAL_MUL;
             drop.setTo(0, 0, dx, baseLen);
             drop.setLineWidth(1.4 * Math.max(0.5, Math.min(2, lenMul)));
             drop.setAlpha((drop._alphaScale || 1.0) * 0.7);
             const dur = Phaser.Math.Between(550, 850) / Math.max(0.2, velMul);
-            // Drift horizontal proporcional ao angulo (com mesmo amplifier)
-            const driftX = ang * (h + 60) * 8 * 0.45;
+            const driftX = ang * (h + 60) * VISUAL_MUL;
             this.tweens.add({
                 targets: drop,
                 y: h + 40, x: drop.x + driftX,
