@@ -6,20 +6,27 @@ Object.assign(Jogo.prototype, {
         // HUD above do atmosphere overlay (depth 195) e do storm flash (196)
         const D = 200, D2 = 201;
 
-        // ── Score ─────────────────────────────────────────────────────
-        // frame limpo (without dígitos baked-in); número sobreposto pelo código
-        this.hud.scoreBg   = this.add.image(0,0,'hud_score_frame').setDisplaySize(200,52).setScrollFactor(0).setDepth(D);
-        this.hud.scoreText = this.add.text(0,12,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // ── 3 SCORE BOXES V2 (nameless: label PT/EN overlaid via Phaser) ─────
+        // Cada box tem 2 zonas: header (top, label) + body (bottom, icon+value)
+        // Display ratio aprox 633x205 = ~3.1:1
+        const useV2Boxes = this.textures.exists('hud_score_v2');
+        const BOX_W = 180, BOX_H = 58;
+        // Score (top-center): empty box, label SCORE/PONTOS no header, value no body
+        this.hud.scoreBg   = this.add.image(0,0, useV2Boxes ? 'hud_score_v2' : 'hud_score_frame').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.scoreLabel = this.add.text(0,0,'SCORE',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.scoreText = this.add.text(0,0,'0',{fontSize:'20px',fill:'#00ff55',fontStyle:'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.scoreText    = this.hud.scoreText;
 
-        // ── COWS box (cows + oxen abduzidos no beam) ─────────────────
-        this.hud.cowsBox  = this.add.image(0, 0, 'hud_cows_box').setDisplaySize(160, 80).setScrollFactor(0).setDepth(D);
-        this.hud.cowsText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // ── COWS box (cows abduzidos no beam) ─────────────────
+        this.hud.cowsBox   = this.add.image(0, 0, useV2Boxes ? 'hud_cows_v2' : 'hud_cows_box').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.cowsLabel = this.add.text(0,0,'COWS',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.cowsText  = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
         // ── BURGERS box (total entregue) ───────────────────────────────
-        this.hud.burgersBox  = this.add.image(0, 0, 'hud_burgers_box').setDisplaySize(176, 80).setScrollFactor(0).setDepth(D);
-        this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.counterText   = this.hud.burgersText;  // alias mantido to _turnIntoBurger
+        this.hud.burgersBox   = this.add.image(0, 0, useV2Boxes ? 'hud_burgers_v2' : 'hud_burgers_box').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.burgersLabel = this.add.text(0,0,'BURGERS',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.burgersText  = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
         // ── Barras combinadas (PNG unico c/ fuel+GRAVITON) ───────
         // more simples: um empty PNG + um full PNG, dois fillImg apontando pro
@@ -106,15 +113,23 @@ Object.assign(Jogo.prototype, {
     _positionHUD() {
         const w = this.scale.width, h = this.scale.height;
 
+        // Boxes V2: header strip top (label) + body (icon+value)
+        // Display 180x58: header ~14px, body ~44px
+        const HDR_OFF = -19;   // y offset do center pro header
+        const VAL_OFF = 8;     // y offset pro value (body, lado direito do icon)
         // Score — center-topo
-        this.hud.scoreBg.setPosition(w/2, 28);
-        this.hud.scoreText.setPosition(w/2, 32);
+        this.hud.scoreBg.setPosition(w/2, 32);
+        if (this.hud.scoreLabel) this.hud.scoreLabel.setPosition(w/2, 32 + HDR_OFF);
+        this.hud.scoreText.setPosition(w/2, 32 + VAL_OFF);
 
         // COWS + BURGERS boxes lado a lado no canto superior esquerdo
-        this.hud.cowsBox.setPosition(90, 55);
-        this.hud.cowsText.setPosition(122, 62);   // ao lado direito do ícone cow
-        this.hud.burgersBox.setPosition(265, 55);
-        this.hud.burgersText.setPosition(300, 62);
+        this.hud.cowsBox.setPosition(100, 60);
+        if (this.hud.cowsLabel) this.hud.cowsLabel.setPosition(100, 60 + HDR_OFF);
+        this.hud.cowsText.setPosition(135, 60 + VAL_OFF);   // ao lado right do ícone cow
+
+        this.hud.burgersBox.setPosition(290, 60);
+        if (this.hud.burgersLabel) this.hud.burgersLabel.setPosition(290, 60 + HDR_OFF);
+        this.hud.burgersText.setPosition(325, 60 + VAL_OFF);
 
         // Barras: combined PNG OU 2 separados
         if (this.hud._combinedHud && this.hud.combinedBg) {
@@ -179,15 +194,41 @@ Object.assign(Jogo.prototype, {
         // _mini exposes rx/ry to _updateMinimap projetar elipse + z dome
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
-        // Cria sprite do radar v2 (lazy — primeira vez ou apos resize)
-        if (!this.hud.radarFrameV2 && this.textures.exists('hud_radar_frame_v2')) {
-            this.hud.radarFrameV2 = this.add.image(cx, cy, 'hud_radar_frame_v2')
-                .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_W, FRAME_H);
-        } else if (this.hud.radarFrameV2) {
-            this.hud.radarFrameV2.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
+        // Radar v2 NOVO: ring (base metal) embaixo + dome (vidro) em cima,
+        // sandwiching o conteudo do radar (sweep + blips) no meio.
+        // Ring: 632x356 ratio ≈1.78 (top-down with leve perspectiva).
+        // Dome: 551x490 ratio ≈1.12 (hemisferio side-view).
+        const useV2Radar = this.textures.exists('hud_radar_ring_v2') && this.textures.exists('hud_radar_dome_v2');
+        if (useV2Radar) {
+            // Ring base (depth low — antes do conteudo)
+            if (!this.hud.radarRing) {
+                this.hud.radarRing = this.add.image(cx, cy, 'hud_radar_ring_v2')
+                    .setScrollFactor(0).setDepth(199.0).setDisplaySize(FRAME_W, FRAME_H);
+            } else {
+                this.hud.radarRing.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
+            }
+            // Dome (vidro semi-transparente em cima — depth alta + alpha 0.55)
+            // Posicionado um pouco acima do center pra alinhar com a base do ring
+            const DOME_W = FRAME_W * 0.88;
+            const DOME_H = DOME_W * (490/551);  // mantem ratio do dome
+            const DOME_DY = -FRAME_H * 0.12;  // sobe pra dome encostar na borda do ring
+            if (!this.hud.radarDome) {
+                this.hud.radarDome = this.add.image(cx, cy + DOME_DY, 'hud_radar_dome_v2')
+                    .setScrollFactor(0).setDepth(200.8).setDisplaySize(DOME_W, DOME_H).setAlpha(0.55);
+            } else {
+                this.hud.radarDome.setPosition(cx, cy + DOME_DY).setDisplaySize(DOME_W, DOME_H);
+            }
+            // Hide old frame_v2 se foi criado
+            if (this.hud.radarFrameV2) this.hud.radarFrameV2.setVisible(false);
+        } else if (this.textures.exists('hud_radar_frame_v2')) {
+            // Fallback: frame perspectivo antigo
+            if (!this.hud.radarFrameV2) {
+                this.hud.radarFrameV2 = this.add.image(cx, cy, 'hud_radar_frame_v2')
+                    .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_W, FRAME_H);
+            } else {
+                this.hud.radarFrameV2.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
+            }
         }
-
-        // Hide o sprite radar antigo se existir (radar_frame.png v1)
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
         // ── Mascara da cavidade (clipa leak embaixo do frame perspectivo) ──
@@ -289,12 +330,15 @@ Object.assign(Jogo.prototype, {
     _applyHudI18n() {
         const lang = this.dbg?.behavior?.lang || 'en';
         const labels = {
-            en: { fuel: 'FUEL',         graviton: 'GRAVITON' },
-            pt: { fuel: 'COMBUSTÍVEL',  graviton: 'GRAVITON' },
+            en: { fuel:'FUEL', graviton:'GRAVITON', score:'SCORE', cows:'COWS', burgers:'BURGERS' },
+            pt: { fuel:'COMBUSTÍVEL', graviton:'GRAVITON', score:'PONTOS', cows:'VACAS', burgers:'HAMBURGUERES' },
         };
         const L = labels[lang] || labels.en;
-        if (this.hud.combLabel) this.hud.combLabel.setText(L.fuel);
-        if (this.hud.eneLabel)  this.hud.eneLabel.setText(L.graviton);
+        if (this.hud.combLabel)    this.hud.combLabel.setText(L.fuel);
+        if (this.hud.eneLabel)     this.hud.eneLabel.setText(L.graviton);
+        if (this.hud.scoreLabel)   this.hud.scoreLabel.setText(L.score);
+        if (this.hud.cowsLabel)    this.hud.cowsLabel.setText(L.cows);
+        if (this.hud.burgersLabel) this.hud.burgersLabel.setText(L.burgers);
     },
 
     _updateMinimap() {
