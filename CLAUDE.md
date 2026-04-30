@@ -307,6 +307,20 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - `design:design-critique` — feedback visual da arte gerada
 - `anthropic-skills:canvas-design` — diagramas/mockups
 
+## Handoff entre sessões
+
+Sistema simples de fila pra coordenar múltiplas sessões Claude trabalhando no projeto:
+
+- **Source-of-truth:** `docs/HANDOFF_QUEUE.json` (versionado no git)
+- **Mirror human-readable:** `docs/HANDOFF_QUEUE.md`
+- **Skill:** `~/.claude/skills/handoff-queue/SKILL.md` — comandos `/handoff list/add/claim/done`
+- **Workflow:**
+  - Sessão A (ex: asset-gen com PixelLab MCP) adiciona items quando fica algo pendente pra integração in-game
+  - Sessão B (in-game integration) abre projeto, lê `/handoff list`, escolhe item, implementa, marca done
+  - Git é o sync: sempre `git pull` antes de ler, `git push` após editar
+
+Triggers naturais: "que pendências tem", "adiciona X à handoff", "pega item Y", "marca Z como done".
+
 ## Comandos do projeto
 
 - **`/checkpoint`** — rodar **antes de desligar o computador**. Atualiza CLAUDE.md, docs/PROGRESS.md e docs/PROMPTS.md com tudo que aconteceu na sessão, oferece backup do HTML se houve mudanças significativas. Garante que nada se perde entre sessões.
