@@ -276,20 +276,20 @@
 
 
 <script src="pixapro/js/constants.js"></script>
+<script src="pixapro/js/store.js"></script>
+<script src="pixapro/js/api.js"></script>
 <script>
-// MANIFEST → moved to pixapro/js/constants.js
+// MANIFEST, PIXELLAB_TOOLS, WANG_PRESETS → constants.js
+// API_BASE, MCP_SERVER, Api.* → api.js
+// STORE_KEYS, Store.* → store.js
 
-const API_URL = id => `https://api.pixellab.ai/mcp/map-objects/${id}/download`;
-// API_BASE = se servido pelo gallery_server.py, usa same-origin; senão aponta pro 8090
-const API_BASE = (window.location.port === '8090') ? '' : 'http://localhost:8090';
-const DECISIONS_KEY = 'chapEscapadeAssetDecisions';
+const API_URL = PIXELLAB_DOWNLOAD; // alias compat (pixellab map-objects download)
 let idx = 0;
 let refreshTimer = 8;
 
 // Decisões: { [assetId]: { action: 'promote'|'discard'|'rename', target?: string, newName?: string } }
-let decisions = {};
-try { decisions = JSON.parse(localStorage.getItem(DECISIONS_KEY) || '{}'); } catch(e){}
-const saveDecisions = () => localStorage.setItem(DECISIONS_KEY, JSON.stringify(decisions));
+let decisions = Store.loadDecisions();
+const saveDecisions = () => Store.saveDecisions(decisions);
 
 const $ = id => document.getElementById(id);
 
@@ -464,11 +464,7 @@ $("btnExport").onclick = async ()=>{
     out[a.id] = { ...dec };
   });
   try {
-    const res = await fetch(API_BASE + '/save_decisions', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(out, null, 2)
-    });
+    const res = await Api.saveDecisions(out);
     if(res.ok){
       const r = await res.json();
       $("stats").textContent = `💾 Salvo ${r.count} decisões em ${r.saved_to}`;
@@ -514,30 +510,25 @@ document.querySelectorAll('.tab').forEach(t => {
 let summaryData = null;
 let promotedFilter = 'folders'; // folders | files | type | tags
 // Tags state: { [assetPath]: ['tag1', 'tag2'] }
-let assetTags = {};
-try { assetTags = JSON.parse(localStorage.getItem('chapEscapadeAssetTags') || '{}'); } catch(e){}
+let assetTags = Store.loadTags();
 function saveAssetTags(){
-  localStorage.setItem('chapEscapadeAssetTags', JSON.stringify(assetTags));
-  fetch(API_BASE + '/save_asset_tags', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify(assetTags)}).catch(()=>{});
+  Store.saveTags(assetTags);
+  Api.saveTags(assetTags);
 }
 function collectAssetTags(){
   const set = new Set();
   Object.values(assetTags).forEach(tags => tags.forEach(t => set.add(t)));
   return [...set].sort();
 }
-// Carrega registry do disk se existir
-fetch(API_BASE + '/tools/saves/asset_tags.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(data => {
+// Carrega registry do disk se existir (merge: localStorage wins por ser mais recente)
+Api.loadTags().then(data => {
   if(data && typeof data === 'object'){
-    assetTags = {...data, ...assetTags}; // merge: localStorage wins (mais recente)
+    assetTags = {...data, ...assetTags};
     saveAssetTags();
   }
-}).catch(()=>{});
+});
 async function fetchSummary(){
-  try {
-    const res = await fetch(API_BASE + '/list_assets');
-    if(!res.ok) return null;
-    return await res.json();
-  } catch(e){ return null; }
+  return await Api.listAssets();
 }
 
 function renderGallery(){
@@ -901,9 +892,8 @@ $("btnRefreshSummary")?.addEventListener('click', async () => {
 // PIXELLAB_TOOLS → moved to pixapro/js/constants.js
 
 let detailSelected = null;
-let mcpQueue = [];
-try { mcpQueue = JSON.parse(localStorage.getItem('chapEscapadeMcpQueue') || '[]'); } catch(e){}
-function saveQueue(){ localStorage.setItem('chapEscapadeMcpQueue', JSON.stringify(mcpQueue)); updateQueueBar(); }
+let mcpQueue = Store.loadQueue();
+function saveQueue(){ Store.saveQueue(mcpQueue); updateQueueBar(); }
 
 function updateQueueBar(){
   const bar = $("queueBar");
@@ -937,7 +927,7 @@ function approvedAssets(){
 function renderEditorList(){ return renderDetailList(); }
 function renderDetailDashboard(){
   // Reload from localStorage pra pegar updates de outras tabs
-  try { mcpQueue = JSON.parse(localStorage.getItem('chapEscapadeMcpQueue') || '[]'); } catch(e){}
+  mcpQueue = Store.loadQueue();
 
   const pending = mcpQueue.filter(q => !q.done && !q.failed && !q.running);
   const running = mcpQueue.filter(q => q.running);
@@ -1017,7 +1007,7 @@ function renderDetailDashboard(){
           else if(action === 'reset'){ delete mcpQueue[idx].done; delete mcpQueue[idx].failed; delete mcpQueue[idx].running; }
           else if(action === 'remove'){ mcpQueue.splice(idx, 1); }
           saveQueue();
-          fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue)}).catch(()=>{});
+          Api.saveMcpQueue(mcpQueue);
           renderDetailDashboard();
         };
       });
@@ -1029,13 +1019,13 @@ $("btnDetailClearQueue")?.addEventListener('click', () => {
   if(!confirm('Limpar todo o queue MCP?')) return;
   mcpQueue = [];
   saveQueue();
-  fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify([])}).catch(()=>{});
+  Api.saveMcpQueue([]);
   renderDetailDashboard();
 });
 $("btnDetailClearDone")?.addEventListener('click', () => {
   mcpQueue = mcpQueue.filter(q => !q.done);
   saveQueue();
-  fetch(API_BASE + '/save_mcp_queue', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue)}).catch(()=>{});
+  Api.saveMcpQueue(mcpQueue);
   renderDetailDashboard();
 });
 $("btnDetailExportJSON")?.addEventListener('click', () => {
@@ -1132,8 +1122,7 @@ function renderDetailMain(){
   titleEl.textContent = a.name;
   const catLabels = {create:'🆕 CREATE', modify:'🎨 MODIFY', anim:'🎬 ANIMATE', meta:'📖 META'};
   const defaultCats = ['create','modify','anim','meta'];
-  let savedOrder = null;
-  try { savedOrder = JSON.parse(localStorage.getItem('chapEscapadeEditorSectionOrder') || 'null'); } catch(e){}
+  const savedOrder = Store.loadEditorOrder();
   // valida e completa caso falte algum
   const cats = (savedOrder && Array.isArray(savedOrder))
     ? defaultCats.sort((a,b) => (savedOrder.indexOf(a) === -1 ? 999 : savedOrder.indexOf(a)) - (savedOrder.indexOf(b) === -1 ? 999 : savedOrder.indexOf(b)))
@@ -1227,7 +1216,7 @@ function renderDetailMain(){
         const i1 = order.indexOf(fromCat), i2 = order.indexOf(toCat);
         if(i1 < 0 || i2 < 0) return;
         order.splice(i1, 1); order.splice(i2, 0, fromCat);
-        localStorage.setItem('chapEscapadeEditorSectionOrder', JSON.stringify(order));
+        Store.saveEditorOrder(order);
         renderDetailMain(); // re-render com nova ordem
       };
     });
@@ -1339,7 +1328,7 @@ function queueTool(toolName){
   });
   saveQueue();
   // POST ao server pra persistir
-  fetch(API_BASE + '/save_mcp_queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(mcpQueue) }).catch(()=>{});
+  Api.saveMcpQueue(mcpQueue);
 }
 
 $("btnQueueShow")?.addEventListener('click', () => {
@@ -1349,7 +1338,7 @@ $("btnQueueClear")?.addEventListener('click', () => {
   if(!confirm('Limpar fila MCP?')) return;
   mcpQueue = [];
   saveQueue();
-  fetch(API_BASE + '/save_mcp_queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify([]) }).catch(()=>{});
+  Api.saveMcpQueue([]);
 });
 
 updateQueueBar();
@@ -1542,9 +1531,8 @@ function repaintViewCells(){
 async function applyStoredCorrections(presetId){
   if(!tileEditState || tileEditState.presetId !== presetId) return;
   try {
-    const res = await fetch(API_BASE + '/tools/saves/wang_corrections.json?t=' + Date.now());
-    if(!res.ok) return;
-    const registry = await res.json();
+    const registry = await Api.loadWangCorrections();
+    if(!registry) return;
     const corr = registry?.[presetId];
     if(!corr) return;
     const original = tileEditState.cells.slice();
@@ -1804,13 +1792,9 @@ function renderTestMap(){
 async function fetchTilesetMetadata(preset){
   if(!preset.metadataUrl) return null;
   if(presetMetadata[preset.id]) return presetMetadata[preset.id];
-  try {
-    const res = await fetch(preset.metadataUrl);
-    if(!res.ok) return null;
-    const data = await res.json();
-    presetMetadata[preset.id] = data;
-    return data;
-  } catch(e){ return null; }
+  const data = await Api.fetchMetadata(preset.metadataUrl);
+  if(data) presetMetadata[preset.id] = data;
+  return data;
 }
 
 function sliceImage(imgEl, tileSize, gridCols){
@@ -2105,17 +2089,13 @@ document.addEventListener('click', (e) => {
   if(e.target.id === 'btnSaveCorrected'){
     if(!tileEditState) return;
     // Fetch existing registry, merge this preset, save back
-    fetch(API_BASE + '/tools/saves/wang_corrections.json').then(r => r.ok ? r.json() : {}).catch(()=>({})).then(registry => {
+    Api.loadWangCorrections().then(registry => {
       registry = registry || {};
       registry[tileEditState.presetId] = {
         timestamp: Date.now(),
         cells: tileEditState.cells.map((c,i) => ({ position: i, origIdx: c.origIdx, transforms: c.transforms })),
       };
-      fetch(API_BASE + '/save_wang_corrections', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(registry)
-      }).then(r => r.json()).then(r => {
+      Api.saveWangCorrections(registry).then(r => r.json()).then(r => {
         $("editorHint").textContent = r.ok ? `💾 Salvo (${Object.keys(registry).length} presets registrados)` : `⚠ erro: ${JSON.stringify(r)}`;
       }).catch(err => {
         $("editorHint").textContent = `⚠ servidor offline (${err.message})`;
@@ -2142,7 +2122,7 @@ setInterval(()=>{
 render();
 
 // ========== MCP Live Status polling ==========
-const MCP_SERVER = 'http://localhost:8090';
+// MCP_SERVER + Api.mcpStatus()/mcpClear() vivem em api.js
 let _mcpPollInterval = null;
 let _mcpLiveConnected = false;
 
@@ -2152,9 +2132,7 @@ async function pollMcpStatus() {
   const countEl = $('mcpLiveCount');
   const lastPoll = $('mcpLiveLastPoll');
   try {
-    const r = await fetch(MCP_SERVER + '/mcp_status', {signal: AbortSignal.timeout(3000)});
-    if (!r.ok) throw new Error(r.status);
-    const jobs = await r.json();
+    const jobs = await Api.mcpStatus();
     _mcpLiveConnected = true;
     dot.style.background = '#3da53d';
     const now = new Date();
@@ -2278,7 +2256,7 @@ switchTab = function(t) {
 $('btnMcpLiveRefresh').onclick = pollMcpStatus;
 $('btnMcpLiveClear').onclick = async () => {
   try {
-    await fetch(MCP_SERVER + '/mcp_clear', {method:'POST'});
+    await Api.mcpClear();
     pollMcpStatus();
   } catch(e) { console.warn('clear failed', e); }
 };
