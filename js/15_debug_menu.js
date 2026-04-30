@@ -26,6 +26,8 @@ const MENU_I18N = {
         atiradores_e:'Shooters (towers)', beam_e:'Beam visual', cenario:'Scenery (fences/bushes)',
         language:'Language',
         atmosfera:'ATMOSPHERE', efeitos:'EFFECTS', neve:'SNOW',
+        terreno:'TERRAIN', tile_ativar:'Enable Wang tiles', tile_res:'Tile resolution',
+        tile_style:'Tile style', tile_note:'Applies on restart.',
     },
     pt: {
         configs:'CONFIGURAÇÕES', controles:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
@@ -48,6 +50,8 @@ const MENU_I18N = {
         atiradores_e:'Atiradores (torres)', beam_e:'Beam visual', cenario:'Cenário (cercas/moitas)',
         language:'Idioma',
         atmosfera:'ATMOSFERA', efeitos:'EFEITOS', neve:'NEVE',
+        terreno:'TERRENO', tile_ativar:'Ativar Wang tiles', tile_res:'Resolução do tile',
+        tile_style:'Estilo do tile', tile_note:'Aplica ao reiniciar.',
     },
 };
 
@@ -96,6 +100,8 @@ const DBG_DEFAULTS = {
         beamShake:          true,
         explosaoBoa:        true,
         wangtiles:          false,
+        tileRes:            16,        // 16 | 32 px per tile
+        tileStyle:          'test',    // test | ocean_sand | dirt_grass
         timeOfDay:          'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:      false,     // ciclo auto a cada 60s
         weather:            'clear',   // clear|rain|snow|fog|storm
@@ -329,7 +335,22 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="sparkles_beam">Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                         <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.explosaoBoa"></label>
-                        <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend data-i18n="terreno">TERRAIN</legend>
+                        <div class="note" data-i18n="tile_note">Aplica ao reiniciar.</div>
+                        <label><span data-i18n="tile_ativar">Ativar Wang tiles</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span data-i18n="tile_res">Resolução do tile</span>
+                            <select data-cfg="fx.tileRes" style="flex:1;max-width:130px;min-width:90px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="16">16×16 px</option>
+                                <option value="32">32×32 px</option>
+                            </select></label>
+                        <label><span data-i18n="tile_style">Estilo do tile</span>
+                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="test">Test palette (debug)</option>
+                                <option value="ocean_sand">Ocean ↔ Sand</option>
+                                <option value="dirt_grass">Dirt ↔ Grass</option>
+                            </select></label>
                     </fieldset>
                 </div>
 

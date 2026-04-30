@@ -49,16 +49,14 @@ Object.assign(Jogo.prototype, {
         // ── 3. RENDER ─────────────────────────────────────────────────
         const useWang = this.dbg?.fx?.wangtiles;
         if (useWang) {
-            // Wang tiles cr31 corner convention.
-            // Convenção tools/wang_test_palette.py: NE=1, SE=2, SW=4, NW=8.
+            // Wang tiles cr31 corner convention (standard):
+            //   NW=1, NE=2, SE=4, SW=8  (1 = upper terrain)
             // Cada CELL é renderizada com 4 cantos compartilhados com vizinhos.
-            // Construímos um corner grid (COLS+1)×(ROWS+1) — não é o cell grid,
-            // são os cantos entre cells. Fica robusto: cantos compartilhados sempre
-            // batem entre cells vizinhas (sem costura).
+            // Construímos um corner grid (COLS+1)×(ROWS+1) — cantos compartilhados
+            // sempre batem entre cells vizinhas (sem costura).
             const CW = COLS + 1, CH = ROWS + 1;
             // Canto = 1 (UPPER, grama verde) só se a maioria dos 4 cells ao redor é
             // PURO grass (===2). Sand/water/terra todos contam como 0 (LOWER, areia).
-            // Isso evita o bug "tudo idx=15" quando grass+terra dominavam o grid.
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
@@ -72,7 +70,6 @@ Object.assign(Jogo.prototype, {
                             if (grid[cy][cx] === 2) hi++;
                         }
                     }
-                    // 50%+ de pureza pra ser upper
                     corners[y][x] = (total > 0 && hi * 2 >= total) ? 1 : 0;
                 }
             }
@@ -97,12 +94,12 @@ Object.assign(Jogo.prototype, {
             // Cell (x,y) lê seus 4 cantos:
             //   NW = corners[y][x],  NE = corners[y][x+1]
             //   SW = corners[y+1][x], SE = corners[y+1][x+1]
-            // Bits cr31: NE=1, SE=2, SW=4, NW=8
+            // Bits cr31: NW=1, NE=2, SE=4, SW=8
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     const nw = corners[y][x],     ne = corners[y][x+1];
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
-                    const idx = (ne * 1) | (se * 2) | (sw * 4) | (nw * 8);
+                    const idx = (nw * 1) | (ne * 2) | (se * 4) | (sw * 8);
                     const f = String(idx).padStart(2, '0');
                     this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, `wang_${f}`)
                         .setDisplaySize(CELL, CELL).setDepth(0);
