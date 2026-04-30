@@ -4,7 +4,7 @@ Lower = areia/grama seca (claro), Upper = grama verde (médio).
 Quadrantes intermediários usam mistura pra dar transição suave.
 
 Convenção cr31 (2-corner Wang, padrão da indústria):
-    NE=1, SE=2, SW=4, NW=8     (1 = upper terrain present)
+    NW=1, NE=2, SE=4, SW=8     (1 = upper terrain present)
     index = soma dos pesos dos corners "upper" (0..15)
 
 Saída:
@@ -21,7 +21,7 @@ DST.mkdir(parents=True, exist_ok=True)
 TILE = 32
 HALF = TILE // 2
 
-CORNER_BITS = {"NE": 1, "SE": 2, "SW": 4, "NW": 8}
+CORNER_BITS = {"NW": 1, "NE": 2, "SE": 4, "SW": 8}
 
 # Paleta terrosa Chapada — areia/seca → grama verde
 LOWER = (201, 165, 116)  # areia bege quente (#c9a574)
