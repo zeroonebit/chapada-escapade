@@ -210,6 +210,31 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Auto-sort validado** — algoritmo funciona sem corrections salvas, 0 conflitos nos 2 tilesets PixelLab
 - **`docs/REFS_WANG.md`** atualizado com novos IDs 32px e base tile IDs
 
+### ✅ Pronto (cont. — sessão 2026-04-30 manhã · gen + refactor curral V2 + cercas deco)
+- **5 currais V2 PixelLab 200×200** — substitui sistema procedural de cercas
+  - Variantes: pequeno_quadrado / redondo_feno / hexagonal_ornamental / rustico_pedra / abandonado_caveira
+  - Salvos em `assets/pixel_labs/chars/nature/objects/curral_*.png`
+  - `js/04_scenery.js` `_buildCorral`: substituiu ~50 linhas de procedural → 1 sprite random com `slotOffsetY` por variante
+  - `js/08_corrals.js` `_slotPos`: lê `curral.slotOffsetY` (fallback 110)
+  - Mascot/feno/balde/burger slots mantidos (Option C: sprite + procedural overlay)
+- **Cercas scatter decoração** — assets antigos do curral procedural reaproveitados
+  - 14 spots aleatórios pelo mapa em `_buildScenery` (após dry_turf, antes de currais)
+  - 10 keys deco: fence_broken, fence_corner, post_single, post_thin, plank_v, post_lantern_low/thin, post_carved, post_thin_simple, post_double_rope
+  - 60% spot único / 40% mini-cluster 2-3 peças, rotação random ±90°, alpha 0.85-1.0
+- **5 grass blade variations** PixelLab 64×64 — em `assets/pixel_labs/chars/nature/grass_v2/`
+  - Variantes: vibrant / dark_curled / lime_bent / olive_dry / yellow_tip
+  - 5 wind_sway anims (4 frames) disparadas (~3min cooking, integração in-game pendente)
+- **Saldo PixelLab via bookmarklet** — `tools/gallery_server.py`
+  - `GET/POST /pixellab_balance` (cache + persiste em `tools/saves/pixellab_balance.json`)
+  - PixaPro `tools/pixapro/js/balance.js`: badge no header com refresh 60s
+  - Bookmarklet: roda em `pixellab.ai/account` → scrape DOM → POST localhost:8090
+  - Por que bookmarklet: Secret da página `/account` NÃO autentica `api.pixellab.ai/get-account-data` (403 Invalid token). JWT real está em session cookie do browser
+- **8 tilesets 16px transitions** disparados (4 v1 + 4 v2 cerrado)
+  - Mapa Opção 1 (verde, v1): ocean↔dirt `ff745b17`, ocean↔grass `70faa0d8`, sand↔dirt `448352c8`, sand↔grass `ac546645`
+  - Mapa Opção 2 (seco, v2): ocean↔dirt `d395054a`, ocean↔grass `53598aae`, sand↔dirt `e8b56eea`, sand↔grass `43ac051b`
+  - Todos com base_tile_ids dos 16px existentes pra consistência visual
+  - Slice + agrupar em WANG_PRESETS pendente
+
 ### ✅ Pronto (cont. — sessão 2026-04-30 madrugada · PixaPro refactor 10 sprints)
 - **PixaPro modularizado** — `tools/asset_gallery.html` 121kb → 17kb (-86%), zero `<script>` inline (era 2778 linhas)
 - **Estrutura final** `tools/pixapro/`:
@@ -231,20 +256,26 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Validação:** preview_eval com 68 thumbs renderizando + todas 5 tabs trocam sem erro
 
 ### 🚧 Em andamento
-- **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
+- **Grass blades anim integration** — 5 wind_sway (4 frames cada) disparadas, falta download + integrar in-game com scatter (mesmo padrão das pedras/vegetação)
+- **8 tilesets 16px** — disparados, falta download PNGs + slice + grupar Mapa1/Mapa2 em WANG_PRESETS
+- **Tradução D+R2** — main já tem files renomeados (`04_scenery.js`, `08_corrals.js`); worktree ainda PT (`04_cenario.js`, `08_curral.js`). Próximo merge vai resolver
 - **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
 - **Game preview na worktree** — `_setupGeometricTextures is not a function` (pré-existente, não investigado)
+- **PixaPro migração standalone** — preparada via `docs/PIXAPRO_HANDOFF.md`. Plano: spinoff pra repo próprio
 
 ### 🔜 Próximos passos
-1. **Verificar PixaPro modularizado** — abrir gallery via `python tools/gallery_server.py` e testar todas as funcionalidades end-to-end (Manager P/D/R/C, Gallery filtros, Editor 8-dir slots, Detail dashboard, Tiles auto-sort)
-2. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
-3. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
-4. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
-5. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-6. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
-7. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
-8. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
-9. **PixaPro futuras melhorias** (opcional): converter pra ES modules reais (import/export) se módulos crescerem; criar `Store.subscribe` pattern pra reatividade; DRY mais o `fillSumGrid`
+1. **Fechar grass blades** — quando 5 anims finalizarem, baixar 20 frames + integrar scatter in-game (similar a `_natureVegeKeys`)
+2. **Fechar 8 tilesets 16px** — download + slice + WANG_PRESETS com headers de grupo "Mapa Opção 1 — Cerrado Verde" / "Mapa Opção 2 — Cerrado Seco"
+3. **Testar currais V2 in-game** — via GitHub Pages, ver se 5 sprites alinham com burger slots; ajustar `slotOffsetY` por variante se preciso
+4. **Migrar PixaPro pra repo próprio** — seguir `docs/PIXAPRO_HANDOFF.md`
+5. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
+6. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+7. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+8. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+9. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+10. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+11. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
+12. **PixaPro futuras melhorias** (opcional): converter pra ES modules reais (import/export) se módulos crescerem; criar `Store.subscribe` pattern pra reatividade; DRY mais o `fillSumGrid`
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
