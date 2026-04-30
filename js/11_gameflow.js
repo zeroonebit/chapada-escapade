@@ -18,6 +18,18 @@ Object.assign(Jogo.prototype, {
             return;
         }
 
+        // Sessao anterior ja escolheu lang+input -> pula splash entirely.
+        // Tutorial fica disabled (so aparece no primeiro jogo). Pode resetar
+        // limpando o localStorage 'cep_played_once'.
+        try {
+            if (localStorage.getItem('cep_played_once') === '1') {
+                this.gameStarted = true;
+                this.tutorialMode = false;
+                this.matter.world.enabled = true;
+                return;
+            }
+        } catch (e) { /* localStorage indisponivel — segue splash normal */ }
+
         const w = this.scale.width, h = this.scale.height;
 
         this.splashBg = this.add.rectangle(w/2, h/2, w, h, 0x000a03, 1)
@@ -85,6 +97,8 @@ Object.assign(Jogo.prototype, {
                 this.dbg.behavior.inputMode = inputMode;
                 if (this._saveDebugCfg) this._saveDebugCfg();
             }
+            // Marca pra pular splash em sessoes futuras (lang+input ja escolhidos)
+            try { localStorage.setItem('cep_played_once', '1'); } catch (e) {}
             this.matter.world.enabled = true;
             allBtns.forEach(o => o.destroy());
             this._splashStartGame = null;
@@ -237,7 +251,94 @@ Object.assign(Jogo.prototype, {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
         btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
         btn.on('pointerout',  () => btn.setFillStyle(0x00dd44));
-        btn.on('pointerdown', () => this.scene.restart());
+        btn.on('pointerdown', () => this._restartTransition('victory'));
+    },
+
+    // Transicao estilo pre-loader: tela escura + titulo CHAPADA ESCAPADE
+    // VT323 morphing red->green + barra simulando carregamento. Apos ~1.6s
+    // chama scene.restart(). Splash eh pulado pq cep_played_once=1.
+    _restartTransition(fromState) {
+        // Trava input — nada mais clicavel durante a transicao
+        if (this.input) this.input.enabled = false;
+        const w = this.scale.width, h = this.scale.height;
+
+        // Cor inicial muda baseado no estado: GAME OVER vermelho, VITORIA verde
+        const startColor = (fromState === 'victory')
+            ? { r: 0x44, g: 0xff, b: 0x66 }
+            : { r: 0xff, g: 0x22, b: 0x22 };
+        const endColor = { r: 0x00, g: 0xff, b: 0x55 };
+
+        const TRANS_DEPTH = 700;
+
+        // Bg preto-esverdeado fade in
+        const bg = this.add.rectangle(w/2, h/2, w, h, 0x050a04, 0)
+            .setScrollFactor(0).setDepth(TRANS_DEPTH);
+        this.tweens.add({ targets: bg, alpha: 1, duration: 350, ease: 'Cubic.easeIn' });
+
+        // Titulo CHAPADA (menor, 80%)
+        const tCha = this.add.text(w/2, h/2 - 50, 'CHAPADA', {
+            fontFamily: '"VT323", "Courier New", monospace',
+            fontSize: '60px',
+            fill: '#ff2222',
+            letterSpacing: 6,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(TRANS_DEPTH + 1).setAlpha(0);
+
+        // Titulo ESCAPADE (maior)
+        const tEsc = this.add.text(w/2, h/2 + 14, 'ESCAPADE', {
+            fontFamily: '"VT323", "Courier New", monospace',
+            fontSize: '76px',
+            fill: '#ff2222',
+            letterSpacing: 6,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(TRANS_DEPTH + 1).setAlpha(0);
+
+        // Barra fake de carregamento
+        const BAR_W = 320, BAR_H = 18;
+        const barBg = this.add.rectangle(w/2, h/2 + 90, BAR_W, BAR_H, 0x002010, 1)
+            .setStrokeStyle(1.5, 0x00aa44, 1)
+            .setScrollFactor(0).setDepth(TRANS_DEPTH + 1).setAlpha(0);
+        const barFill = this.add.rectangle(w/2 - BAR_W/2, h/2 + 90, 0, BAR_H - 4, 0x66ff99, 1)
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0).setDepth(TRANS_DEPTH + 2).setAlpha(0);
+        const pctText = this.add.text(w/2, h/2 + 118, '0%', {
+            fontFamily: '"Courier New", monospace',
+            fontSize: '12px',
+            fill: '#00ff55',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(TRANS_DEPTH + 1).setAlpha(0);
+
+        // Fade in dos elementos
+        this.tweens.add({
+            targets: [tCha, tEsc, barBg, barFill, pctText],
+            alpha: 1, duration: 250, delay: 200, ease: 'Cubic.easeOut',
+        });
+
+        // Tween principal: cor red->green + barra fill 0->100% over 1400ms
+        const FILL_DUR = 1400;
+        const obj = { t: 0 };
+        this.tweens.add({
+            targets: obj,
+            t: 1,
+            duration: FILL_DUR,
+            delay: 350,
+            ease: 'Cubic.easeInOut',
+            onUpdate: () => {
+                const t = obj.t;
+                const r = Math.round(Phaser.Math.Linear(startColor.r, endColor.r, t));
+                const g = Math.round(Phaser.Math.Linear(startColor.g, endColor.g, t));
+                const b = Math.round(Phaser.Math.Linear(startColor.b, endColor.b, t));
+                const css = `rgb(${r},${g},${b})`;
+                tCha.setColor(css);
+                tEsc.setColor(css);
+                barFill.width = (BAR_W - 4) * t;
+                pctText.setText(Math.round(t * 100) + '%');
+            },
+            onComplete: () => {
+                // Pequeno hold em verde + restart
+                this.time.delayedCall(280, () => {
+                    if (this.input) this.input.enabled = true;
+                    this.scene.restart();
+                });
+            },
+        });
     },
 
     // ── GAME OVER ─────────────────────────────────────────────────────────
@@ -284,7 +385,7 @@ Object.assign(Jogo.prototype, {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
         btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
         btn.on('pointerout',  () => btn.setFillStyle(0x00dd44));
-        btn.on('pointerdown', () => this.scene.restart());
+        btn.on('pointerdown', () => this._restartTransition('gameover'));
     }
 
 });
