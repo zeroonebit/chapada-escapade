@@ -22,10 +22,25 @@ Object.assign(Jogo.prototype, {
         this.hud.cowsLabel = this.add.text(0,0,'COWS',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.hud.cowsText  = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
-        // ── BURGERS box (total entregue) ───────────────────────────────
+        // ── 5 boxes em coluna left: BULLS, COWS, FARMERS, SHOOTERS, BURGERS
+        const VAL_STYLE = {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3};
+        const LBL_STYLE = {fontSize:'10px', fill:'#aaffcc', fontStyle:'bold', letterSpacing:2};
+        // BULLS
+        this.hud.bullsBox    = this.add.image(0, 0, 'hud_bulls_v2').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.bullsLabel  = this.add.text(0,0,'BULLS', LBL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.bullsText   = this.add.text(0,0,'0', VAL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // FARMERS
+        this.hud.farmersBox    = this.add.image(0, 0, 'hud_farmers_v2').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.farmersLabel  = this.add.text(0,0,'FARMERS', LBL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.farmersText   = this.add.text(0,0,'0', VAL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // SHOOTERS
+        this.hud.shootersBox    = this.add.image(0, 0, 'hud_shooters_v2').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
+        this.hud.shootersLabel  = this.add.text(0,0,'SHOOTERS', LBL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.shootersText   = this.add.text(0,0,'0', VAL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        // BURGERS
         this.hud.burgersBox   = this.add.image(0, 0, useV2Boxes ? 'hud_burgers_v2' : 'hud_burgers_box').setDisplaySize(BOX_W, BOX_H).setScrollFactor(0).setDepth(D);
-        this.hud.burgersLabel = this.add.text(0,0,'BURGERS',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
-        this.hud.burgersText  = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.burgersLabel = this.add.text(0,0,'BURGERS', LBL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
+        this.hud.burgersText  = this.add.text(0, 0, '0', VAL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
         // ── Barras combinadas (PNG unico fuel+graviton, nameless) ───────
@@ -84,23 +99,30 @@ Object.assign(Jogo.prototype, {
     _positionHUD() {
         const w = this.scale.width, h = this.scale.height;
 
-        // Boxes V2: header strip top (label) + body (icon+value)
-        // Display 180x58: header ~14px, body ~44px
-        const HDR_OFF = -19;   // y offset do center pro header
-        const VAL_OFF = 8;     // y offset pro value (body, lado direito do icon)
-        // Score — center-topo
+        // Boxes V2: header (top) + body (icon+value)
+        const HDR_OFF = -19;
+        const VAL_OFF = 8;
+        // Score — top-center (mantido)
         this.hud.scoreBg.setPosition(w/2, 32);
         if (this.hud.scoreLabel) this.hud.scoreLabel.setPosition(w/2, 32 + HDR_OFF);
         this.hud.scoreText.setPosition(w/2, 32 + VAL_OFF);
 
-        // COWS + BURGERS boxes lado a lado no canto superior esquerdo
-        this.hud.cowsBox.setPosition(100, 60);
-        if (this.hud.cowsLabel) this.hud.cowsLabel.setPosition(100, 60 + HDR_OFF);
-        this.hud.cowsText.setPosition(135, 60 + VAL_OFF);   // ao lado right do ícone cow
-
-        this.hud.burgersBox.setPosition(290, 60);
-        if (this.hud.burgersLabel) this.hud.burgersLabel.setPosition(290, 60 + HDR_OFF);
-        this.hud.burgersText.setPosition(325, 60 + VAL_OFF);
+        // 5 boxes em coluna LEFT — bull/cow/farmer/shooter/burgers
+        const COL_X = 100, FIRST_Y = 36, GAP_Y = 62;  // 58 + 4 spacing
+        const VAL_X_OFF = 35;  // value text a direita do icon (icon ocupa half left)
+        const stackOrder = [
+            { box: 'bullsBox',    lbl: 'bullsLabel',    val: 'bullsText' },
+            { box: 'cowsBox',     lbl: 'cowsLabel',     val: 'cowsText' },
+            { box: 'farmersBox',  lbl: 'farmersLabel',  val: 'farmersText' },
+            { box: 'shootersBox', lbl: 'shootersLabel', val: 'shootersText' },
+            { box: 'burgersBox',  lbl: 'burgersLabel',  val: 'burgersText' },
+        ];
+        stackOrder.forEach((o, i) => {
+            const cy = FIRST_Y + i * GAP_Y;
+            if (this.hud[o.box]) this.hud[o.box].setPosition(COL_X, cy);
+            if (this.hud[o.lbl]) this.hud[o.lbl].setPosition(COL_X, cy + HDR_OFF);
+            if (this.hud[o.val]) this.hud[o.val].setPosition(COL_X + VAL_X_OFF, cy + VAL_OFF);
+        });
 
         // Barras: combined PNG OU 2 separados
         if (this.hud._combinedHud && this.hud.combinedBg) {
@@ -294,15 +316,22 @@ Object.assign(Jogo.prototype, {
     _applyHudI18n() {
         const lang = this.dbg?.behavior?.lang || 'en';
         const labels = {
-            en: { fuel:'FUEL', graviton:'GRAVITON', score:'SCORE', cows:'COWS', burgers:'BURGERS' },
-            pt: { fuel:'COMBUSTÍVEL', graviton:'GRAVITON', score:'PONTOS', cows:'VACAS', burgers:'HAMBURGUERES' },
+            en: { fuel:'FUEL', graviton:'GRAVITON', score:'SCORE',
+                  bulls:'BULLS', cows:'COWS', farmers:'FARMERS',
+                  shooters:'SHOOTERS', burgers:'BURGERS' },
+            pt: { fuel:'COMBUSTÍVEL', graviton:'GRAVITON', score:'PONTOS',
+                  bulls:'BOIS', cows:'VACAS', farmers:'FAZENDEIROS',
+                  shooters:'ESPANTALHOS', burgers:'HAMBURGUERES' },
         };
         const L = labels[lang] || labels.en;
-        if (this.hud.combLabel)    this.hud.combLabel.setText(L.fuel);
-        if (this.hud.eneLabel)     this.hud.eneLabel.setText(L.graviton);
-        if (this.hud.scoreLabel)   this.hud.scoreLabel.setText(L.score);
-        if (this.hud.cowsLabel)    this.hud.cowsLabel.setText(L.cows);
-        if (this.hud.burgersLabel) this.hud.burgersLabel.setText(L.burgers);
+        if (this.hud.combLabel)     this.hud.combLabel.setText(L.fuel);
+        if (this.hud.eneLabel)      this.hud.eneLabel.setText(L.graviton);
+        if (this.hud.scoreLabel)    this.hud.scoreLabel.setText(L.score);
+        if (this.hud.bullsLabel)    this.hud.bullsLabel.setText(L.bulls);
+        if (this.hud.cowsLabel)     this.hud.cowsLabel.setText(L.cows);
+        if (this.hud.farmersLabel)  this.hud.farmersLabel.setText(L.farmers);
+        if (this.hud.shootersLabel) this.hud.shootersLabel.setText(L.shooters);
+        if (this.hud.burgersLabel)  this.hud.burgersLabel.setText(L.burgers);
     },
 
     _updateMinimap() {

@@ -105,12 +105,14 @@ Object.assign(Jogo.prototype, {
             g._yBob       = Phaser.Math.FloatBetween(-14, 14);
             g._yOff       = Phaser.Math.Between(0, h);
             g._xPhase     = Math.random() * Math.PI * 2;
-            // Comprimento e amplitude da senoide do swirl
-            g._len        = Phaser.Math.Between(36, 64);
-            g._amp        = Phaser.Math.FloatBetween(2.2, 5.0);
-            g._alpha      = Phaser.Math.FloatBetween(0.10, 0.26);
+            // Trail (linha que vem atras) + curl (espiral no leading edge)
+            g._len        = Phaser.Math.Between(60, 110);     // trail mais longa
+            g._amp        = Phaser.Math.FloatBetween(3.0, 8.0);
+            g._alpha      = Phaser.Math.FloatBetween(0.18, 0.42);
             g._curveSpeed = Phaser.Math.FloatBetween(2.0, 3.5);
             g._curvePhase = Math.random() * Math.PI * 2;
+            g._curlR      = Phaser.Math.FloatBetween(5, 10);  // raio da espiral
+            g._trails     = Math.random() < 0.5 ? 2 : 1;       // 1 ou 2 linhas paralelas
             this.fxWind.add(g);
             this._windParticles.push(g);
         }
@@ -149,18 +151,44 @@ Object.assign(Jogo.prototype, {
             // Bob vertical (eixo Y oscila no tempo)
             g.y = g._yOff + Math.sin(this._windOscPhase + g._xPhase) * g._yBob;
 
-            // Redraw curva sinuosa usando 6 segmentos: y = amp * sin(t + phase)
-            // Resultado: linha ondulada que parece torcer/rolar (vortex feel)
+            // Cartoon wind swirl: trail (linha ondulada) + curl (espiral no head)
             g.clear();
-            g.lineStyle(1.2, 0xddeeff, g._alpha);
+            g.lineStyle(1.6, 0xeef5ff, g._alpha);
+            const len = g._len;
+            const amp = g._amp;
+            const tailX = -(len/2) * dirSign;
+            const headX =  (len/2) * dirSign;
+            // 1 ou 2 trails paralelas (Y offset pequeno)
+            const trailOffsets = g._trails === 2 ? [-3, 3] : [0];
+            for (const yOff of trailOffsets) {
+                g.beginPath();
+                const SEG = 16;
+                for (let k = 0; k <= SEG; k++) {
+                    const t = k / SEG;
+                    const lx = tailX + (headX - tailX) * t;
+                    // Wave amplitude diminui chegando no head (concentra no tail)
+                    const taper = 1 - t * 0.6;
+                    const ly = Math.sin(g._curvePhase + t * Math.PI * 2.4) * amp * taper + yOff;
+                    if (k === 0) g.moveTo(lx, ly);
+                    else         g.lineTo(lx, ly);
+                }
+                g.strokePath();
+            }
+            // CURL: espiral 1.5 voltas no leading edge (head)
+            const curlR = g._curlR;
+            const curlCx = headX + (curlR * 1.1) * dirSign;
+            const curlCy = 0;
             g.beginPath();
-            const SEG = 12;
-            for (let k = 0; k <= SEG; k++) {
-                const t = k / SEG;
-                const lx = (t - 0.5) * g._len * dirSign;
-                const ly = Math.sin(g._curvePhase + t * Math.PI * 2.2) * g._amp;
-                if (k === 0) g.moveTo(lx, ly);
-                else         g.lineTo(lx, ly);
+            const TURNS = 1.6;
+            const TSEG = 24;
+            for (let k = 0; k <= TSEG; k++) {
+                const t = k / TSEG;
+                const r = curlR * (1 - t * 0.55);  // raio decrescente (espiral fechada)
+                const a = (g._curvePhase * 0.5) + t * TURNS * Math.PI * 2 * dirSign;
+                const px = curlCx + Math.cos(a) * r;
+                const py = curlCy + Math.sin(a) * r;
+                if (k === 0) g.moveTo(px, py);
+                else         g.lineTo(px, py);
             }
             g.strokePath();
         }

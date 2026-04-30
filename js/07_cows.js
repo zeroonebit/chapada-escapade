@@ -288,6 +288,14 @@ Object.assign(Jogo.prototype, {
         // State machine + animation: cows have walk/run/eat/angry × 4 dir.
         // Oxen have walk × 8 dir (anim) + rotations estáticas (when parado).
         if (v.isBurger || v._inCurral) return;
+        // Sprite directional ja indica direcao via texture — nunca rotaciona,
+        // EXCETO when abduzido (beam permite girar livre).
+        if (!this.abductedCows.includes(v)) {
+            if (v.rotation !== 0) v.rotation = 0;
+            if (v.body && Math.abs(v.body.angle) > 0.001 && this.matter?.body) {
+                this.matter.body.setAngle(v.body, 0);
+            }
+        }
 
         const body = v.body;
         const vx = body?.velocity?.x || 0;
