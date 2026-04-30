@@ -345,14 +345,29 @@ Object.assign(Jogo.prototype, {
     _gameOver() {
         if (this.gameOver) return;
         this.gameOver = true;
-        this._releaseAll();
+        console.log('[GAME OVER] triggered. fuelCurrent=', this.fuelCurrent);
+        try { this._releaseAll(); } catch (e) { console.warn('[GO] _releaseAll fail', e); }
 
         // Trava input + congela mundo + para camera follow to cinematic
         if (this.input) this.input.enabled = false;
-        this.matter.world.enabled = false;
-        this.cameras.main.stopFollow();
+        try { this.matter.world.enabled = false; } catch (e) {}
+        try { this.cameras.main.stopFollow(); } catch (e) {}
 
-        this._cinematicGameOver();
+        // Try cinematic; se falhar, vai direto pra UI (pra nunca travar no game over)
+        try {
+            this._cinematicGameOver();
+        } catch (e) {
+            console.warn('[GO] cinematic falhou, direct UI:', e);
+            this._showGameOverUI();
+        }
+
+        // Safety fallback: se em 6s a UI nao apareceu, força (cobre falha de tween)
+        this.time.delayedCall(6000, () => {
+            if (!this._gameOverUiShown) {
+                console.warn('[GO] safety fallback — UI nao apareceu em 6s');
+                this._showGameOverUI();
+            }
+        });
     },
 
     // Cinematic V2: hide tudo exceto ufo, postFX vignette + grayscale,
@@ -519,6 +534,8 @@ Object.assign(Jogo.prototype, {
     },
 
     _showGameOverUI() {
+        if (this._gameOverUiShown) return;  // idempotente (safety fallback pode chamar 2x)
+        this._gameOverUiShown = true;
         const w = this.scale.width, h = this.scale.height;
         if (this.input) this.input.enabled = true;
         const D = 700;  // bem alto to ficar above de tudo

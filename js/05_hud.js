@@ -387,6 +387,14 @@ Object.assign(Jogo.prototype, {
         const FADE_MS = 2500;
         const fades = this._radarBlipFades;
 
+        // Periodic cleanup do Map (entidades mortas acumulam refs -> mem leak)
+        // Cada 60 frames (~1s @ 60fps) varre fades e remove entidades destroyed
+        this._radarFadeClean = (this._radarFadeClean || 0) + 1;
+        if (this._radarFadeClean >= 60) {
+            this._radarFadeClean = 0;
+            this._cleanRadarFades();
+        }
+
         // Helper: testa se sweep line passou pelo angulo do blip in this frame
         const sweptThis = (blipAng) => {
             // Normaliza ambos to [0, 2π)
