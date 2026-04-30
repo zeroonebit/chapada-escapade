@@ -23,17 +23,17 @@
 .refresh{font-size:17px;opacity:.6;margin-top:8px;font-weight:bold;}
 .stats{font-size:12px;opacity:.7;margin:4px 0;}
 
-/* Action button color variants */
-.btn-promote{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
-.btn-promote:hover{background:#5ee85e!important;}
-.btn-discard{background:#e84d4d!important;color:#000!important;border-color:#a02020!important;}
-.btn-discard:hover{background:#ff6464!important;}
-.btn-rename{background:#4da9e8!important;color:#000!important;border-color:#1d6aa0!important;}
-.btn-rename:hover{background:#65bdf5!important;}
-.btn-save{background:#f4c95d!important;color:#000!important;border-color:#a8862e!important;}
-.btn-save:hover{background:#ffd770!important;}
-.btn-clear{background:#d63ad6!important;color:#000!important;border-color:#8a228a!important;}
-.btn-clear:hover{background:#e84fe8!important;}
+/* Action button color variants — alpha 0.55 ambient · 0.92 hover (deixa stage por trás visível) */
+.btn-promote{background:rgba(61,209,61,0.55)!important;color:#000!important;border-color:rgba(29,138,29,0.85)!important;}
+.btn-promote:hover{background:rgba(94,232,94,0.92)!important;}
+.btn-discard{background:rgba(232,77,77,0.55)!important;color:#000!important;border-color:rgba(160,32,32,0.85)!important;}
+.btn-discard:hover{background:rgba(255,100,100,0.92)!important;}
+.btn-rename{background:rgba(77,169,232,0.55)!important;color:#000!important;border-color:rgba(29,106,160,0.85)!important;}
+.btn-rename:hover{background:rgba(101,189,245,0.92)!important;}
+.btn-save{background:rgba(244,201,93,0.55)!important;color:#000!important;border-color:rgba(168,134,46,0.85)!important;}
+.btn-save:hover{background:rgba(255,215,112,0.92)!important;}
+.btn-clear{background:rgba(214,58,214,0.55)!important;color:#000!important;border-color:rgba(138,34,138,0.85)!important;}
+.btn-clear:hover{background:rgba(232,79,232,0.92)!important;}
 
 /* Floating popup (global, position:fixed) */
 #floatingPopup{display:none;position:fixed;background:rgba(26,20,16,0.98);border:2px solid #f4c95d;border-radius:6px;padding:8px;z-index:9999;grid-template-columns:repeat(auto-fit,40px);gap:4px;min-width:260px;max-width:520px;max-height:480px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.7);}
