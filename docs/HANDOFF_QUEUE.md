@@ -13,7 +13,9 @@
 | `grass-blades-integration` | in-game | 🔒 blocked | 🔴 high | Integrar 5 grass blades wind_sway in-game |
 | `tilesets-16px-slice-and-group` | in-game | 🔒 blocked | 🔴 high | Slice + agrupar 8 tilesets 16px (Mapa 1/2) |
 | `scarecrow-droid-turrets-missile` | in-game | ⏳ pending | 🔴 high | Scarecrow turrets (3 cores × 8-dir) + missile (8 frames) |
+| `audit-cleanup-old-geometric-textures` | refactor | ⏳ pending | 🔴 high | Remover sprites geométricos legados de 03_textures.js + HUDs v2 |
 | `currais-v2-test-and-tune` | test | ⏳ pending | 🟡 medium | Testar currais V2 in-game + ajustar slotOffsetY |
+| `pixapro-mark-in-game-assets` | docs | ⏳ pending | 🟡 medium | Sort + decidir 626 PNGs em uso sem decisão Manager |
 | `tutorial-7-9-finish` | in-game | ⏳ pending | 🟡 medium | Concluir tutorial etapas 7-9 |
 | `pixapro-spinoff-standalone` | refactor | ⏳ pending | 🟢 low | Migrar PixaPro pra repo standalone |
 
