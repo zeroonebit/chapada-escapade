@@ -255,27 +255,42 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Bug encontrado e corrigido durante o refactor:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente
 - **Validação:** preview_eval com 68 thumbs renderizando + todas 5 tabs trocam sem erro
 
+### ✅ Pronto (cont. — sessão 2026-04-30 tarde·noite)
+- **Currais V2 mascotCfg per-variante** — `_buildCorral` push salva `mascotCenografico=true` + `mascotCfg{tipo,anim,dx,dy,bucket}`. `_ensureCowMascot` lê config (cow/bull, anim cow_eat_S/N/cow_angry_S/ox_walk_S). 01 pequeno + 02 redondo: cow eat S+balde. 03 hexagonal: cow drinking N (alinha coxo). 04 rustico: cow lie_down. 05 abandonado: ox walk S
+- **Tutorial polish massivo**: box maior (BOX_W 280→360, fonts ↑), nomes engraçados PT-BR (PILOTANDO A NAVE, ROUBANDO VACAS, HORA DO LANCHE, REVIDE…), merge step 02+03, +2 steps novos (DODGE_TORPEDOS, KILL_SHOOTER)
+- **Tutorial highlights fix** — `_combBar`/`_eneBar.y` top-left (era center)
+- **HUD scores nameless V2** — 6 boxes sliced (`tools/slice_hud_scores.py`), labels overlay Phaser PT/EN
+- **Radar v2 sandwich** — ring (199) + conteúdo (199.5-200.5) + dome glass (200.8 alpha 0.4), DOME_DY tunado pra base sentar no ring
+- **Mobile force landscape** — `#rotate-prompt` overlay CSS @media portrait
+- **HUD coluna left centralizada** — 5 boxes vertical (BULLS/COWS/FARMERS/SHOOTERS/BURGERS), score top-center mantido
+- **HUD counters wired** — `bullsTotal`/`cowsTotal`/`farmersTotal`/`shootersTotal` cumulativos. Increment em `_dropCowsAtCorral` (cow/bull), `_explode` (farmer isEnemy), `_destroyShooter` (shooter)
+- **8 tilesets 16px UNBLOCKED** — Mapa1 verde + Mapa2 seco downloaded via `api.pixellab.ai/mcp/tilesets/{id}/{image,metadata}` (sem auth), sliced cr31 mapping (PixelLab NW=8 NE=4 SW=2 SE=1 vs nosso NW=1 NE=2 SE=4 SW=8). Salvos em `assets/terrain/{mapa1,mapa2}_*`. WANG_STYLES expandida 3→11. Dropdown CONFIGS com 11 opções traduzidas
+- **Wangtiles default ON** — `dbg.fx.wangtiles=true` no DBG_DEFAULTS
+- **ox→bull rename** — bulk replace em todos refs, asset `oxen_v2.png`→`bulls_v2.png`
+- **HUD assets cleanup** — 18 PNGs deletados (frames v1/v2/v3, radar_frame), preload simplificado. Combined HUD agora `_empty_nameless` + `_full-nameless`
+- **Gas can rules** — só perto de truck, scale `truck.scale * 0.35`, tint `0xc88a5a` (marrom-laranja). Barrel_rusty cluster random independente
+- **Wind swirls cartoon** — trail bezier (taper amp) + curl spiral 1.6 voltas no leading edge, len 60-110, alpha 0.18-0.42
+- **Rotation lock cows/farmers** — `_directionalTexture` força `rotation=0` exceto se abducted; `_updateFarmers` igual exceto se inSpin
+- **Cow/bull sem explosão** — `_environmentCollision` rocha branch: SÓ farmer (isEnemy) explode. Cow/bull bounce físico
+- **Farmer release-spin 3s** — `_releaseCow` detecta isEnemy: friction 0.01 + `_releaseSpinUntil` + `_spinRate ±8-14 rad/s`. `_updateFarmers` rotaciona durante janela
+- **Fuel drain por movimento** — `(0.4 + 3.1 × speedNorm) × difficulty`, parado ~0.4/s, full ~3.5/s
+- **Bug fix loading** — removed `this.matter.body.setAngle()` calls (factory não tem método estático)
+- **Splash skip on restart** + restart transition red→green
+- **Game over cinematic V2** — vinheta + Fibonacci spiral + tremor + smoke + crash crooked
+- **Quips coloridos por tom** + seguem target
+
 ### 🚧 Em andamento
-- **Grass blades anim integration** — 5 wind_sway (4 frames cada) disparadas, falta download + integrar in-game com scatter (mesmo padrão das pedras/vegetação)
-- **8 tilesets 16px** — disparados, falta download PNGs + slice + grupar Mapa1/Mapa2 em WANG_PRESETS
-- **Tradução D+R2** — main já tem files renomeados (`04_scenery.js`, `08_corrals.js`); worktree ainda PT (`04_cenario.js`, `08_curral.js`). Próximo merge vai resolver
-- **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
-- **Game preview na worktree** — `_setupGeometricTextures is not a function` (pré-existente, não investigado)
-- **PixaPro migração standalone** — preparada via `docs/PIXAPRO_HANDOFF.md`. Plano: spinoff pra repo próprio
+- **Currais V2 polish** — variantes 02/05 ainda usam `mascotCfg` simples; user revisando curral a curral, pode ajustar offsets
+- **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS (counter de torpedos esquivados) + KILL_SHOOTER (flag) ainda placeholder, gameplay já avança via min-read time
+- **Grass blades anim integration** — 5 base PNGs no disco, mas 20 anim frames wind_sway ainda BLOCKED (URL pattern de anim frames PixelLab desconhecido — `api.pixellab.ai/mcp/animations/{id}` retorna 404, precisa testar outras vias)
 
 ### 🔜 Próximos passos
-1. **Fechar grass blades** — quando 5 anims finalizarem, baixar 20 frames + integrar scatter in-game (similar a `_natureVegeKeys`)
-2. **Fechar 8 tilesets 16px** — download + slice + WANG_PRESETS com headers de grupo "Mapa Opção 1 — Cerrado Verde" / "Mapa Opção 2 — Cerrado Seco"
-3. **Testar currais V2 in-game** — via GitHub Pages, ver se 5 sprites alinham com burger slots; ajustar `slotOffsetY` por variante se preciso
+1. **Continuar review curral por curral** — user revisando cada variante, ajustar `mascotCfg.dx/dy` e adicionar novos comportamentos (ex: ox bebendo, cow deitada virada outro lado)
+2. **Wirar completion logic do tutorial 09/10** — contador `_tutTorpedosDodged` em `_updateBody` (incrementa quando bullet passa perto sem hit) + `_tutShooterKilled` flag em `_destroyShooter`
+3. **Grass blades** — descobrir URL pattern de anim frames OU pedir scrape via Chrome MCP da outra sessão
 4. **Migrar PixaPro pra repo próprio** — seguir `docs/PIXAPRO_HANDOFF.md`
-5. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
-6. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
-7. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
-8. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-9. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
-10. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
-11. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
-12. **PixaPro futuras melhorias** (opcional): converter pra ES modules reais (import/export) se módulos crescerem; criar `Store.subscribe` pattern pra reatividade; DRY mais o `fillSumGrid`
+5. **Audit pendentes**: M3 (slot tweens raro) — done na sessão anterior; L6 (FSM tutorial) — done; só sobra polish
+6. **PixaPro futuras melhorias** (opcional): ES modules reais, Store.subscribe, DRY fillSumGrid
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
