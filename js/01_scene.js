@@ -1,6 +1,6 @@
-﻿// 01_scene.js — class principal e orquestração de create() / update()
-// Os métodos da Scene are distribuídos nos arquivos js/0X_*.js seguintes,
-// each um adicionado via Object.assign(Game.prototype, {...}).
+// 01_scene.js — Classe principal e orquestração de create() / update()
+// Os métodos da Scene estão distribuídos nos arquivos js/0X_*.js seguintes,
+// cada um adicionado via Object.assign(Jogo.prototype, {...}).
 
 class Jogo extends Phaser.Scene {
     constructor() { super('Jogo'); }
@@ -17,7 +17,7 @@ class Jogo extends Phaser.Scene {
     }
 
     _createBody() {
-        // Map 2.5× maior (was 3200x2400) — more espaço to scenery, corrals, exploração
+        // Mapa 2.5× maior (era 3200x2400) — mais espaço pra cenário, currais, exploração
         const W = 8000, H = 6000;
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
@@ -26,52 +26,24 @@ class Jogo extends Phaser.Scene {
         this.EXPERIMENT_MODE = false;
         localStorage.setItem('experimentMode', '0');
 
-        // Loads config de debug before de qualquer spawn (afeta scales/counts)
+        // Carrega config de debug ANTES de qualquer spawn (afeta scales/counts)
         this._loadDebugCfg();
 
-        // MOBILE_MODE: override to experiencia atmosferica — cap 5 cows,
-        // without enemies. Beam visual without pull (so muda cone, nao puxa nada).
-        if (window.__MOBILE_MODE && this.dbg) {
-            this.dbg.enabled.farmers = false;
-            this.dbg.enabled.shooters  = false;
-            this.dbg.enabled.cows       = true;
-            this.dbg.enabled.bulls        = false;
-            this.dbg.counts.cows        = 5;
-            this.dbg.fx.weather          = 'storm';
-            this.dbg.fx.timeOfDay        = 'midnight';
-            this.dbg.fx.rain            = true;
-            this.dbg.fx.rainIntensity = 1.0;
-            this.dbg.fx.rainCount       = 450;   // more densidade
-            this.dbg.fx.rainSpeed  = 1.4;   // um pouco more lenta -> visivel more tempo
-            this.dbg.fx.rainSize     = 2.2;   // gotas maiores
-            this.dbg.fx.rainAngle      = 0.04;
-            this.dbg.fx.fog          = true;
-            this.dbg.fx.fogIntensity = 1.0;
-            this.dbg.fx.wind            = true;
-            this.dbg.fx.windForce       = 0.04;
-            // without game over no teaser — fuel congelado, without drain
-            this._tutCombustivelCongelado = true;
-            // Beam visual without pull (equal etapa BEAM_VISUAL do tutorial):
-            // cone aparece ao tocar mas nao abduz/arrasta cows
-            this._tutBeamNoPull  = true;
-            this._tutBeamNoDrain = true;
-        }
+        this._setupGeometricTextures();   // 03_textures.js (textura 'nave' usada abaixo)
 
-        this._setupGeometricTextures();   // 03_textures.js (textura 'ship' used below)
-
-        // ── REGISTRA ANIMS 8-DIR (cow chubby, faz, ox) ─────────────
-        // Cow chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
-        // "run" reusa walk with fps maior (anim chubby não has run dedicado).
+        // ── REGISTRA ANIMS 8-DIR (vaca chubby, faz, boi) ─────────────
+        // Vaca chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
+        // "run" reusa walk com fps maior (anim chubby não tem run dedicado).
         const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
         const ANIM8 = [
-            { prefix: 'cow_walk',  frames: 4,  fps: 6  },
-            { prefix: 'cow_eat',   frames: 11, fps: 4  },
-            { prefix: 'cow_angry', frames: 8,  fps: 8  },
-            { prefix: 'farmer_run',    frames: 4,  fps: 10 },
-            { prefix: 'ox_walk',   frames: 4,  fps: 6  },
+            { prefix: 'vaca_walk',  frames: 4,  fps: 6  },
+            { prefix: 'vaca_eat',   frames: 11, fps: 4  },
+            { prefix: 'vaca_angry', frames: 8,  fps: 8  },
+            { prefix: 'faz_run',    frames: 4,  fps: 10 },
+            { prefix: 'boi_walk',   frames: 4,  fps: 6  },
             { prefix: 'ufo_hover',  frames: 4,  fps: 8  },
-            // ox_idle: 7 dirs (without N) — fallback to static em N
-            { prefix: 'ox_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
+            // boi_idle: 7 dirs (sem N) — fallback pra static em N
+            { prefix: 'boi_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         DIRS8.forEach(d => {
             ANIM8.forEach(({prefix, frames, fps, dirs}) => {
@@ -82,11 +54,11 @@ class Jogo extends Phaser.Scene {
                 for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
                 this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
             });
-            // cow_run is cow_walk em fps×2 — registra as anim separado
-            const runKey = `cow_run_${d}`;
+            // vaca_run é vaca_walk em fps×2 — registra como anim separado
+            const runKey = `vaca_run_${d}`;
             if (!this.anims.exists(runKey)) {
                 const fr = [];
-                for (let i = 0; i < 4; i++) fr.push({ key: `cow_walk_${d}_${i}` });
+                for (let i = 0; i < 4; i++) fr.push({ key: `vaca_walk_${d}_${i}` });
                 this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
             }
         });
@@ -102,68 +74,60 @@ class Jogo extends Phaser.Scene {
             this.terrainGrid = null;
             this._setupGrassPatch(W, H);    // 14_grass_patch.js
         } else {
-            // Scenery always roda (terreno/grass base); fences/moitas opcionais via cfg.scenery
+            // Cenário sempre roda (terreno/grama base); cercas/moitas opcionais via cfg.cenario
             this._setupScenery(W, H);
-            if (this.dbg.enabled.shooters) this._setupShooters();
+            if (this.dbg.enabled.atiradores) this._setupShooters();
             else { this.bullets = []; this.shooters = []; }
             this.farmers = [];
-            if (this.dbg.enabled.farmers) this._spawnFarmers(this.dbg.counts.farmers);
+            if (this.dbg.enabled.fazendeiros) this._spawnFarmers(this.dbg.counts.fazendeiros);
         }
 
-        // ── ufo ─────────────────────────────────────────────────────
-        // shadow blur fake (3 elipses stacked) — substituiu o tinted ship clone
-        this.ufoShadow = this.add.container(0, 0);
-        this.ufoShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
-        this.ufoShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
-        this.ufoShadow.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
-        this.ufoShadow.setDepth(1);
+        // ── NAVE ─────────────────────────────────────────────────────
+        // Sombra blur fake (3 elipses stacked) — substituiu o tinted nave clone
+        this.shipShadow = this.add.container(0, 0);
+        this.shipShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
+        this.shipShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
+        this.shipShadow.add(this.add.ellipse(0, 0, 56, 20, 0x000000, 0.32));
+        this.shipShadow.setDepth(1);
         const beamScale = this.dbg.scale.beam;
         const CONE_R = (40*5.55/2) * beamScale;
         this.coneRadius = CONE_R;
-        // Beam: Graphics with círculos concêntricos de alpha variável (without PNG → without
-        // artefato de mask). Desenhado em _desenharCone(radius) chamado em _updateBody.
+        // Beam: Graphics com círculos concêntricos de alpha variável (sem PNG → sem
+        // artefato de mask). Desenhado em _desenharCone(raio) chamado em _updateBody.
         this.lightCone = this.add.graphics().setDepth(2).setVisible(false);
         this._desenharCone(CONE_R);
         if (!this.dbg.enabled.beam) this.lightCone.setAlpha(0);  // beam invisível se OFF
-        // matter.add.SPRITE (not image) — sprite suporta .anims to hovering_idle 8-dir
-        this.ufo = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
-        this.ufo.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
-        const ufoScale = this.dbg?.scale?.ufo ?? 1.0;
-        this.ufo.setDisplaySize(80 * ufoScale, 80 * ufoScale);
-        // MOBILE_MODE: ufo com inercia alta (frictionAir baixo) + bounce
-        // total nas bordas (matter combina restitution via Math.max — walls
-        // default=0, ship=1 -> bounce without perda de energia).
-        if (window.__MOBILE_MODE) {
-            this.ufo.setFrictionAir(0.005).setBounce(1.0);
-        }
-        // Lock rotação física — ufo não gira by collision; rotação is feita manualmente
-        // via ufoRot slider no _updateBody
-        this.ufo.setFixedRotation();
-        this._ufoDir8 = 'S';
-        if (this.anims.exists('ufo_hover_S')) this.ufo.play('ufo_hover_S');
+        // matter.add.SPRITE (não image) — sprite suporta .anims pra hovering_idle 8-dir
+        this.ship = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
+        this.ship.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
+        const shipScale = this.dbg?.scale?.nave ?? 1.0;
+        this.ship.setDisplaySize(80 * shipScale, 80 * shipScale);
+        // Lock rotação física — disco não gira por colisão; rotação é feita manualmente
+        // via discoRot slider no _updateBody
+        this.ship.setFixedRotation();
+        this._naveDir8 = 'S';
+        if (this.anims.exists('ufo_hover_S')) this.ship.play('ufo_hover_S');
 
-        this._setupLEDs();                  // 06_ufo.js — LEDs animados ao redor da ship
+        this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da nave
 
-        // ── cows ────────────────────────────────────────────────────
+        // ── VACAS ────────────────────────────────────────────────────
         if (!this.EXPERIMENT_MODE) {
             this.cows = [];
             this.abductedCows = [];
-            // Só spawns se cow OU ox tá habilitado — _spawnVacas filtra by tipo internamente
-            if (this.dbg.enabled.cows || this.dbg.enabled.bulls) {
-                this._spawnVacas(this.dbg.counts.cows);
+            // Só spawna se vaca OU boi tá habilitado — _spawnVacas filtra por tipo internamente
+            if (this.dbg.enabled.vacas || this.dbg.enabled.bois) {
+                this._spawnVacas(this.dbg.counts.vacas);
             }
         }
 
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
+        this.farmerKills = 0;     // fazendeiros destruídos (HUD coluna esquerda)
+        this.scarecrowKills = 0;  // espantalhos droids destruídos (placeholder até integrar inimigo)
+        this._boisInBeamCount = 0;
         this.score = 0;
         this.fuelMax   = 100;
         this.fuelCurrent = 100;
-        // Counters cumulativos pra HUD coluna left
-        this.bullsTotal    = 0;  // bois entregues no curral
-        this.cowsTotal     = 0;  // vacas entregues no curral
-        this.farmersTotal  = 0;  // farmers eliminados (rocha/explosao)
-        this.shootersTotal = 0;  // shooters destruidos
         this.difficulty = 1;
         this.gameOver = false;
         this.energiaMax = 100;
@@ -172,27 +136,12 @@ class Jogo extends Phaser.Scene {
         this.energiaRegen = 30;
 
         // ── HUD ──────────────────────────────────────────────────────
-        // L5: detection mais conservadora pra evitar false-positive em hybrid
-        // (touchscreen laptop, 2-in-1, tablet com mouse). So vira true se for
-        // touch-coarse-pointer-pequeno simultaneamente. Hybrid usa desktop mode
-        // (mouse default) — pode togglar pra WASD via CONFIGS sem quebrar.
-        this.isMobile = !!this.sys.game.device.input.touch
-            && window.matchMedia('(pointer: coarse)').matches
-            && window.innerWidth < 1024;
+        this.isMobile = this.sys.game.device.input.touch;
         this.input.addPointer(1);
         this.hud = {};
         this._createHUD();
         this._positionHUD();
         this.scale.on('resize', () => this._positionHUD());
-
-        // MOBILE_MODE teaser: esconde HUD inteiro to player ver so terreno +
-        // ship + beam + smoke + weather (experiencia atmosferica pura).
-        if (window.__MOBILE_MODE) {
-            for (const k of Object.keys(this.hud)) {
-                const o = this.hud[k];
-                if (o && o.setVisible) o.setVisible(false);
-            }
-        }
 
         // ── CURSOR VIRTUAL ───────────────────────────────────────────
         this.virtualX = this.scale.width / 2;
@@ -203,14 +152,14 @@ class Jogo extends Phaser.Scene {
             this.virtualY = p.y;
         });
         this.input.on('pointerdown', (p) => {
-            if(!this.gameStarted) return;   // splash still visível
+            if(!this.gameStarted) return;   // splash ainda visível
             if(this.gameOver) return;
             if(this.isMobile && p !== this.input.pointer1) return;
             if(this.hud.hint) { this.hud.hint.destroy(); this.hud.hint = null; }
             if(this.hud.hintBg) { this.hud.hintBg.destroy(); this.hud.hintBg = null; }
         });
 
-        this.cameras.main.startFollow(this.ufo, true, 0.05, 0.05);
+        this.cameras.main.startFollow(this.ship, true, 0.05, 0.05);
 
         // Repovoamento periódico (desabilitado em experiment mode)
         if (!this.EXPERIMENT_MODE) {
@@ -219,54 +168,13 @@ class Jogo extends Phaser.Scene {
 
         this._setupPause();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
-        this._setupFX();                    // 16_fx.js — rain, fog, helpers
+        this._setupFX();                    // 16_fx.js — chuva, neblina, helpers
         this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
         this._setupDebugOverlay();          // 19_debug_overlay.js — F3 overlay (FPS, heap, counts)
-        this._setupQuips();                 // 20_quips.js — random funny one-liners
         this._setupBarrel();                // post-fx esférico
         this._applyFXVisibility();
         this._setupCollisions();              // 10_colisao.js
-        this._setupMobileControls();        // 12_mobile.js — joystick + botão (only mobile)
-
-        // MOBILE_MODE: dark vignette overlay (canvas radial preto) — more
-        // forte que o vignette branco do fog. Depth 190 -> above das FX
-        // mas below do HUD (que ja esta escondido em mobile).
-        if (window.__MOBILE_MODE) {
-            const SZ = 512;
-            const c = document.createElement('canvas'); c.width = c.height = SZ;
-            const ctx = c.getContext('2d');
-            const grad = ctx.createRadialGradient(SZ/2, SZ/2, SZ*0.18, SZ/2, SZ/2, SZ*0.55);
-            grad.addColorStop(0.0, 'rgba(0,0,0,0)');
-            grad.addColorStop(0.6, 'rgba(0,0,0,0.55)');
-            grad.addColorStop(1.0, 'rgba(0,0,0,0.95)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, SZ, SZ);
-            if (this.textures.exists('mobile_vignette')) this.textures.remove('mobile_vignette');
-            this.textures.addCanvas('mobile_vignette', c);
-            this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
-                .setScrollFactor(0).setDepth(190);
-            // Vignette fixa centralizada (size exato to cobrir screen)
-            this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
-            this.scale.on('resize', () => {
-                if (this.fxMobileVignette?.scene) {
-                    this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
-                    this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
-                }
-            });
-
-            // Shuffle atmosferico recorrente: a each 30-50s troca weather+TOD
-            const TODs = ['dusk','sunset','night','midnight'];   // sempre escuros
-            const WTHs = ['rain','fog','storm','snow'];          // sempre macabros
-            const shuffleAtmosphere = () => {
-                if (!this.dbg?.fx) return;
-                this.dbg.fx.timeOfDay = TODs[Math.floor(Math.random()*TODs.length)];
-                this.dbg.fx.weather   = WTHs[Math.floor(Math.random()*WTHs.length)];
-                if (this._applyAtmosphere) this._applyAtmosphere();
-                const next = Phaser.Math.Between(30000, 50000);
-                this.time.delayedCall(next, shuffleAtmosphere);
-            };
-            this.time.delayedCall(Phaser.Math.Between(30000, 50000), shuffleAtmosphere);
-        }
+        this._setupMobileControls();        // 12_mobile.js — joystick + botão (só mobile)
 
         // ── Tecla T: toggle EXPERIMENT_MODE (recarrega a página)
         // Phaser key listener + fallback nativo no window (caso Phaser perca foco)
@@ -277,8 +185,8 @@ class Jogo extends Phaser.Scene {
             localStorage.setItem('experimentMode', cur ? '0' : '1');
             window.location.reload();
         };
-        // H1: listener leak — guarda referência to remover no shutdown
-        // (each scene.restart adicionava novo listener without limpar o anterior)
+        // H1: listener leak — guarda referência pra remover no shutdown
+        // (cada scene.restart adicionava novo listener sem limpar o anterior)
         if (!this._tHandler) {
             this._tHandler = (e) => {
                 if (e.key === 't' || e.key === 'T') toggleExperimentMode();
@@ -287,9 +195,14 @@ class Jogo extends Phaser.Scene {
         }
         this._toggleExperimentMode = toggleExperimentMode;
 
-        // ── Em debug mode: hides HUD e shows badge "DEBUG"
+        // ── Em debug mode: esconde HUD e mostra badge "DEBUG"
         if (this.EXPERIMENT_MODE) {
-            const hudKeys = ['scoreBg','scoreText','cowsBox','cowsText','burgersBox','burgersText',
+            const hudKeys = ['scoreBg','scoreText',
+                             'boiBox','boiIcon','boiText',
+                             'cowsBox','cowsText',
+                             'fazBox','fazIcon','fazText',
+                             'scareBox','scareIcon','scareText',
+                             'burgersBox','burgersText',
                              'combImg','combFill','eneImg','eneFill','hint','hintBg'];
             for (const k of hudKeys) if (this.hud[k]) this.hud[k].setVisible(false);
             // Badge debug
@@ -300,7 +213,7 @@ class Jogo extends Phaser.Scene {
             }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
         }
 
-        this._setupSplash();               // 11_gameflow.js — by último (sobrepõe tudo)
+        this._setupSplash();               // 11_gameflow.js — por último (sobrepõe tudo)
 
         // M4: shutdown handler centralizado (cleanup ao restart de scene)
         this.events.once('shutdown', () => this._sceneCleanup());
@@ -309,7 +222,7 @@ class Jogo extends Phaser.Scene {
     // M4: chamado em scene.shutdown — limpa listeners globais, timers DOM,
     // graphics persistentes que sobreviveriam ao restart
     _sceneCleanup() {
-        // H1: removes listener global do keydown
+        // H1: remove listener global do keydown
         if (this._tHandler) {
             window.removeEventListener('keydown', this._tHandler);
             this._tHandler = null;
@@ -323,25 +236,20 @@ class Jogo extends Phaser.Scene {
         if (this._atmoFlashGfx?.destroy)  this._atmoFlashGfx.destroy();
         if (this._tutGfx?.destroy)        this._tutGfx.destroy();
         if (this._tutGlowWorld?.destroy)  this._tutGlowWorld.destroy();
-        // H2 + L6: reset flags de tutorial via FSM (TUT_MODES.NONE)
-        if (this._tutSetMode) this._tutSetMode('NONE');
-        // M3: cleanup todos slots dos currais (pisca/bounce tweens + icons orfãos)
-        if (this.corrals && this._cleanSlot) {
-            for (const c of this.corrals) {
-                if (c?.slots) {
-                    for (let i = 0; i < c.slots.length; i++) {
-                        if (c.slots[i]) this._cleanSlot(c, i);
-                    }
-                }
-            }
-        }
+        // H2: reset flags de tutorial pra nao vazar
+        this._tutBeamNoDrain = false;
+        this._tutBeamNoPull  = false;
+        this._tutVacasImortais = false;
+        this._tutFreezeNave = false;
+        this._tutCombustivelCongelado = false;
+        this._tutGravitonDrain2x = false;
     }
 
     update(time, delta) {
-        // F3 + debug overlay funcionam since o splash
+        // F3 + debug overlay funcionam desde o splash
         if (this._updateDebugOverlay) this._updateDebugOverlay();
 
-        // ESC funciona since o splash to abrir CONFIGS before do game iniciar
+        // ESC funciona desde o splash pra abrir CONFIGS antes do jogo iniciar
         if (!this.gameStarted) {
             if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
                 this._splashConfigsOpen = !this._splashConfigsOpen;
@@ -352,7 +260,7 @@ class Jogo extends Phaser.Scene {
         if (this.gameOver) return;
         try { this._updateBody(time, delta); }
         catch (e) {
-            // Captura no debug overlay (without suprimir após o primeiro)
+            // Captura no debug overlay (sem suprimir após o primeiro)
             const msg = (e?.message || String(e)).substring(0, 200);
             if (this._captureErr) this._captureErr(msg, 'update');
             console.error('[UPDATE ERR]', e);
@@ -385,15 +293,19 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
-        // COWS counter: usa _cowsInBeamCount mantido by _updateBeamCounters
-        // (was for-loop by frame before — H5 do audit)
+        // 5 counters da coluna esquerda — _updateBeamCounters mantém _cowsInBeamCount,
+        // _boisInBeamCount e _farmersInBeamCount. farmerKills + scarecrowKills são
+        // contadores acumulados de inimigos destruídos (incrementados em colisão).
+        this.hud.boiText.setText(this._boisInBeamCount || 0);
         this.hud.cowsText.setText(this._cowsInBeamCount || 0);
+        this.hud.fazText.setText(this.farmerKills || 0);
+        this.hud.scareText.setText(this.scarecrowKills || 0);
         this.hud.burgersText.setText(this.burgerCount);
 
         const cam = this.cameras.main;
         let cursor;
         const inputMode = this.dbg?.behavior?.inputMode ?? 'mouse';
-        // Modo WASD: monta vetor das teclas + Space to beam
+        // Modo WASD: monta vetor das teclas + Space pra beam
         if (inputMode === 'wasd' && this._keysWASD) {
             let dx = 0, dy = 0;
             if (this._keysWASD.W.isDown) dy -= 1;
@@ -404,21 +316,21 @@ class Jogo extends Phaser.Scene {
                 const len = Math.hypot(dx, dy);
                 const REACH = 220;
                 cursor = {
-                    x: this.ufo.x + (dx/len) * REACH,
-                    y: this.ufo.y + (dy/len) * REACH
+                    x: this.ship.x + (dx/len) * REACH,
+                    y: this.ship.y + (dy/len) * REACH
                 };
             } else {
-                // without input: cursor na ship (não move)
-                cursor = { x: this.ufo.x, y: this.ufo.y };
+                // Sem input: cursor na nave (não move)
+                cursor = { x: this.ship.x, y: this.ship.y };
             }
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
             this._beamHeld = this._keysWASD.SPACE.isDown;
         } else if (this.isMobile && this._joyVec && this._joyVec.active) {
-            // Joystick — vetor vira "alvo virtual" 220px à front da ship
+            // Joystick — vetor vira "alvo virtual" 220px à frente da nave
             const REACH = 220;
             cursor = {
-                x: this.ufo.x + this._joyVec.x * REACH,
-                y: this.ufo.y + this._joyVec.y * REACH
+                x: this.ship.x + this._joyVec.x * REACH,
+                y: this.ship.y + this._joyVec.y * REACH
             };
         } else {
             const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
@@ -429,32 +341,32 @@ class Jogo extends Phaser.Scene {
         this._moveShip(cursor);
         this._updateArrow();
 
-        this.ufoShadow.setPosition(this.ufo.x+8, this.ufo.y+24);
+        this.shipShadow.setPosition(this.ship.x+8, this.ship.y+24);
         this._updateShadows();
-        this.lightCone.setPosition(this.ufo.x, this.ufo.y);
+        this.lightCone.setPosition(this.ship.x, this.ship.y);
 
-        // ufo: rotação base (slider) + tilt baseado em mudança de speed lateral
-        const ufoRot = this.dbg?.behavior?.ufoRot ?? 0;
-        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + ufoRot * (delta / 1000);
-        const navVx = this.ufo.body.velocity.x;
-        const navVy = this.ufo.body.velocity.y;
+        // Disco: rotação base (slider) + tilt baseado em mudança de speed lateral
+        const discoRot = this.dbg?.behavior?.discoRot ?? 0;
+        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + discoRot * (delta / 1000);
+        const navVx = this.ship.body.velocity.x;
+        const navVy = this.ship.body.velocity.y;
         const vAxDelta = navVx - (this._lastNavVx ?? navVx);
         this._lastNavVx = navVx;
         const tiltTarget = Phaser.Math.Clamp(-vAxDelta * 8, -0.4, 0.4);
         this._tiltCurrent = (this._tiltCurrent ?? 0) * 0.88 + tiltTarget * 0.12;
-        this.ufo.rotation = this._discoBaseAngle + this._tiltCurrent;
+        this.ship.rotation = this._discoBaseAngle + this._tiltCurrent;
 
         // ── UFO directional hover anim ───────────────────────────────
-        // above de threshold, escolhe dir8 do vetor speed; below, mantém última dir
+        // Acima de threshold, escolhe dir8 do vetor speed; abaixo, mantém última dir
         const navSpeedAnim = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeedAnim > 0.5) {
             const deg = (Math.atan2(navVy, navVx) * 180 / Math.PI + 360) % 360;
             const i = Math.round(deg / 45) % 8;
-            this._ufoDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
+            this._naveDir8 = ['E','SE','S','SW','W','NW','N','NE'][i];
         }
-        const hoverKey = `ufo_hover_${this._ufoDir8 || 'S'}`;
-        if (this.ufo.anims && this.anims.exists(hoverKey) && this.ufo.anims.currentAnim?.key !== hoverKey) {
-            this.ufo.play(hoverKey, true);
+        const hoverKey = `ufo_hover_${this._naveDir8 || 'S'}`;
+        if (this.ship.anims && this.anims.exists(hoverKey) && this.ship.anims.currentAnim?.key !== hoverKey) {
+            this.ship.play(hoverKey, true);
         }
 
         // Escapamento: várias nuvenzinhas pequenas e opacas saindo aos poucos,
@@ -465,9 +377,9 @@ class Jogo extends Phaser.Scene {
             this._smokeTimer = (this._smokeTimer ?? 0) + delta;
             if (this._smokeTimer > 100) {
                 this._smokeTimer = 0;
-                const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "back"
-                const px = this.ufo.x + ux * 30;
-                const py = this.ufo.y + uy * 30;
+                const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
+                const px = this.ship.x + ux * 30;
+                const py = this.ship.y + uy * 30;
                 this._spawnSmoke(px, py, {
                     color: 0xbbbbcc, alpha: 0.75, size: 4,
                     dur: 1400, drift: 26
@@ -476,7 +388,7 @@ class Jogo extends Phaser.Scene {
                 if (Math.random() < 0.55) {
                     const colors = [0x33aaff, 0xff4466, 0xffcc33, 0x44ff88, 0xcc66ff];
                     const col = colors[Math.floor(Math.random() * colors.length)];
-                    // Offset radial to parecer que sai de points diferentes do ufo
+                    // Offset radial pra parecer que sai de points diferentes do disco
                     const radial = (Math.random() - 0.5) * 24;
                     const perpX = -uy * radial, perpY = ux * radial;
                     this._spawnSmoke(px + perpX, py + perpY, {
@@ -490,9 +402,6 @@ class Jogo extends Phaser.Scene {
         this._updateBarrel();
         this._atmoUpdate(delta);
         this._updateLEDs(delta);
-        if (this._updateWind) this._updateWind(delta);
-        if (this._quipProximityCheck) this._quipProximityCheck(delta);
-        if (this._updateActiveQuips) this._updateActiveQuips();
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
@@ -528,7 +437,7 @@ class Jogo extends Phaser.Scene {
         }
 
         if (beamActive) {
-            // FX: detecta transição off→on to dar shake/flash uma vez
+            // FX: detecta transição off→on pra dar shake/flash uma vez
             if (!this._beamWasOn) {
                 this._beamWasOn = true;
                 if (this.dbg?.fx?.beamShake) {
@@ -536,7 +445,7 @@ class Jogo extends Phaser.Scene {
                     this.cameras.main.flash(120, 80, 200, 120, false);
                 }
             }
-            // Sparkles emitidos a each ~80ms while o beam is ativo
+            // Sparkles emitidos a cada ~80ms enquanto o beam está ativo
             if (this.dbg?.fx?.beamSparks) {
                 this._beamSparkleTimer = (this._beamSparkleTimer ?? 0) + delta;
                 if (this._beamSparkleTimer > 80) {
