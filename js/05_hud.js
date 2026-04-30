@@ -21,28 +21,36 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido to _turnIntoBurger
 
-        // ── Barra Fuel (v2: empty base + full with setCrop dinâmico) ─
+        // ── Barra Fuel ─────────────────────────────────────────────────
+        // Layer 1 (D): _frame com bar-slot preto = mascara baseline "vazio"
+        // Layer 2 (D+0.3): _full colorido, cropado from left to pct -> sobe
+        // por cima da mascara preta, simulando enchimento.
+        // pct=1 -> _full inteiro -> tampa o preto -> bar cheia
+        // pct=0 -> crop=0 -> _full some -> mascara preta exposta = vazio
         const COMB_W = 380, COMB_H = 68;
-        const useV2Comb = this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2');
-        if (useV2Comb) {
+        const useFrameMask = this.textures.exists('hud_combustivel_frame') && this.textures.exists('hud_combustivel_full');
+        if (useFrameMask) {
+            this.hud.combImg     = this.add.image(0,0,'hud_combustivel_frame').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+            this.hud.combFillImg = this.add.image(0,0,'hud_combustivel_full').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+        } else if (this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2')) {
             this.hud.combImg     = this.add.image(0,0,'hud_comb_empty_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
             this.hud.combFillImg = this.add.image(0,0,'hud_comb_full_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
         } else {
-            // Fallback pro frame antigo + Graphics fill
             this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
             this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
             this.fuelBar = this.hud.combFill;
         }
-        // PNG v3 tem area do label limpa (solid black) → overlay Phaser desenha
-        // FUEL/COMBUSTIVEL dinamico (i18n via _applyHudI18n)
         this.hud.combLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
 
-        // ── Barra Graviton (v2 mesma lógica) ─────────────────────────
+        // ── Barra Graviton (mesma logica frame-as-mask) ─────────────
         const ENE_W = 290, ENE_H = 72;
-        const useV2Energy = this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2');
-        if (useV2Energy) {
+        const useFrameMaskG = this.textures.exists('hud_graviton_frame') && this.textures.exists('hud_graviton_full');
+        if (useFrameMaskG) {
+            this.hud.eneImg     = this.add.image(0,0,'hud_graviton_frame').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+            this.hud.eneFillImg = this.add.image(0,0,'hud_graviton_full').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+        } else if (this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2')) {
             this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
             this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
         } else {
