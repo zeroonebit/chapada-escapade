@@ -7,7 +7,7 @@ Object.assign(Jogo.prototype, {
             console.warn('[ASSET 404]', file.src || file.url || file.key);
         });
 
-        // Pre-loader DOM bar — atualiza durante carregamento + fade out ao terminar
+        // Pre-loader DOM bar — atualiza durante carregamento + fade out ao end
         const preBar = document.getElementById('pre-loader-bar');
         const prePct = document.getElementById('pre-loader-pct');
         const preLoader = document.getElementById('pre-loader');
@@ -36,7 +36,7 @@ Object.assign(Jogo.prototype, {
             });
         }
 
-        // ── HERO ASSETS 200×200 (single sprite usado em algumas situações) ──
+        // ── HERO ASSETS 200×200 (single sprite used em algumas situações) ──
         // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
         this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
         this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
@@ -101,7 +101,7 @@ Object.assign(Jogo.prototype, {
         const NATURE_CERCAS = ['fence_full_h','fence_normal','fence_long','fence_short',
                                'fence_broken','fence_gate_open','fence_corner',
                                'post_single','post_thin','plank_v'];
-        // Cercas v2 (paleta clara consistente, design ornamental)
+        // fences v2 (paleta clara consistente, design ornamental)
         const NATURE_CERCAS_V2 = ['fence_double_short_h','fence_curved_short','fence_curved_long',
                                   'gate_open_double','gate_closed_solid','gate_thin_double',
                                   'post_lantern_low','post_lantern_thin','post_double_rope',
@@ -122,7 +122,7 @@ Object.assign(Jogo.prototype, {
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);
         this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
-        // Expor pra outros módulos (D+R2: renomeado de _naturePedras/Vege/Cercas)
+        // Expor to outros módulos (D+R2: renomeado de _naturePedras/Vege/fences)
         this._natureRocksKeys  = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
         this._natureVegKeys    = NATURE_VEGE.map(n   => `nat_veg_${n}`);
         this._natureFencesKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
@@ -134,8 +134,8 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
         this.load.image('hud_radar_frame_v2',    'assets/pixel_labs/hud/radar_frame_v2.png');
-        // Frames v1 atualizados pelo usuario: bar slot agora preto = mascara
-        // de "vazio". Vai por cima do _full pra cobrir o que ja foi gasto.
+        // Frames v1 atualizados pelo usuario: bar slot now preto = mascara
+        // de "vazio". Vai por cima do _full to cobrir o que ja foi gasto.
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');

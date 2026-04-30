@@ -6,8 +6,8 @@ Object.assign(Jogo.prototype, {
         const tex   = tipo === 'ox' ? 'ox_S' : 'cow_S';
         // matter.add.SPRITE (not image) — sprite supports .anims, image does not
         let v = this.matter.add.sprite(x, y, tex);
-        v.setFixedRotation();  // without isso, colisão with beam/shooter deita o bicho de lado
-        // setDisplaySize força size visual fixo (anim frames 68px e static 180px viram mesma scale)
+        v.setFixedRotation();  // without this, colisão with beam/shooter deita o bicho de lado
+        // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
         const baseSize = tipo === 'ox' ? 78 : 68;
         const sizeScale = tipo === 'ox' ? ((this.dbg?.scale?.ox) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
@@ -44,7 +44,7 @@ Object.assign(Jogo.prototype, {
             }
         });
 
-        // Sombra blur below
+        // shadow blur below
         const shRx = tipo === 'ox' ? 28 : 22;
         const shRy = tipo === 'ox' ? 10 : 8;
         this._attachSombra(v, { rx: shRx, ry: shRy, alpha: 0.42, offY: shRy*1.6, offX: 4 });
@@ -92,7 +92,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Idempotente — seguro chamar múltiplas vezes
+    // Idempotente — seguro chamar múltiplas times
     _destroyCow(v) {
         if (!v || v._destroyed) return;
         v._destroyed = true;
@@ -161,7 +161,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // 1 = cell de grass with 4 cardinais also grass (deep grass)
-    // 0.5 = grass de borda (1+ cardinal não-grass)
+    // 0.5 = grass de edge (1+ cardinal não-grass)
     // 0 = não is grass
     _grassDepth(x, y) {
         if (!this._isOverGrass(x, y)) return 0;
@@ -186,7 +186,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // ── ABDUÇÃO E FÍSICA NO FEIXE ────────────────────────────────────
+    // ── ABDUÇÃO E FÍSICA NO beam ────────────────────────────────────
     _tryAbduct() {
         // Conta carga atual usando contador (em vez de filter — perf)
         const carryingCows    = this._cowsInBeamCount  || 0;
@@ -235,8 +235,8 @@ Object.assign(Jogo.prototype, {
 
     _basinPhysics(v) {
         if (!v.scene || !v.body || v._dying) return;
-        // Não re-prende em grass enquanto abduzida (bug: cow grudava de novo no frame seguinte)
-        // Atrito low enquanto no beam — to deslizar livre até a ship
+        // Não re-prende em grass while abduzida (bug: cow grudava de novo no frame seguinte)
+        // friction low while no beam — to deslizar livre até a ship
         if (!v.isBurger && !v.isEnemy) {
             v.setFrictionAir(0.015);
         }
@@ -295,7 +295,7 @@ Object.assign(Jogo.prototype, {
         const speed = Math.sqrt(vx*vx + vy*vy);
 
         // Direction 8-dir (cow chubby now is 8-dir as o ox)
-        // Durante janela de 3s pós-abdução, força south (independe de speed/wander)
+        // Durante window de 3s pós-abdução, force south (independe de speed/wander)
         const now = this.time?.now ?? 0;
         const returningSouth = v._returnSouthUntil && now < v._returnSouthUntil;
         let angRad = null;
@@ -354,17 +354,17 @@ Object.assign(Jogo.prototype, {
             const v = this.cows[i];
             if (!v.scene || !v.body || v._dying) continue;
             if (v.isBurger || v.stuckInBush || v.stuckInGrass || v._inCurral) continue;
-            // Abduzidas tocam anim "angry" mas não rodam IA de movimento (beam controla)
+            // Abduzidas tocam anim "angry" mas não rodam IA de movement (beam controla)
             if (this.abductedCows.includes(v)) {
                 this._directionalTexture(v);
                 continue;
             }
-            // Janela pós-soltar: trava IA, deixa atrito high frear, força south
+            // window pós-soltar: trava IA, deixa friction high frear, force south
             if (v._returnSouthUntil && now < v._returnSouthUntil) {
                 this._directionalTexture(v);
                 continue;
             }
-            // Saiu da janela: restaura atrito padrão se still estiver high
+            // Saiu da window: restaura friction padrão se still estiver high
             if (v._returnSouthUntil && now >= v._returnSouthUntil && v.body) {
                 v.setFrictionAir(0.08);
                 v._returnSouthUntil = 0;
@@ -372,7 +372,7 @@ Object.assign(Jogo.prototype, {
 
             const dx = v.x - this.ufo.x, dy = v.y - this.ufo.y;
             const distSq = dx*dx + dy*dy;
-            // Bumpou o ox to 0.0030 (was 0.0010) — before força/mass não vencia atrito,
+            // Bumpou o ox to 0.0030 (was 0.0010) — before force/mass não vencia friction,
             // ox parecia preso e picker caía no wanderAngle (random) em vez do vetor speed
             const baseF = (v.tipo === 'ox' ? 0.0030 : 0.0016) * velMul;
 
@@ -395,7 +395,7 @@ Object.assign(Jogo.prototype, {
                 this._directionalTexture(v);
                 continue;
             }
-            // Dentro do raio de fuga: corre
+            // inside do raio de fuga: corre
             v._fleeing = true;
             v._eating = false;
             this._directionalTexture(v);
@@ -423,7 +423,7 @@ Object.assign(Jogo.prototype, {
         this._updateBeamCounters();
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.08).setDepth(5);
         if (vaca.timer) { vaca.timer.remove(); vaca.timer = null; }
-        // Janela de 3s onde a cow/ox força orientação south e atrito high to parar
+        // window de 3s onde a cow/ox force orientação south e friction high to parar
         // Picker e IA respeitam essa flag to ignorar wandering during esse período
         vaca._lastDir8 = 'S';
         vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;

@@ -112,7 +112,7 @@ Object.assign(Jogo.prototype, {
             // versões do Phaser, deixando body do size da textura (180×180 = bug)
             f.setBody({type:'circle', radius:16});
             f.setDisplaySize(farmerSize, farmerSize);
-            // Lock rotação física: without isso, colisões with cows (que vêm pelo beam)
+            // Lock rotação física: without this, colisões with cows (que vêm pelo beam)
             // viravam o sprite de lado e ele aparecia "deitado" as humano de perfil
             f.setFixedRotation();
             f.setFrictionAir(0.1).setMass(2).setDepth(6)
@@ -135,7 +135,7 @@ Object.assign(Jogo.prototype, {
                     f._wandering = true;
                 }
             });
-            // Sombra blur below do farmer
+            // shadow blur below do farmer
             this._attachSombra(f, { rx: 24, ry: 9, alpha: 0.45, offY: 18, offX: 5 });
 
             this.farmers.push(f);

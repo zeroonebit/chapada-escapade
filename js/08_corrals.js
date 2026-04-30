@@ -1,7 +1,7 @@
 ﻿// 08_corrals.js — Corral with slots fixos: 3 cows max, 3 burgers max
 // Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
 // Constantes BURGER_TEXTURES, SLOT_VALOR, SLOT_FUEL vêm de 00_constants.js
-// (alias local to manter o código antigo lendo BURGER_SLOTS)
+// (alias local to keep o código antigo lendo BURGER_SLOTS)
 const BURGER_SLOTS = BURGER_TEXTURES;
 
 Object.assign(Jogo.prototype, {
@@ -144,7 +144,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // M3: cleanup completo de um slot (tweens + icon)
-    // Usado no _collectSlot e em qualquer destrução prematura do corral
+    // used no _collectSlot e em qualquer destrução prematura do corral
     _cleanSlot(curral, slotIdx) {
         const slot = curral?.slots?.[slotIdx];
         if (!slot) return;
@@ -173,7 +173,7 @@ Object.assign(Jogo.prototype, {
         }
         this._updateMascoteVisibilidade(curral);
 
-        // Stops piscar e fixa burger pronto with bounce sutil
+        // Stops piscar e fixa burger ready with bounce sutil
         if (slot.pisca) slot.pisca.stop();
         slot.icon.setAlpha(1);
         slot.bounce = this.tweens.add({
@@ -197,7 +197,7 @@ Object.assign(Jogo.prototype, {
             if (!icon || !icon.scene) continue;
             const dx = icon.x - this.ufo.x, dy = icon.y - this.ufo.y;
             if (dx*dx + dy*dy > r2) continue;
-            // Dentro do beam: dispara coleta
+            // inside do beam: dispara coleta
             this._collectSlot(curral, i);
         }
     },
@@ -218,7 +218,7 @@ Object.assign(Jogo.prototype, {
             scale: 0.25, alpha: 0,
             duration: 380, ease: 'Cubic.easeIn',
             onUpdate: () => {
-                // Updates to acompanhar movimento da ship
+                // Updates to acompanhar movement da ship
                 if (icon.scene && this.ufo) {
                     // segue dinamicamente o destino
                 }
@@ -239,7 +239,7 @@ Object.assign(Jogo.prototype, {
                     duration: 700, onComplete: () => popup.destroy()
                 });
                 // M3: libera slot via _cleanSlot (null-safe + para tweens órfãos
-                // se algo travar entre o stop manual acima e o complete callback)
+                // se algo travar between o stop manual above e o complete callback)
                 this._cleanSlot(curral, slotIdx);
                 // Quip ao entregar burger
                 if (this._showQuip) this._showQuip({ x: this.ufo.x, y: this.ufo.y }, 'burger');
@@ -247,7 +247,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    // Compat with tutorial e radar (checks se has burger pronto to coletar)
+    // Compat with tutorial e radar (checks se has burger ready to coletar)
     _anyCorralReady() {
         for (const c of this.corrals) {
             if (!c.slots) continue;

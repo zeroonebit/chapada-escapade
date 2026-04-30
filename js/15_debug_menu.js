@@ -73,7 +73,7 @@ const DBG_DEFAULTS = {
         burger: 1.0,
     },
     behavior: {
-        sensitivity:    1.0,  // multiplicador da força da ship (live)
+        sensitivity:    1.0,  // multiplicador da force da ship (live)
         pullBeam:       0.5,
         cowSpeed:       1.0,
         farmerSpeed:    1.0,
@@ -90,7 +90,7 @@ const DBG_DEFAULTS = {
     fx: {
         rain:           false,
         rainIntensity:  0.5,
-        rainAngle:      0.3,   // -1..1 (negativo = pra esquerda)
+        rainAngle:      0.3,   // -1..1 (negativo = to left)
         rainSpeed:      1.0,   // 0.2..3 multiplicador
         rainSize:       1.0,   // 0.3..3 mult. do comprimento da gota
         rainCount:      80,    // 0..400 frequência (qty de gotas)
@@ -101,20 +101,20 @@ const DBG_DEFAULTS = {
         fancyExplosion: true,
         wangtiles:      false,
         timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
-        timeAutoCycle:  false,     // ciclo auto a cada 60s
+        timeAutoCycle:  false,     // ciclo auto a each 60s
         weather:        'clear',   // clear|rain|snow|fog|storm
         weatherShuffle: false,     // PREVIEW aleatoriza weather+TOD
         snow:           false,
         snowCount:      100,       // 0..400 flakes
         snowIntensity:  0.85,      // 0..1 alpha
         wind:           false,     // swirl particles + driver do rainAngle
-        windForce:      0.03,      // -0.05..0.05 (positivo = direita)
+        windForce:      0.03,      // -0.05..0.05 (positivo = right)
         quips:          true,      // floating one-liners
     },
 };
 
 // Migration map: PT key (legacy localStorage) -> EN key (novo padrao).
-// Roda em _loadDebugCfg pra preservar configs salvas antes do refator.
+// Roda em _loadDebugCfg to preservar configs salvas before do refator.
 // Nota: as chaves do lado esquerdo SAO PT (legadas no localStorage do user),
 // nao podem ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
 const PT_TO_EN_MIGRATION = {
@@ -130,7 +130,7 @@ Object.assign(Jogo.prototype, {
     _loadDebugCfg() {
         try {
             const raw = JSON.parse(localStorage.getItem(DBG_KEY) || '{}');
-            // Migration PT->EN: remapeia keys legadas antes do merge com defaults
+            // Migration PT->EN: remapeia keys legadas before do merge com defaults
             const migrated = this._migratePtKeys(raw);
             this.dbg = {
                 enabled:  Object.assign({}, DBG_DEFAULTS.enabled,  migrated.enabled),
@@ -144,7 +144,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Migration de keys PT legadas (pre-refator R2) pra novos nomes EN.
+    // Migration de keys PT legadas (pre-refator R2) to novos nomes EN.
     // Preserva valores salvos pelo user. Snapshot em docs/configs_pre_translation.json
     _migratePtKeys(raw) {
         if (!raw || typeof raw !== 'object') return {};
@@ -165,7 +165,7 @@ Object.assign(Jogo.prototype, {
         return out;
     },
 
-    // M7: debounce 500ms — slider drag dispara setItem ~10x/s without isso
+    // M7: debounce 500ms — slider drag dispara setItem ~10x/s without this
     _saveDebugCfg() {
         if (!this.dbg) return;
         if (this._saveDbgTimer) clearTimeout(this._saveDbgTimer);
@@ -492,7 +492,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Applies i18n inicial baseado no lang salvo
+        // Applies i18n initial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
 
         // PREVIEW: 5s timeslice — hides menu + enemies to você ver o mood escolhido

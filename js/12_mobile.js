@@ -1,6 +1,6 @@
 // 12_mobile.js — Joystick virtual + botão de beam to touch screens
-// Só activates em this.isMobile. Joystick à esquerda controla direction da ship;
-// botão à direita activates o beam enquanto segurado.
+// Só activates em this.isMobile. Joystick à left controla direction da ship;
+// botão à right activates o beam while segurado.
 Object.assign(Jogo.prototype, {
 
     _setupMobileControls() {
@@ -38,7 +38,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '13px', fill: '#ffffff', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
 
-        // Applies alpha inicial idle (silhueta)
+        // Applies alpha initial idle (silhueta)
         [this.joyBase, this.joyKnob].forEach(o => o.setAlpha(IDLE_ALPHA));
         [this.beamBtn, this.beamBtnLabel].forEach(o => o.setAlpha(IDLE_ALPHA));
 

@@ -115,7 +115,7 @@ Object.assign(Jogo.prototype, {
             this._buildCorral(cx + 480, cy + 300);
         }
 
-        // Estado inicial: barras escondidas, beam visual only desligado, drains normal
+        // Estado initial: barras escondidas, beam visual only desligado, drains normal
         this._tutCombustivelCongelado = true;
         this._tutBeamVisualOnly = false;          // only liga em BEAM_VISUAL
         this._tutGravitonDrain2x  = false;
@@ -241,7 +241,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'TAKE_DAMAGE': {
-                // Trava ship + spawn 1 farmer atirando logo (cooldown 400ms)
+                // Trava ship + spawn 1 farmer atirando then (cooldown 400ms)
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
                     this._tutSpawnFazendeiroAtirando();
@@ -249,7 +249,7 @@ Object.assign(Jogo.prototype, {
                     this._tutCombustivelAntes = this.fuelCurrent;
                     this._tutCombustivelCongelado = true;
                 }
-                // Hit detectado -> descongela nave + mensagem de sucesso + auto-avanca em 1.5s
+                // Hit detectado -> descongela ufo + mensagem de sucesso + auto-avanca em 1.5s
                 if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5) && !this._tutDamageTaken) {
                     this._tutDamageTaken = true;
                     this._tutFreezeNave = false;
@@ -279,7 +279,7 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
-                // Seta pra rocha mais perto do farmer abduzido
+                // Seta to rocha mais perto do farmer abduzido
                 const farmer = this.abductedCows.find(e => e.isEnemy);
                 if (farmer) {
                     const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
@@ -296,8 +296,8 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Toast verde rapido no centro da tela ("✓ TIRO RECEBIDO" etc) — feedback
-    // de objetivo cumprido antes do _tutAdvance disparar
+    // Toast verde rapido no centro da screen ("✓ TIRO RECEBIDO" etc) — feedback
+    // de objetivo cumprido before do _tutAdvance disparar
     _tutShowSuccess(text) {
         const w = this.scale.width, h = this.scale.height;
         const bg = this.add.rectangle(w/2, h/2, 280, 50, 0x002211, 0.92)
@@ -343,7 +343,7 @@ Object.assign(Jogo.prototype, {
         if (!this._createFarmer) return;
         const cx = this.ufo.x + 280, cy = this.ufo.y - 60;
         this._createFarmer(cx, cy);
-        // Pega ref do farmer recém-criado e força cooldown curto to atacar logo
+        // Pega ref do farmer recém-criado e force cooldown curto to atacar then
         const f = this.farmers[this.farmers.length - 1];
         if (f) {
             f._cooldown = 400;  // dispara em ~400ms
@@ -497,7 +497,7 @@ Object.assign(Jogo.prototype, {
             this._tutVacasGlobalSpawned = false;
         }
         // BURGER: fuel starts em 15%, barra fuel aparece, fuel DESCONGELA
-        // (player precisa ver drain pra entender que precisa coletar burger)
+        // (player needs ver drain to entender que needs coletar burger)
         if (nextKey === 'BURGER') {
             this.fuelCurrent = this.fuelMax * 0.15;
             this._setBarsVisibility(true, true);
@@ -508,7 +508,7 @@ Object.assign(Jogo.prototype, {
             this._tutAtiradorSpawned = false;
             this._tutVacasImortais = false;     // dano normal volta
             this._tutDamageTaken    = false;    // reset toast trigger
-            this._tutCombustivelCongelado = true;  // congela durante freeze pra hit ser unico decremento visivel
+            this._tutCombustivelCongelado = true;  // congela durante freeze to hit ser unico decremento visivel
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -525,13 +525,13 @@ Object.assign(Jogo.prototype, {
         const step = TUT_STEPS[idx];
         if (!step) return;
 
-        // Reset do timer de leitura minima (5s pra cada nova etapa)
+        // Reset do timer de leitura minima (5s to each nova etapa)
         this._tutStepShownAt = this.time?.now ?? 0;
 
         const w = this.scale.width;
         const BOX_W  = 280;
         const PAD_X  = 16;
-        const PAD_Y  = 60;  // 60px do topo (acima do score)
+        const PAD_Y  = 60;  // 60px do topo (above do score)
         const bx = w - BOX_W - 16;  // alinha right edge
 
         // Calcula altura dinamica: header + N etapas + bloco expandido current
@@ -596,7 +596,7 @@ Object.assign(Jogo.prototype, {
                 }).setOrigin(0, 0).setScrollFactor(0).setDepth(510);
                 items.push(tNote);
                 cursorY += tNote.height + 8;
-                // Guarda ref pra pulse anim do icon current
+                // Guarda ref to pulse anim do icon current
                 this._tutCurrentIconText = t;
             }
         }

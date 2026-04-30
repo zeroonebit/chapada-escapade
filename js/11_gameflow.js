@@ -18,10 +18,10 @@ Object.assign(Jogo.prototype, {
             return;
         }
 
-        // Skip splash apenas em restart in-session (game over -> jogar de novo).
+        // Skip splash only em restart in-session (game over -> jogar de novo).
         // Flag eh in-memory (window.__cepPlayedOnce) -> reset no F5/reload, mas
         // sobrevive a scene.restart(). Lang+input ficam persistidos no localStorage
-        // via _saveDebugCfg, entao mesmo que o splash apareca de novo, basta passar
+        // via _saveDebugCfg, entao same que o splash apareca de novo, basta passar
         // por ele -- o jogo ja sabe a preferencia.
         if (window.__cepPlayedOnce) {
             this.gameStarted = true;
@@ -87,7 +87,7 @@ Object.assign(Jogo.prototype, {
         setHoverPlay(); setHoverTut();
 
         const allBtns = [this.splashBg, this.splashImg, btnL, lblL, btnR, lblR];
-        // Expõe to função PREVIEW poder esconder/mostrar temporariamente
+        // Expõe to função PREVIEW poder hide/show temporariamente
         this._splashElements = allBtns;
 
         const _startGame = (tutorial, inputMode) => {
@@ -97,7 +97,7 @@ Object.assign(Jogo.prototype, {
                 this.dbg.behavior.inputMode = inputMode;
                 if (this._saveDebugCfg) this._saveDebugCfg();
             }
-            // Marca pra pular splash em restarts in-session (reseta no F5)
+            // Marca to pular splash em restarts in-session (reseta no F5)
             window.__cepPlayedOnce = true;
             this.matter.world.enabled = true;
             allBtns.forEach(o => o.destroy());
@@ -173,8 +173,8 @@ Object.assign(Jogo.prototype, {
         this.pauseGrafico = this.add.graphics()
             .setScrollFactor(0).setDepth(301).setVisible(false);
         this.pauseGrafico.fillStyle(0x00ff55, 1);
-        this.pauseGrafico.fillRoundedRect(-26, -45, 18, 90, 5); // barra esquerda
-        this.pauseGrafico.fillRoundedRect(8,   -45, 18, 90, 5); // barra direita
+        this.pauseGrafico.fillRoundedRect(-26, -45, 18, 90, 5); // barra left
+        this.pauseGrafico.fillRoundedRect(8,   -45, 18, 90, 5); // barra right
         this.pauseGrafico.setPosition(pw/2, ph/2 - 35);
 
         // Label "PAUSE"
@@ -254,7 +254,7 @@ Object.assign(Jogo.prototype, {
         btn.on('pointerdown', () => this._restartTransition('victory'));
     },
 
-    // Transicao estilo pre-loader: tela escura + titulo CHAPADA ESCAPADE
+    // Transicao estilo pre-loader: screen escura + titulo CHAPADA ESCAPADE
     // VT323 morphing red->green + barra simulando carregamento. Apos ~1.6s
     // chama scene.restart(). Splash eh pulado pq cep_played_once=1.
     _restartTransition(fromState) {
@@ -262,7 +262,7 @@ Object.assign(Jogo.prototype, {
         if (this.input) this.input.enabled = false;
         const w = this.scale.width, h = this.scale.height;
 
-        // Cor inicial muda baseado no estado: GAME OVER vermelho, VITORIA verde
+        // Cor initial muda baseado no estado: GAME OVER vermelho, VITORIA verde
         const startColor = (fromState === 'victory')
             ? { r: 0x44, g: 0xff, b: 0x66 }
             : { r: 0xff, g: 0x22, b: 0x22 };
@@ -347,7 +347,7 @@ Object.assign(Jogo.prototype, {
         this.gameOver = true;
         this._releaseAll();
 
-        // Trava input + congela mundo + para camera follow pra cinematic
+        // Trava input + congela mundo + para camera follow to cinematic
         if (this.input) this.input.enabled = false;
         this.matter.world.enabled = false;
         this.cameras.main.stopFollow();
@@ -355,8 +355,8 @@ Object.assign(Jogo.prototype, {
         this._cinematicGameOver();
     },
 
-    // Cinematic V2: hide tudo exceto disco, postFX vignette + grayscale,
-    // Fibonacci spiral pro disco morrer no centro da tela, fumaca + tremor
+    // Cinematic V2: hide tudo exceto ufo, postFX vignette + grayscale,
+    // Fibonacci spiral pro ufo morrer no centro da screen, fumaca + tremor
     _cinematicGameOver() {
         const w = this.scale.width, h = this.scale.height;
         const cam = this.cameras.main;
@@ -366,7 +366,7 @@ Object.assign(Jogo.prototype, {
         const ufoOrigScale = ship.scaleX || 1;
         ship._origScale = ufoOrigScale;
 
-        // ── 1. Esconde TUDO exceto o disco + smoke + atmosfera ──
+        // ── 1. Esconde TUDO exceto o ufo + smoke + atmosfera ──
         this._hideForCinematic();
 
         // ── 2. PostFX no camera: vignette + grayscale animados ──
@@ -389,8 +389,8 @@ Object.assign(Jogo.prototype, {
             onUpdate: function (tw, tgt) { grayFx.grayscale(tgt.g); },
         });
 
-        // ── 3. Fibonacci spiral: disco converge pro centro da tela ──
-        // Centro da tela em world coords (camera nao move durante cinematic)
+        // ── 3. Fibonacci spiral: ufo converge pro centro da screen ──
+        // Centro da screen em world coords (camera nao move durante cinematic)
         const destX = cam.scrollX + w/2;
         const destY = cam.scrollY + h/2;
         const startX = ship.x, startY = ship.y;
@@ -402,7 +402,7 @@ Object.assign(Jogo.prototype, {
         const TOTAL_THETA = TURNS * Math.PI * 2;
         const SPIRAL_DUR = 2400;
 
-        // Fumaca cinza durante spiral (a cada 70ms)
+        // Fumaca cinza durante spiral (a each 70ms)
         const smokeEvent = this.time.addEvent({
             delay: 70,
             callback: () => this._spawnGameOverSmoke(ship.x, ship.y),
@@ -505,7 +505,7 @@ Object.assign(Jogo.prototype, {
             sz,
             0x555555,
             0.7
-        ).setDepth(180);  // acima do mundo, abaixo da vinheta
+        ).setDepth(180);  // above do mundo, below da vinheta
         this.tweens.add({
             targets: c,
             x: c.x + (Math.random() - 0.5) * 70,
@@ -521,9 +521,9 @@ Object.assign(Jogo.prototype, {
     _showGameOverUI() {
         const w = this.scale.width, h = this.scale.height;
         if (this.input) this.input.enabled = true;
-        const D = 700;  // bem alto pra ficar acima de tudo
+        const D = 700;  // bem alto to ficar above de tudo
 
-        // GAME OVER: bem acima do disco (que ta no centro), gigante,
+        // GAME OVER: bem above do ufo (que ta no centro), gigante,
         // entrada lenta com scale grow + alpha (1.4s)
         const goText = this.add.text(w/2, h/2 - 200, 'GAME OVER', {
             fontFamily: '"VT323", "Courier New", monospace',
@@ -541,7 +541,7 @@ Object.assign(Jogo.prototype, {
             duration: 1400, ease: 'Cubic.easeOut',
         });
 
-        // SCORE label + valor, abaixo do disco
+        // SCORE label + valor, below do ufo
         const scoreLabel = this.add.text(w/2, h/2 + 130, 'SCORE', {
             fontFamily: '"Courier New", monospace',
             fontSize: '13px', fill: '#aaaaaa',
@@ -580,7 +580,7 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        // Score+botao aparecem DEPOIS do GAME OVER (delay maior)
+        // Score+botao aparecem after do GAME OVER (delay maior)
         this.tweens.add({
             targets: [scoreLabel, scoreVal, btn, btnLbl],
             alpha: 1, duration: 600, delay: 1100, ease: 'Cubic.easeOut',

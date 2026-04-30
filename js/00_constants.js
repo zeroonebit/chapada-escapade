@@ -6,7 +6,7 @@
 const WORLD_W = 8000;
 const WORLD_H = 6000;
 
-// ── BEAM / NAVE ───────────────────────────────────────────────────
+// ── BEAM / ufo ───────────────────────────────────────────────────
 const BEAM_RADIUS_BASE   = 40 * 5.55 / 2;   // raio cone do beam
 const BEAM_CAP_VACAS     = 5;               // max cows/oxen abduzidos
 const BEAM_CAP_FARMERS   = 1;               // max farmers abduzidos (mutex with cows)
@@ -25,7 +25,7 @@ const HIGH_SPEED         = 4.0;             // threshold de impacto to dano
 const HIT_DEBOUNCE_MS    = 120;             // ignora hits seguidos
 const FAZENDEIRO_BOUNCE  = 0.45;
 
-// ── CURRAL / BURGER ───────────────────────────────────────────────
+// ── corral / BURGER ───────────────────────────────────────────────
 const CURRAL_SLOTS       = 3;
 const SLOT_VALOR         = [100, 150, 220];   // points by tipo (classic/cheese/double)
 const SLOT_FUEL          = [22,  28,  36 ];   // fuel restaurado by tipo
@@ -38,7 +38,7 @@ const SPEED_THRESHOLD_MOVING  = 0.5;
 const SPEED_THRESHOLD_STATIC  = 0.05;
 
 // ── HUD DEPTHS ────────────────────────────────────────────────────
-// Acima do atmosphere overlay (195) e storm flash (196)
+// above do atmosphere overlay (195) e storm flash (196)
 const HUD_DEPTH_BG       = 200;
 const HUD_DEPTH_FG       = 201;
 const HUD_DEPTH_HINT_BG  = 205;

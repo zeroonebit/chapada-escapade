@@ -1,6 +1,6 @@
 // 14_grass_patch.js — Patch de grass interativo via Verlet integration (cloth sim).
-// Cada blade is uma string vertical de points conectados by constraints rígidas.
-// Mouse applies força with falloff by distance. Vento global oscila no time.
+// each blade is uma string vertical de points conectados by constraints rígidas.
+// Mouse applies force with falloff by distance. wind global oscila no time.
 // Roda em JS puro (CPU) — performance ok até ~400 blades em 60fps.
 
 class GrassBlade {
@@ -118,7 +118,7 @@ Object.assign(Jogo.prototype, {
             strength: 6
         };
 
-        // Vento global (mistura 2 frequências)
+        // wind global (mistura 2 frequências)
         const t = this._grassWindTime;
         const windX = Math.sin(t * 1.4) * 22 + Math.sin(t * 0.6 + 1.7) * 14;
         const gravity = 8;  // suave — blades não caem, only pesam
