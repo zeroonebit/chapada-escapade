@@ -28,6 +28,12 @@ const MENU_I18N = {
         language:'Language',
         atmosphere:'ATMOSPHERE', effects:'EFFECTS', snow_lbl:'SNOW',
         wind:'WIND', wind_force:'Force (-0.05=L, +0.05=R)',
+        // Option labels (selects)
+        opt_dawn:'Dawn', opt_day:'Day', opt_dusk:'Dusk', opt_sunset:'Sunset',
+        opt_night:'Night', opt_midnight:'Midnight',
+        opt_clear:'Clear', opt_rain:'Rain', opt_snow:'Snow', opt_fog:'Fog',
+        opt_storm:'Storm (rain+fog+lightning)',
+        opt_mouse:'Mouse', opt_wasd:'WASD + Space',
     },
     pt: {
         configs:'CONFIGURAÇÕES', controls:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
@@ -52,6 +58,12 @@ const MENU_I18N = {
         language:'Idioma',
         atmosphere:'ATMOSFERA', effects:'EFEITOS', snow_lbl:'NEVE',
         wind:'VENTO', wind_force:'Força (-0.05=esq, +0.05=dir)',
+        // Option labels (selects)
+        opt_dawn:'Amanhecer', opt_day:'Dia', opt_dusk:'Crepúsculo', opt_sunset:'Pôr do sol',
+        opt_night:'Noite', opt_midnight:'Meia-noite',
+        opt_clear:'Limpo', opt_rain:'Chuva', opt_snow:'Neve', opt_fog:'Neblina',
+        opt_storm:'Tempestade (chuva+neblina+raios)',
+        opt_mouse:'Mouse', opt_wasd:'WASD + Espaço',
     },
 };
 
@@ -240,8 +252,8 @@ Object.assign(Jogo.prototype, {
                             </select></label>
                         <label><span data-i18n="input">Input</span>
                             <select data-cfg="behavior.inputMode" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="mouse">Mouse</option>
-                                <option value="wasd">WASD + Space</option>
+                                <option value="mouse" data-i18n="opt_mouse">Mouse</option>
+                                <option value="wasd" data-i18n="opt_wasd">WASD + Space</option>
                             </select></label>
                         <label><span data-i18n="sensitivity">Sensibilidade</span>
                             <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensitivity" list="sens-ticks">
@@ -311,12 +323,12 @@ Object.assign(Jogo.prototype, {
                         <legend data-i18n="time_of_day">TIME OF DAY</legend>
                         <label><span data-i18n="time">Time</span>
                             <select data-cfg="fx.timeOfDay" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="dawn">Dawn</option>
-                                <option value="day">Day</option>
-                                <option value="dusk">Dusk</option>
-                                <option value="sunset">Sunset</option>
-                                <option value="night">Night</option>
-                                <option value="midnight">Midnight</option>
+                                <option value="dawn" data-i18n="opt_dawn">Dawn</option>
+                                <option value="day" data-i18n="opt_day">Day</option>
+                                <option value="dusk" data-i18n="opt_dusk">Dusk</option>
+                                <option value="sunset" data-i18n="opt_sunset">Sunset</option>
+                                <option value="night" data-i18n="opt_night">Night</option>
+                                <option value="midnight" data-i18n="opt_midnight">Midnight</option>
                             </select></label>
                         <label><span data-i18n="auto_cycle">Auto-cycle (60s/preset)</span><input type="checkbox" data-cfg="fx.timeAutoCycle"></label>
                     </fieldset>
@@ -324,11 +336,11 @@ Object.assign(Jogo.prototype, {
                         <legend data-i18n="weather">WEATHER</legend>
                         <label><span data-i18n="preset">Preset</span>
                             <select data-cfg="fx.weather" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="clear">Clear</option>
-                                <option value="rain">Rain</option>
-                                <option value="snow">Snow</option>
-                                <option value="fog">Fog</option>
-                                <option value="storm">Storm (rain+fog+lightning)</option>
+                                <option value="clear" data-i18n="opt_clear">Clear</option>
+                                <option value="rain" data-i18n="opt_rain">Rain</option>
+                                <option value="snow" data-i18n="opt_snow">Snow</option>
+                                <option value="fog" data-i18n="opt_fog">Fog</option>
+                                <option value="storm" data-i18n="opt_storm">Storm (rain+fog+lightning)</option>
                             </select></label>
                         <label><span data-i18n="shuffle_prev">Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
