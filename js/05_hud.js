@@ -122,13 +122,18 @@ Object.assign(Jogo.prototype, {
                 this.hud.eneLabel.setPosition(w/2, lblY);
                 this.hud.eneLabelBg.setPosition(w/2, lblY);
             }
-            // _eneBar/_combBar (compat) — em screen coords aproximadas
-            const combBx = w/2 - HUD_W * combR.fw/2;
-            const combBy = cy + (combR.fy + combR.fh/2 - 0.5) * HUD_H;
-            this._combBar = { x: combBx, y: combBy, w: HUD_W * combR.fw, h: HUD_H * combR.fh };
-            const eneBx = w/2 - HUD_W * eneR.fw/2;
-            const eneBy = cy + (eneR.fy + eneR.fh/2 - 0.5) * HUD_H;
-            this._eneBar = { x: eneBx, y: eneBy, w: HUD_W * eneR.fw, h: HUD_H * eneR.fh };
+            // _eneBar/_combBar (compat) — top-left+w+h (mesmo formato do fallback)
+            // V2 mede em fractions: top y = cy + (fy - 0.5)*HUD_H
+            const combBw = HUD_W * combR.fw;
+            const combBh = HUD_H * combR.fh;
+            const combBx = w/2 - combBw/2;
+            const combBy = cy + (combR.fy - 0.5) * HUD_H;
+            this._combBar = { x: combBx, y: combBy, w: combBw, h: combBh };
+            const eneBw = HUD_W * eneR.fw;
+            const eneBh = HUD_H * eneR.fh;
+            const eneBx = w/2 - eneBw/2;
+            const eneBy = cy + (eneR.fy - 0.5) * HUD_H;
+            this._eneBar = { x: eneBx, y: eneBy, w: eneBw, h: eneBh };
         } else {
             const ENE_Y = h - 104;
             const PAC_Y = h - 36;

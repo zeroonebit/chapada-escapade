@@ -339,11 +339,19 @@ Object.assign(Jogo.prototype, {
         // Curral V2: sprite PixelLab 200x200 (substitui cercas procedural).
         // 5 variantes random + slotOffsetY pro burger row em 08_corrals._slotPos.
         const VARIANTS = [
-            { key: 'nat_obj_curral_01_pequeno',    displaySize: 240, slotOffsetY: 130, gateOpen: true,  name: 'pequeno_quadrado' },
-            { key: 'nat_obj_curral_02_redondo',    displaySize: 260, slotOffsetY: 140, gateOpen: true,  name: 'redondo_feno' },
-            { key: 'nat_obj_curral_03_hexagonal',  displaySize: 280, slotOffsetY: 150, gateOpen: true,  name: 'hexagonal_ornamental' },
-            { key: 'nat_obj_curral_04_rustico',    displaySize: 250, slotOffsetY: 135, gateOpen: true,  name: 'rustico_pedra' },
-            { key: 'nat_obj_curral_05_abandonado', displaySize: 260, slotOffsetY: 140, gateOpen: false, name: 'abandonado' },
+            // mascotCfg: tipo (cow/ox), anim, posicao relativa ao curral, e se mostra balde
+            { key: 'nat_obj_curral_01_pequeno',    displaySize: 240, slotOffsetY: 130, gateOpen: true,  name: 'pequeno_quadrado',
+              mascotCfg: { tipo: 'cow', anim: 'cow_eat_S',  dx: -14, dy:  0, bucket: true } },
+            { key: 'nat_obj_curral_02_redondo',    displaySize: 260, slotOffsetY: 140, gateOpen: true,  name: 'redondo_feno',
+              mascotCfg: { tipo: 'cow', anim: 'cow_eat_S',  dx: -14, dy:  0, bucket: true } },
+            // hexagonal: tem coxo (water trough) ao norte -> boi/vaca bebendo agua, facing N
+            { key: 'nat_obj_curral_03_hexagonal',  displaySize: 280, slotOffsetY: 150, gateOpen: true,  name: 'hexagonal_ornamental',
+              mascotCfg: { tipo: 'cow', anim: 'cow_eat_N',  dx:  0,  dy: 24, bucket: false } },
+            // rustico_pedra: cow deitada (lie_down anim) — feno ja no sprite
+            { key: 'nat_obj_curral_04_rustico',    displaySize: 250, slotOffsetY: 135, gateOpen: true,  name: 'rustico_pedra',
+              mascotCfg: { tipo: 'cow', anim: 'cow_angry_S', dx: -10, dy: 5, bucket: false } },
+            { key: 'nat_obj_curral_05_abandonado', displaySize: 260, slotOffsetY: 140, gateOpen: false, name: 'abandonado',
+              mascotCfg: { tipo: 'ox',  anim: 'ox_walk_S',  dx: -14, dy:  0, bucket: false } },
         ];
         const v = VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
 
@@ -362,6 +370,15 @@ Object.assign(Jogo.prototype, {
             variant: v,
             slotOffsetY: v.slotOffsetY,  // override pra _slotPos em 08_corrals
         });
+        // V2: cenografico — mascote sempre visivel, config por variante (mascotCfg)
+        const corralObj = this.corrals[this.corrals.length - 1];
+        corralObj.mascotCenografico = true;
+        corralObj.mascotCfg = v.mascotCfg;  // tipo/anim/dx/dy/bucket por curral
+        if (this._ensureCowMascot) {
+            this._ensureCowMascot(corralObj);
+            if (corralObj.mascot)       corralObj.mascot.setVisible(true);
+            if (corralObj.mascotBucket) corralObj.mascotBucket.setVisible(!!v.mascotCfg?.bucket);
+        }
     }
 
 });

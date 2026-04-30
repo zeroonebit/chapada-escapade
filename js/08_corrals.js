@@ -24,14 +24,22 @@ Object.assign(Jogo.prototype, {
             if (curral.mascotHay) curral.mascotHay.setVisible(true);
             return curral.mascot;
         }
-        // Size REAL da cow (equal _createCow: baseSize 68 * scale.cow)
-        const SIZE = 68 * (this.dbg?.scale?.cow ?? 1.0);
+        // mascotCfg controla tipo/anim/posicao por variante (vem do _buildCorral V2).
+        // Fallback (sem cfg): cow eat_S no canto esquerdo (comportamento antigo).
+        const cfg = curral.mascotCfg || { tipo: 'cow', anim: 'cow_eat_S', dx: -14, dy: 0 };
+        const tipo = cfg.tipo || 'cow';
+        const SIZE_BASE = tipo === 'ox' ? 84 : 68;
+        const SIZE = SIZE_BASE * (this.dbg?.scale?.[tipo === 'ox' ? 'bull' : 'cow'] ?? 1.0);
 
-        // Cow chubby comendo virada to sul (anim fixa eat_S)
-        const initTex = this.textures.exists('cow_eat_S_0') ? 'cow_eat_S_0' : 'cow_S';
-        const m = this.add.sprite(curral.x - 14, curral.y, initTex)
+        // Texture initial: tenta primeiro frame da anim, senao sprite static do tipo
+        const animKey = cfg.anim || (tipo === 'ox' ? 'ox_walk_S' : 'cow_eat_S');
+        const firstFrame = `${animKey}_0`;
+        const fallbackStatic = tipo === 'ox' ? 'ox_S' : 'cow_S';
+        const initTex = this.textures.exists(firstFrame) ? firstFrame
+                       : (this.textures.exists(animKey + '_0_0') ? animKey + '_0_0' : fallbackStatic);
+        const m = this.add.sprite(curral.x + (cfg.dx ?? -14), curral.y + (cfg.dy ?? 0), initTex)
             .setDisplaySize(SIZE, SIZE).setDepth(2);
-        if (this.anims.exists('cow_eat_S')) m.play('cow_eat_S', true);
+        if (this.anims.exists(animKey)) m.play(animKey, true);
 
         // Fardo de feno ao lado direito (cow olha to ele e come)
         let feno = null;
@@ -66,11 +74,13 @@ Object.assign(Jogo.prototype, {
 
     _updateMascoteVisibilidade(curral) {
         if (!curral.mascot) return;
-        const visible = curral.mascotCount > 0;
-        curral.mascot.setVisible(visible);
-        if (curral.mascotCountTxt) curral.mascotCountTxt.setVisible(visible);
-        if (curral.mascotHay) curral.mascotHay.setVisible(visible);
-        if (curral.mascotBucket) curral.mascotBucket.setVisible(visible);
+        // Cenografico (V2): cow + bucket SEMPRE visiveis. Counter+feno so com delivery.
+        const isCenografico = !!curral.mascotCenografico;
+        const hasDelivery = curral.mascotCount > 0;
+        curral.mascot.setVisible(isCenografico || hasDelivery);
+        if (curral.mascotBucket) curral.mascotBucket.setVisible(isCenografico || hasDelivery);
+        if (curral.mascotCountTxt) curral.mascotCountTxt.setVisible(hasDelivery);
+        if (curral.mascotHay) curral.mascotHay.setVisible(hasDelivery);
     },
 
     // Position do slot fixo (0/1/2) below do gate sul do corral
