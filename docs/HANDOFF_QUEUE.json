@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "project": "Chapada Escapade",
+  "description": "Fila de handoff cross-session entre Claude Codes. Sessão A (asset-gen) adiciona items, Sessão B (in-game) consome. Editar via skill `handoff-queue` ou direto.",
+  "conventions": {
+    "status_values": ["pending", "blocked", "in-progress", "review", "done", "cancelled"],
+    "priority_values": ["low", "medium", "high", "critical"],
+    "type_values": ["asset-generation", "in-game-integration", "refactor", "bug-fix", "docs", "test"],
+    "id_format": "kebab-case slug, único, ex: grass-blades-integration"
+  },
+  "queue": [
+    {
+      "id": "grass-blades-integration",
+      "title": "Integrar 5 grass blades wind_sway in-game (4 frames cada)",
+      "type": "in-game-integration",
+      "status": "blocked",
+      "priority": "high",
+      "created_at": "2026-04-30T11:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "blocked_by_external": "5 anim jobs PixelLab cooking (~1min restante quando criado)",
+      "context": {
+        "summary": "5 sprites base 64×64 em `assets/pixel_labs/chars/nature/grass_v2/grass_*.png`. 5 wind_sway anims (4 frames cada × 5 = 20 generations) disparadas. Quando completarem, baixar frames e integrar.",
+        "asset_object_ids": [
+          "a68c22c1-e7e0-4ca0-a10d-762e66a96a15 — grass_01_vibrant",
+          "95cc74d4-5b87-4426-91e8-a1ae09ad71d6 — grass_02_dark_curled",
+          "495de85b-c798-4bb9-8d62-7e5e11fbb39c — grass_03_lime_bent",
+          "18f97c4e-c2c4-476c-b8a8-04c98d202b91 — grass_04_olive_dry",
+          "8881168d-3f5a-4845-bc61-5a228fee5429 — grass_05_yellow_tip"
+        ],
+        "anim_ids": [
+          "585e0ba3-959c-4f30-90bc-b783e2f76fb6 — grass_01 wind_sway",
+          "6d62f51f-3bd8-4567-811e-48139a8fe6e9 — grass_02 wind_sway",
+          "03e4527b-21c3-490b-9b37-17f5621c4a7b — grass_03 wind_sway",
+          "7af3a658-75a7-4e15-a5bc-f23eac92abd9 — grass_04 wind_sway",
+          "b2354dc2-070f-4a68-b470-a624e70fe338 — grass_05 wind_sway"
+        ],
+        "frame_paths_target": "assets/pixel_labs/chars/nature/grass_v2/anims/wind_sway/{01..05}/frame_{000..003}.png"
+      },
+      "spec": [
+        "1. Download 20 frames via Backblaze CDN (mesmo padrão de tools/pixellab_fetch_new.py: User-Agent header obrigatório)",
+        "2. js/02_preload.js: load das 5 base + 20 frames com keys grass_v2_{01..05}_anim_{0..3}; criar 5 anims com fps random 3-5 pra desincronizar",
+        "3. js/04_scenery.js: nova section após NATURE_VEGE — scatter 25-30 spots aleatórios em terra; usar matter.add.sprite (não image, pra suportar .anims) com anim wind_sway loop",
+        "4. Decoração pura (sem colisão, depth ~1.3 — abaixo de pedras 1)",
+        "5. Variar scale 0.8-1.4, alpha 0.9-1.0"
+      ],
+      "files_to_touch": [
+        "js/02_preload.js",
+        "js/04_scenery.js (ou 04_cenario.js no worktree PT)"
+      ],
+      "verification": "Visual no GitHub Pages: ver tufos de grama balançando em locais aleatórios do mapa, com tempos de sway dessincronizados",
+      "verified": false
+    },
+    {
+      "id": "tilesets-16px-slice-and-group",
+      "title": "Slice + agrupar 8 tilesets 16px em WANG_PRESETS (Mapa 1 vs Mapa 2)",
+      "type": "in-game-integration",
+      "status": "blocked",
+      "priority": "high",
+      "created_at": "2026-04-30T11:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "blocked_by_external": "6 de 8 tilesets ainda cooking (~100s cada)",
+      "context": {
+        "summary": "8 tilesets 16px transitions disparados pra cobrir todas conexões entre 4 materiais (ocean, sand, cerrado_dirt, cerrado_grass). 4 usam IDs cerrado v1, 4 usam v2.",
+        "tileset_ids_mapa1_v1_verde": {
+          "ocean_dirt": "ff745b17-679f-4213-b8e8-ce08bd349e86",
+          "ocean_grass": "70faa0d8-8c99-449c-9699-8d56175824c7",
+          "sand_dirt": "448352c8-0e6e-4515-b860-e15f70e93722",
+          "sand_grass": "ac546645-a924-465e-b474-0b2ab10ecdd4"
+        },
+        "tileset_ids_mapa2_v2_seco": {
+          "ocean_dirt": "d395054a-5e3c-4e28-9b76-3d8ba82baec1",
+          "ocean_grass": "53598aae-b258-47c4-b3fc-6d8a33befe40",
+          "sand_dirt": "e8b56eea-c20e-4ab9-9dff-bab3231eb333",
+          "sand_grass": "43ac051b-7e0d-4c84-8575-4dbc269db8db"
+        },
+        "tileset_ids_existentes": {
+          "dirt_grass_v1": "267836d8-f211-4260-8917-938216d7e0f1",
+          "dirt_grass_v2": "5398c10b-52b2-45b3-b6ab-dac141249b1f",
+          "ocean_sand_legacy": "2640e1f9-1e20-464d-b4ca-f700357733ee"
+        }
+      },
+      "spec": [
+        "1. Esperar 8 tilesets completarem (get_topdown_tileset retorna status)",
+        "2. Download de cada PNG (4×4 grid de 16 tiles 16×16) via api.pixellab.ai/mcp/tilesets/{id}/image",
+        "3. Slice cada PNG em 16 PNGs individuais (16×16 cada) usando metadata JSON pra mapear corners → posição cr31",
+        "4. Salvar em assets/terrain/16x16_mapa1_{ocean_dirt,ocean_grass,sand_dirt,sand_grass}/ e mapa2_*",
+        "5. Atualizar tools/pixapro/js/constants.js WANG_PRESETS com headers de grupo: 'Mapa Opção 1 — Cerrado Verde' / 'Mapa Opção 2 — Cerrado Seco'",
+        "6. Cada grupo lista os 6 tilesets do bioma (4 transitions + 1 ocean↔sand legacy compartilhado + 1 dirt↔grass cerrado)"
+      ],
+      "files_to_touch": [
+        "tools/pixapro/js/constants.js — WANG_PRESETS",
+        "assets/terrain/ — novos folders sliced",
+        "tools/slice_tilesets.py — pode precisar update se usar"
+      ],
+      "verification": "Abrir PixaPro Tiles tab, ver headers Mapa 1 / Mapa 2 com 6 presets cada, test render funciona",
+      "verified": false
+    },
+    {
+      "id": "currais-v2-test-and-tune",
+      "title": "Testar currais V2 in-game + ajustar slotOffsetY se desalinhar",
+      "type": "test",
+      "status": "pending",
+      "priority": "medium",
+      "created_at": "2026-04-30T11:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "context": {
+        "summary": "5 sprites curral V2 já deployed em main. Burger slots posicionados com slotOffsetY por variante (130-150). Pode precisar ajuste fino quando ver in-game.",
+        "deployed_at": "main commit f0437a4",
+        "test_url": "https://zeroonebit.github.io/chapada-escapade/"
+      },
+      "spec": [
+        "1. Abrir GitHub Pages, jogar até spawn dos 5 currais",
+        "2. Capturar 1 vaca, levar pra cada curral, ver se burger aparece alinhado com gate visível",
+        "3. Se desalinhar: ajustar slotOffsetY no array VARIANTS de js/04_scenery.js _buildCorral",
+        "4. Variantes (200×200): pequeno_quadrado=130, redondo=140, hexagonal=150, rustico=135, abandonado=140"
+      ],
+      "files_to_touch": ["js/04_scenery.js (VARIANTS array)"],
+      "verification": "Burgers aparecem visualmente alinhados com gate de cada curral",
+      "verified": false
+    },
+    {
+      "id": "pixapro-spinoff-standalone",
+      "title": "Migrar PixaPro pra repo standalone próprio",
+      "type": "refactor",
+      "status": "pending",
+      "priority": "low",
+      "created_at": "2026-04-30T11:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "context": {
+        "summary": "PixaPro hoje vive em tools/asset_gallery.html + tools/pixapro/ + tools/gallery_server.py. Plano completo de migração documentado.",
+        "handoff_doc": "docs/PIXAPRO_HANDOFF.md (251 linhas, detalhado)"
+      },
+      "spec": "Seguir docs/PIXAPRO_HANDOFF.md fases 1→3. Decisões pendentes (repo nome, multi-projeto?, MANIFEST dinâmico?) precisam input do user antes.",
+      "files_to_touch": ["tools/pixapro/* (cópia)", "tools/asset_gallery.html → index.html (rename)", "tools/gallery_server.py → server.py (ajusta ROOT)"],
+      "verification": "PixaPro funciona standalone em ~/Projects/PixaPro/ apontando pro asset_root do Chapada Escapade",
+      "verified": false
+    },
+    {
+      "id": "tutorial-7-9-finish",
+      "title": "Concluir tutorial etapas 7-9 (TAKE_DAMAGE, FARMER, FARMER_KILL)",
+      "type": "in-game-integration",
+      "status": "pending",
+      "priority": "medium",
+      "created_at": "2026-04-30T11:00:00-03:00",
+      "created_by": "asset-gen-session-2026-04-30",
+      "context": {
+        "summary": "Tutorial reorganizado mas etapas 7-9 ainda precisam refinar texto/glow/condições.",
+        "current_state": "funcional mas precisa polish"
+      },
+      "spec": "Revisar js/17_tutorial.js etapas 7-9: textos i18n claros, glow nos elementos certos, condições de avanço corretas (ex: FARMER_KILL avança quando user matar 1 farmer com pedra)",
+      "files_to_touch": ["js/17_tutorial.js"],
+      "verification": "Jogar tutorial até o fim sem travar nas 3 etapas finais",
+      "verified": false
+    }
+  ],
+  "log": [
+    {
+      "ts": "2026-04-30T11:00:00-03:00",
+      "action": "queue_created",
+      "by": "asset-gen-session-2026-04-30",
+      "note": "Fila inicial com 5 items pendentes: grass blades anim integration, 8 tilesets slice/group, currais V2 test, PixaPro spinoff, tutorial 7-9"
+    }
+  ]
+}
