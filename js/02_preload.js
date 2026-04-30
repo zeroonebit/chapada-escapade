@@ -126,37 +126,25 @@ Object.assign(Jogo.prototype, {
         this._natureRocksKeys  = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
         this._natureVegKeys    = NATURE_VEGE.map(n   => `nat_veg_${n}`);
         this._natureFencesKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
-        // ── HUD PIXELLAB (substitui o antigo) ────────────────────────
-        this.load.image('hud_score_frame',       'assets/pixel_labs/hud/score.png');
-        this.load.image('hud_cows_box',          'assets/pixel_labs/hud/cows.png');
-        this.load.image('hud_burgers_box',       'assets/pixel_labs/hud/burgers.png');
-        // V2 nameless boxes + radar v2 (dome+ring) — labels overlay via Phaser i18n
+        // ── HUD PIXELLAB ──────────────────────────────────────────
+        // Layout final (limpo): 6 boxes nameless + bars combinadas + radar v2
+        // Score boxes (top): label PT/EN overlay via Phaser
         this.load.image('hud_score_v2',          'assets/pixel_labs/hud/score_v2.png');
         this.load.image('hud_burgers_v2',        'assets/pixel_labs/hud/burgers_v2.png');
         this.load.image('hud_cows_v2',           'assets/pixel_labs/hud/cows_v2.png');
-        this.load.image('hud_oxen_v2',           'assets/pixel_labs/hud/oxen_v2.png');
+        this.load.image('hud_bulls_v2',           'assets/pixel_labs/hud/bulls_v2.png');
         this.load.image('hud_farmers_v2',        'assets/pixel_labs/hud/farmers_v2.png');
         this.load.image('hud_shooters_v2',       'assets/pixel_labs/hud/shooters_v2.png');
+        // Radar v2 (sandwich: ring base + dome glass top)
         this.load.image('hud_radar_dome_v2',     'assets/pixel_labs/hud/radar_dome_v2.png');
         this.load.image('hud_radar_ring_v2',     'assets/pixel_labs/hud/radar_ring_v2.png');
-        this.load.image('hud_frame_combustivel', 'assets/pixel_labs/hud/combustivel.png');
-        this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
-        this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
-        this.load.image('hud_radar_frame_v2',    'assets/pixel_labs/hud/radar_frame_v2.png');
-        // Frames v1 atualizados pelo usuario: bar slot now preto = mascara
-        // de "empty". will por cima do _full to cobrir o que ja foi gasto.
-        this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
-        this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
+        // Bars combinadas (FUEL+GRAVITON num PNG so) — _empty_nameless = mascara
+        // preta + _full-nameless = barras coloridas cropadas pelo pct
+        this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty_nameless.png');
+        this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
+        // Bars individuais (fallback antigo, mantido pra cobrir caminhos legados)
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
-        // Combined HUD (fuel+GRAVITON num PNG so) — labels traduzidos overlaid
-        this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty.png');
-        this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
-        // v3 mantidos como fallback — nao sao more o caminho default
-        this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v3.png');
-        this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v3.png');
-        this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v3.png');
-        this.load.image('hud_grav_empty_v2', 'assets/pixel_labs/hud/graviton_empty_v3.png');
         // ── BURGERS (3 variantes) ────────────────────────────────────
         this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
         this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');

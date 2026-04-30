@@ -16,7 +16,7 @@ Object.assign(Jogo.prototype, {
     _environmentCollision(entity, otherLabel, otherEntity) {
         if (entity._dying || entity._destroyed) return;
         // Tutorial: cows/oxen imortais (skip total)
-        if (this._tutVacasImortais && (entity.body.label === 'cow' || entity.body.label === 'ox')) return;
+        if (this._tutVacasImortais && (entity.body.label === 'cow' || entity.body.label === 'bull')) return;
 
         const entityIsEnemy   = !!entity.isEnemy;
         const entityAbducted  = this.abductedCows.includes(entity);
@@ -41,7 +41,7 @@ Object.assign(Jogo.prototype, {
             }
         }
         // cow-cow / cow-ox / ox-ox: dano only with impacto de alta speed
-        else if (otherLabel === 'cow' || otherLabel === 'ox') {
+        else if (otherLabel === 'cow' || otherLabel === 'bull') {
             if (entityIsEnemy) return;       // farmer: bounce físico, without dano
             if (!isHighImpact) return;
             entity._lastHitT = now;

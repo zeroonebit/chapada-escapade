@@ -2,17 +2,17 @@
 Object.assign(Jogo.prototype, {
 
     _createCow(x, y, tipo = 'holstein') {
-        const label = tipo === 'ox' ? 'ox' : 'cow';
-        const tex   = tipo === 'ox' ? 'ox_S' : 'cow_S';
+        const label = tipo === 'bull' ? 'ox' : 'cow';
+        const tex   = tipo === 'bull' ? 'ox_S' : 'cow_S';
         // matter.add.SPRITE (not image) — sprite supports .anims, image does not
         let v = this.matter.add.sprite(x, y, tex);
         v.setFixedRotation();  // without this, collision with beam/shooter deita o bicho de lado
         // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
-        const baseSize = tipo === 'ox' ? 78 : 68;
-        const sizeScale = tipo === 'ox' ? ((this.dbg?.scale?.ox) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
+        const baseSize = tipo === 'bull' ? 78 : 68;
+        const sizeScale = tipo === 'bull' ? ((this.dbg?.scale?.bull) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
         v.setDisplaySize(size, size);
-        const mass = tipo === 'ox' ? 3.2 : 2;
+        const mass = tipo === 'bull' ? 3.2 : 2;
         v.setFrictionAir(0.08).setMass(mass).setDepth(5).setCollisionCategory(2);
         v.body.label = label;
         v.isBurger = false;
@@ -22,8 +22,8 @@ Object.assign(Jogo.prototype, {
         v._dying = false;
         v.tipo = tipo;
         v.valorBurger = 100;
-        v.tempoAbducao = tipo === 'ox' ? 4500 : 3000;
-        v.burgerYield = tipo === 'ox' ? (Math.random() < 0.5 ? 2 : 3) : 1;
+        v.tempoAbducao = tipo === 'bull' ? 4500 : 3000;
+        v.burgerYield = tipo === 'bull' ? (Math.random() < 0.5 ? 2 : 3) : 1;
         v.wanderAngle = Math.random() * Math.PI * 2;
         v._wandering = true;
         // Sistema de saúde colisional: 3-5 hits before de explodir
@@ -45,8 +45,8 @@ Object.assign(Jogo.prototype, {
         });
 
         // shadow blur below
-        const shRx = tipo === 'ox' ? 28 : 22;
-        const shRy = tipo === 'ox' ? 10 : 8;
+        const shRx = tipo === 'bull' ? 28 : 22;
+        const shRy = tipo === 'bull' ? 10 : 8;
         this._attachSombra(v, { rx: shRx, ry: shRy, alpha: 0.42, offY: shRy*1.6, offX: 4 });
 
         this.cows.push(v);
@@ -78,7 +78,7 @@ Object.assign(Jogo.prototype, {
     _spawnVacas(n) {
         const W=8000, H=6000;
         const okVaca = this.dbg?.enabled?.cows !== false;
-        const okBoi  = this.dbg?.enabled?.oxen  !== false;
+        const okBoi  = this.dbg?.enabled?.bulls  !== false;
         for(let i=0; i<n; i++) {
             let tipo;
             if (okVaca && okBoi) {
@@ -252,7 +252,7 @@ Object.assign(Jogo.prototype, {
     _turnIntoBurger(v) {
         if (!v.scene || v._destroyed || v.isBurger) return;
 
-        if (v.tipo === 'ox') {
+        if (v.tipo === 'bull') {
             // Ox vira 2-3 burgers (spawns entidades extras)
             const yld = v.burgerYield || 2;
             const px = v.x, py = v.y;
@@ -311,7 +311,7 @@ Object.assign(Jogo.prototype, {
         if (returningSouth) dir8 = 'S';
 
         // Ox: walk when movendo, idle_head_shake when parado (fallback static se N)
-        if (v.tipo === 'ox') {
+        if (v.tipo === 'bull') {
             const moving = speed > 0.08;
             if (moving) {
                 const animKey = `ox_walk_${dir8}`;
@@ -374,7 +374,7 @@ Object.assign(Jogo.prototype, {
             const distSq = dx*dx + dy*dy;
             // Bumpou o ox to 0.0030 (was 0.0010) — before force/mass não vencia friction,
             // ox parecia preso e picker caía no wanderAngle (random) em vez do vetor speed
-            const baseF = (v.tipo === 'ox' ? 0.0030 : 0.0016) * velMul;
+            const baseF = (v.tipo === 'bull' ? 0.0030 : 0.0016) * velMul;
 
             if (distSq >= FLEE_DIST_SQ) {
                 // Far do player: alterna between comer e andar with timer
@@ -428,7 +428,7 @@ Object.assign(Jogo.prototype, {
         vaca._lastDir8 = 'S';
         vaca._returnSouthUntil = (this.time?.now ?? 0) + 3000;
         if (vaca.scene && vaca.body && !vaca._dying) vaca.setFrictionAir(0.4); // freia rapido
-        if (vaca.scene && vaca.tipo === 'ox' && this.textures.exists('ox_S')) {
+        if (vaca.scene && vaca.tipo === 'bull' && this.textures.exists('ox_S')) {
             if (vaca.anims?.isPlaying) vaca.anims.stop();
             vaca.setTexture('ox_S');
         }

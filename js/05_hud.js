@@ -28,54 +28,25 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText  = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
-        // ── Barras combinadas (PNG unico c/ fuel+GRAVITON) ───────
-        // more simples: um empty PNG + um full PNG, dois fillImg apontando pro
-        // same full mas each um com crop region da sua bar (independencia)
-        const useCombined = this.textures.exists('hud_combined_empty') && this.textures.exists('hud_combined_full');
-        if (useCombined) {
-            const HUD_W = 460, HUD_H = 306;  // ratio 762:508 ≈ 1.5
-            this.hud.combinedBg = this.add.image(0, 0, 'hud_combined_empty')
-                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D);
-            this.hud.combFillImg = this.add.image(0, 0, 'hud_combined_full')
-                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
-            this.hud.eneFillImg = this.add.image(0, 0, 'hud_combined_full')
-                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
-            // Bar regions em fractions da texture (refinar visualmente)
-            this.hud.combFillImg._cropRegion = { fx: 0.235, fy: 0.528, fw: 0.521, fh: 0.073 };
-            this.hud.eneFillImg._cropRegion  = { fx: 0.278, fy: 0.662, fw: 0.434, fh: 0.064 };
-            // Aliases to _setBarsVisibility / outros consumidores
-            this.hud.combImg = this.hud.combinedBg;
-            this.hud.eneImg  = this.hud.combinedBg;
-            this.hud._combinedHud = true;
-        } else {
-            // Fallback antigo: 2 sprites separados (frame + full)
-            const COMB_W = 380, COMB_H = 68;
-            const useFrameMask = this.textures.exists('hud_combustivel_frame') && this.textures.exists('hud_combustivel_full');
-            if (useFrameMask) {
-                this.hud.combImg     = this.add.image(0,0,'hud_combustivel_frame').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-                this.hud.combFillImg = this.add.image(0,0,'hud_combustivel_full').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-            } else if (this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2')) {
-                this.hud.combImg     = this.add.image(0,0,'hud_comb_empty_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-                this.hud.combFillImg = this.add.image(0,0,'hud_comb_full_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-            } else {
-                this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-                this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-                this.fuelBar = this.hud.combFill;
-            }
-            const ENE_W = 290, ENE_H = 72;
-            const useFrameMaskG = this.textures.exists('hud_graviton_frame') && this.textures.exists('hud_graviton_full');
-            if (useFrameMaskG) {
-                this.hud.eneImg     = this.add.image(0,0,'hud_graviton_frame').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-                this.hud.eneFillImg = this.add.image(0,0,'hud_graviton_full').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-            } else if (this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2')) {
-                this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-                this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-            } else {
-                this.hud.eneImg  = this.add.image(0,0,'hud_frame_graviton').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-                this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-                this.energyBar = this.hud.eneFill;
-            }
-        }
+        // ── Barras combinadas (PNG unico fuel+graviton, nameless) ───────
+        // _empty_nameless = mascara preta + _full-nameless = barras coloridas.
+        // Dois fillImg apontam pro mesmo _full, cada um com crop region propria
+        // (independencia entre as duas barras). _empty fica embaixo, _full crops
+        // por cima conforme pct.
+        const HUD_W = 460, HUD_H = 306;  // ratio 1536:1024 ≈ 1.5
+        this.hud.combinedBg = this.add.image(0, 0, 'hud_combined_empty')
+            .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D);
+        this.hud.combFillImg = this.add.image(0, 0, 'hud_combined_full')
+            .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
+        this.hud.eneFillImg = this.add.image(0, 0, 'hud_combined_full')
+            .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
+        // Bar regions em fractions da texture (medidas via Pillow)
+        this.hud.combFillImg._cropRegion = { fx: 0.235, fy: 0.528, fw: 0.521, fh: 0.073 };
+        this.hud.eneFillImg._cropRegion  = { fx: 0.278, fy: 0.662, fw: 0.434, fh: 0.064 };
+        // Aliases pra _setBarsVisibility e outros consumidores
+        this.hud.combImg = this.hud.combinedBg;
+        this.hud.eneImg  = this.hud.combinedBg;
+        this.hud._combinedHud = true;
         this.hud.combLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
@@ -181,55 +152,43 @@ Object.assign(Jogo.prototype, {
             this.hud.hint.setPosition(w/2, h/2 + 60);
         }
 
-        // Radar v2 — sprite tilted/perspectivo (radar_frame_v2.png 1024x1024).
-        // Source frame visivel 864x564 (aspect 1.53), inner hollow ellipse
-        // ~468x238 (aspect 1.97). Display proporcional 220x144 -> inner
-        // ellipse aprox 120x60.
-        const FRAME_W = 220, FRAME_H = Math.round(FRAME_W * 564 / 864);  // ~144
-        const INNER_RX = Math.round(FRAME_W * 234 / 864);   // half-width inner
-        const INNER_RY = Math.round(FRAME_H * 119 / 564);   // half-height inner
-        const PAD_X = 14, PAD_BOTTOM = 18;  // radar coladinho no rodape (eixos X distintos das bars)
-        const cx = PAD_X + FRAME_W/2;
-        const cy = h - PAD_BOTTOM - FRAME_H/2;
-        // _mini exposes rx/ry to _updateMinimap projetar elipse + z dome
+        // Radar v2: ring base (metal porthole) + dome glass (overlay).
+        // Source: ring 643x367 (ratio 1.75), dome 562x501 (ratio 1.12).
+        // Display preserva aspect do ring pra nao distorcer o frame.
+        // Inner hollow do ring: ~60% da width / ~50% da height visivel.
+        const RING_W = 220;
+        const RING_H = Math.round(RING_W * 367 / 643);  // ~126
+        const FRAME_W = RING_W, FRAME_H = RING_H;
+        const INNER_RX = Math.round(RING_W * 0.32);  // raio horizontal interno
+        const INNER_RY = Math.round(RING_H * 0.28);  // raio vertical interno
+        const PAD_X = 14, PAD_BOTTOM = 18;
+        const cx = PAD_X + RING_W/2;
+        const cy = h - PAD_BOTTOM - RING_H/2;
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
-        // Radar v2 NOVO: ring (base metal) embaixo + dome (vidro) em cima,
-        // sandwiching o conteudo do radar (sweep + blips) no meio.
-        // Ring: 632x356 ratio ≈1.78 (top-down with leve perspectiva).
-        // Dome: 551x490 ratio ≈1.12 (hemisferio side-view).
-        const useV2Radar = this.textures.exists('hud_radar_ring_v2') && this.textures.exists('hud_radar_dome_v2');
-        if (useV2Radar) {
-            // Ring base (depth low — antes do conteudo)
-            if (!this.hud.radarRing) {
-                this.hud.radarRing = this.add.image(cx, cy, 'hud_radar_ring_v2')
-                    .setScrollFactor(0).setDepth(199.0).setDisplaySize(FRAME_W, FRAME_H);
-            } else {
-                this.hud.radarRing.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
-            }
-            // Dome (vidro semi-transparente em cima — depth alta + alpha 0.55)
-            // Posicionado um pouco acima do center pra alinhar com a base do ring
-            const DOME_W = FRAME_W * 0.88;
-            const DOME_H = DOME_W * (490/551);  // mantem ratio do dome
-            const DOME_DY = -FRAME_H * 0.12;  // sobe pra dome encostar na borda do ring
+        // Sandwich: ring (depth 199) -> conteudo (199.5-200.5) -> dome (200.8 alpha 0.4)
+        if (!this.hud.radarRing && this.textures.exists('hud_radar_ring_v2')) {
+            this.hud.radarRing = this.add.image(cx, cy, 'hud_radar_ring_v2')
+                .setScrollFactor(0).setDepth(199.0).setDisplaySize(RING_W, RING_H);
+        } else if (this.hud.radarRing) {
+            this.hud.radarRing.setPosition(cx, cy).setDisplaySize(RING_W, RING_H);
+        }
+        // Dome: same width do ring, height proporcional ao source. Centered no
+        // ring pra cobrir uniforme. Alpha baixo (0.4) pra ver conteudo through.
+        if (this.textures.exists('hud_radar_dome_v2')) {
+            const DOME_W = RING_W;
+            const DOME_H = Math.round(DOME_W * 501 / 562);  // ~196
+            // Y offset: alinha o BASE do dome com center do ring pra ele "sair"
+            // do ring como hemisferio. Base = bottom do dome -> dome center y =
+            // cy - DOME_H/2 + (DOME_H * 0.18) (bottom rim do dome PNG tem 18% de altura).
+            const DOME_DY = -DOME_H * 0.32;
             if (!this.hud.radarDome) {
                 this.hud.radarDome = this.add.image(cx, cy + DOME_DY, 'hud_radar_dome_v2')
-                    .setScrollFactor(0).setDepth(200.8).setDisplaySize(DOME_W, DOME_H).setAlpha(0.55);
+                    .setScrollFactor(0).setDepth(200.8).setDisplaySize(DOME_W, DOME_H).setAlpha(0.4);
             } else {
                 this.hud.radarDome.setPosition(cx, cy + DOME_DY).setDisplaySize(DOME_W, DOME_H);
             }
-            // Hide old frame_v2 se foi criado
-            if (this.hud.radarFrameV2) this.hud.radarFrameV2.setVisible(false);
-        } else if (this.textures.exists('hud_radar_frame_v2')) {
-            // Fallback: frame perspectivo antigo
-            if (!this.hud.radarFrameV2) {
-                this.hud.radarFrameV2 = this.add.image(cx, cy, 'hud_radar_frame_v2')
-                    .setScrollFactor(0).setDepth(199.5).setDisplaySize(FRAME_W, FRAME_H);
-            } else {
-                this.hud.radarFrameV2.setPosition(cx, cy).setDisplaySize(FRAME_W, FRAME_H);
-            }
         }
-        if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
         // ── Mascara da cavidade (clipa leak embaixo do frame perspectivo) ──
         // Cavidade visivel fica deslocada to cima por causa da perspectiva.
@@ -457,7 +416,7 @@ Object.assign(Jogo.prototype, {
         // Cows + oxen + farmers usam pool de mini sprites holograficos
         if (this.cows) for (const v of this.cows) {
             if (!v.scene || v._destroyed || v.isBurger) continue;
-            const isOx = v.tipo === 'ox';
+            const isOx = v.tipo === 'bull';
             renderHolo(v,
                 isOx ? 'ox_S' : 'cow_S',
                 isOx ? 0xddccaa : 0xaaffee,    // ox marrom-clarinho cyan / cow cyan
