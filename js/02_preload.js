@@ -134,10 +134,13 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_frame_graviton',    'assets/pixel_labs/hud/graviton.png');
         this.load.image('hud_radar_frame',       'assets/pixel_labs/hud/radar_frame.png');
         this.load.image('hud_radar_frame_v2',    'assets/pixel_labs/hud/radar_frame_v2.png');
+        // Frames v1 atualizados pelo usuario: bar slot agora preto = mascara
+        // de "vazio". Vai por cima do _full pra cobrir o que ja foi gasto.
         this.load.image('hud_combustivel_frame', 'assets/pixel_labs/hud/combustivel_frame.png');
         this.load.image('hud_graviton_frame',    'assets/pixel_labs/hud/graviton_frame.png');
-        // v3: label area limpa (preta) — Phaser overlay escreve FUEL/GRAVITON dinamico
-        // i18n volta a funcionar (PT: COMBUSTIVEL/GRAVITON, EN: FUEL/GRAVITON)
+        this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
+        this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
+        // v3 mantidos como fallback — nao sao mais o caminho default
         this.load.image('hud_comb_full_v2',  'assets/pixel_labs/hud/combustivel_full_v3.png');
         this.load.image('hud_comb_empty_v2', 'assets/pixel_labs/hud/combustivel_empty_v3.png');
         this.load.image('hud_grav_full_v2',  'assets/pixel_labs/hud/graviton_full_v3.png');
