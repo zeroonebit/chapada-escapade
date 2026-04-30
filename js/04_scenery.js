@@ -98,13 +98,17 @@ Object.assign(Jogo.prototype, {
             //   NW = corners[y][x],  NE = corners[y][x+1]
             //   SW = corners[y+1][x], SE = corners[y+1][x+1]
             // Bits cr31: NE=1, SE=2, SW=4, NW=8
+            // tileStyle: 'test' (placeholder), 'dirt_grass_32' ou 'ocean_sand_32'
+            const style = this.dbg?.fx?.tileStyle;
+            const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     const nw = corners[y][x],     ne = corners[y][x+1];
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
                     const idx = (ne * 1) | (se * 2) | (sw * 4) | (nw * 8);
                     const f = String(idx).padStart(2, '0');
-                    this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, `wang_${f}`)
+                    const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+                    this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
                 }
             }

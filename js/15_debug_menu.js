@@ -33,6 +33,7 @@ const MENU_I18N = {
         opt_night:'Night', opt_midnight:'Midnight',
         opt_clear:'Clear', opt_rain:'Rain', opt_snow:'Snow', opt_fog:'Fog',
         opt_storm:'Storm (rain+fog+lightning)',
+        tile_style:'Tile style', opt_tile_test:'Test palette', opt_tile_dirt:'Grass / Dirt', opt_tile_ocean:'Ocean / Sand',
         opt_mouse:'Mouse', opt_wasd:'WASD + Space',
     },
     pt: {
@@ -63,6 +64,7 @@ const MENU_I18N = {
         opt_night:'Noite', opt_midnight:'Meia-noite',
         opt_clear:'Limpo', opt_rain:'Chuva', opt_snow:'Neve', opt_fog:'Neblina',
         opt_storm:'Tempestade (chuva+neblina+raios)',
+        tile_style:'Estilo do tile', opt_tile_test:'Paleta de teste', opt_tile_dirt:'Grama / Terra', opt_tile_ocean:'Oceano / Areia',
         opt_mouse:'Mouse', opt_wasd:'WASD + Espaço',
     },
 };
@@ -112,6 +114,7 @@ const DBG_DEFAULTS = {
         beamShake:      true,
         fancyExplosion: true,
         wangtiles:      false,
+        tileStyle:      'dirt_grass_32',  // 'test' | 'dirt_grass_32' | 'ocean_sand_32'
         timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:  false,     // ciclo auto a each 60s
         weather:        'clear',   // clear|rain|snow|fog|storm
@@ -384,6 +387,12 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="explosion">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
                         <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span data-i18n="tile_style">Tile style</span>
+                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="test" data-i18n="opt_tile_test">Test palette</option>
+                                <option value="dirt_grass_32" data-i18n="opt_tile_dirt">Grass / Dirt</option>
+                                <option value="ocean_sand_32" data-i18n="opt_tile_ocean">Ocean / Sand</option>
+                            </select></label>
                     </fieldset>
                 </div>
 

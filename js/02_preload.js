@@ -154,7 +154,19 @@ Object.assign(Jogo.prototype, {
         this.load.image('splash', 'splashv4.png');
         this.load.image('game_icon', 'icon.png');
 
-        // ── WANG TILES (16 tiles cr31 colors sólidas to debug) ──────
+        // ── WANG TILES — 3 styles disponíveis (toggle via dbg.fx.tileStyle) ──
+        // 'test' = paleta sólida cr31 placeholder
+        // 'dirt_grass_32' = grass <-> dirt transitions (32px, gerado outra sessao)
+        // 'ocean_sand_32' = ocean <-> sand transitions (32px)
+        // _wangStyles fica disponivel pro 04_scenery escolher por nome
+        const WANG_STYLES = ['test', 'dirt_grass_32', 'ocean_sand_32'];
+        for (const style of WANG_STYLES) {
+            for (let i = 0; i < 16; i++) {
+                const f = String(i).padStart(2, '0');
+                this.load.image(`wang_${style}_${f}`, `assets/terrain/${style}/wang_${f}.png`);
+            }
+        }
+        // Aliases pro estilo default (test) — mantem caminho legado wang_NN funcional
         for (let i = 0; i < 16; i++) {
             const f = String(i).padStart(2, '0');
             this.load.image(`wang_${f}`, `assets/terrain/test/wang_${f}.png`);
