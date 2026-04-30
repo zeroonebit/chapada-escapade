@@ -1,5 +1,8 @@
 /* PixaPro · manager.css — workspace, stage, decisions */
 .workspace{display:flex;gap:8px;align-items:stretch;width:96vw;justify-content:center;margin-bottom:10px;}
+/* box-sizing:border-box garante que stage E side-grid tenham EXATAMENTE 520px de altura visual
+   (sem isso, side-grid teria 520+padding+border = 536, stage só 520+border = 524 — diff 12px) */
+.workspace > * { box-sizing: border-box; }
 .stage{position:relative;width:520px;height:520px;flex:0 0 520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
 .stage img{max-width:90%;max-height:90%;image-rendering:pixelated;}
 .pending{color:#f4c95d;font-size:14px;text-align:center;padding:20px;}
