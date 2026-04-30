@@ -91,18 +91,6 @@
 <!-- ====== TAB AUDIT (curadoria + IN-GAME priority panel) ====== -->
 <div class="tab-content" id="tab-manager">
 
-<!-- 🎮 IN-GAME (priority) + ⏳ PENDING (rest) — click thumb foca no stage abaixo -->
-<div class="summary-panel promoted" id="auditInGamePanel" style="width:96vw;max-width:1400px;margin:14px auto 6px;border-color:#9fcfe8;background:rgba(29,58,74,0.15);min-height:auto;">
-  <h2 style="color:#9fcfe8;">🎮 IN-GAME (priorizar audit) <span id="sumInGame" style="margin-left:8px;color:#9fcfe8;font-size:14px;">—</span></h2>
-  <div class="breakdown" id="sumInGameBd" style="opacity:.85;font-size:12px;">Assets em uso provável pelo game (em pastas categorizadas, não em inbox) que ainda não passaram pelo Manager. Click pra abrir no stage.</div>
-  <div class="grid-thumbs" id="sumInGameGrid" style="min-height:100px;max-height:300px;"></div>
-</div>
-<div class="summary-panel pending" id="auditPendingPanel" style="width:96vw;max-width:1400px;margin:0 auto 8px;min-height:auto;">
-  <h2>⏳ PENDING (não in-game) <span id="sumAuditPending" style="margin-left:8px;color:#f4c95d;font-size:14px;">—</span></h2>
-  <div class="breakdown" id="sumAuditPendingBd" style="font-size:12px;opacity:.85;">Assets sem decisão e NÃO em uso pelo game (inbox + manifest sem decisão).</div>
-  <div class="grid-thumbs" id="sumAuditPendingGrid" style="min-height:100px;max-height:240px;"></div>
-</div>
-
 <div class="workspace">
   <div class="side-grid left" id="gridLeft">
     <div class="side-title">❌ DISCARDED (0)</div>
@@ -134,8 +122,22 @@
 
 <div class="stats" id="stats">—</div>
 
-<div class="grid" id="grid"></div>
-<div class="refresh" id="refreshInfo">próximo refresh em 8s</div>
+<!-- 2 painéis PENDING abaixo do workspace · click thumb foca no stage acima -->
+<div class="summary-row" style="width:96vw;max-width:1400px;margin:14px auto 8px;">
+  <div class="summary-panel promoted" id="auditInGamePanel" style="border-color:#9fcfe8;background:rgba(29,58,74,0.15);min-height:auto;">
+    <h2 style="color:#9fcfe8;">🎮 PENDING (IN-GAME) <span id="sumInGame" style="margin-left:8px;color:#9fcfe8;font-size:14px;">—</span></h2>
+    <div class="breakdown" id="sumInGameBd" style="opacity:.85;font-size:12px;">Sem decisão & em uso pelo game (categorized folders).</div>
+    <div class="grid-thumbs" id="sumInGameGrid" style="min-height:100px;max-height:280px;"></div>
+  </div>
+  <div class="summary-panel pending" id="auditPendingPanel" style="min-height:auto;">
+    <h2>⏳ PENDING (NOT IN-GAME) <span id="sumAuditPending" style="margin-left:8px;color:#f4c95d;font-size:14px;">—</span></h2>
+    <div class="breakdown" id="sumAuditPendingBd" style="font-size:12px;opacity:.85;">Sem decisão & NÃO em uso (inbox + manifest pending).</div>
+    <div class="grid-thumbs" id="sumAuditPendingGrid" style="min-height:100px;max-height:280px;"></div>
+  </div>
+</div>
+
+<div class="grid" id="grid" hidden></div>
+<div class="refresh" id="refreshInfo" style="opacity:.4;">próximo refresh em 8s</div>
 </div><!-- /tab-manager -->
 
 <!-- ====== TAB DETAIL (queue MCP + tileset info/refs) ====== -->
