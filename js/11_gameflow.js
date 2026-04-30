@@ -355,100 +355,146 @@ Object.assign(Jogo.prototype, {
         this._cinematicGameOver();
     },
 
-    // Cinematic: vinheta radial fechando no disco + tremor + fumaca + queda
-    // crooked + UI vermelha de game over apos. Botao -> _restartTransition.
+    // Cinematic V2: hide tudo exceto disco, postFX vignette + grayscale,
+    // Fibonacci spiral pro disco morrer no centro da tela, fumaca + tremor
     _cinematicGameOver() {
         const w = this.scale.width, h = this.scale.height;
         const cam = this.cameras.main;
         const ship = this.ship;
         if (!ship || !ship.scene) { this._showGameOverUI(); return; }
 
-        const shipBaseX = ship.x;
-        const shipBaseY = ship.y;
-        const shipBaseScale = ship.scaleX || 1;
+        const shipOrigScale = ship.scaleX || 1;
+        ship._origScale = shipOrigScale;
 
-        // ── 1. Vinheta radial: rect preto fullscreen com hole mask shrinking ──
-        const vignette = this.add.rectangle(w/2, h/2, w, h, 0x000000, 1)
-            .setScrollFactor(0).setDepth(190).setAlpha(0);
-        const holeMaskG = this.make.graphics({ x: 0, y: 0, add: false });
-        const holeMask = holeMaskG.createGeometryMask();
-        holeMask.invertAlpha = true;  // branco = hole transparente no rect preto
-        vignette.setMask(holeMask);
+        // ── 1. Esconde TUDO exceto o disco + smoke + atmosfera ──
+        this._hideForCinematic();
 
-        const drawHole = (r) => {
-            const sx = ship.x - cam.scrollX;
-            const sy = ship.y - cam.scrollY;
-            holeMaskG.clear();
-            holeMaskG.fillStyle(0xffffff);
-            holeMaskG.fillCircle(sx, sy, r);
-        };
+        // ── 2. PostFX no camera: vignette + grayscale animados ──
+        // Phaser 3.60 built-in: vignette darkens corners, grayscale desatura
+        let vignFx = null, grayFx = null;
+        try {
+            vignFx = cam.postFX.addVignette(0.5, 0.5, 1.4, 0);
+            grayFx = cam.postFX.addColorMatrix();
+            grayFx.grayscale(0);
+        } catch (e) { console.warn('postFX nao disponivel:', e); }
+        this._gameOverFx = { vignFx, grayFx };
 
-        const startR = Math.max(w, h);
-        const endR = 110;
-        drawHole(startR);
-
-        this.tweens.add({ targets: vignette, alpha: 1, duration: 280 });
-        const holeObj = { r: startR };
-        this.tweens.add({
-            targets: holeObj, r: endR,
-            duration: 1400, ease: 'Cubic.easeIn',
-            onUpdate: () => drawHole(holeObj.r),
+        if (vignFx) this.tweens.add({
+            targets: vignFx, radius: 0.55, strength: 0.92,
+            duration: 2200, ease: 'Cubic.easeIn',
+        });
+        if (grayFx) this.tweens.add({
+            targets: { g: 0 }, g: 0.85,
+            duration: 2200, ease: 'Cubic.easeIn',
+            onUpdate: function (tw, tgt) { grayFx.grayscale(tgt.g); },
         });
 
-        // ── 2. Tremor do disco (intensifica ao longo do tempo) ──
-        const SHAKE_DUR = 1400;
-        let shakeT = 0;
-        const shakeEvent = this.time.addEvent({
-            delay: 30,
-            callback: () => {
-                shakeT += 30;
-                if (shakeT > SHAKE_DUR) { shakeEvent.remove(); return; }
-                const k = shakeT / SHAKE_DUR;
-                const I = 1 + k * 6;
-                ship.x = shipBaseX + (Math.random() - 0.5) * I * 2.2;
-                ship.y = shipBaseY + (Math.random() - 0.5) * I * 2.2;
-                ship.rotation = (Math.random() - 0.5) * 0.06 * I;
-                drawHole(holeObj.r);  // refresh hole pra acompanhar shake
-            },
-            loop: true,
-        });
+        // ── 3. Fibonacci spiral: disco converge pro centro da tela ──
+        // Centro da tela em world coords (camera nao move durante cinematic)
+        const destX = cam.scrollX + w/2;
+        const destY = cam.scrollY + h/2;
+        const startX = ship.x, startY = ship.y;
+        const dx0 = startX - destX, dy0 = startY - destY;
+        const startR = Math.max(60, Math.sqrt(dx0*dx0 + dy0*dy0));
+        const startAng = Math.atan2(dy0, dx0);
+        const PHI = 1.61803398;
+        const TURNS = 2.5;
+        const TOTAL_THETA = TURNS * Math.PI * 2;
+        const SPIRAL_DUR = 2400;
 
-        // ── 3. Fumaca cinza saindo do disco durante shake + queda ──
+        // Fumaca cinza durante spiral (a cada 70ms)
         const smokeEvent = this.time.addEvent({
-            delay: 90,
+            delay: 70,
             callback: () => this._spawnGameOverSmoke(ship.x, ship.y),
             loop: true,
         });
+        this._gameOverSmokeEvent = smokeEvent;
 
-        // ── 4. Apos shake, queda crooked: tilt + drop ──
-        this.time.delayedCall(SHAKE_DUR, () => {
-            shakeEvent.remove();
-            const fallObj = { y: shipBaseY, rot: 0, scale: shipBaseScale };
-            this.tweens.add({
-                targets: fallObj,
-                y: shipBaseY + 95,
-                rot: 0.6,
-                scale: shipBaseScale * 0.9,
-                duration: 780,
-                ease: 'Cubic.easeIn',
-                onUpdate: () => {
-                    ship.x = shipBaseX;
-                    ship.y = fallObj.y;
-                    ship.rotation = fallObj.rot;
-                    ship.setScale(fallObj.scale);
-                    drawHole(holeObj.r);
-                },
-                onComplete: () => {
-                    smokeEvent.remove();
-                    // Burst de fumaca no impacto
-                    for (let i = 0; i < 14; i++) {
-                        this._spawnGameOverSmoke(shipBaseX, ship.y, true);
-                    }
-                    // Beat antes da UI
-                    this.time.delayedCall(520, () => this._showGameOverUI());
-                },
+        const spiral = { t: 0 };
+        this.tweens.add({
+            targets: spiral, t: 1,
+            duration: SPIRAL_DUR, ease: 'Cubic.easeIn',
+            onUpdate: () => {
+                const t = spiral.t;
+                // Log spiral Fibonacci: r diminui exponencialmente by phi
+                const dTheta = TOTAL_THETA * t;
+                const theta = startAng + dTheta;
+                const r = startR * Math.pow(PHI, -2 * dTheta / Math.PI) * (1 - t * 0.2);
+                // Tremor random (intensifica)
+                const I = 1 + t * 5;
+                const sx = (Math.random() - 0.5) * I * 1.4;
+                const sy = (Math.random() - 0.5) * I * 1.4;
+                ship.x = destX + r * Math.cos(theta) + sx;
+                ship.y = destY + r * Math.sin(theta) + sy;
+                // Rotacao acompanha tangente do spiral + tremor random
+                ship.rotation = theta + Math.PI/2 + (Math.random() - 0.5) * 0.04 * I;
+                ship.scaleX = ship.scaleY = shipOrigScale * (1 - t * 0.18);
+            },
+            onComplete: () => {
+                smokeEvent.remove();
+                this._gameOverSmokeEvent = null;
+                this._gameOverFinalCrash(destX, destY);
+            },
+        });
+    },
+
+    _gameOverFinalCrash(destX, destY) {
+        const ship = this.ship;
+        const fall = { y: ship.y, rot: ship.rotation, scale: ship.scaleX };
+        this.tweens.add({
+            targets: fall,
+            y: destY + 18, rot: 0.65, scale: ship.scaleX * 0.92,
+            duration: 480, ease: 'Bounce.easeOut',
+            onUpdate: () => {
+                ship.x = destX;
+                ship.y = fall.y;
+                ship.rotation = fall.rot;
+                ship.setScale(fall.scale);
+            },
+            onComplete: () => {
+                // Burst impacto
+                for (let i = 0; i < 18; i++) this._spawnGameOverSmoke(ship.x, ship.y, true);
+                // Smoke continuo do destroço
+                this._gameOverDebrisSmoke = this.time.addEvent({
+                    delay: 280,
+                    callback: () => this._spawnGameOverSmoke(ship.x, ship.y),
+                    loop: true,
+                });
+                this.time.delayedCall(620, () => this._showGameOverUI());
+            },
+        });
+    },
+
+    // Esconde HUD, indicators, beam, todos enemies, corral decor, tutorial
+    _hideForCinematic() {
+        if (this.hud) {
+            for (const k in this.hud) {
+                const o = this.hud[k];
+                if (o && typeof o.setVisible === 'function') o.setVisible(false);
+            }
+        }
+        if (this.indicatorArrow) this.indicatorArrow.setVisible(false);
+        if (this.trailGraphic) this.trailGraphic.setVisible(false);
+        if (this.beam) this.beam.setVisible(false);
+        if (this.beamHaloImg) this.beamHaloImg.setVisible(false);
+        if (this.beamGfx) this.beamGfx.setVisible(false);
+        [this.cows, this.farmers, this.shooters, this.bullets].forEach(arr => {
+            if (arr) arr.forEach(o => { if (o && o.setVisible) o.setVisible(false); });
+        });
+        if (this.corrals) this.corrals.forEach(c => {
+            if (c.fences) c.fences.forEach(f => f && f.setVisible && f.setVisible(false));
+            if (c.lanterns) c.lanterns.forEach(l => l && l.setVisible && l.setVisible(false));
+            if (c.mascot && c.mascot.setVisible) c.mascot.setVisible(false);
+            if (c.hayBale && c.hayBale.setVisible) c.hayBale.setVisible(false);
+            if (c.gfx && c.gfx.setVisible) c.gfx.setVisible(false);
+            if (c.slots) c.slots.forEach(s => {
+                if (s.burger && s.burger.setVisible) s.burger.setVisible(false);
+                if (s.platform && s.platform.setVisible) s.platform.setVisible(false);
             });
         });
+        if (this._tutContainer) this._tutContainer.setVisible(false);
+        if (this._tutQuest) this._tutQuest.setVisible(false);
+        if (this._dbgOverlayText) this._dbgOverlayText.setVisible(false);
     },
 
     _spawnGameOverSmoke(x, y, big) {
@@ -475,52 +521,69 @@ Object.assign(Jogo.prototype, {
     _showGameOverUI() {
         const w = this.scale.width, h = this.scale.height;
         if (this.input) this.input.enabled = true;
-        const D = 201;
+        const D = 700;  // bem alto pra ficar acima de tudo
 
-        const goText = this.add.text(w/2, h/2 - 70, 'GAME OVER', {
+        // GAME OVER: bem acima do disco (que ta no centro), gigante,
+        // entrada lenta com scale grow + alpha (1.4s)
+        const goText = this.add.text(w/2, h/2 - 200, 'GAME OVER', {
             fontFamily: '"VT323", "Courier New", monospace',
-            fontSize: '76px',
+            fontSize: '128px',
             fill: '#ff2222',
-            stroke: '#440000',
-            strokeThickness: 4,
-            letterSpacing: 8,
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
+            stroke: '#220000',
+            strokeThickness: 7,
+            letterSpacing: 12,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D)
+          .setAlpha(0).setScale(0.25);
 
-        const scoreLabel = this.add.text(w/2, h/2 + 6, 'SCORE', {
+        this.tweens.add({
+            targets: goText,
+            alpha: 1, scale: 1,
+            duration: 1400, ease: 'Cubic.easeOut',
+        });
+
+        // SCORE label + valor, abaixo do disco
+        const scoreLabel = this.add.text(w/2, h/2 + 130, 'SCORE', {
             fontFamily: '"Courier New", monospace',
-            fontSize: '11px', fill: '#777777',
-            fontStyle: 'bold', letterSpacing: 4,
+            fontSize: '13px', fill: '#aaaaaa',
+            fontStyle: 'bold', letterSpacing: 5,
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
 
-        const scoreVal = this.add.text(w/2, h/2 + 44, this.score, {
+        const scoreVal = this.add.text(w/2, h/2 + 175, this.score, {
             fontFamily: '"VT323", "Courier New", monospace',
-            fontSize: '52px', fill: '#ffaaaa',
+            fontSize: '60px', fill: '#ffbbbb',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D).setAlpha(0);
 
-        const btn = this.add.rectangle(w/2, h/2 + 116, 240, 46, 0xcc1122)
+        // Botao JOGAR NOVAMENTE vermelho
+        const btn = this.add.rectangle(w/2, h/2 + 250, 280, 52, 0xcc1122)
             .setScrollFactor(0).setDepth(D)
-            .setStrokeStyle(2, 0xff5566, 0.85)
+            .setStrokeStyle(2, 0xff5566, 0.9)
             .setInteractive({ useHandCursor: true })
             .setAlpha(0);
-        const btnLbl = this.add.text(w/2, h/2 + 116, 'JOGAR NOVAMENTE', {
+        const btnLbl = this.add.text(w/2, h/2 + 250, 'JOGAR NOVAMENTE', {
             fontFamily: '"Courier New", monospace',
-            fontSize: '13px', fill: '#fff5f5',
+            fontSize: '14px', fill: '#fff5f5',
             fontStyle: 'bold', letterSpacing: 2,
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 1).setAlpha(0);
 
         btn.on('pointerover', () => btn.setFillStyle(0xff3344));
         btn.on('pointerout',  () => btn.setFillStyle(0xcc1122));
         btn.on('pointerdown', () => {
+            // Para fumaca dos destrocos
+            if (this._gameOverDebrisSmoke) {
+                this._gameOverDebrisSmoke.remove();
+                this._gameOverDebrisSmoke = null;
+            }
             this.tweens.add({
                 targets: [btn, btnLbl, goText, scoreLabel, scoreVal],
-                alpha: 0, duration: 220,
+                alpha: 0, duration: 240,
                 onComplete: () => this._restartTransition('gameover'),
             });
         });
 
+        // Score+botao aparecem DEPOIS do GAME OVER (delay maior)
         this.tweens.add({
-            targets: [goText, scoreLabel, scoreVal, btn, btnLbl],
-            alpha: 1, duration: 480, delay: 220, ease: 'Cubic.easeOut',
+            targets: [scoreLabel, scoreVal, btn, btnLbl],
+            alpha: 1, duration: 600, delay: 1100, ease: 'Cubic.easeOut',
         });
     }
 

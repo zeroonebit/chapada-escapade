@@ -21,44 +21,57 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText = this.add.text(0, 0, '0', {fontSize:'22px', fill:'#ffffff', fontStyle:'bold', stroke:'#000000', strokeThickness:3}).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido to _turnIntoBurger
 
-        // ── Barra Fuel ─────────────────────────────────────────────────
-        // Layer 1 (D): _frame com bar-slot preto = mascara baseline "vazio"
-        // Layer 2 (D+0.3): _full colorido, cropado from left to pct -> sobe
-        // por cima da mascara preta, simulando enchimento.
-        // pct=1 -> _full inteiro -> tampa o preto -> bar cheia
-        // pct=0 -> crop=0 -> _full some -> mascara preta exposta = vazio
-        const COMB_W = 380, COMB_H = 68;
-        const useFrameMask = this.textures.exists('hud_combustivel_frame') && this.textures.exists('hud_combustivel_full');
-        if (useFrameMask) {
-            this.hud.combImg     = this.add.image(0,0,'hud_combustivel_frame').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-            this.hud.combFillImg = this.add.image(0,0,'hud_combustivel_full').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-        } else if (this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2')) {
-            this.hud.combImg     = this.add.image(0,0,'hud_comb_empty_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-            this.hud.combFillImg = this.add.image(0,0,'hud_comb_full_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+        // ── Barras combinadas (PNG unico c/ COMBUSTIVEL+GRAVITON) ───────
+        // Mais simples: um empty PNG + um full PNG, dois fillImg apontando pro
+        // mesmo full mas cada um com crop region da sua bar (independencia)
+        const useCombined = this.textures.exists('hud_combined_empty') && this.textures.exists('hud_combined_full');
+        if (useCombined) {
+            const HUD_W = 460, HUD_H = 306;  // ratio 762:508 ≈ 1.5
+            this.hud.combinedBg = this.add.image(0, 0, 'hud_combined_empty')
+                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D);
+            this.hud.combFillImg = this.add.image(0, 0, 'hud_combined_full')
+                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
+            this.hud.eneFillImg = this.add.image(0, 0, 'hud_combined_full')
+                .setDisplaySize(HUD_W, HUD_H).setScrollFactor(0).setDepth(D + 0.3);
+            // Bar regions em fractions da texture (refinar visualmente)
+            this.hud.combFillImg._cropRegion = { fx: 0.252, fy: 0.490, fw: 0.498, fh: 0.085 };
+            this.hud.eneFillImg._cropRegion  = { fx: 0.305, fy: 0.640, fw: 0.395, fh: 0.078 };
+            // Aliases pra _setBarsVisibility / outros consumidores
+            this.hud.combImg = this.hud.combinedBg;
+            this.hud.eneImg  = this.hud.combinedBg;
+            this.hud._combinedHud = true;
         } else {
-            this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
-            this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-            this.fuelBar = this.hud.combFill;
+            // Fallback antigo: 2 sprites separados (frame + full)
+            const COMB_W = 380, COMB_H = 68;
+            const useFrameMask = this.textures.exists('hud_combustivel_frame') && this.textures.exists('hud_combustivel_full');
+            if (useFrameMask) {
+                this.hud.combImg     = this.add.image(0,0,'hud_combustivel_frame').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+                this.hud.combFillImg = this.add.image(0,0,'hud_combustivel_full').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+            } else if (this.textures.exists('hud_comb_empty_v2') && this.textures.exists('hud_comb_full_v2')) {
+                this.hud.combImg     = this.add.image(0,0,'hud_comb_empty_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+                this.hud.combFillImg = this.add.image(0,0,'hud_comb_full_v2').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+            } else {
+                this.hud.combImg  = this.add.image(0,0,'hud_frame_combustivel').setDisplaySize(COMB_W, COMB_H).setScrollFactor(0).setDepth(D);
+                this.hud.combFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+                this.fuelBar = this.hud.combFill;
+            }
+            const ENE_W = 290, ENE_H = 72;
+            const useFrameMaskG = this.textures.exists('hud_graviton_frame') && this.textures.exists('hud_graviton_full');
+            if (useFrameMaskG) {
+                this.hud.eneImg     = this.add.image(0,0,'hud_graviton_frame').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+                this.hud.eneFillImg = this.add.image(0,0,'hud_graviton_full').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+            } else if (this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2')) {
+                this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+                this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
+            } else {
+                this.hud.eneImg  = this.add.image(0,0,'hud_frame_graviton').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
+                this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
+                this.energyBar = this.hud.eneFill;
+            }
         }
         this.hud.combLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
-
-        // ── Barra Graviton (mesma logica frame-as-mask) ─────────────
-        const ENE_W = 290, ENE_H = 72;
-        const useFrameMaskG = this.textures.exists('hud_graviton_frame') && this.textures.exists('hud_graviton_full');
-        if (useFrameMaskG) {
-            this.hud.eneImg     = this.add.image(0,0,'hud_graviton_frame').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-            this.hud.eneFillImg = this.add.image(0,0,'hud_graviton_full').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-        } else if (this.textures.exists('hud_grav_empty_v2') && this.textures.exists('hud_grav_full_v2')) {
-            this.hud.eneImg     = this.add.image(0,0,'hud_grav_empty_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-            this.hud.eneFillImg = this.add.image(0,0,'hud_grav_full_v2').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D + 0.3).setOrigin(0.5);
-        } else {
-            this.hud.eneImg  = this.add.image(0,0,'hud_frame_graviton').setDisplaySize(ENE_W, ENE_H).setScrollFactor(0).setDepth(D);
-            this.hud.eneFill = this.add.graphics().setScrollFactor(0).setDepth(D + 0.5);
-            this.energyBar = this.hud.eneFill;
-        }
-        // Idem combustivel — PNG v3 com area limpa, overlay Phaser visivel
         this.hud.eneLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
         this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
@@ -103,26 +116,48 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersBox.setPosition(265, 55);
         this.hud.burgersText.setPosition(300, 62);
 
-        // Barras empilhadas no centro-rodape SEM overlap (cada PNG eh 68 tall em
-        // display, precisa de >=68 entre os dois centros). Antes tinha 42 de gap
-        // -> PAC label cobria ENE bar fill em 13px.
-        const ENE_Y = h - 104;
-        const PAC_Y = h - 36;
-        this.hud.eneImg.setPosition(w/2, ENE_Y);
-        this.hud.combImg.setPosition(w/2, PAC_Y);
-        if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, ENE_Y);
-        if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, PAC_Y);
-
-        this._eneBar  = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
-        this._combBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
-
-        // Labels sobre area limpa do PNG v3 (offset -20 do centro do bar
-        // bate com bbox do label no source @ scale 1.24-1.33)
-        if (this.hud.eneLabel) {
-            this.hud.eneLabelBg.setPosition(w/2, ENE_Y - 20);
-            this.hud.eneLabel.setPosition(w/2, ENE_Y - 20);
-            this.hud.combLabelBg.setPosition(w/2, PAC_Y - 20);
-            this.hud.combLabel.setPosition(w/2, PAC_Y - 20);
+        // Barras: combined PNG OU 2 separados
+        if (this.hud._combinedHud && this.hud.combinedBg) {
+            const HUD_W = 460, HUD_H = 306;
+            const cy = h - HUD_H/2 + 30;  // bottom (alguns 30px do fundo cortados pq PNG tem area transparente embaixo)
+            this.hud.combinedBg.setPosition(w/2, cy);
+            if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, cy);
+            if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, cy);
+            // Labels overlay no centro de cada bar (offset = (fy + fh/2 - 0.5) * HUD_H)
+            const combR = this.hud.combFillImg?._cropRegion;
+            const eneR  = this.hud.eneFillImg?._cropRegion;
+            if (combR && this.hud.combLabel) {
+                const lblY = cy + (combR.fy + combR.fh/2 - 0.5) * HUD_H;
+                this.hud.combLabel.setPosition(w/2, lblY);
+                this.hud.combLabelBg.setPosition(w/2, lblY);
+            }
+            if (eneR && this.hud.eneLabel) {
+                const lblY = cy + (eneR.fy + eneR.fh/2 - 0.5) * HUD_H;
+                this.hud.eneLabel.setPosition(w/2, lblY);
+                this.hud.eneLabelBg.setPosition(w/2, lblY);
+            }
+            // _eneBar/_combBar (compat) — em screen coords aproximadas
+            const combBx = w/2 - HUD_W * combR.fw/2;
+            const combBy = cy + (combR.fy + combR.fh/2 - 0.5) * HUD_H;
+            this._combBar = { x: combBx, y: combBy, w: HUD_W * combR.fw, h: HUD_H * combR.fh };
+            const eneBx = w/2 - HUD_W * eneR.fw/2;
+            const eneBy = cy + (eneR.fy + eneR.fh/2 - 0.5) * HUD_H;
+            this._eneBar = { x: eneBx, y: eneBy, w: HUD_W * eneR.fw, h: HUD_H * eneR.fh };
+        } else {
+            const ENE_Y = h - 104;
+            const PAC_Y = h - 36;
+            this.hud.eneImg.setPosition(w/2, ENE_Y);
+            this.hud.combImg.setPosition(w/2, PAC_Y);
+            if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, ENE_Y);
+            if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, PAC_Y);
+            this._eneBar  = { x: w/2 - 120, y: ENE_Y + 12, w: 240, h: 16 };
+            this._combBar = { x: w/2 - 165, y: PAC_Y + 12, w: 330, h: 18 };
+            if (this.hud.eneLabel) {
+                this.hud.eneLabelBg.setPosition(w/2, ENE_Y - 20);
+                this.hud.eneLabel.setPosition(w/2, ENE_Y - 20);
+                this.hud.combLabelBg.setPosition(w/2, PAC_Y - 20);
+                this.hud.combLabel.setPosition(w/2, PAC_Y - 20);
+            }
         }
 
         // Hint inicial
@@ -237,10 +272,17 @@ Object.assign(Jogo.prototype, {
     _updateFillCrop(fillImg, pct) {
         if (!fillImg || !fillImg.scene) return;
         const tex = fillImg.texture;
-        const w = tex.source[0].width;
-        const h = tex.source[0].height;
-        // Crop revela only a parte esquerda proporcional (resto fica preto = empty)
-        fillImg.setCrop(0, 0, Math.max(0, w * pct), h);
+        const tw = tex.source[0].width;
+        const th = tex.source[0].height;
+        const p = Math.max(0, Math.min(1, pct));
+        if (fillImg._cropRegion) {
+            // Combined HUD: crop em region especifica da bar
+            const r = fillImg._cropRegion;
+            fillImg.setCrop(r.fx * tw, r.fy * th, r.fw * tw * p, r.fh * th);
+        } else {
+            // Fallback: crop a partir do canto esquerdo full-width
+            fillImg.setCrop(0, 0, tw * p, th);
+        }
     },
 
     // Applies i18n aos labels das barras (chamado when lang muda)
