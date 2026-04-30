@@ -86,6 +86,12 @@ Pode desligar tranquilo. Na próxima sessão, abra o Claude Code dentro
 desta pasta e o CLAUDE.md carrega o contexto automaticamente.
 ```
 
+### 8. Compactar contexto automaticamente
+
+Após reportar o checkpoint, **invoque `/compact`** pra liberar tokens da sessão atual. O contexto crítico já está persistido em CLAUDE.md/PROGRESS.md, então comprimir o histórico não perde nada importante.
+
+Diga ao usuário: "Vou compactar o contexto agora pra liberar tokens (`/compact`)." e execute.
+
 ## Princípios
 
 - **Honesto:** se a sessão foi curta e nada substancial aconteceu, diga isso e atualize só o que faz sentido. Não enrole.
