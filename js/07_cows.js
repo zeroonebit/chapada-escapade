@@ -118,6 +118,9 @@ Object.assign(Jogo.prototype, {
         if (entity._timer && entity._timer.remove) { entity._timer.remove(); entity._timer = null; }
         if (entity.walkTimer && entity.walkTimer.remove) { entity.walkTimer.remove(); entity.walkTimer = null; }
         if (entity.isEnemy) {
+            // HUD counter: farmer eliminado
+            this.farmersTotal = (this.farmersTotal || 0) + 1;
+            if (this.hud?.farmersText) this.hud.farmersText.setText(this.farmersTotal);
             this.farmers = this.farmers.filter(f => f !== entity);
         } else {
             this.cows = this.cows.filter(v => v !== entity);
