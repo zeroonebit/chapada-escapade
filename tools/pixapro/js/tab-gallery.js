@@ -47,22 +47,6 @@ function renderGallery(){
   const inboxAssets  = fsAssets.filter(a => /inbox/.test(a.path));
   const localPending = MANIFEST.filter(m => !decisions[m.id] || decisions[m.id].action === 'rename');
 
-  // 🎮 IN-GAME (auditar): PNGs em pastas categorizadas (não inbox) que NÃO têm
-  // decisão registrada. Heurística: estão sendo usados pelo game (preload os
-  // carrega via convenção de pasta) mas user nunca passou pelo Manager.
-  // Ordena por relevância: HUDs / objects / chars > anims (centenas de frames).
-  const decidedPaths = new Set();
-  for (const k in decisions) {
-    const p = decisions[k]?.path;
-    if (p) decidedPaths.add(p.replace(/^\.\.\//, ''));
-  }
-  const inGameUnaudited = fsAssets.filter(a => {
-    const path = a.abs || a.path.replace(/^\.\.\//, '');
-    if (/inbox/.test(path)) return false;          // pulou Manager intencionalmente
-    if (decidedPaths.has(path)) return false;      // já decidido
-    return true;
-  });
-
   const promotedItems = [
     ...fsPromoted.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})),
     ...localPromoted.map(m => ({path: m.path, name: m.name})),
@@ -80,35 +64,51 @@ function renderGallery(){
   $("sumPendingBd").innerHTML = `📁 ${inboxAssets.length} no inbox<br>☁ ${orphans.length} órfãos no PixelLab (sem decisão local)`;
   fillSumGrid('sumPendingGrid', inboxAssets.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})));
 
-  // 🎮 IN-GAME (auditar) — render
-  if ($("sumInGame")) {
-    $("sumInGame").textContent = inGameUnaudited.length;
-    // Breakdown por sub-categoria pra priorizar sorting
-    const byCat = {};
-    for (const a of inGameUnaudited) {
-      const path = a.abs || a.path;
-      // extrai sub-folder relevante: chars/<X>/anims, chars/nature/<Y>, hud, etc.
-      let cat = 'outros';
-      const m = path.match(/pixel_labs\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/);
-      if (m) {
-        if (m[1] === 'hud')                cat = '📺 HUD';
-        else if (m[1] === 'items')         cat = '🍔 items';
-        else if (m[1] === 'chars' && m[2] === 'nature') cat = '🌳 nature/' + (m[3] || '?');
-        else if (m[1] === 'chars' && m[3] === 'anims')  cat = '🎬 anims/' + (m[2] || '?');
-        else if (m[1] === 'chars')         cat = '🧍 chars/' + (m[2] || '?');
-      }
-      byCat[cat] = (byCat[cat] || 0) + 1;
-    }
-    const sorted = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
-    $("sumInGameBd").innerHTML = sorted.slice(0, 8)
-      .map(([c, n]) => `<span style="color:#9fcfe8;margin-right:10px;">${c}: <strong>${n}</strong></span>`)
-      .join('') + (sorted.length > 8 ? ` <span style="opacity:.5">+ ${sorted.length-8} cats</span>` : '');
-    fillSumGrid('sumInGameGrid', inGameUnaudited.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})));
-  }
-
   if(!summaryData){
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderGallery(); });
   }
+}
+
+// 🎮 IN-GAME panel — render no Audit tab (chamado por tab-manager quando tab Audit
+// está ativa). Lista PNGs em pastas categorizadas (não inbox) sem decisão registrada.
+function renderInGamePanel(){
+  if (!$("sumInGame")) return;
+  if (!summaryData) {
+    fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderInGamePanel(); });
+    return;
+  }
+  const fsAssets = summaryData?.filesystem || [];
+  const decidedPaths = new Set();
+  for (const k in decisions) {
+    const p = decisions[k]?.path;
+    if (p) decidedPaths.add(p.replace(/^\.\.\//, ''));
+  }
+  const inGameUnaudited = fsAssets.filter(a => {
+    const path = a.abs || a.path.replace(/^\.\.\//, '');
+    if (/inbox/.test(path)) return false;
+    if (decidedPaths.has(path)) return false;
+    return true;
+  });
+  $("sumInGame").textContent = inGameUnaudited.length;
+  const byCat = {};
+  for (const a of inGameUnaudited) {
+    const path = a.abs || a.path;
+    let cat = 'outros';
+    const m = path.match(/pixel_labs\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/);
+    if (m) {
+      if (m[1] === 'hud')                cat = '📺 HUD';
+      else if (m[1] === 'items')         cat = '🍔 items';
+      else if (m[1] === 'chars' && m[2] === 'nature') cat = '🌳 nature/' + (m[3] || '?');
+      else if (m[1] === 'chars' && m[3] === 'anims')  cat = '🎬 anims/' + (m[2] || '?');
+      else if (m[1] === 'chars')         cat = '🧍 chars/' + (m[2] || '?');
+    }
+    byCat[cat] = (byCat[cat] || 0) + 1;
+  }
+  const sorted = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
+  $("sumInGameBd").innerHTML = sorted.slice(0, 8)
+    .map(([c, n]) => `<span style="color:#9fcfe8;margin-right:10px;">${c}: <strong>${n}</strong></span>`)
+    .join('') + (sorted.length > 8 ? ` <span style="opacity:.5">+ ${sorted.length-8} cats</span>` : '');
+  fillSumGrid('sumInGameGrid', inGameUnaudited.map(a => ({path: a.path, name: a.path.split(/[\\/]/).pop()})));
 }
 
 // === Filter bar do PROMOTED ===

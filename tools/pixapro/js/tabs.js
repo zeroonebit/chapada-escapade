@@ -21,6 +21,7 @@ function switchTab(name){
   else if(name === 'editor') renderEditorList();
   else if(name === 'detail') renderDetailDashboard();
   else if(name === 'tiles') renderTiles();
+  else if(name === 'manager' && typeof renderInGamePanel === 'function') renderInGamePanel();
 }
 
 // Bug fix: fecha popup ao scrollar qualquer painel

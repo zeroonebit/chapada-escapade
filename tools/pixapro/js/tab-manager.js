@@ -189,3 +189,9 @@ setInterval(()=>{
 
 // === Initial render ===
 render();
+
+// === IN-GAME audit panel (carrega quando Audit/Manager está ativa, default tab) ===
+// renderInGamePanel é definido em tab-gallery.js; lazy call após scripts carregarem
+setTimeout(() => {
+  if (typeof renderInGamePanel === 'function') renderInGamePanel();
+}, 0);
