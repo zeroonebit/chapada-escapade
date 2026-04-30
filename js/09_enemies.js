@@ -1,4 +1,4 @@
-﻿// 09_inimigos.js — Shooters fixos (torres) e farmers móveis
+﻿// 09_enemies.js — Shooters fixos (torres) e farmers móveis
 Object.assign(Jogo.prototype, {
 
     _setupShooters() {
@@ -39,7 +39,7 @@ Object.assign(Jogo.prototype, {
         const MAX_DIST = 580;
 
         for (const at of this.shooters) {
-            const dx = this.ship.x - at.x, dy = this.ship.y - at.y;
+            const dx = this.ufo.x - at.x, dy = this.ufo.y - at.y;
             const emRange = (dx*dx + dy*dy) <= RANGE_SQ;
 
             at.sprite.setTint(emRange ? 0xff4400 : 0xffffff);
@@ -68,7 +68,7 @@ Object.assign(Jogo.prototype, {
             b.sprite.y += b.vy;
             b.dist += VEL;
 
-            const dx = b.sprite.x - this.ship.x, dy = b.sprite.y - this.ship.y;
+            const dx = b.sprite.x - this.ufo.x, dy = b.sprite.y - this.ufo.y;
             // Bala "armada" only após 25px — evita hit instantâneo se shooter estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
                 this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
@@ -105,7 +105,7 @@ Object.assign(Jogo.prototype, {
             const x = Phaser.Math.Between(400, W-400);
             const y = Phaser.Math.Between(400, H-400);
             // matter.add.SPRITE (not image) — sprite suporta .anims to running
-            const farmerScale = (this.dbg?.scale?.faz) ?? 2.0;
+            const farmerScale = (this.dbg?.scale?.farmer) ?? 2.0;
             const farmerSize  = 81 * farmerScale;
             const f = this.matter.add.sprite(x, y, 'farmer_S');
             // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
@@ -184,7 +184,7 @@ Object.assign(Jogo.prototype, {
             if (isAbducted) continue;
 
             // Disparo when ship is perto (mas with distance mínima de engajamento)
-            const dx = this.ship.x - f.x, dy = this.ship.y - f.y;
+            const dx = this.ufo.x - f.x, dy = this.ufo.y - f.y;
             const distSq = dx*dx + dy*dy;
             f._cooldown -= delta;
             if (distSq <= SHOOT_SQ && distSq > 80*80 && f._cooldown <= 0) {

@@ -113,7 +113,7 @@
      dinamico dos modulos na ordem correta. -->
 <script>
 (function() {
-    const V = '20260430k';
+    const V = '20260430m';
     // Detecta mobile/touch pequeno: igual @media query do CSS (max-width:900px)
     // OU pointer:coarse (touch screens) com viewport menor que 1024
     const smallScreen = window.matchMedia('(max-width: 900px)').matches;
@@ -153,8 +153,8 @@
     // Desktop: load dinamico dos modulos na ordem correta
     // 00_constants antes de tudo; 01_scene define classe; demais estendem prototype; 99_main instancia
     const modules = [
-        '00_constants', '01_scene', '02_preload', '03_textures', '04_cenario',
-        '05_hud', '06_nave', '07_vacas', '08_curral', '09_inimigos', '10_colisao',
+        '00_constants', '01_scene', '02_preload', '03_textures', '04_scenery',
+        '05_hud', '06_ufo', '07_cows', '08_corrals', '09_enemies', '10_collision',
         '11_gameflow', '12_mobile', '13_terrain_shader', '14_grass_patch',
         '15_debug_menu', '16_fx', '17_tutorial', '18_atmosphere', '19_debug_overlay',
         '20_quips', '99_main'

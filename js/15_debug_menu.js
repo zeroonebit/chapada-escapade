@@ -6,53 +6,51 @@ const DBG_KEY = 'chapEscapadeDebug';
 // Dicionário de tradução do menu CONFIGS (en default, pt opcional)
 const MENU_I18N = {
     en: {
-        configs:'CONFIGS', controles:'CONTROLS', looks:'VISUALS', vfx:'VFX', debug:'DEBUG',
-        nave:'SHIP', entidades:'ENTITIES', entidades_onoff:'ENTITIES (ON/OFF)',
-        quantidades:'AMOUNTS (restart)', escalas:'SCALES', camera:'CAMERA',
+        configs:'CONFIGS', controls:'CONTROLS', looks:'VISUALS', vfx:'VFX', debug:'DEBUG',
+        ufo:'SHIP', entities:'ENTITIES', entities_onoff:'ENTITIES (ON/OFF)',
+        amounts:'AMOUNTS (restart)', scales:'SCALES', camera:'CAMERA',
         time_of_day:'TIME OF DAY', weather:'WEATHER', rain:'RAIN', fog:'FOG',
         note_live:'Apply live without restart.', note_visual:'Scales apply on restart. Barrel applies live.',
         note_vfx:'All apply live.', note_debug:'Toggles apply on restart.',
         btn_apply:'APPLY + RESTART', btn_reset:'RESET', btn_preview:'👁 PREVIEW (live)',
-        input:'Input', sensitivity:'Sensitivity', ship_rot:'Disc rotation', beam_force:'Beam force (pull)',
+        input:'Input', sensitivity:'Sensitivity', ufo_rot:'Disc rotation', beam_force:'Beam force (pull)',
         vel_cows:'Cows/oxen speed', vel_farmer:'Farmers speed', shooter_dmg:'Shooter damage',
         cows_spawn:'Cows spawn', farmer_spawn:'Farmers spawn',
-        vaca:'Cow', boi:'Ox', fazendeiro:'Farmer', beam_radius:'Beam radius',
-        cow:'Cow', ox:'Ox', farmer:'Farmer',
-        ship_ufo:'Ship (UFO)', burger:'Burger', dist_esf:'Spherical distortion',
+        cow:'Cow', ox:'Ox', farmer:'Farmer', beam_radius:'Beam radius',
+        ufo_label:'Ship (UFO)', burger:'Burger', dist_sphere:'Spherical distortion',
         time:'Time', auto_cycle:'Auto-cycle (60s/preset)', preset:'Preset', shuffle_prev:'Shuffle on PREVIEW',
-        ativar:'Active', intensidade:'Intensity', frequencia:'Frequency (drops)', angulo:'Angle (-1=L, +1=R)',
-        speed:'Speed', stroke_len:'Stroke length', flocos:'Flakes',
-        sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosao:'Fancy explosion',
+        active:'Active', intensity:'Intensity', frequency:'Frequency (drops)', angle:'Angle (-1=L, +1=R)',
+        speed:'Speed', stroke_len:'Stroke length', flakes:'Flakes',
+        sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosion:'Fancy explosion',
         quips:'Funny one-liners',
         wang:'Wang tiles (debug)', cows_e:'Cows', oxen_e:'Oxen', farmers_e:'Farmers',
         shooters_e:'Shooters (towers)', beam_e:'Beam visual', scenery:'Scenery (fences/bushes)',
         language:'Language',
-        atmosfera:'ATMOSPHERE', efeitos:'EFFECTS', neve:'SNOW',
+        atmosphere:'ATMOSPHERE', effects:'EFFECTS', snow_lbl:'SNOW',
         wind:'WIND', wind_force:'Force (-0.05=L, +0.05=R)',
     },
     pt: {
-        configs:'CONFIGURAÇÕES', controles:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
-        nave:'NAVE', entidades:'ENTIDADES', entidades_onoff:'ENTIDADES (ON/OFF)',
-        quantidades:'QUANTIDADES (reiniciar)', escalas:'ESCALAS', camera:'CÂMERA',
+        configs:'CONFIGURAÇÕES', controls:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
+        ufo:'NAVE', entities:'ENTIDADES', entities_onoff:'ENTIDADES (ON/OFF)',
+        amounts:'QUANTIDADES (reiniciar)', scales:'ESCALAS', camera:'CÂMERA',
         time_of_day:'HORA DO DIA', weather:'CLIMA', rain:'CHUVA', fog:'NEBLINA',
         note_live:'Aplicam ao vivo sem reiniciar.', note_visual:'Escalas aplicam ao reiniciar. Barrel aplica ao vivo.',
         note_vfx:'Todos aplicam ao vivo.', note_debug:'Toggles aplicam ao reiniciar.',
         btn_apply:'APLICAR + REINICIAR', btn_reset:'RESETAR', btn_preview:'👁 PRÉVIA (ao vivo)',
-        input:'Controle', sensitivity:'Sensibilidade', ship_rot:'Rotação do disco', beam_force:'Força do beam (atração)',
+        input:'Controle', sensitivity:'Sensibilidade', ufo_rot:'Rotação do disco', beam_force:'Força do beam (atração)',
         vel_cows:'Velocidade vacas/bois', vel_farmer:'Velocidade fazendeiros', shooter_dmg:'Dano dos atiradores',
         cows_spawn:'Vacas spawn', farmer_spawn:'Fazendeiros spawn',
-        vaca:'Vaca', boi:'Boi', fazendeiro:'Fazendeiro', beam_radius:'Raio do beam',
-        cow:'Vaca', ox:'Boi', farmer:'Fazendeiro',
-        ship_ufo:'Nave (UFO)', burger:'Hambúrguer', dist_esf:'Distorção esférica',
+        cow:'Vaca', ox:'Boi', farmer:'Fazendeiro', beam_radius:'Raio do beam',
+        ufo_label:'Nave (UFO)', burger:'Hambúrguer', dist_sphere:'Distorção esférica',
         time:'Hora', auto_cycle:'Ciclo automático (60s/preset)', preset:'Preset', shuffle_prev:'Aleatório na PRÉVIA',
-        ativar:'Ativar', intensidade:'Intensidade', frequencia:'Frequência (gotas)', angulo:'Ângulo (-1=esq, +1=dir)',
-        speed:'Velocidade', stroke_len:'Comprimento do traço', flocos:'Flocos',
-        sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosao:'Explosão fancy',
+        active:'Ativar', intensity:'Intensidade', frequency:'Frequência (gotas)', angle:'Ângulo (-1=esq, +1=dir)',
+        speed:'Velocidade', stroke_len:'Comprimento do traço', flakes:'Flocos',
+        sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosion:'Explosão fancy',
         quips:'Frases engraçadas',
         wang:'Wang tiles (debug)', cows_e:'Vacas', oxen_e:'Bois', farmers_e:'Fazendeiros',
         shooters_e:'Atiradores (torres)', beam_e:'Beam visual', scenery:'Cenário (cercas/moitas)',
         language:'Idioma',
-        atmosfera:'ATMOSFERA', efeitos:'EFEITOS', neve:'NEVE',
+        atmosphere:'ATMOSFERA', effects:'EFEITOS', snow_lbl:'NEVE',
         wind:'VENTO', wind_force:'Força (-0.05=esq, +0.05=dir)',
     },
 };
@@ -71,7 +69,7 @@ const DBG_DEFAULTS = {
         ox:     3.0,
         farmer: 2.0,
         beam:   1.0,
-        ship:   1.0,
+        ufo:    1.0,
         burger: 1.0,
     },
     behavior: {
@@ -80,7 +78,7 @@ const DBG_DEFAULTS = {
         cowSpeed:       1.0,
         farmerSpeed:    1.0,
         shooterDamage:  1.0,
-        shipRot:        0.0,
+        ufoRot:        0.0,
         barrel:         0.15,
         inputMode:      'mouse',  // 'mouse' | 'wasd'
         lang:           'en',     // 'en' | 'pt' (escolhido na splash)
@@ -107,7 +105,7 @@ const DBG_DEFAULTS = {
         weather:        'clear',   // clear|rain|snow|fog|storm
         weatherShuffle: false,     // PREVIEW aleatoriza weather+TOD
         snow:           false,
-        snowCount:      100,       // 0..400 flocos
+        snowCount:      100,       // 0..400 flakes
         snowIntensity:  0.85,      // 0..1 alpha
         wind:           false,     // swirl particles + driver do rainAngle
         windForce:      0.03,      // -0.05..0.05 (positivo = direita)
@@ -121,8 +119,8 @@ const DBG_DEFAULTS = {
 // nao podem ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
 const PT_TO_EN_MIGRATION = {
     enabled:  { ['va'+'cas']:'cows', ['b'+'ois']:'oxen', ['fazendeir'+'os']:'farmers', ['atirador'+'es']:'shooters', ['cenari'+'o']:'scenery' },
-    scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'ox', ['fa'+'z']:'farmer', ['nav'+'e']:'ship' },
-    behavior: { ['sensibilidad'+'e']:'sensitivity', ['velVac'+'a']:'cowSpeed', ['velFa'+'z']:'farmerSpeed', ['danoAtirador']:'shooterDamage', ['discoRo'+'t']:'shipRot' },
+    scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'ox', ['fa'+'z']:'farmer', ['nav'+'e']:'ufo' },
+    behavior: { ['sensibilidad'+'e']:'sensitivity', ['velVac'+'a']:'cowSpeed', ['velFa'+'z']:'farmerSpeed', ['danoAtirador']:'shooterDamage', ['discoRo'+'t']:'ufoRot' },
     counts:   { ['va'+'cas']:'cows', ['fazendeir'+'os']:'farmers' },
     fx:       { ['chuv'+'a']:'rain', ['chuvaIntensidad'+'e']:'rainIntensity', ['chuvaAngul'+'o']:'rainAngle', ['chuvaVelocidad'+'e']:'rainSpeed', ['chuvaTamanh'+'o']:'rainSize', ['chuvaCoun'+'t']:'rainCount', ['neblin'+'a']:'fog', ['neblinaIntensidad'+'e']:'fogIntensity', ['explosaoBo'+'a']:'fancyExplosion', ['snowIntensidad'+'e']:'snowIntensity', ['vent'+'o']:'wind', ['ventoForc'+'a']:'windForce' },
 };
@@ -224,17 +222,17 @@ Object.assign(Jogo.prototype, {
             <div id="debug-menu">
                 <h2>⚙ <span data-i18n="configs">CONFIGS</span></h2>
                 <div class="tab-bar">
-                    <button class="tab-btn active" data-tab="controles" data-i18n="controles">CONTROLS</button>
+                    <button class="tab-btn active" data-tab="controls" data-i18n="controls">CONTROLS</button>
                     <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
                     <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
                 </div>
 
                 <!-- ABA: CONTROLES -->
-                <div class="tab-panel" id="tab-controles">
+                <div class="tab-panel" id="tab-controls">
                     <div class="note" data-i18n="note_live">Apply live without restart.</div>
                     <fieldset>
-                        <legend data-i18n="nave">SHIP</legend>
+                        <legend data-i18n="ufo">SHIP</legend>
                         <label><span data-i18n="language">Language</span>
                             <select data-cfg="behavior.lang" style="flex:1;max-width:170px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="en">ENG</option>
@@ -254,7 +252,7 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend data-i18n="entidades">ENTIDADES</legend>
+                        <legend data-i18n="entities">ENTIDADES</legend>
                         <label><span data-i18n="vel_cows">Velocidade cows/oxen</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.cowSpeed">
                             <input type="number" class="val" data-show="behavior.cowSpeed" /></label>
@@ -266,7 +264,7 @@ Object.assign(Jogo.prototype, {
                             <input type="number" class="val" data-show="behavior.shooterDamage" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend data-i18n="quantidades">QUANTIDADES (reiniciar)</legend>
+                        <legend data-i18n="amounts">QUANTIDADES (reiniciar)</legend>
                         <label><span data-i18n="cows_spawn">Vacas spawn</span>
                             <input type="number" min="0" max="200" step="1" data-cfg="counts.cows"></label>
                         <label><span data-i18n="farmer_spawn">Fazendeiros spawn</span>
@@ -278,29 +276,29 @@ Object.assign(Jogo.prototype, {
                 <div class="tab-panel" id="tab-looks" style="display:none">
                     <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
                     <fieldset>
-                        <legend data-i18n="escalas">ESCALAS</legend>
+                        <legend data-i18n="scales">ESCALAS</legend>
                         <label><span data-i18n="cow">Vaca</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.cow">
                             <input type="number" class="val" data-show="scale.cow" /></label>
                         <label><span data-i18n="ox">Boi</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.boi">
-                            <input type="number" class="val" data-show="scale.boi" /></label>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.ox">
+                            <input type="number" class="val" data-show="scale.ox" /></label>
                         <label><span data-i18n="farmer">Fazendeiro</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.faz">
-                            <input type="number" class="val" data-show="scale.faz" /></label>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.farmer">
+                            <input type="number" class="val" data-show="scale.farmer" /></label>
                         <label><span data-i18n="beam_radius">Beam radius</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.beam">
                             <input type="number" class="val" data-show="scale.beam" /></label>
-                        <label><span data-i18n="ship_ufo">Nave (UFO)</span>
-                            <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.nave">
-                            <input type="number" class="val" data-show="scale.nave" /></label>
+                        <label><span data-i18n="ufo_label">Nave (UFO)</span>
+                            <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.ufo">
+                            <input type="number" class="val" data-show="scale.ufo" /></label>
                         <label><span data-i18n="burger">Hambúrguer</span>
                             <input type="range" min="0.3" max="6" step="0.01" data-cfg="scale.burger">
                             <input type="number" class="val" data-show="scale.burger" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="camera">CÂMERA</legend>
-                        <label><span data-i18n="dist_esf">Distorção esférica</span>
+                        <label><span data-i18n="dist_sphere">Distorção esférica</span>
                             <input type="range" min="0" max="0.8" step="0.01" data-cfg="behavior.barrel">
                             <input type="number" class="val" data-show="behavior.barrel" /></label>
                     </fieldset>
@@ -336,14 +334,14 @@ Object.assign(Jogo.prototype, {
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="rain">CHUVA</legend>
-                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.rain"></label>
-                        <label><span data-i18n="intensidade">Intensidade (alpha)</span>
+                        <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.rain"></label>
+                        <label><span data-i18n="intensity">Intensidade (alpha)</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.rainIntensity">
                             <input type="number" class="val" data-show="fx.rainIntensity" /></label>
-                        <label><span data-i18n="frequencia">Frequência (gotas)</span>
+                        <label><span data-i18n="frequency">Frequência (gotas)</span>
                             <input type="range" min="0" max="400" step="5" data-cfg="fx.rainCount">
                             <input type="number" class="val" data-show="fx.rainCount" /></label>
-                        <label><span data-i18n="angulo">Ângulo (-0.05=esq, +0.05=dir)</span>
+                        <label><span data-i18n="angle">Ângulo (-0.05=esq, +0.05=dir)</span>
                             <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.rainAngle">
                             <input type="number" class="val" data-show="fx.rainAngle" /></label>
                         <label><span data-i18n="speed">Velocidade</span>
@@ -355,23 +353,23 @@ Object.assign(Jogo.prototype, {
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="fog">NEBLINA</legend>
-                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.fog"></label>
-                        <label><span data-i18n="intensidade">Intensidade</span>
+                        <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.fog"></label>
+                        <label><span data-i18n="intensity">Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.fogIntensity">
                             <input type="number" class="val" data-show="fx.fogIntensity" /></label>
                     </fieldset>
                     <fieldset>
                         <legend data-i18n="wind">VENTO</legend>
-                        <label><span data-i18n="ativar">Ativar</span><input type="checkbox" data-cfg="fx.wind"></label>
+                        <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.wind"></label>
                         <label><span data-i18n="wind_force">Força (-0.05=esq, +0.05=dir)</span>
                             <input type="range" min="-0.05" max="0.05" step="0.005" data-cfg="fx.windForce">
                             <input type="number" class="val" data-show="fx.windForce" /></label>
                     </fieldset>
                     <fieldset>
-                        <legend data-i18n="efeitos">EFEITOS</legend>
+                        <legend data-i18n="effects">EFEITOS</legend>
                         <label><span data-i18n="sparkles_beam">Sparkles no beam</span><input type="checkbox" data-cfg="fx.beamSparks"></label>
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
-                        <label><span data-i18n="explosao">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
+                        <label><span data-i18n="explosion">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
                         <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                     </fieldset>
@@ -381,7 +379,7 @@ Object.assign(Jogo.prototype, {
                 <div class="tab-panel" id="tab-debug" style="display:none">
                     <div class="note" data-i18n="note_debug">Toggles aplicam ao reiniciar.</div>
                     <fieldset>
-                        <legend data-i18n="entidades_onoff">ENTIDADES (ON/OFF)</legend>
+                        <legend data-i18n="entities_onoff">ENTIDADES (ON/OFF)</legend>
                         <label><span data-i18n="cows_e">Vacas</span><input type="checkbox" data-cfg="enabled.cows"></label>
                         <label><span data-i18n="oxen_e">Bois</span><input type="checkbox" data-cfg="enabled.oxen"></label>
                         <label><span data-i18n="farmers_e">Fazendeiros</span><input type="checkbox" data-cfg="enabled.farmers"></label>
@@ -533,7 +531,7 @@ Object.assign(Jogo.prototype, {
             snap.farmers.forEach(f => f && f.scene && f.setVisible(false));
             snap.towers.forEach(t  => t && t.sprite && t.sprite.scene && t.sprite.setVisible(false));
             snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(false));
-            // Despausa to atmosfera/rain animarem
+            // Despausa to atmosphere/rain animarem
             this.paused = false;
             this.matter.world.enabled = true;
             if (this.pauseOverlay) this.pauseOverlay.setVisible(false);

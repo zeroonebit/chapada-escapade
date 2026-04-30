@@ -403,17 +403,17 @@ Object.assign(Jogo.prototype, {
 
     // 3 anéis verdes que partem do alvo e sobem até a ship (efeito de captura)
     _spawnCaptureRings(target) {
-        if (!target || !target.scene || !this.ship) return;
+        if (!target || !target.scene || !this.ufo) return;
         const sx = target.x, sy = target.y;
         const baseR = Math.max(20, (target.displayWidth || 60) * 0.5);
         for (let i = 0; i < 3; i++) {
             this.time.delayedCall(i * 120, () => {
-                if (!this.ship || !this.ship.scene) return;
+                if (!this.ufo || !this.ufo.scene) return;
                 const ring = this.add.circle(sx, sy, baseR, 0, 0)
                     .setStrokeStyle(2.5, 0xaaffcc, 0.9).setDepth(11);
                 this.tweens.add({
                     targets: ring,
-                    x: this.ship.x, y: this.ship.y,
+                    x: this.ufo.x, y: this.ufo.y,
                     alpha: 0,
                     duration: 620,
                     ease: 'Cubic.easeIn',
@@ -426,16 +426,16 @@ Object.assign(Jogo.prototype, {
 
     // Sparkles orbitando inside do beam when ativo (chamado a each N frames)
     _emitBeamSparkle() {
-        if (!this.ship) return;
+        if (!this.ufo) return;
         const r = (this.coneRadius || 100) * Phaser.Math.FloatBetween(0.3, 0.95);
         const ang = Math.random() * Math.PI * 2;
-        const x = this.ship.x + Math.cos(ang) * r;
-        const y = this.ship.y + Math.sin(ang) * r;
+        const x = this.ufo.x + Math.cos(ang) * r;
+        const y = this.ufo.y + Math.sin(ang) * r;
         const dot = this.add.circle(x, y, 2.5, 0xaaffcc, 0.95).setDepth(8);
         // Move em direction ao centro da ship (efeito de absorção)
         this.tweens.add({
             targets: dot,
-            x: this.ship.x, y: this.ship.y,
+            x: this.ufo.x, y: this.ufo.y,
             scale: 0.3, alpha: 0,
             duration: 500 + Math.random()*250,
             ease: 'Cubic.easeIn',

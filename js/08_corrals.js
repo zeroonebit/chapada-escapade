@@ -1,4 +1,4 @@
-// 08_curral.js — Corral with slots fixos: 3 cows max, 3 burgers max
+﻿// 08_corrals.js — Corral with slots fixos: 3 cows max, 3 burgers max
 // Slot 0=classic, 1=cheese, 2=double. Coleta via beam graviton.
 // Constantes BURGER_TEXTURES, SLOT_VALOR, SLOT_FUEL vêm de 00_constants.js
 // (alias local to manter o código antigo lendo BURGER_SLOTS)
@@ -9,7 +9,7 @@ Object.assign(Jogo.prototype, {
     _checkDelivery() {
         for (const c of this.corrals) {
             // Drop by proximidade do corral
-            const d = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
+            const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
             if (d < 110) this._dropCowsAtCorral(c);
             // Coleta via beam (atrai burgers ready)
             this._attractBurgersBeam(c);
@@ -195,7 +195,7 @@ Object.assign(Jogo.prototype, {
             if (!slot || slot.state !== 'ready' || slot._sendoColetado) continue;
             const icon = slot.icon;
             if (!icon || !icon.scene) continue;
-            const dx = icon.x - this.ship.x, dy = icon.y - this.ship.y;
+            const dx = icon.x - this.ufo.x, dy = icon.y - this.ufo.y;
             if (dx*dx + dy*dy > r2) continue;
             // Dentro do beam: dispara coleta
             this._collectSlot(curral, i);
@@ -214,12 +214,12 @@ Object.assign(Jogo.prototype, {
         // Tween de atração to ship (efeito beam)
         this.tweens.add({
             targets: icon,
-            x: this.ship.x, y: this.ship.y,
+            x: this.ufo.x, y: this.ufo.y,
             scale: 0.25, alpha: 0,
             duration: 380, ease: 'Cubic.easeIn',
             onUpdate: () => {
                 // Updates to acompanhar movimento da ship
-                if (icon.scene && this.ship) {
+                if (icon.scene && this.ufo) {
                     // segue dinamicamente o destino
                 }
             },
@@ -231,7 +231,7 @@ Object.assign(Jogo.prototype, {
                 this.fuelCurrent = Math.min(this.fuelMax, this.fuelCurrent + fuel);
                 this.cameras.main.flash(140, 255, 220, 0);
                 const lbl = `+${points}`;
-                const popup = this.add.text(this.ship.x, this.ship.y - 50, lbl, {
+                const popup = this.add.text(this.ufo.x, this.ufo.y - 50, lbl, {
                     fontSize: '18px', fill: '#ffcc00', fontStyle: 'bold'
                 }).setDepth(50).setOrigin(0.5);
                 this.tweens.add({
@@ -242,7 +242,7 @@ Object.assign(Jogo.prototype, {
                 // se algo travar entre o stop manual acima e o complete callback)
                 this._cleanSlot(curral, slotIdx);
                 // Quip ao entregar burger
-                if (this._showQuip) this._showQuip({ x: this.ship.x, y: this.ship.y }, 'burger');
+                if (this._showQuip) this._showQuip({ x: this.ufo.x, y: this.ufo.y }, 'burger');
             }
         });
     },

@@ -1,4 +1,4 @@
-// 11_gameflow.js — Fluxo de game: splash, pausa (ESC), game over, vitória
+﻿// 11_gameflow.js — Fluxo de game: splash, pausa (ESC), game over, vitória
 Object.assign(Jogo.prototype, {
 
     // ── SPLASH ────────────────────────────────────────────────────────────
@@ -360,11 +360,11 @@ Object.assign(Jogo.prototype, {
     _cinematicGameOver() {
         const w = this.scale.width, h = this.scale.height;
         const cam = this.cameras.main;
-        const ship = this.ship;
+        const ship = this.ufo;
         if (!ship || !ship.scene) { this._showGameOverUI(); return; }
 
-        const shipOrigScale = ship.scaleX || 1;
-        ship._origScale = shipOrigScale;
+        const ufoOrigScale = ship.scaleX || 1;
+        ship._origScale = ufoOrigScale;
 
         // ── 1. Esconde TUDO exceto o disco + smoke + atmosfera ──
         this._hideForCinematic();
@@ -428,7 +428,7 @@ Object.assign(Jogo.prototype, {
                 ship.y = destY + r * Math.sin(theta) + sy;
                 // Rotacao acompanha tangente do spiral + tremor random
                 ship.rotation = theta + Math.PI/2 + (Math.random() - 0.5) * 0.04 * I;
-                ship.scaleX = ship.scaleY = shipOrigScale * (1 - t * 0.18);
+                ship.scaleX = ship.scaleY = ufoOrigScale * (1 - t * 0.18);
             },
             onComplete: () => {
                 smokeEvent.remove();
@@ -439,7 +439,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _gameOverFinalCrash(destX, destY) {
-        const ship = this.ship;
+        const ship = this.ufo;
         const fall = { y: ship.y, rot: ship.rotation, scale: ship.scaleX };
         this.tweens.add({
             targets: fall,

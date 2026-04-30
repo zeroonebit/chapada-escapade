@@ -9,7 +9,7 @@ Object.assign(Jogo.prototype, {
         v.setFixedRotation();  // without isso, colisão with beam/shooter deita o bicho de lado
         // setDisplaySize força size visual fixo (anim frames 68px e static 180px viram mesma scale)
         const baseSize = tipo === 'ox' ? 78 : 68;
-        const sizeScale = tipo === 'ox' ? ((this.dbg?.scale?.boi) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
+        const sizeScale = tipo === 'ox' ? ((this.dbg?.scale?.ox) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
         v.setDisplaySize(size, size);
         const mass = tipo === 'ox' ? 3.2 : 2;
@@ -200,7 +200,7 @@ Object.assign(Jogo.prototype, {
             if (v._dying || v._destroyed || v.stuckInBush || v._inCurral || this.abductedCows.includes(v)) return;
             if (v.isEnemy && !canCarryFarmers) return;
             if (!v.isEnemy && !canCarryCows) return;
-            if (distSq(this.ship.x, this.ship.y, v.x, v.y) > r2) return;
+            if (distSq(this.ufo.x, this.ufo.y, v.x, v.y) > r2) return;
             if (v.stuckInGrass) {
                 v.stuckInGrass = false;
                 if (v.scene && v.body) {
@@ -241,7 +241,7 @@ Object.assign(Jogo.prototype, {
             v.setFrictionAir(0.015);
         }
         const pullMul = this.dbg?.behavior?.pullBeam ?? 1.0;
-        let dx = this.ship.x-v.x, dy = this.ship.y-v.y;
+        let dx = this.ufo.x-v.x, dy = this.ufo.y-v.y;
         let dist = Math.sqrt(dx*dx+dy*dy), ang = Math.atan2(dy, dx);
         v.applyForce({x: Math.cos(ang)*0.0008*pullMul, y: Math.sin(ang)*0.0008*pullMul});
         if (dist > this.coneRadius*0.7) v.applyForce({x: Math.cos(ang)*0.003*pullMul, y: Math.sin(ang)*0.003*pullMul});
@@ -370,7 +370,7 @@ Object.assign(Jogo.prototype, {
                 v._returnSouthUntil = 0;
             }
 
-            const dx = v.x - this.ship.x, dy = v.y - this.ship.y;
+            const dx = v.x - this.ufo.x, dy = v.y - this.ufo.y;
             const distSq = dx*dx + dy*dy;
             // Bumpou o ox to 0.0030 (was 0.0010) — before força/mass não vencia atrito,
             // ox parecia preso e picker caía no wanderAngle (random) em vez do vetor speed

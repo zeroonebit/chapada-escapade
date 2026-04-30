@@ -1,4 +1,4 @@
-// 17_tutorial.js — Tutorial guiado passo a passo
+﻿// 17_tutorial.js — Tutorial guiado passo a passo
 // Ativado when tutorialMode=true (botão TUTORIAL na splash).
 // 8 etapas sequenciais with hint overlay + setas + condições de avanço.
 
@@ -82,7 +82,7 @@ Object.assign(Jogo.prototype, {
     _setupTutorial() {
         this.tutorialMode = true;
         this._tutStepIdx   = 0;
-        this._tutStartPos  = { x: this.ship.x, y: this.ship.y };
+        this._tutStartPos  = { x: this.ufo.x, y: this.ufo.y };
         this._tutStepShownAt = this.time?.now ?? 0;
         this._tutMinReadMs   = 5000;  // time mínimo de leitura by etapa
         this._tutHadAbductees = false;
@@ -109,7 +109,7 @@ Object.assign(Jogo.prototype, {
         });
         this.cows = [];
 
-        const cx = this.ship.x, cy = this.ship.y;
+        const cx = this.ufo.x, cy = this.ufo.y;
         // Ensures 1 corral near
         if (!this.corrals || this.corrals.length === 0) {
             this._buildCorral(cx + 480, cy + 300);
@@ -167,7 +167,7 @@ Object.assign(Jogo.prototype, {
         const elapsed = (this.time?.now ?? 0) - (this._tutStepShownAt || 0);
         const canAdvance = elapsed >= (this._tutMinReadMs || 5000);
 
-        const nave = this.ship;
+        const nave = this.ufo;
 
         switch (step.key) {
 
@@ -314,13 +314,13 @@ Object.assign(Jogo.prototype, {
 
     _tutSpawnFazendeiro() {
         if (!this._createFarmer) return;
-        const cx = this.ship.x, cy = this.ship.y;
+        const cx = this.ufo.x, cy = this.ufo.y;
         this._createFarmer(cx + 350, cy - 150);
     },
 
     // Spawns N cows em circulo ao redor da ship (raios variados)
     _tutSpawnVacas(n) {
-        const cx = this.ship.x, cy = this.ship.y;
+        const cx = this.ufo.x, cy = this.ufo.y;
         for (let i = 0; i < n; i++) {
             const ang = (i / n) * Math.PI * 2 + Math.random() * 0.4;
             const r   = 200 + Math.random() * 220;
@@ -341,7 +341,7 @@ Object.assign(Jogo.prototype, {
     // Farmer near da ship que atira (TAKE_DAMAGE step)
     _tutSpawnFazendeiroAtirando() {
         if (!this._createFarmer) return;
-        const cx = this.ship.x + 280, cy = this.ship.y - 60;
+        const cx = this.ufo.x + 280, cy = this.ufo.y - 60;
         this._createFarmer(cx, cy);
         // Pega ref do farmer recém-criado e força cooldown curto to atacar logo
         const f = this.farmers[this.farmers.length - 1];
@@ -376,7 +376,7 @@ Object.assign(Jogo.prototype, {
         for (const t of targets) {
             switch (t) {
                 case 'nave': {
-                    if (this.ship) this._tutGlowAt(this.ship.x, this.ship.y, 38);
+                    if (this.ufo) this._tutGlowAt(this.ufo.x, this.ufo.y, 38);
                     break;
                 }
                 case 'graviton': {
