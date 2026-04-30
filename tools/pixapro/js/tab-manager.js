@@ -96,20 +96,8 @@ function render(){
 
   _renderSide('gridLeft',  'discard', '❌ DISCARDED (N)');
   _renderSide('gridRight', 'promote', '✅ PROMOTED (N)');
-
-  $("grid").innerHTML = "";
-  MANIFEST.forEach((m,i)=>{
-    const dec = decisions[m.id];
-    if(dec && (dec.action === 'promote' || dec.action === 'discard')) return;
-    const wrap = document.createElement("div");
-    wrap.className = "thumb-wrap";
-    wrap.style.position = "relative";
-    const t = makeThumb(m, i);
-    t.onclick = ()=>{ idx = i; render(); };
-    wrap.appendChild(t);
-    wrap.insertAdjacentHTML('beforeend', thumbBadge(m.id));
-    $("grid").appendChild(wrap);
-  });
+  // #grid antigo (linha de pending no rodapé) removido — pending agora vive
+  // nos 2 painéis PENDING (IN-GAME) + PENDING (NOT IN-GAME) abaixo do stats.
 }
 
 // === Wire up buttons ===
