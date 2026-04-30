@@ -195,18 +195,34 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Linha verde dos cantos** eliminada
 - **Skill `pixellab-asset-download`** + 3 memórias (perguntas explícitas, prompts complexos, heartbeat)
 
+### ✅ Pronto (cont. — sessão 2026-04-30)
+- **Wang tilesets 32×32 via PixelLab** — ocean↔sand e dirt↔grass regenerados a 32px, sliced em `assets/terrain/ocean_sand_32/` e `assets/terrain/dirt_grass_32/` (16 tiles cada, cr31 index)
+- **Wang tiles habilitados no jogo** — `wangtiles=true` por default, `tileStyle=dirt_grass`, preload lê config do localStorage
+- **Menu TERRAIN no CONFIGS** (aba VFX): toggle on/off, selector resolução 16/32, selector estilo (test/ocean_sand/dirt_grass). Nota "Aplica ao reiniciar"
+- **cr31 convention fix** — game code e test palette corrigidos pra NW=1 NE=2 SE=4 SW=8 (standard)
+- **PixaPro font-size** clamped 12px–17px pra legibilidade
+- **PixaPro Detail dashboard** evolution: stats cards, progress bar, category chips, queue cards com ações por card
+- **PixaPro 5 bug fixes**: popup stuck, gallery refresh duplica, wang canvas gray, tag input perde valor, dashboard stale
+- **PixaPro test render 4:3** — canvas 640×480, grid retangular, info de tile size + game map total
+- **MCP Live Status endpoint** — `gallery_server.py` com `GET/POST /mcp_status` + `POST /mcp_clear` + persist em `mcp_live.json`
+- **MCP Live dashboard no PixaPro** — painel na tab Detail com polling 4s, cards expandíveis (inspect banner com ID, type, params, preview images, error/log)
+- **WANG_PRESETS atualizados** — 32px sliced local como primário, 16px arquivados como legacy
+- **Auto-sort validado** — algoritmo funciona sem corrections salvas, 0 conflitos nos 2 tilesets PixelLab
+- **`docs/REFS_WANG.md`** atualizado com novos IDs 32px e base tile IDs
+
 ### 🚧 Em andamento
 - **Tradução D+R2** — esperando JSON do `localStorage` do user pra preservar configs antes do refator de identificadores PT→EN
 - **Tutorial etapas 7-9** (TAKE_DAMAGE / FARMER / FARMER_KILL) — funcional mas precisa refinar texto/glow/condições
-- **Wang tiles** funcionalmente OK mas precisa tiles "de verdade" (palette de teste sólida)
+- **Game preview na worktree** — `_setupGeometricTextures is not a function` (pré-existente, não investigado)
 
 ### 🔜 Próximos passos
-1. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
-2. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
-3. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
-4. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
-5. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
-6. **Tileset Wang real** com transição grass↔sand↔dirt (gerar via PixelLab `create_topdown_tileset`)
+1. **Verificar tiles in-game** — testar via GitHub Pages se Wang dirt↔grass renderiza corretamente no mapa
+2. **Conclusão do tutorial** etapas 7-9 (TAKE_DAMAGE / FARMER / FARMER_KILL) — refinar visual + balanço
+3. **Pegar JSON do localStorage do user** → salvar em `configs_pre_translation.json` + atualizar `DBG_DEFAULTS` + migration code
+4. **Refator D+R2** (identificadores PT→EN, comentários, code review com cleanups óbvios)
+5. **Audit pendentes**: M3 (slot tweens raro), L5 (mobile dual-input untestado), L6 (FSM tutorial opcional)
+6. **Labels de inputs** com `data-i18n` no menu CONFIGS (só legends/notes/buttons traduzidos)
+7. **Wire `fx.tileRes`** pra carregar tiles de resolução diferente (hoje tudo é 32px)
 
 ### 🛠 Ferramentas criadas
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
