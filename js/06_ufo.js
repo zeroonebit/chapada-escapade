@@ -1,4 +1,4 @@
-﻿// 06_ufo.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
+﻿// 06_ufo.js — Ship: cone do beam, LEDs, rastro do cursor, movement, patience
 Object.assign(Jogo.prototype, {
 
     _setupLEDs() {
@@ -22,7 +22,7 @@ Object.assign(Jogo.prototype, {
 
     _updateLEDs(delta) {
         const N = this.leds.length;
-        // Raio do anel = ~48% do displayWidth da ship (borda visual exterior)
+        // Raio do anel = ~48% do displayWidth da ship (edge visual exterior)
         // setDisplaySize(80,80) → LED_R ≈ 38. Ajusta automático se ship escalar.
         const LED_R = (this.ufo?.displayWidth || 80) * 0.48;
         this._ledHead += (N / this._ledRotMs) * delta;
@@ -139,11 +139,11 @@ Object.assign(Jogo.prototype, {
         );
     },
 
-    // Sombra with blur fake (3 elipses stackadas with alpha decrescente)
+    // shadow with blur fake (3 elipses stackadas with alpha decrescente)
     // Container atrelado à entidade — position sincronizada no _updateShadows
     _attachSombra(entity, opts = {}) {
         // Size proporcional ao displayWidth da entidade (pega no momento da criação).
-        // Se a entidade escalar after, sombra fica fixa no size inicial — ok to MVP.
+        // Se a entidade escalar after, shadow fica fixa no size initial — ok to MVP.
         const dw = entity.displayWidth || 60;
         const dh = entity.displayHeight || 60;
         const {

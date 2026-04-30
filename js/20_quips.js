@@ -1,7 +1,7 @@
 ﻿// 20_quips.js — Random funny one-liners que aparecem como floating text
-// quando player abduz/mata/passa perto de coisas. Toggle em dbg.fx.quips.
+// when player abduz/mata/passa perto de coisas. Toggle em dbg.fx.quips.
 //
-// Cada linha agora tem mood: r=angry(red) g=funny(green) y=ironic(yellow) b=factual(blue)
+// each linha now tem mood: r=angry(red) g=funny(green) y=ironic(yellow) b=factual(blue)
 // Format: { t: 'texto', m: 'g' }
 
 const TONE_COLORS = {
@@ -169,7 +169,7 @@ const QUIP_COOLDOWN_SOURCE = {
 };
 const QUIP_GLOBAL_COOLDOWN = 3000;
 
-// Quips exclusivos do mobile teaser (saem do disco voador)
+// Quips exclusivos do mobile teaser (saem do ufo voador)
 const MOBILE_QUIPS = {
     en: [
         { t: 'Martians don\'t have phones. Only PCs', m: 'b' },
@@ -199,9 +199,9 @@ Object.assign(Jogo.prototype, {
 
     _setupQuips() {
         this._lastQuipT = 0;          // timestamp do ultimo quip global
-        this._quipProxTimer = 0;      // throttle de proximity check (a cada 500ms)
-        this._activeQuips = [];       // quips ativos: rastreiam target a cada frame
-        // MOBILE_MODE: schedule recursivo de quip do disco a cada 10-15s.
+        this._quipProxTimer = 0;      // throttle de proximity check (a each 500ms)
+        this._activeQuips = [];       // quips ativos: rastreiam target a each frame
+        // MOBILE_MODE: schedule recursivo de quip do ufo a each 10-15s.
         // Quips normais (proximity, abduct, etc.) ficam silenciados.
         if (window.__MOBILE_MODE) {
             this._scheduleMobileQuip();
@@ -218,7 +218,7 @@ Object.assign(Jogo.prototype, {
         });
     },
 
-    // Atualiza todos quips ativos a cada frame: reposiciona em target.x/y +
+    // Atualiza todos quips ativos a each frame: reposiciona em target.x/y +
     // offset que sobe ao longo da duracao + alpha decai. Remove os finalizados.
     _updateActiveQuips() {
         const list = this._activeQuips;
@@ -239,7 +239,7 @@ Object.assign(Jogo.prototype, {
             const yOff = q.baseOffsetY - q.floatDist * e;
             q.txt.x = q.target.x;
             q.txt.y = q.target.y + yOff;
-            // Alpha: full ate 60%, depois fade linear
+            // Alpha: full ate 60%, after fade linear
             q.txt.alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
         }
     },
@@ -261,13 +261,13 @@ Object.assign(Jogo.prototype, {
                 fontFamily: '"VT323", "Courier New", monospace',
                 shadow: { color: color, fill: false, blur: 10 },
             }).setOrigin(0.5).setDepth(195);
-            // Segue a nave: baseOffset -60, sobe +80 ao longo de 5500ms
+            // Segue a ufo: baseOffset -60, sobe +80 ao longo de 5500ms
             this._registerQuip(txt, this.ufo, -60, 80, 5500);
             this._scheduleMobileQuip();  // re-schedule
         });
     },
 
-    // Mostra quip flutuante acima do target. Retorna true se conseguiu.
+    // Mostra quip flutuante above do target. Retorna true se conseguiu.
     _showQuip(target, category) {
         if (window.__MOBILE_MODE) return false;  // mobile usa MOBILE_QUIPS dedicado
         if (!this.dbg?.fx?.quips) return false;
@@ -308,7 +308,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Proximity check (chamado do _updateBody throttled a 500ms).
-    // Dispara quips de church/cactus quando player passa perto.
+    // Dispara quips de church/cactus when player passa perto.
     _quipProximityCheck(delta) {
         if (window.__MOBILE_MODE) return;  // mobile usa MOBILE_QUIPS dedicado
         if (!this.dbg?.fx?.quips) return;
@@ -330,7 +330,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // Cactus/vegetacao (sample 1 por proximity check pra performance)
+        // Cactus/vegetacao (sample 1 por proximity check to performance)
         // Pega aleatorio: itera primeira metade e dispara no primeiro proximo.
         // Nao tem _vegePositions tracked — fallback: 5% chance de generic.
         if (Math.random() < 0.04) {

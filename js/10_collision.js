@@ -40,7 +40,7 @@ Object.assign(Jogo.prototype, {
                 this._explode(entity, entityIsEnemy ? 0xff8800 : 0xff2222);
             }
         }
-        // VACA-VACA / VACA-BOI / BOI-BOI: dano only with impacto de alta speed
+        // cow-cow / cow-ox / ox-ox: dano only with impacto de alta speed
         else if (otherLabel === 'cow' || otherLabel === 'ox') {
             if (entityIsEnemy) return;       // farmer: bounce físico, without dano
             if (!isHighImpact) return;
@@ -53,7 +53,7 @@ Object.assign(Jogo.prototype, {
         else if (otherLabel === 'bush') {
             return;  // bounce já tratado pelo Matter (setBounce na entidade)
         }
-        // FAZENDEIRO: cow vs farmer — ninguém toma dano (físico only)
+        // farmer: cow vs farmer — ninguém toma dano (físico only)
         else if (otherLabel === 'farmer') {
             return;
         }

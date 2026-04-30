@@ -51,14 +51,14 @@ Object.assign(Jogo.prototype, {
         if (useWang) {
             // Wang tiles cr31 corner convention.
             // Convenção tools/wang_test_palette.py: NE=1, SE=2, SW=4, NW=8.
-            // Cada CELL is renderizada with 4 cantos compartilhados with vizinhos.
+            // each CELL is renderizada with 4 cantos compartilhados with vizinhos.
             // Construímos um corner grid (COLS+1)×(ROWS+1) — não is o cell grid,
             // são os cantos between cells. Fica robusto: cantos compartilhados always
             // batem between cells vizinhas (without costura).
             const CW = COLS + 1, CH = ROWS + 1;
             // Canto = 1 (UPPER, grass verde) only se a maioria dos 4 cells ao redor is
             // PURO grass (===2). Sand/water/dirt all contam as 0 (LOWER, sand).
-            // Isso evita o bug "tudo idx=15" when grass+dirt dominavam o grid.
+            // this evita o bug "tudo idx=15" when grass+dirt dominavam o grid.
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
@@ -147,7 +147,7 @@ Object.assign(Jogo.prototype, {
         this._noiseR = noise; // mantém compat (algumas funções consultam)
 
         // MOBILE_MODE teaser: pula a maioria dos itens. Mantem decoracao
-        // esparsa (~25 small rocks + small cactus/bush) pra nao ficar vazio.
+        // esparsa (~25 small rocks + small cactus/bush) to nao ficar vazio.
         // Sem matter physics — sao puramente visuais (player nao colide).
         if (window.__MOBILE_MODE) {
             this.corrals = [];
@@ -270,7 +270,7 @@ Object.assign(Jogo.prototype, {
                 if (tooClose) continue;
                 lmPlaced.push({x: cx, y: cy});
                 this.add.image(cx, cy, lm).setScale(LM_SCALE[lm] || 2.0).setDepth(1.4);
-                // Track pra sistema de quips (proximity check em 20_quips.js)
+                // Track to sistema de quips (proximity check em 20_quips.js)
                 if (!this._landmarkPositions) this._landmarkPositions = [];
                 this._landmarkPositions.push({ x: cx, y: cy, key: lm });
                 break;
@@ -308,7 +308,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 6. CURRAIS (em dirt firme)
+        // ── 6. corrals (em dirt firme)
         this.corrals = [];
         this.driveThrus = this.corrals;
         // Corrals — qualquer position válida (dirt ou grass), far das bordas

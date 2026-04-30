@@ -6,12 +6,12 @@ Object.assign(Jogo.prototype, {
     _setupGeometricTextures() {
         let g = this.add.graphics();
 
-        // NAVE — now vem de assets/pixel_labs/ship.png (carregado no preload)
+        // ufo — now vem de assets/pixel_labs/ship.png (carregado no preload)
         // Geometria antiga removida to não sobrescrever o PNG.
 
-        // HAMBÚRGUER — now vem de assets/pixel_labs/items/burger_classic.png
+        // burger — now vem de assets/pixel_labs/items/burger_classic.png
 
-        // CURRAL — chão de dirt with fence de madeira
+        // corral — chão de dirt with fence de madeira
         g.clear();
         g.fillStyle(0x8b6839, 1); g.fillCircle(50, 50, 46);
         g.fillStyle(0xa07840, 0.55); g.fillCircle(50, 50, 32);
@@ -45,7 +45,7 @@ Object.assign(Jogo.prototype, {
         g.beginPath(); g.moveTo(15,10); g.lineTo(2,36); g.lineTo(28,36); g.closePath(); g.fillPath(); g.strokePath();
         g.generateTexture('bush', 30, 40);
 
-        // ATIRADOR — torre sentinela
+        // shooter — torre sentinela
         g.clear();
         g.fillStyle(0x993300, 1); g.fillRect(2, 2, 28, 28);
         g.fillStyle(0x661a00, 1); g.fillRect(0, 0, 32, 7);
@@ -54,7 +54,7 @@ Object.assign(Jogo.prototype, {
         g.lineStyle(2, 0x440000, 1); g.strokeRect(2, 2, 28, 28);
         g.generateTexture('atirador', 32, 32);
 
-        // FAZENDEIRO — now vem de assets/pixel_labs/chars/farmer/*.png (8 dir)
+        // farmer — now vem de assets/pixel_labs/chars/farmer/*.png (8 dir)
 
         g.destroy();
     }

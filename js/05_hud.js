@@ -23,7 +23,7 @@ Object.assign(Jogo.prototype, {
 
         // ── Barras combinadas (PNG unico c/ COMBUSTIVEL+GRAVITON) ───────
         // Mais simples: um empty PNG + um full PNG, dois fillImg apontando pro
-        // mesmo full mas cada um com crop region da sua bar (independencia)
+        // same full mas each um com crop region da sua bar (independencia)
         const useCombined = this.textures.exists('hud_combined_empty') && this.textures.exists('hud_combined_full');
         if (useCombined) {
             const HUD_W = 460, HUD_H = 306;  // ratio 762:508 ≈ 1.5
@@ -36,7 +36,7 @@ Object.assign(Jogo.prototype, {
             // Bar regions em fractions da texture (refinar visualmente)
             this.hud.combFillImg._cropRegion = { fx: 0.252, fy: 0.490, fw: 0.498, fh: 0.085 };
             this.hud.eneFillImg._cropRegion  = { fx: 0.305, fy: 0.640, fw: 0.395, fh: 0.078 };
-            // Aliases pra _setBarsVisibility / outros consumidores
+            // Aliases to _setBarsVisibility / outros consumidores
             this.hud.combImg = this.hud.combinedBg;
             this.hud.eneImg  = this.hud.combinedBg;
             this.hud._combinedHud = true;
@@ -76,7 +76,7 @@ Object.assign(Jogo.prototype, {
         this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
 
-        // Hint inicial removido — tutorial cobre instruções de input.
+        // Hint initial removido — tutorial cobre instruções de input.
 
         // ── Seta indicadora e rastro ──────────────────────────────────
         this.indicatorArrow = this.add.graphics().setScrollFactor(0).setDepth(D2);
@@ -94,12 +94,12 @@ Object.assign(Jogo.prototype, {
 
         // Pool de mini sprites holograficos pros blips (reciclados por frame).
         // Substituem os pixels de fillCircle/fillRect — ficam com tint cyan +
-        // ADD blend mode -> look holografico dentro do dome 3D.
+        // ADD blend mode -> look holografico inside do dome 3D.
         this._radarHoloPool = [];
         this._radarHoloPoolSize = 32;
         this._radarHoloDome = null;
 
-        // Applies i18n inicial nos labels (FUEL/GRAVITON em EN, COMBUSTÍVEL/GRAVITON em PT)
+        // Applies i18n initial nos labels (FUEL/GRAVITON em EN, fuel/GRAVITON em PT)
         if (this._applyHudI18n) this._applyHudI18n();
     },
 
@@ -123,7 +123,7 @@ Object.assign(Jogo.prototype, {
             this.hud.combinedBg.setPosition(w/2, cy);
             if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, cy);
             if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, cy);
-            // Labels overlay no centro de cada bar (offset = (fy + fh/2 - 0.5) * HUD_H)
+            // Labels overlay no centro de each bar (offset = (fy + fh/2 - 0.5) * HUD_H)
             const combR = this.hud.combFillImg?._cropRegion;
             const eneR  = this.hud.eneFillImg?._cropRegion;
             if (combR && this.hud.combLabel) {
@@ -160,7 +160,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // Hint inicial
+        // Hint initial
         if (this.hud.hint) {
             this.hud.hintBg.setPosition(w/2, h/2 + 60);
             this.hud.hint.setPosition(w/2, h/2 + 60);
@@ -176,7 +176,7 @@ Object.assign(Jogo.prototype, {
         const PAD_X = 14, PAD_BOTTOM = 18;  // radar coladinho no rodape (eixos X distintos das bars)
         const cx = PAD_X + FRAME_W/2;
         const cy = h - PAD_BOTTOM - FRAME_H/2;
-        // _mini exposes rx/ry pra _updateMinimap projetar elipse + z dome
+        // _mini exposes rx/ry to _updateMinimap projetar elipse + z dome
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
         // Cria sprite do radar v2 (lazy — primeira vez ou apos resize)
@@ -191,12 +191,12 @@ Object.assign(Jogo.prototype, {
         if (this.hud.radarFrame) this.hud.radarFrame.setVisible(false);
 
         // ── Mascara da cavidade (clipa leak embaixo do frame perspectivo) ──
-        // Cavidade visivel fica deslocada pra cima por causa da perspectiva.
-        // Mask shape eh uma elipse menor + shift pra cima -> clipa miniBg+miniGfx
-        // pra que nada do radar (fill, sweep, blips) vaze fora da abertura.
+        // Cavidade visivel fica deslocada to cima por causa da perspectiva.
+        // Mask shape eh uma elipse menor + shift to cima -> clipa miniBg+miniGfx
+        // to que nada do radar (fill, sweep, blips) vaze outside da abertura.
         const MASK_RX = INNER_RX * 0.92;
         const MASK_RY = INNER_RY * 0.88;
-        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica acima do centro do frame
+        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica above do centro do frame
         if (!this._radarMaskShape) {
             this._radarMaskShape = this.make.graphics({ x: 0, y: 0, add: false });
             this._radarMask = this._radarMaskShape.createGeometryMask();
@@ -253,7 +253,7 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Shows/hides as barras de fuel e graviton (usado pelo tutorial)
+    // Shows/hides as barras de fuel e graviton (used pelo tutorial)
     _setBarsVisibility(combVisible, gravVisible) {
         if (this.hud.combImg)     this.hud.combImg.setVisible(combVisible);
         if (this.hud.combFill)    this.hud.combFill.setVisible(combVisible);
@@ -299,8 +299,8 @@ Object.assign(Jogo.prototype, {
 
     _updateMinimap() {
         const m = this._mini; if (!m || !this.hud?.miniGfx || !this.ufo) return;
-        // Coords da CAVIDADE (mascara) — sweep e blips renderizam aqui pra
-        // ficar dentro do clip do GeometryMask, sem leak embaixo do frame.
+        // Coords da CAVIDADE (mascara) — sweep e blips renderizam aqui to
+        // ficar inside do clip do GeometryMask, sem leak embaixo do frame.
         const cx = m.maskCx ?? m.cx;
         const cy = m.maskCy ?? m.cy;
         const rx = m.maskRx ?? m.rx;
@@ -338,7 +338,7 @@ Object.assign(Jogo.prototype, {
         g.lineBetween(cx, cy, cx + Math.cos(sa)*rx, cy + Math.sin(sa)*ry);
 
         // Decay-based blips: each entidade only "acende" when a sweep line passa by ela.
-        // Depois fade gradual via lastSeenAt timestamp (decay ~2.5s).
+        // after fade gradual via lastSeenAt timestamp (decay ~2.5s).
         const now = this.time?.now ?? 0;
         const FADE_MS = 2500;
         const fades = this._radarBlipFades;
@@ -354,7 +354,7 @@ Object.assign(Jogo.prototype, {
             return b >= prev || b <= curr;
         };
 
-        // Pool de mini sprites holograficos: hide tudo, depois ativa os
+        // Pool de mini sprites holograficos: hide tudo, after ativa os
         // necessarios (sprite recycle pattern).
         const pool = this._radarHoloPool || [];
         for (const s of pool) s.setVisible(false);
@@ -385,7 +385,7 @@ Object.assign(Jogo.prototype, {
             s.setAlpha(alpha * 0.85);
         };
 
-        // Curral: square cyan via Graphics, projecao plana
+        // corral: square cyan via Graphics, projecao plana
         if (this.corrals) {
             for (const c of this.corrals) {
                 const bx = wx(c.x), by = wy(c.y);

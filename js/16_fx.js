@@ -36,7 +36,7 @@ Object.assign(Jogo.prototype, {
     _setupFX() {
         const w = this.scale.width, h = this.scale.height;
 
-        // ── CHUVA ──────────────────────────────────────────────────────
+        // ── rain ──────────────────────────────────────────────────────
         // Gotas with angulo/comprimento/speed controlados live via dbg.fx.
         // Container guarda referência das gotas to recriar when frequencia muda.
         this.fxRain = this.add.container(0, 0).setScrollFactor(0).setDepth(180).setVisible(false);
@@ -51,9 +51,9 @@ Object.assign(Jogo.prototype, {
         this._snowCountAtual = 0;
         this._rebuildSnow();
 
-        // ── NEBLINA (vinheta with gradiente radial) ────────────────────
+        // ── fog (vinheta with gradiente radial) ────────────────────
         // Gera uma textura canvas with radial gradient: centro transparente,
-        // bordas brancas with alpha médio. Mesmo conceito da fumaça (camadas
+        // bordas brancas with alpha médio. same conceito da fumaça (camadas
         // alpha) mas em formato de vinheta full-screen.
         if (!this.textures.exists('vignette_fog')) {
             const SZ = 512;
@@ -82,9 +82,9 @@ Object.assign(Jogo.prototype, {
         // Resize: recompõe os tamanhos
         this.scale.on('resize', () => this._fxResize());
 
-        // ── VENTO ──────────────────────────────────────────────────────
+        // ── wind ──────────────────────────────────────────────────────
         // Particulas de swirl horizontal (curtas, semi-transparentes, drift
-        // lateral). _windAngle eh o valor atual usado pela rain (lerp suave
+        // lateral). _windAngle eh o valor atual used pela rain (lerp suave
         // de fx.windForce). Wind so eh "lateral" — Y nao eh afetado.
         this.fxWind = this.add.container(0, 0).setScrollFactor(0).setDepth(179).setVisible(false);
         this._windParticles = [];
@@ -97,7 +97,7 @@ Object.assign(Jogo.prototype, {
         const N = 22;  // qtd de swirls visiveis
         const h = this.scale.height;
         for (let i = 0; i < N; i++) {
-            // Cada swirl eh um Graphics que redesenha uma curva sinuosa cada
+            // each swirl eh um Graphics que redesenha uma curva sinuosa each
             // frame -> efeito de "vortex" / wisp horizontal (mais organico
             // que linha reta).
             const g = this.add.graphics();
@@ -117,7 +117,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Update por frame — chamado via 01_scene._updateBody.
-    // Lerp _windAngle pra fx.windForce + anima as swirl particles.
+    // Lerp _windAngle to fx.windForce + anima as swirl particles.
     _updateWind(delta) {
         const cfg = this.dbg?.fx;
         if (!cfg) return;
@@ -135,7 +135,7 @@ Object.assign(Jogo.prototype, {
         const dt = delta / 1000;
         this._windOscPhase = (this._windOscPhase + dt * 1.4) % (Math.PI * 2);
 
-        // Direcao do swirl segue o wind (positivo = right, espelha curve quando neg)
+        // Direcao do swirl segue o wind (positivo = right, espelha curve when neg)
         const dirSign = this._windAngle >= 0 ? 1 : -1;
 
         for (const g of this._windParticles) {
@@ -167,7 +167,7 @@ Object.assign(Jogo.prototype, {
     },
 
     // Recria as gotas with base em dbg.fx.rainCount.
-    // Cada gota reads angulo/comprimento/speed dinamicamente em each ciclo.
+    // each gota reads angulo/comprimento/speed dinamicamente em each ciclo.
     _rebuildRain() {
         if (!this.fxRain) return;
         const w = this.scale.width, h = this.scale.height;
@@ -181,10 +181,10 @@ Object.assign(Jogo.prototype, {
             const d = this._rainDrops.pop();
             if (d && d.scene) d.destroy();
         }
-        // Creates diferença — cada drop tem variacao propria (depth fake)
+        // Creates diferença — each drop tem variacao propria (depth fake)
         while (this._rainDrops.length < target) {
             const drop = this.add.line(0, 0, 0, 0, -8, 18, 0x88bbff, 0.55).setLineWidth(1.4);
-            // Variacao de comprimento ±25% do base + alpha aleatorio pra profundidade
+            // Variacao de comprimento ±25% do base + alpha aleatorio to depth
             drop._lenScale   = Phaser.Math.FloatBetween(0.75, 1.25);
             drop._alphaScale = Phaser.Math.FloatBetween(0.45, 1.0);
             this.fxRain.add(drop);
@@ -205,16 +205,16 @@ Object.assign(Jogo.prototype, {
         const fall = () => {
             if (!drop || !drop.scene) return;
             const c = this.dbg?.fx || {};
-            // Vento override: se ativo, angulo da rain eh _windAngle (driven
+            // wind override: se ativo, angulo da rain eh _windAngle (driven
             // pelo sistema de wind). Senao usa slider rainAngle direto.
             const ang     = (c.wind && this._windAngle !== undefined) ? this._windAngle : (c.rainAngle ?? 0.0);
             const lenMul  = c.rainSize ?? 1.0;   // 0.3..3 (mult. comprimento global)
             const velMul  = c.rainSpeed ?? 1.0; // 0.2..3 (mult. speed)
             // Per-drop variacao: comprimento ±25% individual + alpha 0.45-1.0
             const baseLen = 18 * lenMul * (drop._lenScale || 1.0);
-            // FIX: line tilt e drift agora usam MESMO multiplicador e MESMO sinal
-            // (antes: dx negativo + drift positivo = linha tilta pra um lado e
-            // rain cai pro outro). Agora a gota cai no sentido do tilt da linha.
+            // FIX: line tilt e drift now usam same multiplicador e same sinal
+            // (before: dx negativo + drift positivo = linha tilta to um lado e
+            // rain cai pro outro). now a gota cai no sentido do tilt da linha.
             const VISUAL_MUL = 8 * 0.45;  // 3.6
             const dx      = ang * baseLen * VISUAL_MUL;
             drop.setTo(0, 0, dx, baseLen);
@@ -311,8 +311,8 @@ Object.assign(Jogo.prototype, {
             this.renderer.pipelines.addPostPipeline('BarrelPipeline', window.BarrelPipeline);
             this.cameras.main.setPostPipeline('BarrelPipeline');
             this._barrelPipeline = this.cameras.main.getPostPipeline('BarrelPipeline');
-            // Applies strength inicial JA to efeito esferico aparecer no splash
-            // (without isso fica zerado ate o gameStarted=true rodar _updateBody/_updateBarrel)
+            // Applies strength initial JA to efeito esferico aparecer no splash
+            // (without this fica zerado ate o gameStarted=true rodar _updateBody/_updateBarrel)
             if (this._barrelPipeline) {
                 this._barrelPipeline._strength = this.dbg?.behavior?.barrel ?? 0.15;
             }

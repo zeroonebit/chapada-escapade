@@ -7,7 +7,7 @@ Object.assign(Jogo.prototype, {
         // Tecla F3 toggle
         this._keyF3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F3);
 
-        // Container DOM (more leve que Phaser text to atualizar 60x/s)
+        // Container DOM (more leve que Phaser text to update 60x/s)
         const el = document.createElement('div');
         el.id = 'debug-overlay';
         el.style.cssText = `

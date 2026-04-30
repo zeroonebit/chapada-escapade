@@ -26,11 +26,11 @@ class Jogo extends Phaser.Scene {
         this.EXPERIMENT_MODE = false;
         localStorage.setItem('experimentMode', '0');
 
-        // Loads config de debug ANTES de qualquer spawn (afeta scales/counts)
+        // Loads config de debug before de qualquer spawn (afeta scales/counts)
         this._loadDebugCfg();
 
-        // MOBILE_MODE: override pra experiencia atmosferica — cap 5 cows,
-        // sem inimigos. Beam visual sem pull (so muda cone, nao puxa nada).
+        // MOBILE_MODE: override to experiencia atmosferica — cap 5 cows,
+        // sem enemies. Beam visual sem pull (so muda cone, nao puxa nada).
         if (window.__MOBILE_MODE && this.dbg) {
             this.dbg.enabled.farmers = false;
             this.dbg.enabled.shooters  = false;
@@ -57,7 +57,7 @@ class Jogo extends Phaser.Scene {
             this._tutBeamNoDrain = true;
         }
 
-        this._setupGeometricTextures();   // 03_textures.js (textura 'ship' usada below)
+        this._setupGeometricTextures();   // 03_textures.js (textura 'ship' used below)
 
         // ── REGISTRA ANIMS 8-DIR (cow chubby, faz, ox) ─────────────
         // Cow chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
@@ -110,8 +110,8 @@ class Jogo extends Phaser.Scene {
             if (this.dbg.enabled.farmers) this._spawnFarmers(this.dbg.counts.farmers);
         }
 
-        // ── NAVE ─────────────────────────────────────────────────────
-        // Sombra blur fake (3 elipses stacked) — substituiu o tinted ship clone
+        // ── ufo ─────────────────────────────────────────────────────
+        // shadow blur fake (3 elipses stacked) — substituiu o tinted ship clone
         this.ufoShadow = this.add.container(0, 0);
         this.ufoShadow.add(this.add.ellipse(0, 0, 110, 38, 0x000000, 0.10));
         this.ufoShadow.add(this.add.ellipse(0, 0, 80, 28, 0x000000, 0.20));
@@ -130,21 +130,21 @@ class Jogo extends Phaser.Scene {
         this.ufo.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         const ufoScale = this.dbg?.scale?.ufo ?? 1.0;
         this.ufo.setDisplaySize(80 * ufoScale, 80 * ufoScale);
-        // MOBILE_MODE: nave com inercia alta (frictionAir baixo) + bounce
+        // MOBILE_MODE: ufo com inercia alta (frictionAir baixo) + bounce
         // total nas bordas (matter combina restitution via Math.max — walls
         // default=0, ship=1 -> bounce sem perda de energia).
         if (window.__MOBILE_MODE) {
             this.ufo.setFrictionAir(0.005).setBounce(1.0);
         }
-        // Lock rotação física — disco não gira by colisão; rotação is feita manualmente
+        // Lock rotação física — ufo não gira by colisão; rotação is feita manualmente
         // via ufoRot slider no _updateBody
         this.ufo.setFixedRotation();
         this._ufoDir8 = 'S';
         if (this.anims.exists('ufo_hover_S')) this.ufo.play('ufo_hover_S');
 
-        this._setupLEDs();                  // 06_nave.js — LEDs animados ao redor da ship
+        this._setupLEDs();                  // 06_ufo.js — LEDs animados ao redor da ship
 
-        // ── VACAS ────────────────────────────────────────────────────
+        // ── cows ────────────────────────────────────────────────────
         if (!this.EXPERIMENT_MODE) {
             this.cows = [];
             this.abductedCows = [];
@@ -174,7 +174,7 @@ class Jogo extends Phaser.Scene {
         this._positionHUD();
         this.scale.on('resize', () => this._positionHUD());
 
-        // MOBILE_MODE teaser: esconde HUD inteiro pra player ver so terreno +
+        // MOBILE_MODE teaser: esconde HUD inteiro to player ver so terreno +
         // ship + beam + smoke + weather (experiencia atmosferica pura).
         if (window.__MOBILE_MODE) {
             for (const k of Object.keys(this.hud)) {
@@ -218,8 +218,8 @@ class Jogo extends Phaser.Scene {
         this._setupMobileControls();        // 12_mobile.js — joystick + botão (only mobile)
 
         // MOBILE_MODE: dark vignette overlay (canvas radial preto) — mais
-        // forte que o vignette branco do fog. Depth 190 -> acima das FX
-        // mas abaixo do HUD (que ja esta escondido em mobile).
+        // forte que o vignette branco do fog. Depth 190 -> above das FX
+        // mas below do HUD (que ja esta escondido em mobile).
         if (window.__MOBILE_MODE) {
             const SZ = 512;
             const c = document.createElement('canvas'); c.width = c.height = SZ;
@@ -234,7 +234,7 @@ class Jogo extends Phaser.Scene {
             this.textures.addCanvas('mobile_vignette', c);
             this.fxMobileVignette = this.add.image(this.scale.width/2, this.scale.height/2, 'mobile_vignette')
                 .setScrollFactor(0).setDepth(190);
-            // Vignette fixa centralizada (tamanho exato pra cobrir tela)
+            // Vignette fixa centralizada (tamanho exato to cobrir screen)
             this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
             this.scale.on('resize', () => {
                 if (this.fxMobileVignette?.scene) {
@@ -243,7 +243,7 @@ class Jogo extends Phaser.Scene {
                 }
             });
 
-            // Shuffle atmosferico recorrente: a cada 30-50s troca weather+TOD
+            // Shuffle atmosferico recorrente: a each 30-50s troca weather+TOD
             const TODs = ['dusk','sunset','night','midnight'];   // sempre escuros
             const WTHs = ['rain','fog','storm','snow'];          // sempre macabros
             const shuffleAtmosphere = () => {
@@ -398,7 +398,7 @@ class Jogo extends Phaser.Scene {
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
             this._beamHeld = this._keysWASD.SPACE.isDown;
         } else if (this.isMobile && this._joyVec && this._joyVec.active) {
-            // Joystick — vetor vira "alvo virtual" 220px à frente da ship
+            // Joystick — vetor vira "alvo virtual" 220px à front da ship
             const REACH = 220;
             cursor = {
                 x: this.ufo.x + this._joyVec.x * REACH,
@@ -417,7 +417,7 @@ class Jogo extends Phaser.Scene {
         this._updateShadows();
         this.lightCone.setPosition(this.ufo.x, this.ufo.y);
 
-        // Disco: rotação base (slider) + tilt baseado em mudança de speed lateral
+        // ufo: rotação base (slider) + tilt baseado em mudança de speed lateral
         const ufoRot = this.dbg?.behavior?.ufoRot ?? 0;
         this._discoBaseAngle = (this._discoBaseAngle ?? 0) + ufoRot * (delta / 1000);
         const navVx = this.ufo.body.velocity.x;
@@ -429,7 +429,7 @@ class Jogo extends Phaser.Scene {
         this.ufo.rotation = this._discoBaseAngle + this._tiltCurrent;
 
         // ── UFO directional hover anim ───────────────────────────────
-        // Acima de threshold, escolhe dir8 do vetor speed; below, mantém última dir
+        // above de threshold, escolhe dir8 do vetor speed; below, mantém última dir
         const navSpeedAnim = Math.sqrt(navVx*navVx + navVy*navVy);
         if (navSpeedAnim > 0.5) {
             const deg = (Math.atan2(navVy, navVx) * 180 / Math.PI + 360) % 360;
@@ -449,7 +449,7 @@ class Jogo extends Phaser.Scene {
             this._smokeTimer = (this._smokeTimer ?? 0) + delta;
             if (this._smokeTimer > 100) {
                 this._smokeTimer = 0;
-                const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "atrás"
+                const ux = -navVx/navSpeed, uy = -navVy/navSpeed; // unit vector "back"
                 const px = this.ufo.x + ux * 30;
                 const py = this.ufo.y + uy * 30;
                 this._spawnSmoke(px, py, {
@@ -460,7 +460,7 @@ class Jogo extends Phaser.Scene {
                 if (Math.random() < 0.55) {
                     const colors = [0x33aaff, 0xff4466, 0xffcc33, 0x44ff88, 0xcc66ff];
                     const col = colors[Math.floor(Math.random() * colors.length)];
-                    // Offset radial to parecer que sai de points diferentes do disco
+                    // Offset radial to parecer que sai de points diferentes do ufo
                     const radial = (Math.random() - 0.5) * 24;
                     const perpX = -uy * radial, perpY = ux * radial;
                     this._spawnSmoke(px + perpX, py + perpY, {
@@ -520,7 +520,7 @@ class Jogo extends Phaser.Scene {
                     this.cameras.main.flash(120, 80, 200, 120, false);
                 }
             }
-            // Sparkles emitidos a each ~80ms enquanto o beam is ativo
+            // Sparkles emitidos a each ~80ms while o beam is ativo
             if (this.dbg?.fx?.beamSparks) {
                 this._beamSparkleTimer = (this._beamSparkleTimer ?? 0) + delta;
                 if (this._beamSparkleTimer > 80) {
