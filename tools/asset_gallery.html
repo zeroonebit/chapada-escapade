@@ -5,16 +5,16 @@
 <title>PixaPro</title>
 <style>
   body{margin:0;background:#1a1410;color:#e8d9b8;font-family:monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-  h1{margin:12px 0 8px;font-size:18px;color:#f4c95d;}
+  h1{margin:12px 0 8px;font-size:17px;color:#f4c95d;}
   .workspace{display:flex;gap:8px;align-items:stretch;width:96vw;justify-content:center;margin-bottom:10px;}
   .stage{position:relative;width:520px;height:520px;flex:0 0 520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
   .stage img{max-width:90%;max-height:90%;image-rendering:pixelated;}
   .pending{color:#f4c95d;font-size:14px;text-align:center;padding:20px;}
-  button{background:#3a2d1e;color:#f4c95d;border:2px solid #6b5234;padding:10px 18px;font-family:monospace;font-size:18px;cursor:pointer;border-radius:4px;}
+  button{background:#3a2d1e;color:#f4c95d;border:2px solid #6b5234;padding:10px 18px;font-family:monospace;font-size:17px;cursor:pointer;border-radius:4px;}
   button:hover{background:#4a3826;}
   button:disabled{opacity:.3;cursor:not-allowed;}
   .name{color:#f4c95d;font-size:16px;font-weight:bold;}
-  .id{font-size:10px;opacity:.5;}
+  .id{font-size:12px;opacity:.5;}
   .status{font-size:12px;padding:3px 8px;border-radius:3px;display:inline-block;margin-top:4px;}
   .status.ready{background:#2d5a2d;color:#9fe89f;}
   .status.pending{background:#5a4a2d;color:#f4c95d;}
@@ -23,7 +23,7 @@
   .side-grid{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;flex:1;height:520px;overflow-y:auto;align-content:start;justify-content:center;padding:6px;border:2px solid;border-radius:4px;}
   .side-grid.left{border-color:#5a2222;background:rgba(74,29,29,0.15);}
   .side-grid.right{border-color:#2d5a2d;background:rgba(29,74,29,0.15);}
-  .side-grid .side-title{grid-column:1/-1;font-size:11px;font-weight:bold;text-align:center;padding:2px 0 6px;letter-spacing:1px;}
+  .side-grid .side-title{grid-column:1/-1;font-size:12px;font-weight:bold;text-align:center;padding:2px 0 6px;letter-spacing:1px;}
   .side-grid.left .side-title{color:#e89f9f;}
   .side-grid.right .side-title{color:#9fe89f;}
   .side-grid .thumb{width:42px;height:42px;border-width:1px;}
@@ -31,18 +31,18 @@
   .thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;}
   .thumb.active{border-color:#f4c95d;}
   .thumb.pending{opacity:.4;}
-  .refresh{font-size:33px;opacity:.6;margin-top:8px;font-weight:bold;}
+  .refresh{font-size:17px;opacity:.6;margin-top:8px;font-weight:bold;}
   .stage > .actions, .stage > .caption, .stage > .nav-prev, .stage > .nav-next{position:absolute;opacity:0;transition:opacity .15s;pointer-events:none;z-index:10;}
   .stage:hover > .actions, .stage:hover > .caption, .stage:hover > .nav-prev, .stage:hover > .nav-next{opacity:1;pointer-events:auto;}
   .stage > .actions{bottom:8px;left:8px;right:8px;display:flex;gap:4px;}
-  .stage > .actions button{flex:1 1 0;padding:6px 2px;font-size:11px;font-weight:bold;min-width:0;opacity:.85;}
+  .stage > .actions button{flex:1 1 0;padding:6px 2px;font-size:12px;font-weight:bold;min-width:0;opacity:.85;}
   .stage > .actions button:hover{opacity:1;}
   .stage > .caption{top:8px;left:8px;right:8px;text-align:center;background:rgba(0,0,0,.72);padding:6px 8px;border-radius:3px;}
   .stage > .caption .name{color:#f4c95d;font-size:13px;font-weight:bold;}
-  .stage > .caption .id{font-size:9px;opacity:.6;display:block;margin-top:2px;}
-  .stage > .caption .status{font-size:10px;}
-  .stage > .caption .counter{font-size:10px;display:block;margin-top:3px;}
-  .stage > .nav-prev, .stage > .nav-next{top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:1px solid #6b5234;color:#f4c95d;padding:14px 10px;font-size:18px;}
+  .stage > .caption .id{font-size:12px;opacity:.6;display:block;margin-top:2px;}
+  .stage > .caption .status{font-size:12px;}
+  .stage > .caption .counter{font-size:12px;display:block;margin-top:3px;}
+  .stage > .nav-prev, .stage > .nav-next{top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:1px solid #6b5234;color:#f4c95d;padding:14px 10px;font-size:17px;}
   .stage > .nav-prev{left:8px;}
   .stage > .nav-next{right:8px;}
   .btn-promote{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
@@ -55,13 +55,13 @@
   .btn-save:hover{background:#ffd770!important;}
   .btn-clear{background:#d63ad6!important;color:#000!important;border-color:#8a228a!important;}
   .btn-clear:hover{background:#e84fe8!important;}
-  .decision{position:absolute;top:8px;right:8px;font-size:11px;font-weight:bold;padding:3px 6px;border-radius:3px;}
+  .decision{position:absolute;top:8px;right:8px;font-size:12px;font-weight:bold;padding:3px 6px;border-radius:3px;}
   .decision.promoted{background:#1d4a1d;color:#9fe89f;}
   .decision.discarded{background:#4a1d1d;color:#e89f9f;}
   .decision.renamed{background:#1d3a4a;color:#9fcfe8;}
   .thumb-wrap{position:relative;}
-  .thumb-decision{position:absolute;bottom:0;right:0;width:14px;height:14px;font-size:10px;display:flex;align-items:center;justify-content:center;border-radius:0 0 4px 0;}
-  .stats{font-size:11px;opacity:.7;margin:4px 0;}
+  .thumb-decision{position:absolute;bottom:0;right:0;width:14px;height:14px;font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:0 0 4px 0;}
+  .stats{font-size:12px;opacity:.7;margin:4px 0;}
   .tabs{display:flex;gap:4px;margin:6px 0 14px;}
   .tab{padding:8px 22px;font-size:13px;background:#2a2218;color:#a89368;border:2px solid #4a3826;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;font-family:monospace;letter-spacing:1px;}
   .tab:hover{background:#3a2d1e;color:#f4c95d;}
@@ -80,21 +80,21 @@
   .summary-panel.promoted h2{color:#9fe89f;}
   .summary-panel.pending h2{color:#f4c95d;}
   .summary-panel.discarded h2{color:#e89f9f;}
-  .summary-panel .count{font-size:48px;text-align:center;font-weight:bold;margin:8px 0 12px;}
-  .summary-panel .breakdown{font-size:11px;opacity:.7;margin-bottom:10px;}
+  .summary-panel .count{font-size:17px;text-align:center;font-weight:bold;margin:8px 0 12px;}
+  .summary-panel .breakdown{font-size:12px;opacity:.7;margin-bottom:10px;}
   .summary-panel .grid-thumbs{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;overflow-y:auto;flex:1;align-content:start;justify-content:center;}
   .thumb-group{position:relative;}
-  .thumb-group .group-badge{position:absolute;top:-4px;right:-4px;background:#f4c95d;color:#000;font-size:9px;font-weight:bold;padding:1px 4px;border-radius:6px;line-height:1;z-index:2;pointer-events:none;}
+  .thumb-group .group-badge{position:absolute;top:-4px;right:-4px;background:#f4c95d;color:#000;font-size:12px;font-weight:bold;padding:1px 4px;border-radius:6px;line-height:1;z-index:2;pointer-events:none;}
   /* popup é position:fixed (não absolute) pra não ser clipped por overflow:auto dos painéis */
   #floatingPopup{display:none;position:fixed;background:rgba(26,20,16,0.98);border:2px solid #f4c95d;border-radius:6px;padding:8px;z-index:9999;grid-template-columns:repeat(auto-fit,40px);gap:4px;min-width:260px;max-width:520px;max-height:480px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.7);}
   #floatingPopup.show{display:grid;}
-  #floatingPopup .pop-title{grid-column:1/-1;font-size:11px;color:#f4c95d;text-align:center;padding:2px 0 6px;font-weight:bold;}
+  #floatingPopup .pop-title{grid-column:1/-1;font-size:12px;color:#f4c95d;text-align:center;padding:2px 0 6px;font-weight:bold;}
   #floatingPopup img{width:40px;height:40px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;border-radius:2px;}
   #floatingPopup img[data-click]{cursor:pointer;}
   #floatingPopup img[data-click]:hover{outline:2px solid #f4c95d;}
   /* filter bar do PROMOTED */
   .filter-bar{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;}
-  .filter-bar button{padding:5px 12px;font-size:11px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
+  .filter-bar button{padding:5px 12px;font-size:12px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
   .filter-bar button:hover{background:#3a2d1e;}
   .filter-bar button.active{background:#3a2d1e;color:#f4c95d;border-color:#f4c95d;}
   /* Tab Detail */
@@ -113,7 +113,7 @@
   .visualizer .dir-overlay{position:absolute;inset:-64px;pointer-events:none;}
   .visualizer .dir-overlay .dir-slot{opacity:0;transition:opacity .15s;pointer-events:auto;}
   .visualizer:hover .dir-overlay .dir-slot{opacity:1;}
-  .dir-slot{position:absolute;width:48px;height:48px;background:rgba(26,20,16,0.92);border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#a89368;cursor:pointer;border-radius:3px;}
+  .dir-slot{position:absolute;width:48px;height:48px;background:rgba(26,20,16,0.92);border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;color:#a89368;cursor:pointer;border-radius:3px;}
   .dir-slot:hover{background:rgba(58,45,30,0.98);border-color:#f4c95d;color:#f4c95d;transform:scale(1.08);}
   .dir-slot img{width:44px;height:44px;image-rendering:pixelated;}
   .dir-slot.exists{border-color:#3da53d;}
@@ -138,16 +138,16 @@
   .dir-preview.show{display:flex;}
   .dir-preview img{max-width:90%;max-height:90%;image-rendering:pixelated;}
   .dir-preview .preview-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.78);padding:4px 10px;border-radius:3px;font-size:12px;color:#9fcfe8;font-weight:bold;}
-  .meta{font-size:11px;line-height:1.6;text-align:center;max-width:480px;}
+  .meta{font-size:12px;line-height:1.6;text-align:center;max-width:480px;}
   .meta strong{color:#f4c95d;font-size:13px;}
-  .detail-main .meta{font-size:11px;line-height:1.6;}
+  .detail-main .meta{font-size:12px;line-height:1.6;}
   .tools-grid{display:grid;grid-template-columns:repeat(auto-fill, 240px);gap:10px;justify-content:start;}
   .tool-sections-row{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
   .tool-section{border:2px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);}
-  .tool-section .sec-head{margin:0;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;color:#a89368;background:#2a2218;border-radius:4px 4px 0 0;user-select:none;}
+  .tool-section .sec-head{margin:0;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:2px;color:#a89368;background:#2a2218;border-radius:4px 4px 0 0;user-select:none;}
   .tool-section .sec-head:hover{color:#f4c95d;background:#3a2d1e;}
   .tool-section .sec-head .toggle{font-size:13px;width:14px;display:inline-block;}
-  .tool-section .sec-head .count{font-size:9px;opacity:.5;margin-left:auto;}
+  .tool-section .sec-head .count{font-size:12px;opacity:.5;margin-left:auto;}
   .tool-section[data-collapsed="true"] .sec-body{display:none;}
   .tool-section[data-collapsed="true"] .sec-head{border-radius:4px;}
   .tool-section .sec-body{padding:10px;}
@@ -174,22 +174,22 @@
   .tool-section .sec-head{cursor:grab;}
   .tool-section.dragging{opacity:0.4;}
   .tool-section.drag-over{outline:2px dashed #f4c95d;outline-offset:-2px;}
-  .tool-section .sec-head .drag-handle{cursor:grab;opacity:.5;font-size:11px;margin-right:4px;}
+  .tool-section .sec-head .drag-handle{cursor:grab;opacity:.5;font-size:12px;margin-right:4px;}
   .tool-section .sec-head:active{cursor:grabbing;}
   .tool-card .tname{font-size:12px;font-weight:bold;color:#f4c95d;margin-bottom:6px;font-family:monospace;}
-  .tool-card label{font-size:10px;opacity:.7;display:block;margin:6px 0 2px;}
-  .tool-card input, .tool-card select, .tool-card textarea{width:100%;background:#1a1410;color:#e8d9b8;border:1px solid #4a3826;padding:4px 6px;font-family:monospace;font-size:11px;box-sizing:border-box;}
+  .tool-card label{font-size:12px;opacity:.7;display:block;margin:6px 0 2px;}
+  .tool-card input, .tool-card select, .tool-card textarea{width:100%;background:#1a1410;color:#e8d9b8;border:1px solid #4a3826;padding:4px 6px;font-family:monospace;font-size:12px;box-sizing:border-box;}
   .tool-card textarea{min-height:46px;resize:vertical;}
-  .tool-card .qbtn{margin-top:8px;width:100%;padding:6px;font-size:11px;font-weight:bold;background:#f4c95d;color:#000;border:1px solid #a8862e;cursor:pointer;}
+  .tool-card .qbtn{margin-top:8px;width:100%;padding:6px;font-size:12px;font-weight:bold;background:#f4c95d;color:#000;border:1px solid #a8862e;cursor:pointer;}
   .tool-card .qbtn:hover{background:#ffd770;}
   .queue-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(26,20,16,0.96);border-top:2px solid #6b5234;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;align-items:center;z-index:100;}
-  .queue-bar button{padding:6px 14px;font-size:11px;}
+  .queue-bar button{padding:6px 14px;font-size:12px;}
   /* Tab Tiles */
   .tiles-wrap{display:flex;flex-direction:column;gap:14px;width:96vw;max-width:1400px;margin:20px auto;}
   .tileset-select-bar{display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(0,0,0,0.3);border:1px solid #4a3826;border-radius:6px;}
   .tileset-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-  .tileset-row .row-label{font-size:10px;color:#a89368;letter-spacing:2px;min-width:70px;}
-  .tileset-btn{padding:6px 12px;font-size:11px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
+  .tileset-row .row-label{font-size:12px;color:#a89368;letter-spacing:2px;min-width:70px;}
+  .tileset-btn{padding:6px 12px;font-size:12px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
   .tileset-btn:hover{background:#3a2d1e;color:#f4c95d;}
   .tileset-btn.active{background:#3a2d1e;color:#f4c95d;border-color:#f4c95d;}
   .tileset-btn.placeholder{opacity:.5;border-style:dashed;}
@@ -199,14 +199,14 @@
   .wang-cell{border:2px solid #4a3826;border-radius:4px;padding:6px;background:#1a1410;text-align:center;}
   .wang-cell .wtile{width:96px;height:96px;background:#2a2218;image-rendering:pixelated;display:block;margin:0 auto 4px;}
   .wang-cell canvas{width:96px;height:96px;image-rendering:pixelated;}
-  .wang-cell .wlabel{font-size:11px;font-weight:bold;color:#f4c95d;}
-  .wang-cell .wcorners{font-size:8px;opacity:.6;font-family:monospace;letter-spacing:.5px;}
-  .wang-cell .wbits{font-size:9px;opacity:.5;}
+  .wang-cell .wlabel{font-size:12px;font-weight:bold;color:#f4c95d;}
+  .wang-cell .wcorners{font-size:12px;opacity:.6;font-family:monospace;letter-spacing:.5px;}
+  .wang-cell .wbits{font-size:12px;opacity:.5;}
   .corner-vis{display:grid;grid-template-columns:1fr 1fr;width:24px;height:24px;margin:2px auto;border:1px solid #6b5234;}
   .corner-vis div{width:100%;height:100%;}
   .corner-vis .lower{background:#5a4a2d;}
   .corner-vis .upper{background:#9fe89f;}
-  .tile-info{margin:14px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:11px;line-height:1.5;}
+  .tile-info{margin:14px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:12px;line-height:1.5;}
   .tile-info code{background:#2a2218;padding:2px 4px;border-radius:2px;color:#f4c95d;}
   /* Editor de tiles - drag-drop + transform buttons */
   .wang-cell.editable{position:relative;cursor:move;}
@@ -219,27 +219,27 @@
   .wang-cell.editable .tx-ccw{bottom:34px;left:50%;transform:translateX(-50%);}
   .wang-cell.editable .tx-fh{top:50%;left:6px;transform:translateY(-50%);}
   .wang-cell.editable .tx-fv{top:50%;right:6px;transform:translateY(-50%);}
-  .wang-cell.editable .corrected-mark{position:absolute;top:4px;right:4px;font-size:9px;background:#3da53d;color:#000;padding:1px 4px;border-radius:6px;font-weight:bold;}
+  .wang-cell.editable .corrected-mark{position:absolute;top:4px;right:4px;font-size:12px;background:#3da53d;color:#000;padding:1px 4px;border-radius:6px;font-weight:bold;}
   /* Reference guide compact */
   .wang-ref-grid{display:grid;grid-template-columns:repeat(4, 60px);gap:6px;justify-content:center;margin:8px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;}
-  .wang-ref-cell{text-align:center;font-size:9px;}
+  .wang-ref-cell{text-align:center;font-size:12px;}
   .wang-ref-cell .ref-corners{display:grid;grid-template-columns:1fr 1fr;width:40px;height:40px;margin:0 auto 2px;border:1px solid #6b5234;}
   .wang-ref-cell .ref-corners div{width:100%;height:100%;}
   .wang-ref-cell .ref-corners .lower{background:#7a5a2d;}
   .wang-ref-cell .ref-corners .upper{background:#a8d088;}
   .editor-bar{display:flex;gap:8px;justify-content:center;margin:14px 0;align-items:center;flex-wrap:wrap;}
-  .editor-bar button{padding:6px 14px;font-size:11px;}
+  .editor-bar button{padding:6px 14px;font-size:12px;}
   .save-corrected{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
   .reset-corrections{background:#a53d3d!important;color:#fff!important;}
-  .view-mode-btn{background:#2a2218!important;color:#a89368!important;border:1px solid #4a3826!important;font-size:11px!important;padding:5px 10px!important;}
+  .view-mode-btn{background:#2a2218!important;color:#a89368!important;border:1px solid #4a3826!important;font-size:12px!important;padding:5px 10px!important;}
   .view-mode-btn.active{background:#3a2d1e!important;color:#f4c95d!important;border-color:#f4c95d!important;}
   .view-mode-btn:hover{background:#3a2d1e!important;}
-  .orbit-info{display:block;font-size:9px;opacity:.6;margin-top:2px;}
+  .orbit-info{display:block;font-size:12px;opacity:.6;margin-top:2px;}
   /* Detail dashboard cards */
   .dash-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:8px;}
   .dash-stat{background:#2a2218;padding:10px;border-radius:4px;text-align:center;border:1px solid #4a3826;}
-  .dash-stat .ds-val{font-size:24px;font-weight:bold;}
-  .dash-stat .ds-label{font-size:10px;opacity:.7;}
+  .dash-stat .ds-val{font-size:17px;font-weight:bold;}
+  .dash-stat .ds-label{font-size:12px;opacity:.7;}
   .dash-stat.cooking{border-color:#6b5234;} .dash-stat.cooking .ds-val{color:#f4c95d;}
   .dash-stat.done{border-color:#3da53d;} .dash-stat.done .ds-val{color:#9fe89f;}
   .dash-stat.failed{border-color:#a53d3d;} .dash-stat.failed .ds-val{color:#e89f9f;}
@@ -248,24 +248,56 @@
   .dash-progress{width:100%;height:6px;background:#2a2218;border-radius:3px;overflow:hidden;margin:8px 0 14px;}
   .dash-progress-fill{height:100%;background:linear-gradient(90deg,#3da53d,#9fe89f);border-radius:3px;transition:width .3s;}
   .dash-category-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;}
-  .dash-cat-chip{padding:4px 10px;font-size:10px;border-radius:10px;border:1px solid #4a3826;background:#2a2218;}
+  .dash-cat-chip{padding:4px 10px;font-size:12px;border-radius:10px;border:1px solid #4a3826;background:#2a2218;}
   .dash-queue-cards{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;padding:4px;}
-  .qcard{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #4a3826;border-radius:4px;background:#1a1410;font-size:11px;transition:border-color .15s;}
+  .qcard{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #4a3826;border-radius:4px;background:#1a1410;font-size:12px;transition:border-color .15s;}
   .qcard.st-pending{border-left:3px solid #f4c95d;}
   .qcard.st-running{border-left:3px solid #9fcfe8;animation:pulse-border 1.5s infinite;}
   .qcard.st-done{border-left:3px solid #3da53d;opacity:.7;}
   .qcard.st-failed{border-left:3px solid #a53d3d;opacity:.8;}
   .qcard .qc-tool{color:#f4c95d;font-weight:bold;min-width:140px;}
   .qcard .qc-asset{color:#a89368;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .qcard .qc-status{font-size:10px;padding:2px 8px;border-radius:8px;}
+  .qcard .qc-status{font-size:12px;padding:2px 8px;border-radius:8px;}
   .qcard .qc-status.pending{background:#5a4a2d;color:#f4c95d;}
   .qcard .qc-status.running{background:#1d3a4a;color:#9fcfe8;}
   .qcard .qc-status.done{background:#2d5a2d;color:#9fe89f;}
   .qcard .qc-status.failed{background:#5a2d2d;color:#e89f9f;}
   .qcard .qc-actions{display:flex;gap:4px;}
-  .qcard .qc-actions button{padding:2px 8px;font-size:10px;border:1px solid #4a3826;background:#2a2218;color:#a89368;cursor:pointer;border-radius:3px;}
+  .qcard .qc-actions button{padding:2px 8px;font-size:12px;border:1px solid #4a3826;background:#2a2218;color:#a89368;cursor:pointer;border-radius:3px;}
   .qcard .qc-actions button:hover{background:#3a2d1e;color:#f4c95d;}
   @keyframes pulse-border{0%,100%{border-color:#9fcfe8}50%{border-color:#4a3826}}
+  /* MCP Live cards */
+  .mcp-job{border:1px solid #1d3a4a;border-radius:4px;background:#1a1410;font-size:12px;overflow:hidden;}
+  .mcp-job.st-processing{border-color:#9fcfe8;animation:pulse-border 2s infinite;}
+  .mcp-job.st-completed{border-color:#3da53d;}
+  .mcp-job.st-failed{border-color:#a53d3d;}
+  .mcp-job .mj-row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;user-select:none;}
+  .mcp-job .mj-row:hover{background:rgba(244,201,93,0.05);}
+  .mcp-job .mj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .mcp-job.st-processing .mj-dot{background:#9fcfe8;}
+  .mcp-job.st-completed .mj-dot{background:#3da53d;}
+  .mcp-job.st-failed .mj-dot{background:#e84d4d;}
+  .mcp-job.st-pending .mj-dot{background:#a8862e;}
+  .mcp-job .mj-desc{flex:1;color:#e8d9b8;}
+  .mcp-job .mj-id{opacity:.4;font-family:monospace;font-size:12px;}
+  .mcp-job .mj-status{padding:2px 8px;border-radius:8px;font-size:12px;font-weight:bold;}
+  .mcp-job.st-processing .mj-status{background:#1d3a4a;color:#9fcfe8;}
+  .mcp-job.st-completed .mj-status{background:#1d4a1d;color:#9fe89f;}
+  .mcp-job.st-failed .mj-status{background:#4a1d1d;color:#e89f9f;}
+  .mcp-job.st-pending .mj-status{background:#3a2d1e;color:#f4c95d;}
+  .mcp-job .mj-time{opacity:.4;font-size:12px;min-width:50px;text-align:right;}
+  .mcp-job .mj-chevron{opacity:.4;font-size:14px;transition:transform .15s;flex-shrink:0;}
+  .mcp-job.open .mj-chevron{transform:rotate(90deg);}
+  /* Inspect banner */
+  .mj-inspect{display:none;border-top:1px solid #2a2218;padding:10px 12px;background:rgba(0,0,0,0.25);font-size:12px;line-height:1.6;}
+  .mcp-job.open .mj-inspect{display:block;}
+  .mj-inspect .mji-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;}
+  .mji-grid .mji-key{color:#a89368;text-align:right;}
+  .mji-grid .mji-val{color:#e8d9b8;word-break:break-all;}
+  .mj-inspect .mji-preview{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;}
+  .mj-inspect .mji-preview img{image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;border-radius:2px;}
+  .mj-inspect .mji-log{margin-top:8px;padding:8px;background:#0d0a08;border:1px solid #2a2218;border-radius:3px;font-family:monospace;font-size:12px;color:#a89368;white-space:pre-wrap;max-height:200px;overflow-y:auto;}
+  .mj-inspect .mji-error{color:#e89f9f;background:#2a1010;border-color:#4a1d1d;}
 </style>
 </head>
 <body>
@@ -328,9 +360,9 @@
       </div>
     </div>
   </div>
-  <div style="text-align:center;margin:8px 0 30px;font-size:11px;opacity:.6;">
+  <div style="text-align:center;margin:8px 0 30px;font-size:12px;opacity:.6;">
     Soma: filesystem (<code>assets/pixel_labs/</code>) + decisions locais + MCP <code>list_objects</code>/<code>list_characters</code>
-    <button id="btnRefreshSummary" style="margin-left:14px;padding:4px 12px;font-size:11px;">↻ Refresh</button>
+    <button id="btnRefreshSummary" style="margin-left:14px;padding:4px 12px;font-size:12px;">↻ Refresh</button>
   </div>
 </div>
 
@@ -378,7 +410,7 @@
 <div class="tab-content" id="tab-detail" hidden>
   <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
     <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue Dashboard</h3>
-    <div style="font-size:11px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra rodar.</div>
+    <div style="font-size:12px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra rodar.</div>
     <!-- Stats cards -->
     <div class="dash-stats" id="dashStats"></div>
     <!-- Progress bar -->
@@ -395,15 +427,31 @@
       <button id="btnDetailExportJSON" style="background:#2a2218;color:#9fcfe8;border:1px solid #1d3a4a;">📋 Copy JSON</button>
     </div>
   </div>
+  <!-- MCP Live Status (polling do gallery_server.py) -->
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #1d3a4a;border-radius:6px;background:rgba(29,58,74,0.15);">
+    <h3 style="color:#9fcfe8;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+      <span id="mcpLiveDot" style="width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;"></span>
+      MCP Live Status
+      <span id="mcpLiveCount" style="font-size:12px;opacity:.6;font-weight:normal;margin-left:auto;">—</span>
+    </h3>
+    <div id="mcpLiveCards" style="display:flex;flex-direction:column;gap:6px;">
+      <div style="opacity:.5;font-size:12px;text-align:center;padding:12px;">Conectando ao server (localhost:8090)...</div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+      <button id="btnMcpLiveRefresh" style="padding:4px 12px;font-size:12px;">↻ Refresh</button>
+      <button id="btnMcpLiveClear" style="padding:4px 12px;font-size:12px;background:#2a2218;color:#a89368;">Limpar</button>
+      <span id="mcpLiveLastPoll" style="font-size:12px;opacity:.4;margin-left:auto;">—</span>
+    </div>
+  </div>
   <!-- Info sobre tileset ativo (movido da Tiles tab) -->
   <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
     <h3 style="color:#f4c95d;margin:0 0 10px;">🧩 Active Tileset Info</h3>
-    <div id="tilesetInfo" style="font-size:11px;line-height:1.5;">selecione um tileset na Tab Tiles</div>
+    <div id="tilesetInfo" style="font-size:12px;line-height:1.5;">selecione um tileset na Tab Tiles</div>
   </div>
   <!-- Refs & explanações -->
   <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
     <h3 style="color:#f4c95d;margin:0 0 10px;">📚 Quick Reference</h3>
-    <div style="font-size:11px;line-height:1.8;opacity:.8;">
+    <div style="font-size:12px;line-height:1.8;opacity:.8;">
       <strong>MCP tool naming:</strong> <code>mcp__pixellab__&lt;tool&gt;</code><br>
       <strong>Categories:</strong> 🆕 create (objects, characters, tilesets) · 🎨 modify (vary, select frames, dismiss) · 🎬 anim (animate object/character) · 📖 meta (get/list) · 🗑 delete<br>
       <strong>Workflow:</strong> Editor tab → preenche form → "Add to queue" → aqui no Dashboard → cola "executa o mcp queue" no chat<br>
@@ -445,11 +493,11 @@
           <button class="tileset-btn placeholder" data-season="floracao">🌸 Floração</button>
         </div>
       </div>
-      <div style="font-size:10px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8 · biome+season tilesets em construção</div>
+      <div style="font-size:12px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8 · biome+season tilesets em construção</div>
     </div>
     <div class="tiles-main">
       <h3 id="tilesetTitle">cr31 Wang Tiles</h3>
-      <div class="tile-info" style="font-size:10px;opacity:.5;">Info detalhada + refs movidas pra <strong>Tab Detail</strong>.</div>
+      <div class="tile-info" style="font-size:12px;opacity:.5;">Info detalhada + refs movidas pra <strong>Tab Detail</strong>.</div>
       <div class="editor-bar" id="editorBar" hidden>
         <button id="btnEditorToggle">✏️ Edit mode</button>
         <button id="btnReloadTileset">↻ Reload from PixelLab</button>
@@ -459,17 +507,17 @@
         <button id="btnRotPlaceCW" style="background:#a89368;color:#000;" title="Rotaciona TODAS as placements CW em bitmask space (1→2→4→8→1, 5↔10, etc)">↻ Rot+ </button>
         <button id="btnRotPlaceCCW" style="background:#a89368;color:#000;" title="Inverso: rotaciona placements CCW">↺ Rot-</button>
         <button id="btnRestoreSnap" style="background:#a89368;color:#000;" title="Volta pro estado antes do último auto-sort" hidden>↩ Restore</button>
-        <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
-        <label style="font-size:11px;color:#a89368;">VIEW:</label>
+        <span style="font-size:12px;opacity:.6;margin:0 4px;">|</span>
+        <label style="font-size:12px;color:#a89368;">VIEW:</label>
         <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
         <button id="btnViewReduced" class="view-mode-btn">🔁 Reduced via R (6)</button>
-        <span style="font-size:10px;opacity:.6;margin:0 4px;">|</span>
+        <span style="font-size:12px;opacity:.6;margin:0 4px;">|</span>
         <button class="save-corrected" id="btnSaveCorrected" hidden>💾 Save corrections</button>
         <button class="reset-corrections" id="btnResetCorrections" hidden>↺ Reset</button>
-        <span style="font-size:11px;opacity:.7;" id="editorHint"></span>
+        <span style="font-size:12px;opacity:.7;" id="editorHint"></span>
       </div>
       <div id="wangRefSection" hidden>
-        <div style="font-size:11px;opacity:.7;text-align:center;margin-top:10px;">📐 Reference cr31 (esperado por bitmask):</div>
+        <div style="font-size:12px;opacity:.7;text-align:center;margin-top:10px;">📐 Reference cr31 (esperado por bitmask):</div>
         <div class="wang-ref-grid" id="wangRefGrid"></div>
       </div>
       <div class="wang-grid" id="wangGrid"></div>
@@ -478,13 +526,13 @@
     <div class="tiles-main">
       <h3>🌍 Test render — terreno procedural</h3>
       <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0 14px;">
-        <label style="font-size:11px;">Seed:</label>
+        <label style="font-size:12px;">Seed:</label>
         <input type="number" id="testSeed" value="42" style="width:80px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;">
-        <button id="btnRandomSeed" style="padding:4px 12px;font-size:11px;">🎲 Random</button>
-        <label style="font-size:11px;">Threshold:</label>
+        <button id="btnRandomSeed" style="padding:4px 12px;font-size:12px;">🎲 Random</button>
+        <label style="font-size:12px;">Threshold:</label>
         <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
-        <span id="testThresholdVal" style="font-size:11px;">50%</span>
-        <label style="font-size:11px;">Grid:</label>
+        <span id="testThresholdVal" style="font-size:12px;">50%</span>
+        <label style="font-size:12px;">Grid:</label>
         <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
           <option value="16x12">16×12 (preview)</option>
           <option value="24x18">24×18</option>
@@ -493,12 +541,12 @@
           <option value="64x48">64×48</option>
           <option value="80x60">80×60 (game scale)</option>
         </select>
-        <button id="btnRegenTest" style="padding:4px 12px;font-size:11px;">↻ Regen</button>
-        <span id="testGridInfo" style="font-size:10px;opacity:.5;margin-left:8px;"></span>
+        <button id="btnRegenTest" style="padding:4px 12px;font-size:12px;">↻ Regen</button>
+        <span id="testGridInfo" style="font-size:12px;opacity:.5;margin-left:8px;"></span>
       </div>
       <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:0 0 14px;">
-        <label style="font-size:11px;color:#a89368;">Bias:</label>
-        <select id="testBias" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:11px;">
+        <label style="font-size:12px;color:#a89368;">Bias:</label>
+        <select id="testBias" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
           <option value="white">White noise (fragmentado)</option>
           <option value="ca-3" selected>Cellular Automata · 3 iter</option>
           <option value="ca-5">Cellular Automata · 5 iter (blobs grandes)</option>
@@ -507,10 +555,10 @@
           <option value="value-4">Value noise · scale 4 (organic)</option>
           <option value="value-8">Value noise · scale 8 (continentes)</option>
         </select>
-        <span style="font-size:10px;opacity:.5;">CA = smoothing iterations · Value = block size pra interpolar</span>
+        <span style="font-size:12px;opacity:.5;">CA = smoothing iterations · Value = block size pra interpolar</span>
       </div>
       <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:96vw;"></canvas>
-      <div style="font-size:10px;opacity:.6;text-align:center;margin-top:6px;">ratio 4:3 (8000×6000 game map) · vertices via PRNG · cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
+      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:6px;">ratio 4:3 (8000×6000 game map) · vertices via PRNG · cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
     </div>
   </div>
 </div><!-- /tab-tiles -->
@@ -1077,7 +1125,7 @@ function buildGroupPopupHTML(folder, classified, opts={}){
   const baseCount = classified.bases.length;
   const animCount = classified.anims.length;
   const frameCount = classified.anims.reduce((s,a)=>s+a.frames.length, 0);
-  let html = `<div class="pop-title">${folderName} · ${total} items<br><span style="font-weight:normal;opacity:.6;font-size:9px;">${baseCount} bases · ${animCount} anims · ${frameCount} frames</span></div>`;
+  let html = `<div class="pop-title">${folderName} · ${total} items<br><span style="font-weight:normal;opacity:.6;font-size:12px;">${baseCount} bases · ${animCount} anims · ${frameCount} frames</span></div>`;
   flat.forEach(entry => {
     const tip = (typeof labelMap[entry.type] === 'function' ? labelMap[entry.type](entry) : labelMap[entry.type]) + ' · ' + entry.item.name;
     const cls = opts.clickable ? ' data-click="1"' : '';
@@ -1108,7 +1156,7 @@ function fillSumGrid(id, items, mode='folders'){
     sorted.forEach(([type, list]) => {
       const sec = document.createElement('div');
       sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
-      sec.innerHTML = `<div style="font-size:11px;color:#a89368;letter-spacing:2px;margin-bottom:4px;">${TYPE_ICONS[type]||'•'} ${type.toUpperCase()} <span style="opacity:.5;font-size:10px;">${list.length}</span></div>`;
+      sec.innerHTML = `<div style="font-size:12px;color:#a89368;letter-spacing:2px;margin-bottom:4px;">${TYPE_ICONS[type]||'•'} ${type.toUpperCase()} <span style="opacity:.5;font-size:12px;">${list.length}</span></div>`;
       const sub = document.createElement('div');
       sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
       list.slice(0, 100).forEach(it => {
@@ -1133,14 +1181,14 @@ function fillSumGrid(id, items, mode='folders'){
     });
     const sorted = Object.entries(tagsByName).sort((a,b) => b[1].length - a[1].length);
     if(sorted.length === 1 && sorted[0][0] === '(untagged)'){
-      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.6;font-size:11px;">Nenhum asset taggeado ainda.<br>Vá no Editor → asset selecionado → adicione tags.</div>';
+      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;opacity:.6;font-size:12px;">Nenhum asset taggeado ainda.<br>Vá no Editor → asset selecionado → adicione tags.</div>';
       return;
     }
     sorted.forEach(([tag, list]) => {
       const sec = document.createElement('div');
       sec.style.cssText = 'grid-column:1/-1;margin:6px 0 4px;';
       const isUntagged = tag === '(untagged)';
-      sec.innerHTML = `<div style="font-size:11px;color:${isUntagged?'#666':'#9fcfe8'};letter-spacing:2px;margin-bottom:4px;">🔖 ${tag} <span style="opacity:.5;font-size:10px;">${list.length}</span></div>`;
+      sec.innerHTML = `<div style="font-size:12px;color:${isUntagged?'#666':'#9fcfe8'};letter-spacing:2px;margin-bottom:4px;">🔖 ${tag} <span style="opacity:.5;font-size:12px;">${list.length}</span></div>`;
       const sub = document.createElement('div');
       sub.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;justify-content:start;';
       list.slice(0, 100).forEach(it => {
@@ -1360,14 +1408,14 @@ function renderDetailDashboard(){
       .sort((a,b) => b[1] - a[1])
       .map(([c, n]) => `<span class="dash-cat-chip" style="color:${catColors[c]||'#a89368'};border-color:${catColors[c]||'#4a3826'};">${catIcons[c]||'•'} ${c} <strong>${n}</strong></span>`)
       .join('');
-    if(total === 0) catBar.innerHTML = '<span style="opacity:.5;font-size:10px;">nenhuma ação na fila</span>';
+    if(total === 0) catBar.innerHTML = '<span style="opacity:.5;font-size:12px;">nenhuma ação na fila</span>';
   }
 
   // Queue cards
   const cardsEl = $("dashQueueCards");
   if(cardsEl){
     if(total === 0){
-      cardsEl.innerHTML = '<div style="text-align:center;padding:30px;opacity:.5;font-size:11px;">Queue vazia. Vá no Editor → preencha um tool → "Add to queue".</div>';
+      cardsEl.innerHTML = '<div style="text-align:center;padding:30px;opacity:.5;font-size:12px;">Queue vazia. Vá no Editor → preencha um tool → "Add to queue".</div>';
     } else {
       cardsEl.innerHTML = mcpQueue.map((q, idx) => {
         const st = q.done ? 'done' : q.failed ? 'failed' : q.running ? 'running' : 'pending';
@@ -1375,11 +1423,11 @@ function renderDetailDashboard(){
         const toolShort = (q.tool || '').replace(/^mcp__pixellab__/, '');
         const assetName = q.asset?.name || q.args?.description?.substring(0,40) || '—';
         const tsStr = q.ts ? new Date(q.ts).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
-        const resultStr = q.result ? `<span style="opacity:.6;font-size:9px;margin-left:8px;">${typeof q.result === 'string' ? q.result.substring(0,60) : 'result saved'}</span>` : '';
+        const resultStr = q.result ? `<span style="opacity:.6;font-size:12px;margin-left:8px;">${typeof q.result === 'string' ? q.result.substring(0,60) : 'result saved'}</span>` : '';
         return `<div class="qcard st-${st}" data-qidx="${idx}">
           <span class="qc-tool">${toolShort}</span>
           <span class="qc-asset" title="${assetName}">${assetName}${resultStr}</span>
-          <span style="font-size:9px;opacity:.4;min-width:40px;">${tsStr}</span>
+          <span style="font-size:12px;opacity:.4;min-width:40px;">${tsStr}</span>
           <span class="qc-status ${st}">${stLabel}</span>
           <div class="qc-actions">
             ${st === 'pending' ? `<button data-qaction="done" data-qi="${idx}" title="Marcar como concluído">✅</button>` : ''}
@@ -1451,7 +1499,7 @@ function renderDetailList(){
   }
   if(countEl) countEl.textContent = list.length;
   if(list.length === 0){
-    body.innerHTML = '<div style="opacity:.6;font-size:11px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
+    body.innerHTML = '<div style="opacity:.6;font-size:12px;text-align:center;padding:20px;grid-column:1/-1;">Nenhum asset aprovado.<br>Vá pra Manager e promova alguns.</div>';
     return;
   }
   const groups = groupByFolder(list);
@@ -1548,11 +1596,11 @@ function renderDetailMain(){
         <div>path: ${a.path}</div>
         <div>id: ${a.id||'(unknown)'} · target: ${a.target||'-'}</div>
         <div style="margin-top:8px;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;">
-          <span style="font-size:10px;color:#a89368;">🔖 TAGS:</span>
+          <span style="font-size:12px;color:#a89368;">🔖 TAGS:</span>
           <div id="tagChips" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
-          <input id="tagInput" type="text" placeholder="add tag…" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:3px 8px;font-size:11px;font-family:monospace;width:100px;">
+          <input id="tagInput" type="text" placeholder="add tag…" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:3px 8px;font-size:12px;font-family:monospace;width:100px;">
         </div>
-        <div style="margin-top:6px;font-size:10px;opacity:.6;">Hover no frame ↑ pra ver direções. Hover slot com sprite → preview grande abaixo. Click <strong>+</strong> em slots vazios pra gerar via MCP.</div>
+        <div style="margin-top:6px;font-size:12px;opacity:.6;">Hover no frame ↑ pra ver direções. Hover slot com sprite → preview grande abaixo. Click <strong>+</strong> em slots vazios pra gerar via MCP.</div>
       </div>
     </div>`;
   // 4 sections de tools serão geradas em sectionsHtml separadamente
@@ -1628,7 +1676,7 @@ function renderDetailMain(){
     if(!chipsEl) return;
     const tags = assetTags[a.path] || [];
     chipsEl.innerHTML = tags.map(t =>
-      `<span style="background:#1d3a4a;color:#9fcfe8;padding:2px 8px;border-radius:10px;font-size:10px;display:inline-flex;align-items:center;gap:4px;">${t}<span style="cursor:pointer;opacity:.6;font-weight:bold;" data-rm-tag="${t}">×</span></span>`
+      `<span style="background:#1d3a4a;color:#9fcfe8;padding:2px 8px;border-radius:10px;font-size:12px;display:inline-flex;align-items:center;gap:4px;">${t}<span style="cursor:pointer;opacity:.6;font-weight:bold;" data-rm-tag="${t}">×</span></span>`
     ).join('');
     chipsEl.querySelectorAll('[data-rm-tag]').forEach(x => x.onclick = () => {
       assetTags[a.path] = (assetTags[a.path] || []).filter(t => t !== x.dataset.rmTag);
@@ -1754,25 +1802,42 @@ const WANG_PRESETS = [
     ],
   },
   {
+    id: '6068781a-970c-4f9b-99fe-48ee90110038',
+    name: 'ocean ↔ sand (32px)',
+    meta: 'PixelLab · 32×32 tiles · sliced local',
+    sliced: true,
+    sliceFn: (i) => `../assets/terrain/ocean_sand_32/wang_${String(i).padStart(2,'0')}.png`,
+    tileSize: 32,
+    info: 'deep blue ocean water → warm sandy beach. Medium detail/shading, high top-down. Base tile IDs: lower=ffb24a7a upper=331870a5.',
+    refs: [
+      { url: 'https://api.pixellab.ai/mcp/tilesets/6068781a-970c-4f9b-99fe-48ee90110038/metadata', title: 'PixelLab metadata JSON' },
+    ],
+  },
+  {
+    id: '91c93294-a4fd-425e-8b10-eb1baf32890d',
+    name: 'dirt ↔ grass (32px)',
+    meta: 'PixelLab · 32×32 tiles · sliced local',
+    sliced: true,
+    sliceFn: (i) => `../assets/terrain/dirt_grass_32/wang_${String(i).padStart(2,'0')}.png`,
+    tileSize: 32,
+    info: 'dry brown dirt path → green grass field. Medium detail/shading, high top-down. Base tile IDs: lower=15201074 upper=c92163d3.',
+    refs: [
+      { url: 'https://api.pixellab.ai/mcp/tilesets/91c93294-a4fd-425e-8b10-eb1baf32890d/metadata', title: 'PixelLab metadata JSON' },
+    ],
+  },
+  // Archived 16×16 versions
+  {
     id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
-    name: 'ocean ↔ sand',
-    meta: 'PixelLab · 16×16 tiles · 64×64 PNG',
+    name: 'ocean ↔ sand (16px legacy)',
+    meta: 'PixelLab · 16×16 tiles · superseded by 32px',
     image: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/image',
     metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/2640e1f9-1e20-464d-b4ca-f700357733ee/metadata',
     tileSize: 16,
   },
   {
-    id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
-    name: 'dirt ↔ grass (cerrado v1)',
-    meta: 'PixelLab · 1ª tentativa (404)',
-    image: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/image',
-    metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/5398c10b-52b2-45b3-b6ab-dac141249b1f/metadata',
-    tileSize: 16,
-  },
-  {
     id: '267836d8-f211-4260-8917-938216d7e0f1',
-    name: 'dirt ↔ grass (cerrado v2)',
-    meta: 'PixelLab · regeração ~100s',
+    name: 'dirt ↔ grass (16px legacy)',
+    meta: 'PixelLab · 16×16 tiles · superseded by 32px',
     image: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/image',
     metadataUrl: 'https://api.pixellab.ai/mcp/tilesets/267836d8-f211-4260-8917-938216d7e0f1/metadata',
     tileSize: 16,
@@ -2368,8 +2433,8 @@ async function renderTiles(){
   if(p.info) infoHTML += `<br><br>${p.info}`;
   if(p.docLink) infoHTML += `<br>📖 <a href="${p.docLink}" target="_blank" style="color:#9fcfe8;">${p.docTitle || p.docLink}</a>`;
   if(p.refs?.length){
-    infoHTML += `<br><br><strong style="font-size:10px;letter-spacing:1px;">📚 REFS:</strong><ul style="margin:4px 0 0 18px;padding:0;">`;
-    p.refs.forEach(r => { infoHTML += `<li style="font-size:10px;"><a href="${r.url}" target="_blank" style="color:#9fcfe8;">${r.title}</a></li>`; });
+    infoHTML += `<br><br><strong style="font-size:12px;letter-spacing:1px;">📚 REFS:</strong><ul style="margin:4px 0 0 18px;padding:0;">`;
+    p.refs.forEach(r => { infoHTML += `<li style="font-size:12px;"><a href="${r.url}" target="_blank" style="color:#9fcfe8;">${r.title}</a></li>`; });
     infoHTML += `</ul>`;
   }
   $("tilesetInfo").innerHTML = infoHTML;
@@ -2562,6 +2627,151 @@ setInterval(()=>{
 }, 1000);
 
 render();
+
+// ========== MCP Live Status polling ==========
+const MCP_SERVER = 'http://localhost:8090';
+let _mcpPollInterval = null;
+let _mcpLiveConnected = false;
+
+async function pollMcpStatus() {
+  const dot = $('mcpLiveDot');
+  const cards = $('mcpLiveCards');
+  const countEl = $('mcpLiveCount');
+  const lastPoll = $('mcpLiveLastPoll');
+  try {
+    const r = await fetch(MCP_SERVER + '/mcp_status', {signal: AbortSignal.timeout(3000)});
+    if (!r.ok) throw new Error(r.status);
+    const jobs = await r.json();
+    _mcpLiveConnected = true;
+    dot.style.background = '#3da53d';
+    const now = new Date();
+    lastPoll.textContent = 'poll ' + now.toLocaleTimeString();
+    const active = jobs.filter(j => j.status === 'processing').length;
+    const done = jobs.filter(j => j.status === 'completed').length;
+    const failed = jobs.filter(j => j.status === 'failed').length;
+    const pending = jobs.filter(j => j.status === 'pending').length;
+    countEl.textContent = `${jobs.length} jobs (${active} active, ${done} done, ${failed} fail, ${pending} pending)`;
+    if (jobs.length === 0) {
+      cards.innerHTML = '<div style="opacity:.5;font-size:12px;text-align:center;padding:12px;">Nenhum job MCP ativo. Claude posta status automaticamente ao chamar PixelLab.</div>';
+      return;
+    }
+    // Preserve open state across re-renders
+    const openJobs = new Set();
+    cards.querySelectorAll('.mcp-job.open').forEach(el => {
+      const jid = el.dataset.jobId;
+      if (jid) openJobs.add(jid);
+    });
+    cards.innerHTML = jobs.map(j => {
+      const st = j.status || 'pending';
+      const elapsed = j.ts ? timeAgo(j.ts) : '';
+      const idShort = (j.id || '').substring(0, 8);
+      const desc = j.description || j.type || '—';
+      const isOpen = openJobs.has(j.id);
+      const openCls = isOpen ? ' open' : '';
+      // Inspect banner content
+      const inspectRows = [];
+      inspectRows.push(`<span class="mji-key">ID</span><span class="mji-val" style="font-family:monospace;">${j.id || '—'}</span>`);
+      inspectRows.push(`<span class="mji-key">Type</span><span class="mji-val">${j.type || '—'}</span>`);
+      inspectRows.push(`<span class="mji-key">Status</span><span class="mji-val">${st}</span>`);
+      inspectRows.push(`<span class="mji-key">Created</span><span class="mji-val">${j.ts || '—'}</span>`);
+      if (j.params) {
+        const pStr = typeof j.params === 'string' ? j.params : JSON.stringify(j.params, null, 2);
+        inspectRows.push(`<span class="mji-key">Params</span><span class="mji-val" style="font-family:monospace;font-size:12px;white-space:pre-wrap;">${escHtml(pStr)}</span>`);
+      }
+      if (j.tile_size) inspectRows.push(`<span class="mji-key">Tile size</span><span class="mji-val">${j.tile_size}</span>`);
+      // Preview images
+      let previewHtml = '';
+      if (j.previews && j.previews.length) {
+        previewHtml = `<div class="mji-preview">${j.previews.map(u => `<img src="${u}" width="64" height="64">`).join('')}</div>`;
+      } else if (j.preview) {
+        previewHtml = `<div class="mji-preview"><img src="${j.preview}" width="128" height="128"></div>`;
+      } else if (j.png_url) {
+        previewHtml = `<div class="mji-preview"><img src="${j.png_url}" width="128" height="128"></div>`;
+      }
+      // Log / error
+      let logHtml = '';
+      if (j.error) {
+        logHtml = `<div class="mji-log mji-error">${escHtml(String(j.error))}</div>`;
+      } else if (j.log) {
+        logHtml = `<div class="mji-log">${escHtml(String(j.log))}</div>`;
+      } else if (j.result) {
+        logHtml = `<div class="mji-log">${escHtml(typeof j.result === 'string' ? j.result : JSON.stringify(j.result, null, 2))}</div>`;
+      }
+      return `<div class="mcp-job st-${st}${openCls}" data-job-id="${j.id || ''}">
+        <div class="mj-row">
+          <span class="mj-dot"></span>
+          <span class="mj-desc">${escHtml(desc)}</span>
+          <span class="mj-id">${idShort}…</span>
+          <span class="mj-status">${st}</span>
+          <span class="mj-time">${elapsed}</span>
+          <span class="mj-chevron">▶</span>
+        </div>
+        <div class="mj-inspect">
+          <div class="mji-grid">${inspectRows.join('')}</div>
+          ${previewHtml}
+          ${logHtml}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    if (!_mcpLiveConnected) {
+      dot.style.background = '#e84d4d';
+      cards.innerHTML = '<div style="opacity:.5;font-size:12px;text-align:center;padding:12px;color:#e89f9f;">Server offline (localhost:8090). Rode: python tools/gallery_server.py</div>';
+      countEl.textContent = 'offline';
+    }
+    lastPoll.textContent = 'erro: ' + e.message;
+  }
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Toggle inspect banner on click
+$('mcpLiveCards').addEventListener('click', e => {
+  const row = e.target.closest('.mj-row');
+  if (!row) return;
+  const job = row.closest('.mcp-job');
+  if (job) job.classList.toggle('open');
+});
+
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return Math.floor(diff) + 's';
+  if (diff < 3600) return Math.floor(diff/60) + 'min';
+  return Math.floor(diff/3600) + 'h';
+}
+
+function startMcpPolling() {
+  if (_mcpPollInterval) return;
+  pollMcpStatus();
+  _mcpPollInterval = setInterval(pollMcpStatus, 4000);
+}
+
+function stopMcpPolling() {
+  if (_mcpPollInterval) { clearInterval(_mcpPollInterval); _mcpPollInterval = null; }
+}
+
+// Só faz polling quando tab Detail está visível
+const origSwitchTab = switchTab;
+switchTab = function(t) {
+  origSwitchTab(t);
+  if (t === 'tab-detail') startMcpPolling();
+  else stopMcpPolling();
+};
+
+$('btnMcpLiveRefresh').onclick = pollMcpStatus;
+$('btnMcpLiveClear').onclick = async () => {
+  try {
+    await fetch(MCP_SERVER + '/mcp_clear', {method:'POST'});
+    pollMcpStatus();
+  } catch(e) { console.warn('clear failed', e); }
+};
+
+// Se Detail já estiver ativo no load
+if (!document.getElementById('tab-detail').hidden) startMcpPolling();
 </script>
 
 </body>

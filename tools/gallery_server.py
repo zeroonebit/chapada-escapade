@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SAVES_DIR = ROOT / "tools" / "saves"
 HISTORY_DIR = SAVES_DIR / "history"
 
+_mcp_jobs = {}  # in-memory: {id: {id, type, description, status, result, ts}}
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -46,7 +48,19 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/list_assets":
             self.handle_list_assets()
             return
+        if self.path == "/mcp_status":
+            self.handle_get_mcp_status()
+            return
         super().do_GET()
+
+    def handle_get_mcp_status(self):
+        jobs = list(_mcp_jobs.values())
+        jobs.sort(key=lambda j: j.get("ts", ""), reverse=True)
+        msg = json.dumps(jobs)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(msg.encode("utf-8"))
 
     def handle_list_assets(self):
         base = ROOT / "assets" / "pixel_labs"
@@ -63,7 +77,48 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(msg.encode("utf-8"))
 
+    def handle_post_mcp_status(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self.send_error(400, f"JSON invalido: {e}")
+            return
+        job_id = data.get("id")
+        if not job_id:
+            self.send_error(400, "Campo 'id' obrigatorio")
+            return
+        data.setdefault("ts", datetime.now().isoformat())
+        _mcp_jobs[job_id] = data
+        SAVES_DIR.mkdir(parents=True, exist_ok=True)
+        mcp_path = SAVES_DIR / "mcp_live.json"
+        with open(mcp_path, "w", encoding="utf-8") as f:
+            json.dump(list(_mcp_jobs.values()), f, indent=2, ensure_ascii=False)
+        msg = json.dumps({"ok": True, "job_id": job_id, "status": data.get("status", "unknown")})
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(msg.encode("utf-8"))
+        st = data.get("status", "?")
+        desc = data.get("description", "")
+        print(f"[mcp] {st.upper()} {job_id[:8]}... {desc}")
+
     def do_POST(self):
+        if self.path == "/mcp_status":
+            self.handle_post_mcp_status()
+            return
+        if self.path == "/mcp_clear":
+            _mcp_jobs.clear()
+            mcp_path = SAVES_DIR / "mcp_live.json"
+            if mcp_path.exists():
+                mcp_path.write_text("[]", encoding="utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true,"cleared":true}')
+            print("[mcp] CLEARED all jobs")
+            return
         if self.path not in self.SAVE_ENDPOINTS:
             self.send_error(404, "Not found")
             return
@@ -107,7 +162,7 @@ def main():
     print(f"Serving {ROOT} at http://localhost:{port}")
     print(f"  Game:    http://localhost:{port}/")
     print(f"  Gallery: http://localhost:{port}/tools/asset_gallery.html")
-    print(f"  Endpoints: POST /save_decisions, POST /save_configs")
+    print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status")
     print(f"  Saves:   {SAVES_DIR.relative_to(ROOT)}/")
     server = ThreadingHTTPServer(("", port), Handler)
     try:
