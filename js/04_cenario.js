@@ -293,69 +293,36 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // 4 variantes de curral aleatorias por spawn
+    // Curral V2: sprite PixelLab 200×200 (substitui cercas procedural)
+    // 5 variantes random (pequeno/redondo/hexagonal/rustico/abandonado)
+    // Mascot/feno/balde/burger slots ainda procedural por cima (Option C)
     _buildCorral(cx, cy) {
+        // Catálogo de variantes — cada um tem displaySize e slotOffsetY
+        // (onde os 3 burger icons aparecem abaixo do gate visível do sprite)
         const VARIANTS = [
-            // V1: padrao chapada (fence curved + tower ornamental + lanterna baixa, gate aberto)
-            { side:'fence_curved_long', gate:'gate_open_double', corner:'tower_ornamental_thin',
-              lantern:'post_lantern_low', size:'medio', gateOpen:true },
-            // V2: rustico fechado (fence curva curta + posts esculpidos + lanterna alta)
-            { side:'fence_curved_short', gate:'gate_closed_solid', corner:'post_carved',
-              lantern:'post_lantern_thin', size:'medio', gateOpen:false },
-            // V3: grande aberto duplo (fence curved long + cantos com posts duplos + lanterna baixa)
-            { side:'fence_curved_long', gate:'gate_thin_double', corner:'post_double_rope',
-              lantern:'post_lantern_low', size:'grande', gateOpen:true },
-            // V4: pequeno reto (fence dupla curta horizontal + posts simples + sem lanterna)
-            { side:'fence_double_short_h', gate:'gate_open_double', corner:'post_thin_simple',
-              lantern:null, size:'pequeno', gateOpen:true },
+            { key: 'nat_obj_curral_01_pequeno',    displaySize: 240, slotOffsetY: 130, gateOpen: true,  name: 'pequeno_quadrado' },
+            { key: 'nat_obj_curral_02_redondo',    displaySize: 260, slotOffsetY: 140, gateOpen: true,  name: 'redondo_feno' },
+            { key: 'nat_obj_curral_03_hexagonal',  displaySize: 280, slotOffsetY: 150, gateOpen: true,  name: 'hexagonal_ornamental' },
+            { key: 'nat_obj_curral_04_rustico',    displaySize: 250, slotOffsetY: 135, gateOpen: true,  name: 'rustico_pedra' },
+            { key: 'nat_obj_curral_05_abandonado', displaySize: 260, slotOffsetY: 140, gateOpen: false, name: 'abandonado' },
         ];
         const v = VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
-        const SIZE_MAP = { pequeno:[100,80], medio:[120,96], grande:[150,120] };
-        const [W2, H2] = SIZE_MAP[v.size];
-        const SEG = 56;
-        const SCALE = 0.9;
 
-        // Chão de terra
-        this.add.rectangle(cx, cy, W2*2, H2*2, 0x7a5230, 0.38).setDepth(0.6);
-        this.add.rectangle(cx, cy, W2*1.6, H2*1.5, 0x8b6535, 0.22).setDepth(0.61);
-
-        const place = (x, y, key, scale = SCALE, angle = 0) => {
-            this.add.image(x, y, `nat_cerca_${key}`).setScale(scale).setAngle(angle).setDepth(1.5);
-        };
-
-        // Norte
-        for (let x = -W2 + SEG/2; x < W2; x += SEG)
-            place(cx + x, cy - H2, v.side);
-
-        // Sul (gate sempre no centro, aberto ou fechado)
-        for (let x = -W2 + SEG/2; x < W2; x += SEG) {
-            if (Math.abs(x) < SEG * 0.6) {
-                place(cx + x, cy + H2, v.gate, SCALE * 1.2);
-            } else {
-                place(cx + x, cy + H2, v.side);
-            }
-        }
-
-        // Leste/oeste rotacionados
-        for (let y = -H2 + SEG/2; y < H2; y += SEG) {
-            place(cx - W2, cy + y, v.side, SCALE, 90);
-            place(cx + W2, cy + y, v.side, SCALE, 90);
-        }
-
-        // Cantos
-        [[-W2,-H2],[W2,-H2],[-W2,H2],[W2,H2]].forEach(([ox,oy]) =>
-            place(cx+ox, cy+oy, v.corner, SCALE * 1.1)
-        );
-
-        // Lanternas decorativas (opcional)
-        if (v.lantern) {
-            place(cx - SEG, cy + H2 + 10, v.lantern, SCALE * 0.8);
-            place(cx + SEG, cy + H2 + 10, v.lantern, SCALE * 0.8);
+        // Sprite do curral — depth 1.5 pra ficar abaixo de mascot/burgers (depth 1.9-40)
+        // mas acima de chão/turf (depth 0.6-0.65)
+        if (this.textures.exists(v.key)) {
+            this.add.image(cx, cy, v.key)
+                .setDisplaySize(v.displaySize, v.displaySize)
+                .setDepth(1.5);
+        } else {
+            // Fallback: marker visual se sprite não carregou
+            this.add.rectangle(cx, cy, 200, 200, 0x7a5230, 0.5).setDepth(0.6);
         }
 
         this.corrals.push({
             x: cx, y: cy, sprite: null, processing: [], ready: [],
-            variant: v
+            variant: v,
+            slotOffsetY: v.slotOffsetY,  // override pra _slotPos em 08_curral.js
         });
     }
 

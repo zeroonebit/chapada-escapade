@@ -89,6 +89,11 @@ Object.assign(Jogo.prototype, {
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
         NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        // Currais v2: sprites 200×200 prontos (substituem cercas procedural)
+        const CURRAIS = ['curral_01_pequeno', 'curral_02_redondo', 'curral_03_hexagonal',
+                         'curral_04_rustico', 'curral_05_abandonado'];
+        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        this._curralKeys = CURRAIS.map(n => `nat_obj_${n}`);
         // Expor pra cenario
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);

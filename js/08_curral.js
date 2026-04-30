@@ -74,9 +74,10 @@ Object.assign(Jogo.prototype, {
     },
 
     // Posição do slot fixo (0/1/2) abaixo do gate sul do curral
+    // V2 sprites têm gateY variável → usa slotOffsetY da variante (com fallback 110)
     _slotPos(curral, slotIdx) {
         const SLOT_W = 32;
-        const baseY = curral.y + 110;  // abaixo da entrada
+        const baseY = curral.y + (curral.slotOffsetY ?? 110);
         const startX = curral.x - SLOT_W;
         return { x: startX + slotIdx * SLOT_W, y: baseY };
     },
