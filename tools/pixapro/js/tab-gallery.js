@@ -85,13 +85,27 @@ function renderInGamePanel(){
   }
 
   // Split: in-game (em pastas categorizadas) vs pending (inbox + outros)
+  // Inclui filesystem assets + MANIFEST entries sem decisão.
   const inGameUnaudited = [];
   const pendingUnaudited = [];
+  const seenPaths = new Set();
   for (const a of fsAssets) {
     const path = a.abs || a.path.replace(/^\.\.\//, '');
     if (decidedPaths.has(path)) continue;
+    seenPaths.add(path);
     if (/inbox/.test(path)) pendingUnaudited.push(a);
     else                    inGameUnaudited.push(a);
+  }
+  // Adiciona MANIFEST entries sem decisão que não foram cobertas por filesystem scan
+  // (manifest pode ter ids cujo path não bateu — fallback)
+  for (const m of MANIFEST) {
+    if (decisions[m.id]?.action) continue;  // já decidido
+    const cleanPath = (m.path || '').replace(/^\.\.\//, '');
+    if (cleanPath && seenPaths.has(cleanPath)) continue;  // já adicionado via fsAssets
+    if (m._audit) continue;  // entry sintética dynamic — não duplicar
+    const entry = { path: m.path, name: m.name };
+    if (/inbox/.test(cleanPath)) pendingUnaudited.push(entry);
+    else                          inGameUnaudited.push(entry);
   }
 
   // Helper: render grid com click handler que carrega no stage
