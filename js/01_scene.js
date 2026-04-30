@@ -35,7 +35,7 @@ class Jogo extends Phaser.Scene {
             this.dbg.enabled.farmers = false;
             this.dbg.enabled.shooters  = false;
             this.dbg.enabled.cows       = true;
-            this.dbg.enabled.oxen        = false;
+            this.dbg.enabled.bulls        = false;
             this.dbg.counts.cows        = 5;
             this.dbg.fx.weather          = 'storm';
             this.dbg.fx.timeOfDay        = 'midnight';
@@ -149,7 +149,7 @@ class Jogo extends Phaser.Scene {
             this.cows = [];
             this.abductedCows = [];
             // Só spawns se cow OU ox tá habilitado — _spawnVacas filtra by tipo internamente
-            if (this.dbg.enabled.cows || this.dbg.enabled.oxen) {
+            if (this.dbg.enabled.cows || this.dbg.enabled.bulls) {
                 this._spawnVacas(this.dbg.counts.cows);
             }
         }

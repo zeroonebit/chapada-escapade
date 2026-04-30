@@ -14,16 +14,16 @@ const MENU_I18N = {
         note_vfx:'All apply live.', note_debug:'Toggles apply on restart.',
         btn_apply:'APPLY + RESTART', btn_reset:'RESET', btn_preview:'👁 PREVIEW (live)',
         input:'Input', sensitivity:'Sensitivity', ufo_rot:'Disc rotation', beam_force:'Beam force (pull)',
-        vel_cows:'Cows/oxen speed', vel_farmer:'Farmers speed', shooter_dmg:'Shooter damage',
+        vel_cows:'Cows/bulls speed', vel_farmer:'Farmers speed', shooter_dmg:'Shooter damage',
         cows_spawn:'Cows spawn', farmer_spawn:'Farmers spawn',
-        cow:'Cow', ox:'Ox', farmer:'Farmer', beam_radius:'Beam radius',
+        cow:'Cow', bull:'Bull', farmer:'Farmer', beam_radius:'Beam radius',
         ufo_label:'Ship (UFO)', burger:'Burger', dist_sphere:'Spherical distortion',
         time:'Time', auto_cycle:'Auto-cycle (60s/preset)', preset:'Preset', shuffle_prev:'Shuffle on PREVIEW',
         active:'Active', intensity:'Intensity', frequency:'Frequency (drops)', angle:'Angle (-1=L, +1=R)',
         speed:'Speed', stroke_len:'Stroke length', flakes:'Flakes',
         sparkles_beam:'Beam sparkles', shake_beam:'Beam shake/flash', explosion:'Fancy explosion',
         quips:'Funny one-liners',
-        wang:'Wang tiles (debug)', cows_e:'Cows', oxen_e:'Oxen', farmers_e:'Farmers',
+        wang:'Wang tiles (debug)', cows_e:'Cows', bulls_e:'Bulls', farmers_e:'Farmers',
         shooters_e:'Shooters (towers)', beam_e:'Beam visual', scenery:'Scenery (fences/bushes)',
         language:'Language',
         atmosphere:'ATMOSPHERE', effects:'EFFECTS', snow_lbl:'SNOW',
@@ -46,14 +46,14 @@ const MENU_I18N = {
         input:'Controle', sensitivity:'Sensibilidade', ufo_rot:'Rotação do disco', beam_force:'Força do beam (atração)',
         vel_cows:'Velocidade vacas/bois', vel_farmer:'Velocidade fazendeiros', shooter_dmg:'Dano dos atiradores',
         cows_spawn:'Vacas spawn', farmer_spawn:'Fazendeiros spawn',
-        cow:'Vaca', ox:'Boi', farmer:'Fazendeiro', beam_radius:'Raio do beam',
+        cow:'Vaca', bull:'Boi', farmer:'Fazendeiro', beam_radius:'Raio do beam',
         ufo_label:'Nave (UFO)', burger:'Hambúrguer', dist_sphere:'Distorção esférica',
         time:'Hora', auto_cycle:'Ciclo automático (60s/preset)', preset:'Preset', shuffle_prev:'Aleatório na PRÉVIA',
         active:'Ativar', intensity:'Intensidade', frequency:'Frequência (gotas)', angle:'Ângulo (-1=esq, +1=dir)',
         speed:'Velocidade', stroke_len:'Comprimento do traço', flakes:'Flocos',
         sparkles_beam:'Sparkles no beam', shake_beam:'Shake/flash do beam', explosion:'Explosão fancy',
         quips:'Frases engraçadas',
-        wang:'Wang tiles (debug)', cows_e:'Vacas', oxen_e:'Bois', farmers_e:'Fazendeiros',
+        wang:'Wang tiles (debug)', cows_e:'Vacas', bulls_e:'Bois', farmers_e:'Fazendeiros',
         shooters_e:'Atiradores (torres)', beam_e:'Beam visual', scenery:'Cenário (cercas/moitas)',
         language:'Idioma',
         atmosphere:'ATMOSFERA', effects:'EFEITOS', snow_lbl:'NEVE',
@@ -70,7 +70,7 @@ const MENU_I18N = {
 const DBG_DEFAULTS = {
     enabled: {
         cows:     true,
-        oxen:     true,
+        bulls:    true,
         farmers:  true,
         shooters: true,
         beam:     true,
@@ -78,7 +78,7 @@ const DBG_DEFAULTS = {
     },
     scale: {
         cow:    1.0,
-        ox:     3.0,
+        bull:   3.0,
         farmer: 2.0,
         beam:   1.0,
         ufo:    1.0,
@@ -130,8 +130,8 @@ const DBG_DEFAULTS = {
 // Nota: as chaves do lado esquerdo SAO PT (legadas no localStorage do user),
 // nao can ser tocadas por replace global. Fonte: docs/configs_pre_translation.json
 const PT_TO_EN_MIGRATION = {
-    enabled:  { ['va'+'cas']:'cows', ['b'+'ois']:'oxen', ['fazendeir'+'os']:'farmers', ['atirador'+'es']:'shooters', ['cenari'+'o']:'scenery' },
-    scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'ox', ['fa'+'z']:'farmer', ['nav'+'e']:'ufo' },
+    enabled:  { ['va'+'cas']:'cows', ['b'+'ois']:'bulls', ['fazendeir'+'os']:'farmers', ['atirador'+'es']:'shooters', ['cenari'+'o']:'scenery' },
+    scale:    { ['va'+'ca']:'cow', ['b'+'oi']:'bull', ['fa'+'z']:'farmer', ['nav'+'e']:'ufo' },
     behavior: { ['sensibilidad'+'e']:'sensitivity', ['velVac'+'a']:'cowSpeed', ['velFa'+'z']:'farmerSpeed', ['danoAtirador']:'shooterDamage', ['discoRo'+'t']:'ufoRot' },
     counts:   { ['va'+'cas']:'cows', ['fazendeir'+'os']:'farmers' },
     fx:       { ['chuv'+'a']:'rain', ['chuvaIntensidad'+'e']:'rainIntensity', ['chuvaAngul'+'o']:'rainAngle', ['chuvaVelocidad'+'e']:'rainSpeed', ['chuvaTamanh'+'o']:'rainSize', ['chuvaCoun'+'t']:'rainCount', ['neblin'+'a']:'fog', ['neblinaIntensidad'+'e']:'fogIntensity', ['explosaoBo'+'a']:'fancyExplosion', ['snowIntensidad'+'e']:'snowIntensity', ['vent'+'o']:'wind', ['ventoForc'+'a']:'windForce' },
@@ -293,8 +293,8 @@ Object.assign(Jogo.prototype, {
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.cow">
                             <input type="number" class="val" data-show="scale.cow" /></label>
                         <label><span data-i18n="ox">Boi</span>
-                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.ox">
-                            <input type="number" class="val" data-show="scale.ox" /></label>
+                            <input type="range" min="0" max="10" step="0.01" data-cfg="scale.bull">
+                            <input type="number" class="val" data-show="scale.bull" /></label>
                         <label><span data-i18n="farmer">Fazendeiro</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.farmer">
                             <input type="number" class="val" data-show="scale.farmer" /></label>
@@ -393,7 +393,7 @@ Object.assign(Jogo.prototype, {
                     <fieldset>
                         <legend data-i18n="entities_onoff">ENTIDADES (ON/OFF)</legend>
                         <label><span data-i18n="cows_e">Vacas</span><input type="checkbox" data-cfg="enabled.cows"></label>
-                        <label><span data-i18n="oxen_e">Bois</span><input type="checkbox" data-cfg="enabled.oxen"></label>
+                        <label><span data-i18n="bulls_e">Bois</span><input type="checkbox" data-cfg="enabled.bulls"></label>
                         <label><span data-i18n="farmers_e">Fazendeiros</span><input type="checkbox" data-cfg="enabled.farmers"></label>
                         <label><span data-i18n="shooters_e">Atiradores (torres)</span><input type="checkbox" data-cfg="enabled.shooters"></label>
                         <label><span data-i18n="beam_e">Beam visual</span><input type="checkbox" data-cfg="enabled.beam"></label>
