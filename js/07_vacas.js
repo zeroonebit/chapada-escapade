@@ -1,4 +1,4 @@
-// 07_vacas.js — Cows/oxen: criação, IA, abdução, física no beam, virar burger
+﻿// 07_cows.js — Cows/oxen: criação, IA, abdução, física no beam, virar burger
 Object.assign(Jogo.prototype, {
 
     _createCow(x, y, tipo = 'holstein') {
@@ -77,8 +77,8 @@ Object.assign(Jogo.prototype, {
 
     _spawnVacas(n) {
         const W=8000, H=6000;
-        const okVaca = this.dbg?.enabled?.vacas !== false;
-        const okBoi  = this.dbg?.enabled?.bois  !== false;
+        const okVaca = this.dbg?.enabled?.cows !== false;
+        const okBoi  = this.dbg?.enabled?.oxen  !== false;
         for(let i=0; i<n; i++) {
             let tipo;
             if (okVaca && okBoi) {
@@ -127,8 +127,8 @@ Object.assign(Jogo.prototype, {
         if (this.cameras.main.worldView.contains(entity.x, entity.y)) {
             this.cameras.main.shake(120, 0.007);
         }
-        // FX upgrade: shockwave + sparks (toggle via dbg.fx.explosaoBoa)
-        if (this.dbg?.fx?.explosaoBoa && this._spawnExplosao) {
+        // FX upgrade: shockwave + sparks (toggle via dbg.fx.fancyExplosion)
+        if (this.dbg?.fx?.fancyExplosion && this._spawnExplosao) {
             this._spawnExplosao(entity.x, entity.y, color, 1.0);
         }
         // Quip ao matar farmer (one-shot — sem cooldown source)
@@ -348,7 +348,7 @@ Object.assign(Jogo.prototype, {
 
     _updateCowsAI() {
         // FLEE_DIST/FLEE_DIST_SQ vêm de 00_constants.js
-        const velMul = this.dbg?.behavior?.velVaca ?? 1.0;
+        const velMul = this.dbg?.behavior?.cowSpeed ?? 1.0;
         const now = this.time?.now ?? 0;
         for (let i = 0; i < this.cows.length; i++) {
             const v = this.cows[i];

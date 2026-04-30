@@ -1,4 +1,4 @@
-// 16_fx.js — Efeitos visuais: rain, fog, sparks, shockwaves, beam halo dust
+﻿// 16_fx.js — Efeitos visuais: rain, fog, sparks, shockwaves, beam halo dust
 // Usa Graphics + tweens (without textura) to ficar leve e without dependências.
 
 // ── BARREL POST-FX (distorção esférica sutil — efeito "superfície curva") ──
@@ -55,7 +55,7 @@ Object.assign(Jogo.prototype, {
         // Gera uma textura canvas with radial gradient: centro transparente,
         // bordas brancas with alpha médio. Mesmo conceito da fumaça (camadas
         // alpha) mas em formato de vinheta full-screen.
-        if (!this.textures.exists('vignette_neblina')) {
+        if (!this.textures.exists('vignette_fog')) {
             const SZ = 512;
             const c = document.createElement('canvas');
             c.width = SZ; c.height = SZ;
@@ -67,9 +67,9 @@ Object.assign(Jogo.prototype, {
             grad.addColorStop(1.00, 'rgba(255,255,255,0.40)');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, SZ, SZ);
-            this.textures.addCanvas('vignette_neblina', c);
+            this.textures.addCanvas('vignette_fog', c);
         }
-        this.fxFog = this.add.image(w/2, h/2, 'vignette_neblina')
+        this.fxFog = this.add.image(w/2, h/2, 'vignette_fog')
             .setScrollFactor(0).setDepth(170).setVisible(false);
         this.fxFog.setDisplaySize(w * 1.05, h * 1.05);
         // Pulsação suave de alpha to dar vida without distrair
@@ -84,8 +84,8 @@ Object.assign(Jogo.prototype, {
 
         // ── VENTO ──────────────────────────────────────────────────────
         // Particulas de swirl horizontal (curtas, semi-transparentes, drift
-        // lateral). _windAngle eh o valor atual usado pela chuva (lerp suave
-        // de fx.ventoForca). Wind so eh "lateral" — Y nao eh afetado.
+        // lateral). _windAngle eh o valor atual usado pela rain (lerp suave
+        // de fx.windForce). Wind so eh "lateral" — Y nao eh afetado.
         this.fxWind = this.add.container(0, 0).setScrollFactor(0).setDepth(179).setVisible(false);
         this._windParticles = [];
         this._windAngle = 0;
@@ -117,25 +117,25 @@ Object.assign(Jogo.prototype, {
     },
 
     // Update por frame — chamado via 01_scene._updateBody.
-    // Lerp _windAngle pra fx.ventoForca + anima as swirl particles.
+    // Lerp _windAngle pra fx.windForce + anima as swirl particles.
     _updateWind(delta) {
         const cfg = this.dbg?.fx;
         if (!cfg) return;
-        if (!cfg.vento) {
+        if (!cfg.wind) {
             this.fxWind?.setVisible(false);
             this._windAngle = 0;
             return;
         }
         this.fxWind?.setVisible(true);
-        // Lerp suave do angle atual ate ventoForca
-        const target = Phaser.Math.Clamp(cfg.ventoForca ?? 0.03, -0.05, 0.05);
+        // Lerp suave do angle atual ate windForce
+        const target = Phaser.Math.Clamp(cfg.windForce ?? 0.03, -0.05, 0.05);
         this._windAngle = (this._windAngle ?? 0) + (target - (this._windAngle ?? 0)) * 0.04;
         const w = this.scale.width;
         const speed = this._windAngle * 800;  // px/s lateral
         const dt = delta / 1000;
         this._windOscPhase = (this._windOscPhase + dt * 1.4) % (Math.PI * 2);
 
-        // Direcao do swirl segue o vento (positivo = right, espelha curve quando neg)
+        // Direcao do swirl segue o wind (positivo = right, espelha curve quando neg)
         const dirSign = this._windAngle >= 0 ? 1 : -1;
 
         for (const g of this._windParticles) {
@@ -166,13 +166,13 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Recria as gotas with base em dbg.fx.chuvaCount.
+    // Recria as gotas with base em dbg.fx.rainCount.
     // Cada gota reads angulo/comprimento/speed dinamicamente em each ciclo.
     _rebuildRain() {
         if (!this.fxRain) return;
         const w = this.scale.width, h = this.scale.height;
         const cfg = this.dbg?.fx || {};
-        const target = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
+        const target = Math.max(0, Math.round(cfg.rainCount ?? 80));
 
         // Stops tweens das gotas existentes
         this._rainDrops.forEach(d => this.tweens.killTweensOf(d));
@@ -205,16 +205,16 @@ Object.assign(Jogo.prototype, {
         const fall = () => {
             if (!drop || !drop.scene) return;
             const c = this.dbg?.fx || {};
-            // Vento override: se ativo, angulo da chuva eh _windAngle (driven
-            // pelo sistema de vento). Senao usa slider chuvaAngulo direto.
-            const ang     = (c.vento && this._windAngle !== undefined) ? this._windAngle : (c.chuvaAngulo ?? 0.0);
-            const lenMul  = c.chuvaTamanho ?? 1.0;   // 0.3..3 (mult. comprimento global)
-            const velMul  = c.chuvaVelocidade ?? 1.0; // 0.2..3 (mult. speed)
+            // Vento override: se ativo, angulo da rain eh _windAngle (driven
+            // pelo sistema de wind). Senao usa slider rainAngle direto.
+            const ang     = (c.wind && this._windAngle !== undefined) ? this._windAngle : (c.rainAngle ?? 0.0);
+            const lenMul  = c.rainSize ?? 1.0;   // 0.3..3 (mult. comprimento global)
+            const velMul  = c.rainSpeed ?? 1.0; // 0.2..3 (mult. speed)
             // Per-drop variacao: comprimento ±25% individual + alpha 0.45-1.0
             const baseLen = 18 * lenMul * (drop._lenScale || 1.0);
             // FIX: line tilt e drift agora usam MESMO multiplicador e MESMO sinal
             // (antes: dx negativo + drift positivo = linha tilta pra um lado e
-            // chuva cai pro outro). Agora a gota cai no sentido do tilt da linha.
+            // rain cai pro outro). Agora a gota cai no sentido do tilt da linha.
             const VISUAL_MUL = 8 * 0.45;  // 3.6
             const dx      = ang * baseLen * VISUAL_MUL;
             drop.setTo(0, 0, dx, baseLen);
@@ -327,28 +327,28 @@ Object.assign(Jogo.prototype, {
     _applyFXVisibility() {
         const cfg = this.dbg?.fx || {};
         if (this.fxWind) {
-            this.fxWind.setVisible(!!cfg.vento);
+            this.fxWind.setVisible(!!cfg.wind);
         }
         if (this.fxRain) {
-            const visible = !!cfg.chuva;
+            const visible = !!cfg.rain;
             this.fxRain.setVisible(visible);
-            if (visible) this.fxRain.setAlpha(cfg.chuvaIntensidade ?? 0.5);
+            if (visible) this.fxRain.setAlpha(cfg.rainIntensity ?? 0.5);
             // H3: debounce 200ms to evitar churn em slider drag
-            const targetCount = Math.max(0, Math.round(cfg.chuvaCount ?? 80));
+            const targetCount = Math.max(0, Math.round(cfg.rainCount ?? 80));
             if (targetCount !== this._rainCountAtual) this._scheduleRebuildRain();
         }
         if (this.fxSnow) {
             const visible = !!cfg.snow;
             this.fxSnow.setVisible(visible);
-            if (visible) this.fxSnow.setAlpha(cfg.snowIntensidade ?? 0.85);
+            if (visible) this.fxSnow.setAlpha(cfg.snowIntensity ?? 0.85);
             const targetCount = Math.max(0, Math.round(cfg.snowCount ?? 100));
             if (targetCount !== this._snowCountAtual) this._scheduleRebuildSnow();
         }
         if (this.fxFog) {
-            const visible = !!cfg.neblina;
+            const visible = !!cfg.fog;
             this.fxFog.setVisible(visible);
             if (visible) {
-                const intensity = cfg.neblinaIntensidade ?? 0.5;
+                const intensity = cfg.fogIntensity ?? 0.5;
                 // Kill pulsation tween e reaplica with faixa proporcional à intensidade
                 this.tweens.killTweensOf(this.fxFog);
                 this.tweens.add({

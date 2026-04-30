@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "captured": "2026-04-30",
+    "user": "Thiago/Bolinho",
+    "purpose": "Snapshot do localStorage chapEscapadeDebug ANTES do refator PT->EN",
+    "key": "chapEscapadeDebug",
+    "note": "Migration code em 15_debug_menu.js (_migratePtKeys) preserva esses valores remapeando para os nomes EN. Se algo der errado, esse JSON serve de backup."
+  },
+  "raw": "{\"enabled\":{\"vacas\":true,\"bois\":true,\"fazendeiros\":true,\"atiradores\":true,\"beam\":true,\"cenario\":true},\"scale\":{\"vaca\":2,\"boi\":3,\"faz\":1.5,\"beam\":2.25,\"nave\":1.42,\"burger\":1},\"behavior\":{\"sensibilidade\":1,\"pullBeam\":1.25,\"velVaca\":5,\"velFaz\":2.5,\"danoAtirador\":0,\"discoRot\":0,\"barrel\":0.1,\"inputMode\":\"mouse\",\"lang\":\"en\"},\"counts\":{\"vacas\":33,\"fazendeiros\":11},\"fx\":{\"chuva\":true,\"chuvaIntensidade\":1,\"chuvaAngulo\":0.04,\"chuvaVelocidade\":1.8,\"chuvaTamanho\":1.4,\"chuvaCount\":250,\"neblina\":true,\"neblinaIntensidade\":0.85,\"beamSparks\":true,\"beamShake\":true,\"explosaoBoa\":true,\"wangtiles\":true,\"tileRes\":16,\"tileStyle\":\"test\",\"timeOfDay\":\"day\",\"timeAutoCycle\":true,\"weather\":\"storm\",\"weatherShuffle\":true,\"snow\":false,\"snowCount\":100,\"snowIntensidade\":0.85,\"vento\":true,\"ventoForca\":0.04,\"quips\":true}}",
+  "parsed": {
+    "enabled": {
+      "vacas": true,
+      "bois": true,
+      "fazendeiros": true,
+      "atiradores": true,
+      "beam": true,
+      "cenario": true
+    },
+    "scale": {
+      "vaca": 2,
+      "boi": 3,
+      "faz": 1.5,
+      "beam": 2.25,
+      "nave": 1.42,
+      "burger": 1
+    },
+    "behavior": {
+      "sensibilidade": 1,
+      "pullBeam": 1.25,
+      "velVaca": 5,
+      "velFaz": 2.5,
+      "danoAtirador": 0,
+      "discoRot": 0,
+      "barrel": 0.1,
+      "inputMode": "mouse",
+      "lang": "en"
+    },
+    "counts": {
+      "vacas": 33,
+      "fazendeiros": 11
+    },
+    "fx": {
+      "chuva": true,
+      "chuvaIntensidade": 1,
+      "chuvaAngulo": 0.04,
+      "chuvaVelocidade": 1.8,
+      "chuvaTamanho": 1.4,
+      "chuvaCount": 250,
+      "neblina": true,
+      "neblinaIntensidade": 0.85,
+      "beamSparks": true,
+      "beamShake": true,
+      "explosaoBoa": true,
+      "wangtiles": true,
+      "tileRes": 16,
+      "tileStyle": "test",
+      "timeOfDay": "day",
+      "timeAutoCycle": true,
+      "weather": "storm",
+      "weatherShuffle": true,
+      "snow": false,
+      "snowCount": 100,
+      "snowIntensidade": 0.85,
+      "vento": true,
+      "ventoForca": 0.04,
+      "quips": true
+    }
+  },
+  "migration_map": {
+    "enabled": {
+      "vacas": "cows",
+      "bois": "oxen",
+      "fazendeiros": "farmers",
+      "atiradores": "shooters",
+      "cenario": "scenery"
+    },
+    "scale": {
+      "vaca": "cow",
+      "boi": "ox",
+      "faz": "farmer",
+      "nave": "ship"
+    },
+    "behavior": {
+      "sensibilidade": "sensitivity",
+      "velVaca": "cowSpeed",
+      "velFaz": "farmerSpeed",
+      "danoAtirador": "shooterDamage",
+      "discoRot": "shipRot"
+    },
+    "counts": {
+      "vacas": "cows",
+      "fazendeiros": "farmers"
+    },
+    "fx": {
+      "chuva": "rain",
+      "chuvaIntensidade": "rainIntensity",
+      "chuvaAngulo": "rainAngle",
+      "chuvaVelocidade": "rainSpeed",
+      "chuvaTamanho": "rainSize",
+      "chuvaCount": "rainCount",
+      "neblina": "fog",
+      "neblinaIntensidade": "fogIntensity",
+      "explosaoBoa": "fancyExplosion",
+      "snowIntensidade": "snowIntensity",
+      "vento": "wind",
+      "ventoForca": "windForce"
+    }
+  }
+}

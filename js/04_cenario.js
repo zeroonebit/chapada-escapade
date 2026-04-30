@@ -1,4 +1,4 @@
-// 04_cenario.js — Scenery: terreno procedural via Cellular Automata + obstáculos + corrals
+﻿// 04_scenery.js — Scenery: terreno procedural via Cellular Automata + obstáculos + corrals
 // Layered overlap: 4 camadas de altitude (water/sand/grass/dirt) renderizadas as
 // polígonos orgânicos oversize. Cells adjacentes do same nível fundem visualmente.
 Object.assign(Jogo.prototype, {

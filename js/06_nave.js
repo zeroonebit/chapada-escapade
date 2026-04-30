@@ -1,4 +1,4 @@
-// 06_nave.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
+﻿// 06_nave.js — Ship: cone do beam, LEDs, rastro do cursor, movimento, paciência
 Object.assign(Jogo.prototype, {
 
     _setupLEDs() {
@@ -85,7 +85,7 @@ Object.assign(Jogo.prototype, {
         if (window.__MOBILE_MODE && !this.input.activePointer.isDown) return;
         let dist = Phaser.Math.Distance.Between(this.ship.x, this.ship.y, c.x, c.y);
         if (dist > 50) {
-            const sens = this.dbg?.behavior?.sensibilidade ?? 1.0;
+            const sens = this.dbg?.behavior?.sensitivity ?? 1.0;
             // Carga: -10% speed by cow/ox abduzido (max -50% with 5 animais)
             // Farmers NÃO desaceleram a ship
             const carryingCows = (this.abductedCows || [])

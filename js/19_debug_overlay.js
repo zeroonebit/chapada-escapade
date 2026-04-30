@@ -1,4 +1,4 @@
-// 19_debug_overlay.js — Overlay de debug toggleable with F3
+﻿// 19_debug_overlay.js — Overlay de debug toggleable with F3
 // Shows: FPS, heap (Chrome only), counts de entidades/tweens, últimos erros.
 // Console.log estruturado a each 5s to você anexar em bug report.
 Object.assign(Jogo.prototype, {
@@ -63,7 +63,7 @@ Object.assign(Jogo.prototype, {
 
         const fps = this.game.loop.actualFps.toFixed(1);
         const tweens = this.tweens.getTweens().length;
-        const vacas = (this.cows || []).length;
+        const cows = (this.cows || []).length;
         const farmers = (this.farmers || []).length;
         const towers = (this.shooters || []).length;
         const bullets = (this.bullets || []).length;
@@ -90,7 +90,7 @@ Object.assign(Jogo.prototype, {
             `Heap:   ${heap}\n` +
             `Tweens: ${tweens}\n` +
             `\n` +
-            `Vacas:    ${vacas}\n` +
+            `Vacas:    ${cows}\n` +
             `Bois/abd: ${abduzidas}\n` +
             `Farmers:  ${farmers}\n` +
             `Towers:   ${towers}\n` +
@@ -108,7 +108,7 @@ Object.assign(Jogo.prototype, {
         const snap = {
             fps, heap,
             tweens: this.tweens.getTweens().length,
-            vacas: (this.cows || []).length,
+            cows: (this.cows || []).length,
             farmers: (this.farmers || []).length,
             towers: (this.shooters || []).length,
             bullets: (this.bullets || []).length,

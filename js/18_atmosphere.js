@@ -1,4 +1,4 @@
-// 18_atmosphere.js — Time of day overlay (gradient vertical) + weather presets
+﻿// 18_atmosphere.js — Time of day overlay (gradient vertical) + weather presets
 // 6 TOD presets (dawn/day/dusk/sunset/night/midnight) + auto-cycle opcional
 // Weather: clear / rain / fog / storm (storm has flash de raio aleatório)
 // Tutorial always em "day" + "clear" (não confunde o player)
@@ -63,45 +63,45 @@ Object.assign(Jogo.prototype, {
         const weather = this.tutorialMode ? 'clear' : (cfg.weather ?? 'clear');
         switch (weather) {
             case 'clear':
-                cfg.chuva = false;
-                cfg.neblina = false;
+                cfg.rain = false;
+                cfg.fog = false;
                 cfg.snow = false;
-                cfg.vento = false;
+                cfg.wind = false;
                 break;
             case 'rain':
-                cfg.chuva = true;
-                cfg.neblina = false;
+                cfg.rain = true;
+                cfg.fog = false;
                 cfg.snow = false;
-                cfg.vento = false;
-                cfg.chuvaIntensidade = Math.max(0.5, cfg.chuvaIntensidade ?? 0.5);
+                cfg.wind = false;
+                cfg.rainIntensity = Math.max(0.5, cfg.rainIntensity ?? 0.5);
                 break;
             case 'fog':
-                cfg.chuva = false;
-                cfg.neblina = true;
+                cfg.rain = false;
+                cfg.fog = true;
                 cfg.snow = false;
-                cfg.vento = false;
-                cfg.neblinaIntensidade = Math.max(0.6, cfg.neblinaIntensidade ?? 0.5);
+                cfg.wind = false;
+                cfg.fogIntensity = Math.max(0.6, cfg.fogIntensity ?? 0.5);
                 break;
             case 'snow':
-                cfg.chuva = false;
-                cfg.neblina = false;
+                cfg.rain = false;
+                cfg.fog = false;
                 cfg.snow = true;
-                cfg.vento = false;
+                cfg.wind = false;
                 cfg.snowCount = Math.max(80, cfg.snowCount ?? 100);
-                cfg.snowIntensidade = Math.max(0.7, cfg.snowIntensidade ?? 0.85);
+                cfg.snowIntensity = Math.max(0.7, cfg.snowIntensity ?? 0.85);
                 break;
             case 'storm':
-                cfg.chuva = true;
-                cfg.neblina = true;
+                cfg.rain = true;
+                cfg.fog = true;
                 cfg.snow = false;
-                cfg.vento = true;
-                cfg.chuvaIntensidade = 1.0;
-                cfg.neblinaIntensidade = 0.85;
-                cfg.chuvaCount = 250;
-                cfg.chuvaVelocidade = 1.8;
-                cfg.chuvaTamanho = 1.4;
-                cfg.chuvaAngulo = 0.04;
-                cfg.ventoForca   = 0.04;
+                cfg.wind = true;
+                cfg.rainIntensity = 1.0;
+                cfg.fogIntensity = 0.85;
+                cfg.rainCount = 250;
+                cfg.rainSpeed = 1.8;
+                cfg.rainSize = 1.4;
+                cfg.rainAngle = 0.04;
+                cfg.windForce   = 0.04;
                 break;
         }
         if (this._applyFXVisibility) this._applyFXVisibility();

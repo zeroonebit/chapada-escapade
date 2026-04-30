@@ -1,4 +1,4 @@
-// 02_preload.js — Carregamento de assets (PNGs)
+﻿// 02_preload.js — Carregamento de assets (PNGs)
 Object.assign(Jogo.prototype, {
 
     preload() {
@@ -118,7 +118,7 @@ Object.assign(Jogo.prototype, {
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
         NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
-        // Expor to cenario
+        // Expor to scenery
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
             .map(n => `nat_obj_${n}`);
         this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);

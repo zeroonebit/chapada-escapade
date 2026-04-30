@@ -1,4 +1,4 @@
-// 20_quips.js — Random funny one-liners que aparecem como floating text
+﻿// 20_quips.js — Random funny one-liners que aparecem como floating text
 // quando player abduz/mata/passa perto de coisas. Toggle em dbg.fx.quips.
 //
 // Cada linha agora tem mood: r=angry(red) g=funny(green) y=ironic(yellow) b=factual(blue)

@@ -1,4 +1,4 @@
-// 01_scene.js — Classe principal e orquestração de create() / update()
+﻿// 01_scene.js — Classe principal e orquestração de create() / update()
 // Os métodos da Scene estão distribuídos nos arquivos js/0X_*.js seguintes,
 // each um adicionado via Object.assign(Game.prototype, {...}).
 
@@ -32,23 +32,23 @@ class Jogo extends Phaser.Scene {
         // MOBILE_MODE: override pra experiencia atmosferica — cap 5 cows,
         // sem inimigos. Beam visual sem pull (so muda cone, nao puxa nada).
         if (window.__MOBILE_MODE && this.dbg) {
-            this.dbg.enabled.fazendeiros = false;
-            this.dbg.enabled.atiradores  = false;
-            this.dbg.enabled.vacas       = true;
-            this.dbg.enabled.bois        = false;
-            this.dbg.counts.vacas        = 5;
+            this.dbg.enabled.farmers = false;
+            this.dbg.enabled.shooters  = false;
+            this.dbg.enabled.cows       = true;
+            this.dbg.enabled.oxen        = false;
+            this.dbg.counts.cows        = 5;
             this.dbg.fx.weather          = 'storm';
             this.dbg.fx.timeOfDay        = 'midnight';
-            this.dbg.fx.chuva            = true;
-            this.dbg.fx.chuvaIntensidade = 1.0;
-            this.dbg.fx.chuvaCount       = 450;   // mais densidade
-            this.dbg.fx.chuvaVelocidade  = 1.4;   // um pouco mais lenta -> visivel mais tempo
-            this.dbg.fx.chuvaTamanho     = 2.2;   // gotas maiores
-            this.dbg.fx.chuvaAngulo      = 0.04;
-            this.dbg.fx.neblina          = true;
-            this.dbg.fx.neblinaIntensidade = 1.0;
-            this.dbg.fx.vento            = true;
-            this.dbg.fx.ventoForca       = 0.04;
+            this.dbg.fx.rain            = true;
+            this.dbg.fx.rainIntensity = 1.0;
+            this.dbg.fx.rainCount       = 450;   // mais densidade
+            this.dbg.fx.rainSpeed  = 1.4;   // um pouco mais lenta -> visivel mais tempo
+            this.dbg.fx.rainSize     = 2.2;   // gotas maiores
+            this.dbg.fx.rainAngle      = 0.04;
+            this.dbg.fx.fog          = true;
+            this.dbg.fx.fogIntensity = 1.0;
+            this.dbg.fx.wind            = true;
+            this.dbg.fx.windForce       = 0.04;
             // Sem game over no teaser — fuel congelado, sem drain
             this._tutCombustivelCongelado = true;
             // Beam visual SEM pull (igual etapa BEAM_VISUAL do tutorial):
@@ -102,12 +102,12 @@ class Jogo extends Phaser.Scene {
             this.terrainGrid = null;
             this._setupGrassPatch(W, H);    // 14_grass_patch.js
         } else {
-            // Scenery always roda (terreno/grass base); fences/moitas opcionais via cfg.cenario
+            // Scenery always roda (terreno/grass base); fences/moitas opcionais via cfg.scenery
             this._setupScenery(W, H);
-            if (this.dbg.enabled.atiradores) this._setupShooters();
+            if (this.dbg.enabled.shooters) this._setupShooters();
             else { this.bullets = []; this.shooters = []; }
             this.farmers = [];
-            if (this.dbg.enabled.fazendeiros) this._spawnFarmers(this.dbg.counts.fazendeiros);
+            if (this.dbg.enabled.farmers) this._spawnFarmers(this.dbg.counts.farmers);
         }
 
         // ── NAVE ─────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ class Jogo extends Phaser.Scene {
             this.ship.setFrictionAir(0.005).setBounce(1.0);
         }
         // Lock rotação física — disco não gira by colisão; rotação is feita manualmente
-        // via discoRot slider no _updateBody
+        // via shipRot slider no _updateBody
         this.ship.setFixedRotation();
         this._naveDir8 = 'S';
         if (this.anims.exists('ufo_hover_S')) this.ship.play('ufo_hover_S');
@@ -149,8 +149,8 @@ class Jogo extends Phaser.Scene {
             this.cows = [];
             this.abductedCows = [];
             // Só spawns se cow OU ox tá habilitado — _spawnVacas filtra by tipo internamente
-            if (this.dbg.enabled.vacas || this.dbg.enabled.bois) {
-                this._spawnVacas(this.dbg.counts.vacas);
+            if (this.dbg.enabled.cows || this.dbg.enabled.oxen) {
+                this._spawnVacas(this.dbg.counts.cows);
             }
         }
 
@@ -418,8 +418,8 @@ class Jogo extends Phaser.Scene {
         this.lightCone.setPosition(this.ship.x, this.ship.y);
 
         // Disco: rotação base (slider) + tilt baseado em mudança de speed lateral
-        const discoRot = this.dbg?.behavior?.discoRot ?? 0;
-        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + discoRot * (delta / 1000);
+        const shipRot = this.dbg?.behavior?.shipRot ?? 0;
+        this._discoBaseAngle = (this._discoBaseAngle ?? 0) + shipRot * (delta / 1000);
         const navVx = this.ship.body.velocity.x;
         const navVy = this.ship.body.velocity.y;
         const vAxDelta = navVx - (this._lastNavVx ?? navVx);
