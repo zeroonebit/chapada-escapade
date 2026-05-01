@@ -220,37 +220,37 @@ Object.assign(Jogo.prototype, {
             this.hud.radarDome = null;
         }
 
-        // ── Mascara da cavidade (clipa miniBg+miniGfx pra dentro do hollow) ──
-        // Sem o dome, a cavidade visivel e o proprio hollow central do ring,
-        // centralizado. Mask aperta um pouquinho pra nao vazar nas bordas
-        // do metal do ring.
+        // ── Sem mascara: o ring metalico ja "contem" visualmente o conteudo
+        // (qualquer leak fica embaixo do metal do ring, depth 199 < 199.5+).
+        // GeometryMask era a causa do bug de "radar nao inicializa primeira
+        // sessao" (mask shape nao aplicava direito ate scene restart).
+        // Se ja existe um mask remanescente de sessao anterior, remove.
         const MASK_RX = INNER_RX * 0.95;
         const MASK_RY = INNER_RY * 0.95;
-        const MASK_DY = 0;  // sem dome -> cavidade centralizada no ring
-        if (!this._radarMaskShape) {
-            this._radarMaskShape = this.make.graphics({ x: 0, y: 0, add: false });
-            this._radarMask = this._radarMaskShape.createGeometryMask();
-            this.hud.miniBg.setMask(this._radarMask);
-            if (this.hud.miniGfx) this.hud.miniGfx.setMask(this._radarMask);
+        if (this._radarMask) {
+            if (this.hud.miniBg)  this.hud.miniBg.clearMask();
+            if (this.hud.miniGfx) this.hud.miniGfx.clearMask();
+            this._radarMask = null;
         }
-        this._radarMaskShape.clear();
-        this._radarMaskShape.fillStyle(0xffffff);
-        this._radarMaskShape.fillEllipse(cx, cy + MASK_DY, MASK_RX * 2, MASK_RY * 2);
-        // Salva pos da cavidade pro _updateMinimap usar (sweep + quadrantes)
+        if (this._radarMaskShape) {
+            this._radarMaskShape.destroy();
+            this._radarMaskShape = null;
+        }
+        // Pos da cavidade pro _updateMinimap (sweep + blips renderizam aqui)
         this._mini.maskCx = cx;
-        this._mini.maskCy = cy + MASK_DY;
+        this._mini.maskCy = cy;
         this._mini.maskRx = MASK_RX;
         this._mini.maskRy = MASK_RY;
 
-        // Pool de sprites: applies mesma mascara (segue clipping do leak)
+        // Pool de sprites: limpa qualquer mask remanescente
         if (this._radarHoloPool && this._radarHoloPool.length) {
             for (const s of this._radarHoloPool) {
-                if (s && s.scene) s.setMask(this._radarMask);
+                if (s && s.scene) s.clearMask();
             }
         }
 
         // ── Fundo alien green vibrante + quadrantes ─────────────────────
-        const fcx = cx, fcy = cy + MASK_DY;
+        const fcx = cx, fcy = cy;
         this.hud.miniBg.clear();
         // Base verde-alien escura
         this.hud.miniBg.fillStyle(0x003322, 0.7);
