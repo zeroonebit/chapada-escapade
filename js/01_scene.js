@@ -233,6 +233,25 @@ class Jogo extends Phaser.Scene {
         this._setupPause();                 // 11_gameflow.js
         this._setupDebugMenu();             // 15_debug_menu.js — DOM debug panel
         this._setupFX();                    // 16_fx.js — rain, fog, helpers
+        // ── Shuffle atmosferico em cada restart (desktop, fora do tutorial) ──
+        // User pediu: cada partida comeca em condicoes random — clear/rain/snow/
+        // storm/fog/wind, TOD variado. Isto roda APOS _loadDebugCfg entao
+        // sobrescreve o que tava persistido pra esta sessao (sem salvar de volta).
+        if (!window.__MOBILE_MODE && !this.tutorialMode && this.dbg?.fx) {
+            const TODs = ['day','dawn','dusk','sunset','night','midnight'];
+            const WTHs = ['clear','rain','fog','storm','snow'];
+            this.dbg.fx.timeOfDay = TODs[Math.floor(Math.random() * TODs.length)];
+            this.dbg.fx.weather   = WTHs[Math.floor(Math.random() * WTHs.length)];
+            // Wind: 50/50 ligado/desligado, intensidade random quando ligado
+            this.dbg.fx.wind = Math.random() < 0.5;
+            if (this.dbg.fx.wind) {
+                this.dbg.fx.windForce = Phaser.Math.FloatBetween(-0.045, 0.045);
+            }
+            // Sync flags individuais (alguns FXs leem rain/snow/fog separado)
+            this.dbg.fx.rain  = (this.dbg.fx.weather === 'rain' || this.dbg.fx.weather === 'storm');
+            this.dbg.fx.snow  = (this.dbg.fx.weather === 'snow');
+            this.dbg.fx.fog   = (this.dbg.fx.weather === 'fog' || this.dbg.fx.weather === 'storm');
+        }
         this._setupAtmosphere();            // 18_atmosphere.js — TOD overlay + weather
         this._setupDebugOverlay();          // 19_debug_overlay.js — F3 overlay (FPS, heap, counts)
         this._setupQuips();                 // 20_quips.js — random funny one-liners
