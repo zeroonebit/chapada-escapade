@@ -236,9 +236,13 @@ Object.assign(Jogo.prototype, {
             this._radarMaskShape.destroy();
             this._radarMaskShape = null;
         }
+        // Cavidade fica acima do center geometrico do ring (perspectiva
+        // do PNG ja embute essa offset) -- sem isso o conteudo verde sai
+        // empurrado pra baixo e nao alinha com o hollow visivel.
+        const CAV_DY = -INNER_RY * 0.18;
         // Pos da cavidade pro _updateMinimap (sweep + blips renderizam aqui)
         this._mini.maskCx = cx;
-        this._mini.maskCy = cy;
+        this._mini.maskCy = cy + CAV_DY;
         this._mini.maskRx = MASK_RX;
         this._mini.maskRy = MASK_RY;
 
@@ -250,7 +254,7 @@ Object.assign(Jogo.prototype, {
         }
 
         // ── Fundo alien green vibrante + quadrantes ─────────────────────
-        const fcx = cx, fcy = cy;
+        const fcx = cx, fcy = cy + CAV_DY;
         this.hud.miniBg.clear();
         // Base verde-alien escura
         this.hud.miniBg.fillStyle(0x003322, 0.7);
@@ -280,6 +284,20 @@ Object.assign(Jogo.prototype, {
                     .setVisible(false);
                 this._radarHoloPool.push(s);
             }
+        }
+
+        // ── Overlay tint verde no radar inteiro (combina com tutorial box) ──
+        // Cor 0x001a08 (mesma do tutorial bg), alpha baixo (0.35) -- da
+        // unidade visual sem matar a leitura do radar/sweep/blips.
+        // Depth acima de tudo do radar (ring 199, miniBg 199.5, miniGfx 200,
+        // holos 200.5) -- 201 cobre o conjunto inteiro.
+        if (!this.hud.radarTint) {
+            this.hud.radarTint = this.add.ellipse(cx, cy, RING_W, RING_H, 0x001a08, 0.35)
+                .setScrollFactor(0).setDepth(201);
+        } else {
+            this.hud.radarTint.setPosition(cx, cy)
+                .setSize(RING_W, RING_H)
+                .setDisplaySize(RING_W, RING_H);
         }
     },
 
