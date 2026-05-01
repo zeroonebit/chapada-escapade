@@ -62,11 +62,15 @@ Object.assign(Jogo.prototype, {
         this.hud.combImg = this.hud.combinedBg;
         this.hud.eneImg  = this.hud.combinedBg;
         this.hud._combinedHud = true;
+        // Labels FUEL/GRAVITON com cor identica aos labels do HUD esquerdo
+        // (#aaffcc, fontSize 10px, letterSpacing 2). FUEL fica no espaco preto
+        // ACIMA da barra de fuel, GRAVITON fica no espaco preto ABAIXO da
+        // barra de graviton (posicionados em _positionHUD).
         this.hud.combLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
-        this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
+        this.hud.combLabel   = this.add.text(0,0,'FUEL',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
         this.hud.eneLabelBg = this.add.rectangle(0,0,1,1,0x000000,0).setScrollFactor(0).setDepth(D2).setVisible(false);
-        this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'13px',fill:'#ffffff',fontStyle:'bold',letterSpacing:2})
+        this.hud.eneLabel   = this.add.text(0,0,'GRAVITON',{fontSize:'10px',fill:'#aaffcc',fontStyle:'bold',letterSpacing:2})
             .setOrigin(0.5).setScrollFactor(0).setDepth(D2 + 0.5);
 
         // Hint initial removido — tutorial cobre instruções de input.
@@ -133,16 +137,20 @@ Object.assign(Jogo.prototype, {
             this.hud.combinedBg.setPosition(w/2, cy);
             if (this.hud.combFillImg) this.hud.combFillImg.setPosition(w/2, cy);
             if (this.hud.eneFillImg)  this.hud.eneFillImg.setPosition(w/2, cy);
-            // Labels overlay no center de each bar (offset = (fy + fh/2 - 0.5) * HUD_H)
+            // Labels nos slots pretos do HUD combined:
+            // FUEL fica ACIMA da barra de fuel (espaco preto top do fuel slot)
+            // GRAVITON fica ABAIXO da barra de graviton (espaco preto bottom)
             const combR = this.hud.combFillImg?._cropRegion;
             const eneR  = this.hud.eneFillImg?._cropRegion;
             if (combR && this.hud.combLabel) {
-                const lblY = cy + (combR.fy + combR.fh/2 - 0.5) * HUD_H;
+                // ~28px acima do top da barra
+                const lblY = cy + (combR.fy - 0.5) * HUD_H - 14;
                 this.hud.combLabel.setPosition(w/2, lblY);
                 this.hud.combLabelBg.setPosition(w/2, lblY);
             }
             if (eneR && this.hud.eneLabel) {
-                const lblY = cy + (eneR.fy + eneR.fh/2 - 0.5) * HUD_H;
+                // ~14px abaixo do bottom da barra
+                const lblY = cy + (eneR.fy + eneR.fh - 0.5) * HUD_H + 14;
                 this.hud.eneLabel.setPosition(w/2, lblY);
                 this.hud.eneLabelBg.setPosition(w/2, lblY);
             }
@@ -195,37 +203,30 @@ Object.assign(Jogo.prototype, {
         const cy = h - PAD_BOTTOM - RING_H/2;
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
-        // Sandwich: ring (depth 199) -> conteudo (199.5-200.5) -> dome (200.8 alpha 0.4)
+        // Ring metalico base (sem dome). Conteudo (sweep + blips) renderiza
+        // ACIMA do ring e DENTRO da cavidade clipada pela mascara abaixo.
+        // Depths: ring (199.0) -> miniBg (199.5) -> miniGfx + holos (200.5)
         if (!this.hud.radarRing && this.textures.exists('hud_radar_ring_v2')) {
             this.hud.radarRing = this.add.image(cx, cy, 'hud_radar_ring_v2')
                 .setScrollFactor(0).setDepth(199.0).setDisplaySize(RING_W, RING_H);
         } else if (this.hud.radarRing) {
             this.hud.radarRing.setPosition(cx, cy).setDisplaySize(RING_W, RING_H);
         }
-        // Dome: same width do ring, height proporcional ao source. Centered no
-        // ring pra cobrir uniforme. Alpha baixo (0.4) pra ver conteudo through.
-        if (this.textures.exists('hud_radar_dome_v2')) {
-            const DOME_W = RING_W;
-            const DOME_H = Math.round(DOME_W * 501 / 562);  // ~196
-            // Y offset: alinha o BASE do dome com center do ring pra ele "sair"
-            // do ring como hemisferio. Base = bottom do dome -> dome center y =
-            // cy - DOME_H/2 + (DOME_H * 0.18) (bottom rim do dome PNG tem 18% de altura).
-            const DOME_DY = -DOME_H * 0.18;  // base do dome sentando no ring (era 0.32 — alto demais)
-            if (!this.hud.radarDome) {
-                this.hud.radarDome = this.add.image(cx, cy + DOME_DY, 'hud_radar_dome_v2')
-                    .setScrollFactor(0).setDepth(200.8).setDisplaySize(DOME_W, DOME_H).setAlpha(0.4);
-            } else {
-                this.hud.radarDome.setPosition(cx, cy + DOME_DY).setDisplaySize(DOME_W, DOME_H);
-            }
+        // Glass dome removido (user achou que o radar nao inicializava na 1a sessao
+        // e pediu pra tirar o dome de qualquer forma). Se ja existe um dome
+        // remanescente de uma sessao anterior, esconde+destroi.
+        if (this.hud.radarDome) {
+            this.hud.radarDome.destroy();
+            this.hud.radarDome = null;
         }
 
-        // ── Mascara da cavidade (clipa leak embaixo do frame perspectivo) ──
-        // Cavidade visivel fica deslocada to cima por causa da perspectiva.
-        // Mask shape eh uma elipse menor + shift to cima -> clipa miniBg+miniGfx
-        // to que nada do radar (fill, sweep, blips) vaze outside da abertura.
-        const MASK_RX = INNER_RX * 0.92;
-        const MASK_RY = INNER_RY * 0.88;
-        const MASK_DY = -INNER_RY * 0.18;  // cavidade fica above do center do frame
+        // ── Mascara da cavidade (clipa miniBg+miniGfx pra dentro do hollow) ──
+        // Sem o dome, a cavidade visivel e o proprio hollow central do ring,
+        // centralizado. Mask aperta um pouquinho pra nao vazar nas bordas
+        // do metal do ring.
+        const MASK_RX = INNER_RX * 0.95;
+        const MASK_RY = INNER_RY * 0.95;
+        const MASK_DY = 0;  // sem dome -> cavidade centralizada no ring
         if (!this._radarMaskShape) {
             this._radarMaskShape = this.make.graphics({ x: 0, y: 0, add: false });
             this._radarMask = this._radarMaskShape.createGeometryMask();
