@@ -203,22 +203,45 @@ Object.assign(Jogo.prototype, {
         const cy = h - PAD_BOTTOM - RING_H/2;
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
-        // Ring metalico base (sem dome). Conteudo (sweep + blips) renderiza
-        // ACIMA do ring e DENTRO da cavidade clipada pela mascara abaixo.
-        // Depths: ring (199.0) -> miniBg (199.5) -> miniGfx + holos (200.5)
-        if (!this.hud.radarRing && this.textures.exists('hud_radar_ring_v2')) {
-            this.hud.radarRing = this.add.image(cx, cy, 'hud_radar_ring_v2')
-                .setScrollFactor(0).setDepth(199.0).setDisplaySize(RING_W, RING_H);
-        } else if (this.hud.radarRing) {
-            this.hud.radarRing.setPosition(cx, cy).setDisplaySize(RING_W, RING_H);
+        // Ring metalico do PNG escondido -- design custom abaixo evita o
+        // problema de alinhamento por causa da perspectiva embutida no PNG.
+        // Glass dome ja foi destruido em commit anterior.
+        if (this.hud.radarRing) {
+            this.hud.radarRing.setVisible(false);
         }
-        // Glass dome removido (user achou que o radar nao inicializava na 1a sessao
-        // e pediu pra tirar o dome de qualquer forma). Se ja existe um dome
-        // remanescente de uma sessao anterior, esconde+destroi.
         if (this.hud.radarDome) {
             this.hud.radarDome.destroy();
             this.hud.radarDome = null;
         }
+        // ── Frame custom do radar (Graphics, sem PNG) ──────────────────
+        // Anel escuro com borda externa verde glow + borda interna sutil.
+        // Cor matches o tutorial box (0x001a08 fill, 0x00ff55 strokes).
+        if (!this.hud.radarFrameGfx) {
+            this.hud.radarFrameGfx = this.add.graphics().setScrollFactor(0).setDepth(199.0);
+        }
+        const fg = this.hud.radarFrameGfx;
+        fg.clear();
+        // Outer glow (borda larga semi-transparente, da hint de profundidade)
+        fg.lineStyle(6, 0x00ff55, 0.10);
+        fg.strokeEllipse(cx, cy, INNER_RX * 2 + 26, INNER_RY * 2 + 26);
+        // Anel escuro principal (espessura 8px, fill via stroke largo)
+        fg.lineStyle(10, 0x001a08, 0.92);
+        fg.strokeEllipse(cx, cy, INNER_RX * 2 + 14, INNER_RY * 2 + 14);
+        // Borda externa fina verde brilhante
+        fg.lineStyle(1.6, 0x00ff55, 0.95);
+        fg.strokeEllipse(cx, cy, INNER_RX * 2 + 18, INNER_RY * 2 + 18);
+        // Borda interna fina verde (bordo do hollow)
+        fg.lineStyle(1.2, 0x00ff55, 0.7);
+        fg.strokeEllipse(cx, cy, INNER_RX * 2 + 10, INNER_RY * 2 + 10);
+        // 4 mini "rivets" cardinais no anel (pontinhos verdes)
+        fg.fillStyle(0x00ff55, 0.85);
+        const RIVET_R = 1.6;
+        const ring_rx = INNER_RX + 7;
+        const ring_ry = INNER_RY + 7;
+        fg.fillCircle(cx + ring_rx, cy, RIVET_R);
+        fg.fillCircle(cx - ring_rx, cy, RIVET_R);
+        fg.fillCircle(cx, cy + ring_ry, RIVET_R);
+        fg.fillCircle(cx, cy - ring_ry, RIVET_R);
 
         // ── Sem mascara: o ring metalico ja "contem" visualmente o conteudo
         // (qualquer leak fica embaixo do metal do ring, depth 199 < 199.5+).
@@ -236,10 +259,8 @@ Object.assign(Jogo.prototype, {
             this._radarMaskShape.destroy();
             this._radarMaskShape = null;
         }
-        // Cavidade fica acima do center geometrico do ring (perspectiva
-        // do PNG ja embute essa offset) -- sem isso o conteudo verde sai
-        // empurrado pra baixo e nao alinha com o hollow visivel.
-        const CAV_DY = -INNER_RY * 0.18;
+        // Frame custom symmetric -> cavidade no centro geometrico.
+        const CAV_DY = 0;
         // Pos da cavidade pro _updateMinimap (sweep + blips renderizam aqui)
         this._mini.maskCx = cx;
         this._mini.maskCy = cy + CAV_DY;
@@ -286,18 +307,19 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── Overlay tint verde no radar inteiro (combina com tutorial box) ──
-        // Cor 0x001a08 (mesma do tutorial bg), alpha baixo (0.35) -- da
-        // unidade visual sem matar a leitura do radar/sweep/blips.
-        // Depth acima de tudo do radar (ring 199, miniBg 199.5, miniGfx 200,
-        // holos 200.5) -- 201 cobre o conjunto inteiro.
+        // ── Vidro/scanline overlay sutil sobre a cavidade ──
+        // Elipse verde transparente cobre SO a cavidade (nao o frame),
+        // alpha 0.20 -- da o feel "atras de um vidro fume" sem matar
+        // a leitura dos blips. Combina com cor 0x001a08 do tutorial.
+        const TINT_RX = INNER_RX * 0.95;
+        const TINT_RY = INNER_RY * 0.95;
         if (!this.hud.radarTint) {
-            this.hud.radarTint = this.add.ellipse(cx, cy, RING_W, RING_H, 0x001a08, 0.35)
+            this.hud.radarTint = this.add.ellipse(cx, cy + CAV_DY, TINT_RX*2, TINT_RY*2, 0x001a08, 0.20)
                 .setScrollFactor(0).setDepth(201);
         } else {
-            this.hud.radarTint.setPosition(cx, cy)
-                .setSize(RING_W, RING_H)
-                .setDisplaySize(RING_W, RING_H);
+            this.hud.radarTint.setPosition(cx, cy + CAV_DY)
+                .setSize(TINT_RX*2, TINT_RY*2)
+                .setDisplaySize(TINT_RX*2, TINT_RY*2);
         }
     },
 
