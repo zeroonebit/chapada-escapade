@@ -166,6 +166,14 @@ class Jogo extends Phaser.Scene {
         this.shootersTotal = 0;  // shooters destruidos
         this.difficulty = 1;
         this.gameOver = false;
+        // Reset flags do cinematic game over — sem isto, o segundo game over
+        // chama _showGameOverUI mas a guard `if (this._gameOverUiShown) return`
+        // dispara e a UI nunca aparece. scene.restart() reusa a instancia,
+        // entao estes flags persistem se nao forem reaplicados aqui.
+        this._gameOverUiShown    = false;
+        this._gameOverFx         = null;
+        this._gameOverSmokeEvent = null;
+        this._gameOverDebrisSmoke = null;
         this.energiaMax = 100;
         this.energiaLed = 100;
         this.energiaDrain = 5;
