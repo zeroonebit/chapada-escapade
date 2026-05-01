@@ -111,11 +111,15 @@ Object.assign(Jogo.prototype, {
         if (this.hud.scoreLabel) this.hud.scoreLabel.setPosition(w/2, 32 + HDR_OFF);
         this.hud.scoreText.setPosition(w/2, 32 + VAL_OFF);
 
-        // 5 boxes em coluna LEFT — bull/cow/farmer/shooter/burgers
-        // Coluna HUD centralizada verticalmente (5 boxes × GAP_Y = 248px span)
-        const COL_X = 100, GAP_Y = 62;  // BOX_H 58 + 4 spacing
-        const FIRST_Y = Math.max(36, Math.round(h/2 - 2*GAP_Y));  // centro vertical (h/2 = mid box)
-        const VAL_X_OFF = 35;  // value text a direita do icon (icon ocupa half left)
+        // 5 boxes em ROW horizontal no TOP -- bull/cow/farmer/shooter/burgers
+        // Centralizadas em torno de w/2, abaixo do score box.
+        // BOX_W=180 + GAP_X=8 -> total 5*180 + 4*8 = 932px (cabe em 1280+)
+        const ROW_Y = 88;  // y do centro de cada box (32 score + 56 espaco = 88)
+        const GAP_X = 8;
+        const ROW_BOX_W = 180;
+        const TOTAL_W = 5 * ROW_BOX_W + 4 * GAP_X;
+        const FIRST_X = Math.round(w/2 - TOTAL_W/2 + ROW_BOX_W/2);
+        const VAL_X_OFF = 35;  // value text a direita do icon (igual ao layout antigo)
         const stackOrder = [
             { box: 'bullsBox',    lbl: 'bullsLabel',    val: 'bullsText' },
             { box: 'cowsBox',     lbl: 'cowsLabel',     val: 'cowsText' },
@@ -124,10 +128,10 @@ Object.assign(Jogo.prototype, {
             { box: 'burgersBox',  lbl: 'burgersLabel',  val: 'burgersText' },
         ];
         stackOrder.forEach((o, i) => {
-            const cy = FIRST_Y + i * GAP_Y;
-            if (this.hud[o.box]) this.hud[o.box].setPosition(COL_X, cy);
-            if (this.hud[o.lbl]) this.hud[o.lbl].setPosition(COL_X, cy + HDR_OFF);
-            if (this.hud[o.val]) this.hud[o.val].setPosition(COL_X + VAL_X_OFF, cy + VAL_OFF);
+            const cx = FIRST_X + i * (ROW_BOX_W + GAP_X);
+            if (this.hud[o.box]) this.hud[o.box].setPosition(cx, ROW_Y);
+            if (this.hud[o.lbl]) this.hud[o.lbl].setPosition(cx, ROW_Y + HDR_OFF);
+            if (this.hud[o.val]) this.hud[o.val].setPosition(cx + VAL_X_OFF, ROW_Y + VAL_OFF);
         });
 
         // Barras: combined PNG OU 2 separados
@@ -199,7 +203,8 @@ Object.assign(Jogo.prototype, {
         const INNER_RX = Math.round(RING_W * 0.32);  // raio horizontal interno
         const INNER_RY = Math.round(RING_H * 0.28);  // raio vertical interno
         const PAD_X = 14, PAD_BOTTOM = 18;
-        const cx = PAD_X + RING_W/2;
+        // Radar agora no canto BOTTOM-RIGHT (era bottom-left)
+        const cx = w - PAD_X - RING_W/2;
         const cy = h - PAD_BOTTOM - RING_H/2;
         this._mini = { cx, cy, rx: INNER_RX, ry: INNER_RY, r: INNER_RX };
 
