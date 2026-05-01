@@ -69,17 +69,37 @@ function renderGallery(){
   }
 }
 
+// Cache do scan in-game (regex precisa em js/*.js, server endpoint /scan_in_game_assets)
+// Repopula on demand quando renderInGamePanel é chamado (com TTL no client).
+// Fetch direto (não via Api.*) pra evitar issues de cache do api.js.
+let _inGameScanCache = null;
+let _inGameScanFetchedAt = 0;
+async function _ensureInGameScan(){
+  if (_inGameScanCache && (Date.now() - _inGameScanFetchedAt) < 60000) return _inGameScanCache;
+  try {
+    const url = (window.API_BASE || (location.port === '8090' ? '' : 'http://localhost:8090')) + '/scan_in_game_assets';
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await r.json();
+    _inGameScanCache = data?.paths || {};
+    _inGameScanFetchedAt = Date.now();
+  } catch(e) {
+    _inGameScanCache = {};
+  }
+  return _inGameScanCache;
+}
+
 // ⏳ PENDING panel unificado (roxo) — Audit tab.
 // Anim frames colapsados ao parent (1 thumb por anim, não 232 frames).
-// Outline color-coded: blue=in-game, yellow=not in-game.
+// Outline color-coded: blue=in-game (scan REAL via regex em js/), yellow=not in-game.
 // Click → loadAuditAsset() carrega no stage; asset NÃO sai da lista
 // (decisões só via P/D/R/C buttons ou hotkeys).
-function renderInGamePanel(){
+async function renderInGamePanel(){
   if (!$("sumPendingTotal")) return;
   if (!summaryData) {
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderInGamePanel(); });
     return;
   }
+  const inGameMap = await _ensureInGameScan();  // {path: bool}
   const fsAssets = summaryData?.filesystem || [];
   const decidedPaths = new Set();
   for (const k in decisions) {
@@ -87,8 +107,9 @@ function renderInGamePanel(){
     if (p) decidedPaths.add(p.replace(/^\.\.\//, ''));
   }
 
-  // Coleta tudo sem decisão
-  const allUnaudited = [];   // {path, name, inGame: bool, isAnimGroup?, animKey?}
+  // Coleta tudo sem decisão. inGame vem do scan real (regex em js/*.js)
+  // — NÃO mais heurística por path/inbox.
+  const allUnaudited = [];
   const seenPaths = new Set();
   for (const a of fsAssets) {
     const path = a.abs || a.path.replace(/^\.\.\//, '');
@@ -98,7 +119,7 @@ function renderInGamePanel(){
       path: a.path,
       cleanPath: path,
       name: path.split(/[\\/]/).pop().replace('.png',''),
-      inGame: !/inbox/.test(path),
+      inGame: !!inGameMap[path],   // scan real
     });
   }
   for (const m of MANIFEST) {
@@ -110,7 +131,7 @@ function renderInGamePanel(){
       path: m.path,
       cleanPath,
       name: m.name,
-      inGame: !/inbox/.test(cleanPath),
+      inGame: !!inGameMap[cleanPath],
     });
   }
 

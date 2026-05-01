@@ -86,4 +86,10 @@ const Api = {
     return fetch(API_BASE + '/pixellab_balance', { signal: AbortSignal.timeout(3000) })
       .then(r => r.json());
   },
+
+  // === Scan in-game assets (regex em js/*.js pra detectar refs reais) ===
+  scanInGameAssets() {
+    return fetch(API_BASE + '/scan_in_game_assets', { signal: AbortSignal.timeout(8000) })
+      .then(r => r.json());
+  },
 };
