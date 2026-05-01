@@ -135,42 +135,60 @@ async function renderInGamePanel(){
     });
   }
 
-  // === Collapse anim frames (toggle: window._auditCollapseAnims, default true) ===
-  // Path padrão: chars/<char>/anims/<anim>/<dir>/frame_NNN.png
-  // Group key = chars/<char>/anims/<anim> → 1 thumb representativo (S/frame_000 preferido)
-  const collapseAnims = window._auditCollapseAnims !== false;  // default true
+  // === Collapse: agrupa ANIMS (frames) + DIRECTION SETS (8 dirs base) ===
+  // Toggle: window._auditCollapseAnims (default true). Quando ON:
+  // - anims: chars/<char>/anims/<anim>/<dir>/frame_NNN.png → 1 thumb (group key = anim folder)
+  // - directions: chars/<char>/<DIR>.png ou chars/<X>/<color>/<DIR>.png → 1 thumb (S preferred)
+  const DIRS = ['N','NE','E','SE','S','SW','W','NW'];
+  const dirRe = new RegExp(`^(.+)/(${DIRS.join('|')})\\.png$`);
+  const collapseAnims = window._auditCollapseAnims !== false;
   let items;
   if (collapseAnims) {
-    const animGroups = new Map();
+    const groups = new Map();
     const standalone = [];
     for (const it of allUnaudited) {
-      const m = it.cleanPath.match(/^(.+?\/anims\/[^/]+)\/[^/]+\/frame_\d+\.png$/);
+      // 1) Anim frames
+      let m = it.cleanPath.match(/^(.+?\/anims\/[^/]+)\/[^/]+\/frame_\d+\.png$/);
       if (m) {
-        const groupKey = m[1];
-        if (!animGroups.has(groupKey)) {
-          const animName = groupKey.split('/').slice(-3).join('/');
-          animGroups.set(groupKey, {
+        const groupKey = '🎬 ' + m[1];
+        if (!groups.has(groupKey)) {
+          const animName = m[1].split('/').slice(-3).join('/');
+          groups.set(groupKey, {
             path: it.path, cleanPath: it.cleanPath,
-            name: '🎬 ' + animName,
-            inGame: it.inGame,
-            count: 0,
-            isAnimGroup: true,
-            groupKey,
+            name: '🎬 ' + animName, inGame: it.inGame,
+            count: 0, isAnimGroup: true, groupKey,
           });
         }
-        const g = animGroups.get(groupKey);
+        const g = groups.get(groupKey);
         g.count++;
         if (/\/S\//.test(it.cleanPath) && /frame_000/.test(it.cleanPath)) {
-          g.path = it.path;
-          g.cleanPath = it.cleanPath;
+          g.path = it.path; g.cleanPath = it.cleanPath;
         }
-      } else {
-        standalone.push(it);
+        continue;
       }
+      // 2) Direction sets (8-dir base)
+      m = it.cleanPath.match(dirRe);
+      if (m) {
+        const folder = m[1];        // chars/vaca  ou chars/scarecrow_droid/blue
+        const dir = m[2];           // N, NE, etc
+        const groupKey = '🧭 ' + folder;
+        if (!groups.has(groupKey)) {
+          const dispName = folder.split('/').slice(-2).join('/');
+          groups.set(groupKey, {
+            path: it.path, cleanPath: it.cleanPath,
+            name: '🧭 ' + dispName, inGame: it.inGame,
+            count: 0, isDirGroup: true, groupKey,
+          });
+        }
+        const g = groups.get(groupKey);
+        g.count++;
+        if (dir === 'S') { g.path = it.path; g.cleanPath = it.cleanPath; }
+        continue;
+      }
+      standalone.push(it);
     }
-    items = [...standalone, ...animGroups.values()];
+    items = [...standalone, ...groups.values()];
   } else {
-    // Toggle off: mostra TODOS os frames individuais
     items = allUnaudited;
   }
 
@@ -207,11 +225,18 @@ async function renderInGamePanel(){
     const img = document.createElement('img');
     img.src = it.path;
     wrap.appendChild(img);
-    if (it.isAnimGroup) {
+    if (it.isAnimGroup || it.isDirGroup) {
       const badge = document.createElement('span');
-      badge.textContent = '🎬';
+      badge.textContent = it.isAnimGroup ? '🎬' : '🧭';
       badge.style.cssText = 'position:absolute;top:-3px;right:-3px;font-size:10px;background:#1a1410;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;';
       wrap.appendChild(badge);
+      // Conta visível (X frames/dirs)
+      if (it.count > 1) {
+        const cnt = document.createElement('span');
+        cnt.textContent = it.count;
+        cnt.style.cssText = 'position:absolute;bottom:-3px;right:-3px;font-size:9px;background:#1a1410;color:#dfa6df;border-radius:8px;padding:0 4px;font-weight:bold;';
+        wrap.appendChild(cnt);
+      }
     }
     wrap.onclick = () => {
       if (typeof loadAuditAsset === 'function') loadAuditAsset(it.path, it.name);
@@ -246,7 +271,7 @@ document.addEventListener('click', (e) => {
   b.style.boxShadow = isOn ? '0 0 8px rgba(244,201,93,0.5)' : 'none';
   b.style.fontWeight = isOn ? 'bold' : 'normal';
   b.style.opacity = isOn ? '1' : '0.5';
-  b.textContent = isOn ? '🎬 Group anims' : '🎞️ Show all frames';
+  b.textContent = isOn ? '🎬🧭 Group anims+dirs' : '🎞️ Show all individuals';
   if (typeof renderInGamePanel === 'function') renderInGamePanel();
 });
 
