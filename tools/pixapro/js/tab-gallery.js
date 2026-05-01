@@ -135,40 +135,44 @@ async function renderInGamePanel(){
     });
   }
 
-  // === Collapse anim frames ===
+  // === Collapse anim frames (toggle: window._auditCollapseAnims, default true) ===
   // Path padrão: chars/<char>/anims/<anim>/<dir>/frame_NNN.png
-  // Group key = chars/<char>/anims/<anim> → 1 thumb representativo (primeiro frame S/sul ou qualquer)
-  const ANIM_RE = /\/anims\/([^/]+)\/([^/]+)\/frame_\d+\.png$/;
-  const animGroups = new Map();   // key → { repPath, count, inGame, name }
-  const standalone = [];
-
-  for (const it of allUnaudited) {
-    const m = it.cleanPath.match(/^(.+?\/anims\/[^/]+)\/[^/]+\/frame_\d+\.png$/);
-    if (m) {
-      const groupKey = m[1];  // chars/vaca/anims/walk
-      if (!animGroups.has(groupKey)) {
-        const animName = groupKey.split('/').slice(-3).join('/');  // vaca/anims/walk
-        animGroups.set(groupKey, {
-          path: it.path, cleanPath: it.cleanPath,
-          name: '🎬 ' + animName,
-          inGame: it.inGame,
-          count: 0,
-          isAnimGroup: true,
-          groupKey,
-        });
+  // Group key = chars/<char>/anims/<anim> → 1 thumb representativo (S/frame_000 preferido)
+  const collapseAnims = window._auditCollapseAnims !== false;  // default true
+  let items;
+  if (collapseAnims) {
+    const animGroups = new Map();
+    const standalone = [];
+    for (const it of allUnaudited) {
+      const m = it.cleanPath.match(/^(.+?\/anims\/[^/]+)\/[^/]+\/frame_\d+\.png$/);
+      if (m) {
+        const groupKey = m[1];
+        if (!animGroups.has(groupKey)) {
+          const animName = groupKey.split('/').slice(-3).join('/');
+          animGroups.set(groupKey, {
+            path: it.path, cleanPath: it.cleanPath,
+            name: '🎬 ' + animName,
+            inGame: it.inGame,
+            count: 0,
+            isAnimGroup: true,
+            groupKey,
+          });
+        }
+        const g = animGroups.get(groupKey);
+        g.count++;
+        if (/\/S\//.test(it.cleanPath) && /frame_000/.test(it.cleanPath)) {
+          g.path = it.path;
+          g.cleanPath = it.cleanPath;
+        }
+      } else {
+        standalone.push(it);
       }
-      const g = animGroups.get(groupKey);
-      g.count++;
-      // Prefere frame de direção S (sul) como rep
-      if (/\/S\//.test(it.cleanPath) && /frame_000/.test(it.cleanPath)) {
-        g.path = it.path;
-        g.cleanPath = it.cleanPath;
-      }
-    } else {
-      standalone.push(it);
     }
+    items = [...standalone, ...animGroups.values()];
+  } else {
+    // Toggle off: mostra TODOS os frames individuais
+    items = allUnaudited;
   }
-  const items = [...standalone, ...animGroups.values()];
 
   // Aplica filtro ativo (window._auditFilter: 'all' | 'in-game' | 'not-in-game')
   const filter = window._auditFilter || 'all';
@@ -222,13 +226,27 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest('.audit-filter');
   if (!b) return;
   window._auditFilter = b.dataset.filter;
-  // Visual: active button glow
   document.querySelectorAll('.audit-filter').forEach(x => {
     const active = (x === b);
     x.classList.toggle('active', active);
     x.style.boxShadow = active ? '0 0 8px rgba(244,201,93,0.5)' : 'none';
     x.style.fontWeight = active ? 'bold' : 'normal';
   });
+  if (typeof renderInGamePanel === 'function') renderInGamePanel();
+});
+
+// === Toggle: Group anim frames no sprite parent ===
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('#btnToggleCollapseAnims');
+  if (!b) return;
+  window._auditCollapseAnims = !(window._auditCollapseAnims !== false);
+  // window._auditCollapseAnims agora = false se era true (estava ativo), true se era false
+  const isOn = window._auditCollapseAnims !== false;
+  b.classList.toggle('active', isOn);
+  b.style.boxShadow = isOn ? '0 0 8px rgba(244,201,93,0.5)' : 'none';
+  b.style.fontWeight = isOn ? 'bold' : 'normal';
+  b.style.opacity = isOn ? '1' : '0.5';
+  b.textContent = isOn ? '🎬 Group anims' : '🎞️ Show all frames';
   if (typeof renderInGamePanel === 'function') renderInGamePanel();
 });
 
