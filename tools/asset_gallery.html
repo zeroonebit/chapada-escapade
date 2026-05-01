@@ -124,13 +124,18 @@
 
 <!-- 1 painel PENDING único (roxo) · outlines blue=in-game, yellow=not-in-game · anims colapsados -->
 <div class="summary-panel" id="auditPendingPanel" style="width:96vw;max-width:1400px;margin:14px auto;border-color:#a85ba8;background:rgba(74,29,74,0.18);min-height:auto;">
-  <h2 style="color:#dfa6df;">⏳ PENDING <span id="sumPendingTotal" style="margin-left:8px;color:#dfa6df;font-size:14px;">—</span>
-    <span style="margin-left:18px;font-size:12px;font-weight:normal;color:#a89368;letter-spacing:0;">
-      <span style="border:2px solid #4da9e8;padding:0 6px;border-radius:3px;">🔵 in-game</span>
-      <span style="margin-left:6px;border:2px solid #f4c95d;padding:0 6px;border-radius:3px;">🟡 not in-game</span>
-    </span>
-  </h2>
-  <div class="breakdown" id="sumPendingBd" style="opacity:.85;font-size:12px;">Click thumb pra abrir no stage. Anim frames colapsados ao parent asset.</div>
+  <h2 style="color:#dfa6df;">⏳ PENDING <span id="sumPendingTotal" style="margin-left:8px;color:#dfa6df;font-size:14px;">—</span></h2>
+  <div class="breakdown" id="sumPendingBd" style="opacity:.85;font-size:12px;margin-bottom:8px;">Click thumb pra abrir no stage. Anim frames colapsados ao parent asset.</div>
+  <!-- Filter buttons: All / In-game / Not in-game -->
+  <div id="auditFilterBar" style="display:flex;gap:6px;margin-bottom:10px;align-items:center;font-size:12px;">
+    <span style="color:#a89368;letter-spacing:1px;">FILTER:</span>
+    <button class="audit-filter active" data-filter="all"
+            style="padding:5px 14px;font-size:12px;background:#3a2d1e;color:#dfa6df;border:2px solid #a85ba8;border-radius:4px;cursor:pointer;font-family:monospace;">All</button>
+    <button class="audit-filter" data-filter="in-game"
+            style="padding:5px 14px;font-size:12px;background:rgba(77,169,232,0.15);color:#9fcfe8;border:2px solid #4da9e8;border-radius:4px;cursor:pointer;font-family:monospace;">🔵 In-game</button>
+    <button class="audit-filter" data-filter="not-in-game"
+            style="padding:5px 14px;font-size:12px;background:rgba(244,201,93,0.10);color:#f4c95d;border:2px solid #f4c95d;border-radius:4px;cursor:pointer;font-family:monospace;">🟡 Not in-game</button>
+  </div>
   <div class="grid-thumbs" id="sumPendingGridUnified" style="min-height:100px;max-height:480px;"></div>
 </div>
 
