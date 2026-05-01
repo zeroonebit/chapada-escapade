@@ -83,10 +83,12 @@ Object.assign(Jogo.prototype, {
         if (curral.mascotHay) curral.mascotHay.setVisible(hasDelivery);
     },
 
-    // Position do slot fixo (0/1/2) below do gate sul do corral
+    // Position do slot fixo (0/1/2) ACIMA do corral (era abaixo, user pediu)
     _slotPos(curral, slotIdx) {
-        const SLOT_W = 56;  // espaco entre burgers (era 32 — encostavam)
-        const baseY = curral.y + (curral.slotOffsetY ?? 110);  // V2 sprites tem gateY variavel
+        const SLOT_W = 56;  // espaco entre burgers
+        // Offset negativo: sobe acima do top do sprite. slotOffsetY usa o
+        // mesmo valor (gateY) -- inverte sinal pra ir pro norte.
+        const baseY = curral.y - (curral.slotOffsetY ?? 110);
         const startX = curral.x - SLOT_W;
         return { x: startX + slotIdx * SLOT_W, y: baseY };
     },

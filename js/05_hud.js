@@ -106,32 +106,31 @@ Object.assign(Jogo.prototype, {
         // Boxes V2: header (top) + body (icon+value)
         const HDR_OFF = -19;
         const VAL_OFF = 8;
-        // Score — top-center (mantido)
-        this.hud.scoreBg.setPosition(w/2, 32);
-        if (this.hud.scoreLabel) this.hud.scoreLabel.setPosition(w/2, 32 + HDR_OFF);
-        this.hud.scoreText.setPosition(w/2, 32 + VAL_OFF);
 
-        // 5 boxes em ROW horizontal no TOP -- bull/cow/farmer/shooter/burgers
-        // Centralizadas em torno de w/2, abaixo do score box.
-        // BOX_W=180 + GAP_X=8 -> total 5*180 + 4*8 = 932px (cabe em 1280+)
-        const ROW_Y = 88;  // y do centro de cada box (32 score + 56 espaco = 88)
+        // 6 boxes em ROW horizontal no TOP -- bulls/cows/farmers/SCORE/shooters/burgers
+        // Score no MEIO da row (4a posicao, idx=3). Tudo na mesma linha.
+        // BOX_W=180 + GAP_X=8 -> total 6*180 + 5*8 = 1120px (cabe em 1280+)
+        const ROW_Y = 56;  // y do centro de cada box (top do screen)
         const GAP_X = 8;
         const ROW_BOX_W = 180;
-        const TOTAL_W = 5 * ROW_BOX_W + 4 * GAP_X;
-        const FIRST_X = Math.round(w/2 - TOTAL_W/2 + ROW_BOX_W/2);
-        const VAL_X_OFF = 35;  // value text a direita do icon (igual ao layout antigo)
         const stackOrder = [
-            { box: 'bullsBox',    lbl: 'bullsLabel',    val: 'bullsText' },
-            { box: 'cowsBox',     lbl: 'cowsLabel',     val: 'cowsText' },
-            { box: 'farmersBox',  lbl: 'farmersLabel',  val: 'farmersText' },
-            { box: 'shootersBox', lbl: 'shootersLabel', val: 'shootersText' },
-            { box: 'burgersBox',  lbl: 'burgersLabel',  val: 'burgersText' },
+            { box: 'bullsBox',    lbl: 'bullsLabel',    val: 'bullsText',    centered: false },
+            { box: 'cowsBox',     lbl: 'cowsLabel',     val: 'cowsText',     centered: false },
+            { box: 'farmersBox',  lbl: 'farmersLabel',  val: 'farmersText',  centered: false },
+            { box: 'scoreBg',     lbl: 'scoreLabel',    val: 'scoreText',    centered: true  },  // SCORE no meio
+            { box: 'shootersBox', lbl: 'shootersLabel', val: 'shootersText', centered: false },
+            { box: 'burgersBox',  lbl: 'burgersLabel',  val: 'burgersText',  centered: false },
         ];
+        const TOTAL_W = stackOrder.length * ROW_BOX_W + (stackOrder.length - 1) * GAP_X;
+        const FIRST_X = Math.round(w/2 - TOTAL_W/2 + ROW_BOX_W/2);
+        const VAL_X_OFF = 35;  // value text a direita do icon (boxes com icon a esq)
         stackOrder.forEach((o, i) => {
             const cx = FIRST_X + i * (ROW_BOX_W + GAP_X);
             if (this.hud[o.box]) this.hud[o.box].setPosition(cx, ROW_Y);
             if (this.hud[o.lbl]) this.hud[o.lbl].setPosition(cx, ROW_Y + HDR_OFF);
-            if (this.hud[o.val]) this.hud[o.val].setPosition(cx + VAL_X_OFF, ROW_Y + VAL_OFF);
+            // Score: value text centralizado (sem icon). Outros: value a direita do icon
+            const valX = o.centered ? cx : (cx + VAL_X_OFF);
+            if (this.hud[o.val]) this.hud[o.val].setPosition(valX, ROW_Y + VAL_OFF);
         });
 
         // Barras: combined PNG OU 2 separados
