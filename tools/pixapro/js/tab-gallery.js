@@ -69,10 +69,13 @@ function renderGallery(){
   }
 }
 
-// 🎮 IN-GAME + ⏳ PENDING panels — render no Audit tab (chamado por tab-manager).
-// Click num thumb chama loadAuditAsset(path, name) que carrega no stage central.
+// ⏳ PENDING panel unificado (roxo) — Audit tab.
+// Anim frames colapsados ao parent (1 thumb por anim, não 232 frames).
+// Outline color-coded: blue=in-game, yellow=not in-game.
+// Click → loadAuditAsset() carrega no stage; asset NÃO sai da lista
+// (decisões só via P/D/R/C buttons ou hotkeys).
 function renderInGamePanel(){
-  if (!$("sumInGame")) return;
+  if (!$("sumPendingTotal")) return;
   if (!summaryData) {
     fetchSummary().then(d => { summaryData = d || {filesystem:[], orphans:[]}; renderInGamePanel(); });
     return;
@@ -84,78 +87,102 @@ function renderInGamePanel(){
     if (p) decidedPaths.add(p.replace(/^\.\.\//, ''));
   }
 
-  // Split: in-game (em pastas categorizadas) vs pending (inbox + outros)
-  // Inclui filesystem assets + MANIFEST entries sem decisão.
-  const inGameUnaudited = [];
-  const pendingUnaudited = [];
+  // Coleta tudo sem decisão
+  const allUnaudited = [];   // {path, name, inGame: bool, isAnimGroup?, animKey?}
   const seenPaths = new Set();
   for (const a of fsAssets) {
     const path = a.abs || a.path.replace(/^\.\.\//, '');
     if (decidedPaths.has(path)) continue;
     seenPaths.add(path);
-    if (/inbox/.test(path)) pendingUnaudited.push(a);
-    else                    inGameUnaudited.push(a);
-  }
-  // Adiciona MANIFEST entries sem decisão que não foram cobertas por filesystem scan
-  // (manifest pode ter ids cujo path não bateu — fallback)
-  for (const m of MANIFEST) {
-    if (decisions[m.id]?.action) continue;  // já decidido
-    const cleanPath = (m.path || '').replace(/^\.\.\//, '');
-    if (cleanPath && seenPaths.has(cleanPath)) continue;  // já adicionado via fsAssets
-    if (m._audit) continue;  // entry sintética dynamic — não duplicar
-    const entry = { path: m.path, name: m.name };
-    if (/inbox/.test(cleanPath)) pendingUnaudited.push(entry);
-    else                          inGameUnaudited.push(entry);
-  }
-
-  // Helper: render grid com click handler que carrega no stage
-  const renderGrid = (gridId, list) => {
-    const el = $(gridId);
-    if (!el) return;
-    el.innerHTML = '';
-    list.forEach(a => {
-      const wrap = document.createElement('div');
-      wrap.className = 'thumb';
-      wrap.style.width = '42px'; wrap.style.height = '42px'; wrap.style.cursor = 'pointer';
-      wrap.title = a.path.split(/[\\/]/).pop();
-      const img = document.createElement('img');
-      img.src = a.path;
-      wrap.appendChild(img);
-      wrap.onclick = () => {
-        const name = a.path.split(/[\\/]/).pop().replace('.png','');
-        if (typeof loadAuditAsset === 'function') loadAuditAsset(a.path, name);
-      };
-      el.appendChild(wrap);
+    allUnaudited.push({
+      path: a.path,
+      cleanPath: path,
+      name: path.split(/[\\/]/).pop().replace('.png',''),
+      inGame: !/inbox/.test(path),
     });
-  };
-
-  // 🎮 IN-GAME panel
-  $("sumInGame").textContent = inGameUnaudited.length;
-  const byCat = {};
-  for (const a of inGameUnaudited) {
-    const path = a.abs || a.path;
-    let cat = 'outros';
-    const m = path.match(/pixel_labs\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/);
-    if (m) {
-      if (m[1] === 'hud')                cat = '📺 HUD';
-      else if (m[1] === 'items')         cat = '🍔 items';
-      else if (m[1] === 'chars' && m[2] === 'nature') cat = '🌳 nature/' + (m[3] || '?');
-      else if (m[1] === 'chars' && m[3] === 'anims')  cat = '🎬 anims/' + (m[2] || '?');
-      else if (m[1] === 'chars')         cat = '🧍 chars/' + (m[2] || '?');
-    }
-    byCat[cat] = (byCat[cat] || 0) + 1;
   }
-  const sorted = Object.entries(byCat).sort((a,b) => b[1] - a[1]);
-  $("sumInGameBd").innerHTML = sorted.slice(0, 8)
-    .map(([c, n]) => `<span style="color:#9fcfe8;margin-right:10px;">${c}: <strong>${n}</strong></span>`)
-    .join('') + (sorted.length > 8 ? ` <span style="opacity:.5">+ ${sorted.length-8} cats</span>` : '');
-  renderGrid('sumInGameGrid', inGameUnaudited);
+  for (const m of MANIFEST) {
+    if (decisions[m.id]?.action) continue;
+    if (m._audit) continue;
+    const cleanPath = (m.path || '').replace(/^\.\.\//, '');
+    if (cleanPath && seenPaths.has(cleanPath)) continue;
+    allUnaudited.push({
+      path: m.path,
+      cleanPath,
+      name: m.name,
+      inGame: !/inbox/.test(cleanPath),
+    });
+  }
 
-  // ⏳ PENDING panel (inbox + sem uso)
-  if ($("sumAuditPending")) {
-    $("sumAuditPending").textContent = pendingUnaudited.length;
-    $("sumAuditPendingBd").innerHTML = `📁 ${pendingUnaudited.length} sem decisão fora do game (inbox + uncategorized)`;
-    renderGrid('sumAuditPendingGrid', pendingUnaudited);
+  // === Collapse anim frames ===
+  // Path padrão: chars/<char>/anims/<anim>/<dir>/frame_NNN.png
+  // Group key = chars/<char>/anims/<anim> → 1 thumb representativo (primeiro frame S/sul ou qualquer)
+  const ANIM_RE = /\/anims\/([^/]+)\/([^/]+)\/frame_\d+\.png$/;
+  const animGroups = new Map();   // key → { repPath, count, inGame, name }
+  const standalone = [];
+
+  for (const it of allUnaudited) {
+    const m = it.cleanPath.match(/^(.+?\/anims\/[^/]+)\/[^/]+\/frame_\d+\.png$/);
+    if (m) {
+      const groupKey = m[1];  // chars/vaca/anims/walk
+      if (!animGroups.has(groupKey)) {
+        const animName = groupKey.split('/').slice(-3).join('/');  // vaca/anims/walk
+        animGroups.set(groupKey, {
+          path: it.path, cleanPath: it.cleanPath,
+          name: '🎬 ' + animName,
+          inGame: it.inGame,
+          count: 0,
+          isAnimGroup: true,
+          groupKey,
+        });
+      }
+      const g = animGroups.get(groupKey);
+      g.count++;
+      // Prefere frame de direção S (sul) como rep
+      if (/\/S\//.test(it.cleanPath) && /frame_000/.test(it.cleanPath)) {
+        g.path = it.path;
+        g.cleanPath = it.cleanPath;
+      }
+    } else {
+      standalone.push(it);
+    }
+  }
+  const items = [...standalone, ...animGroups.values()];
+
+  // Render no painel unificado
+  $("sumPendingTotal").textContent = items.length;
+  const inGameCount = items.filter(x => x.inGame).length;
+  const notInGameCount = items.length - inGameCount;
+  $("sumPendingBd").innerHTML =
+    `<span style="color:#9fcfe8;">🔵 ${inGameCount} in-game</span> · ` +
+    `<span style="color:#f4c95d;">🟡 ${notInGameCount} not in-game</span> · ` +
+    `<span style="opacity:.6;">Click no thumb pra abrir no stage. Anim frames colapsados.</span>`;
+
+  const grid = $("sumPendingGridUnified");
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const it of items) {
+    const wrap = document.createElement('div');
+    wrap.className = 'thumb';
+    wrap.style.width = '46px'; wrap.style.height = '46px';
+    wrap.style.cursor = 'pointer';
+    wrap.style.position = 'relative';
+    wrap.style.borderColor = it.inGame ? '#4da9e8' : '#f4c95d';
+    wrap.style.borderWidth = '2px';
+    wrap.title = it.name + (it.isAnimGroup ? ` (${it.count} frames)` : '');
+    const img = document.createElement('img');
+    img.src = it.path;
+    wrap.appendChild(img);
+    if (it.isAnimGroup) {
+      const badge = document.createElement('span');
+      badge.textContent = '🎬';
+      badge.style.cssText = 'position:absolute;top:-3px;right:-3px;font-size:10px;background:#1a1410;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;';
+      wrap.appendChild(badge);
+    }
+    wrap.onclick = () => {
+      if (typeof loadAuditAsset === 'function') loadAuditAsset(it.path, it.name);
+    };
+    grid.appendChild(wrap);
   }
 }
 

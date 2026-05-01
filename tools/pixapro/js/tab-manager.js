@@ -95,7 +95,7 @@ function render(){
   _updateStats();
 
   _renderSide('gridLeft',  'discard', '❌ DISCARDED (N)');
-  _renderSide('gridRight', 'promote', '✅ PROMOTED (N)');
+  _renderSide('gridRight', 'promote', '✅ APPROVED (N)');
   // #grid antigo (linha de pending no rodapé) removido — pending agora vive
   // nos 2 painéis PENDING (IN-GAME) + PENDING (NOT IN-GAME) abaixo do stats.
 }

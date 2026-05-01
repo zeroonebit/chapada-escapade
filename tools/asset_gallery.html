@@ -116,22 +116,22 @@
   </div>
 
   <div class="side-grid right" id="gridRight">
-    <div class="side-title">✅ PROMOTED (0)</div>
+    <div class="side-title">✅ APPROVED (0)</div>
   </div>
 </div>
 
 <div class="stats" id="stats">—</div>
 
-<!-- 2 painéis PENDING empilhados full-width abaixo do workspace · click thumb foca no stage -->
-<div class="summary-panel promoted" id="auditInGamePanel" style="width:96vw;max-width:1400px;margin:14px auto 8px;border-color:#9fcfe8;background:rgba(29,58,74,0.15);min-height:auto;">
-  <h2 style="color:#9fcfe8;">🎮 PENDING (IN-GAME) <span id="sumInGame" style="margin-left:8px;color:#9fcfe8;font-size:14px;">—</span></h2>
-  <div class="breakdown" id="sumInGameBd" style="opacity:.85;font-size:12px;">Sem decisão & em uso pelo game (categorized folders).</div>
-  <div class="grid-thumbs" id="sumInGameGrid" style="min-height:100px;max-height:300px;"></div>
-</div>
-<div class="summary-panel pending" id="auditPendingPanel" style="width:96vw;max-width:1400px;margin:0 auto 14px;min-height:auto;">
-  <h2>⏳ PENDING (NOT IN-GAME) <span id="sumAuditPending" style="margin-left:8px;color:#f4c95d;font-size:14px;">—</span></h2>
-  <div class="breakdown" id="sumAuditPendingBd" style="font-size:12px;opacity:.85;">Sem decisão & NÃO em uso (inbox + manifest pending).</div>
-  <div class="grid-thumbs" id="sumAuditPendingGrid" style="min-height:100px;max-height:240px;"></div>
+<!-- 1 painel PENDING único (roxo) · outlines blue=in-game, yellow=not-in-game · anims colapsados -->
+<div class="summary-panel" id="auditPendingPanel" style="width:96vw;max-width:1400px;margin:14px auto;border-color:#a85ba8;background:rgba(74,29,74,0.18);min-height:auto;">
+  <h2 style="color:#dfa6df;">⏳ PENDING <span id="sumPendingTotal" style="margin-left:8px;color:#dfa6df;font-size:14px;">—</span>
+    <span style="margin-left:18px;font-size:12px;font-weight:normal;color:#a89368;letter-spacing:0;">
+      <span style="border:2px solid #4da9e8;padding:0 6px;border-radius:3px;">🔵 in-game</span>
+      <span style="margin-left:6px;border:2px solid #f4c95d;padding:0 6px;border-radius:3px;">🟡 not in-game</span>
+    </span>
+  </h2>
+  <div class="breakdown" id="sumPendingBd" style="opacity:.85;font-size:12px;">Click thumb pra abrir no stage. Anim frames colapsados ao parent asset.</div>
+  <div class="grid-thumbs" id="sumPendingGridUnified" style="min-height:100px;max-height:480px;"></div>
 </div>
 
 <div class="refresh" id="refreshInfo" style="opacity:.4;">próximo refresh em 8s</div>
