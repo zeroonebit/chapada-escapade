@@ -101,17 +101,30 @@ Object.assign(Jogo.prototype, {
             // tileStyle: 'test' (placeholder), 'dirt_grass_32' ou 'ocean_sand_32'
             const style = this.dbg?.fx?.tileStyle;
             const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
+            // Diagnostico: log style escolhido + se assets carregaram
+            console.log('[WANG] tileStyle=', style, 'useStyle=', useStyle,
+                'has wang_00=', this.textures.exists(`wang_${style}_00`));
+            // Se style escolhido nao tem assets, avisa missing tiles
+            if (style && style !== 'test' && !useStyle) {
+                console.warn('[WANG] style "' + style + '" sem assets carregados — fallback pra test palette');
+            }
+            // Salva tile indices pra _renderWangDebug usar (toggle live)
+            this._wangIndices = [];
             for (let y = 0; y < ROWS; y++) {
+                this._wangIndices[y] = [];
                 for (let x = 0; x < COLS; x++) {
                     const nw = corners[y][x],     ne = corners[y][x+1];
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
                     const idx = (ne * 1) | (se * 2) | (sw * 4) | (nw * 8);
+                    this._wangIndices[y][x] = idx;
                     const f = String(idx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                     this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
                 }
             }
+            // Re-render overlay caso ja estivesse on antes do scenery
+            if (this.dbg?.fx?.wangDebug) this._renderWangDebug();
         } else {
             // Fallback: solid color verde + manchas de dirt
             this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(0);
@@ -397,6 +410,37 @@ Object.assign(Jogo.prototype, {
             if (corralObj.mascot)       corralObj.mascot.setVisible(true);
             if (corralObj.mascotBucket) corralObj.mascotBucket.setVisible(!!v.mascotCfg?.bucket);
         }
+    },
+
+    // ── DEBUG OVERLAY: numeros dos wang tiles em cada celula ──────────
+    // Toggle live via dbg.fx.wangDebug (checkbox no menu CONFIGS aba VFX).
+    // Renderiza/destroi os Phaser.Text labels sob demanda. Se on, fica
+    // ativo ate desligar (sem precisar restart pra atualizar).
+    _renderWangDebug() {
+        // Limpa labels antigos
+        if (this._wangDebugLabels) {
+            for (const t of this._wangDebugLabels) if (t && t.scene) t.destroy();
+        }
+        this._wangDebugLabels = [];
+        if (!this._wangIndices || !this.dbg?.fx?.wangDebug) return;
+        const CELL = this.terrainCell;
+        const ROWS = this._wangIndices.length;
+        for (let y = 0; y < ROWS; y++) {
+            const row = this._wangIndices[y];
+            for (let x = 0; x < row.length; x++) {
+                const idx = row[x];
+                const t = this.add.text(x*CELL + CELL/2, y*CELL + CELL/2, String(idx), {
+                    fontSize: '12px', fontStyle: 'bold',
+                    fill: '#ffffff', stroke: '#000000', strokeThickness: 3,
+                }).setOrigin(0.5).setDepth(2);
+                this._wangDebugLabels.push(t);
+            }
+        }
+    },
+
+    _toggleWangDebug() {
+        // Chamado pelo checkbox handler no debug menu. Re-renderiza ou limpa.
+        this._renderWangDebug();
     }
 
 });

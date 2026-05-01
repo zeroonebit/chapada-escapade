@@ -119,6 +119,7 @@ const DBG_DEFAULTS = {
         fancyExplosion: true,
         wangtiles:      true,
         tileStyle:      'dirt_grass_32',  // 'test' | 'dirt_grass_32' | 'ocean_sand_32'
+        wangDebug:      false,            // overlay com numero do tile em cada celula
         timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:  false,     // ciclo auto a each 60s
         weather:        'clear',   // clear|rain|snow|fog|storm
@@ -391,6 +392,7 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="explosion">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
                         <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span data-i18n="wang_debug">Mostrar nº dos tiles (live)</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
                         <label><span data-i18n="tile_style">Tile style</span>
                             <select data-cfg="fx.tileStyle" style="flex:1;max-width:200px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
                                 <option value="test" data-i18n="opt_tile_test">Test palette</option>
@@ -481,6 +483,10 @@ Object.assign(Jogo.prototype, {
                 if (display && typeof val === 'number') display.value = val.toFixed(2);
 
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
+                // wangDebug: re-renderiza overlay live (sem precisar restart)
+                if (section === 'fx' && key === 'wangDebug' && this._toggleWangDebug) {
+                    this._toggleWangDebug();
+                }
             });
         });
 
