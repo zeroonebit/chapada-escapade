@@ -356,11 +356,12 @@ Object.assign(Jogo.prototype, {
 
     _updateCowsAI() {
         // FLEE_DIST/FLEE_DIST_SQ vêm de 00_constants.js
+        if (!this.ufo || !this.ufo.scene) return;  // guard: ufo pode estar destruído mid-restart
         const velMul = this.dbg?.behavior?.cowSpeed ?? 1.0;
         const now = this.time?.now ?? 0;
         for (let i = 0; i < this.cows.length; i++) {
             const v = this.cows[i];
-            if (!v.scene || !v.body || v._dying) continue;
+            if (!v || !v.scene || !v.body || v._dying) continue;
             if (v.isBurger || v.stuckInBush || v.stuckInGrass || v._inCurral) continue;
             // Abduzidas tocam anim "angry" mas não rodam IA de movement (beam controla)
             if (this.abductedCows.includes(v)) {
