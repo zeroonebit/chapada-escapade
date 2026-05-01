@@ -85,7 +85,7 @@ Object.assign(Jogo.prototype, {
 
     // Position do slot fixo (0/1/2) below do gate sul do corral
     _slotPos(curral, slotIdx) {
-        const SLOT_W = 32;
+        const SLOT_W = 56;  // espaco entre burgers (era 32 — encostavam)
         const baseY = curral.y + (curral.slotOffsetY ?? 110);  // V2 sprites tem gateY variavel
         const startX = curral.x - SLOT_W;
         return { x: startX + slotIdx * SLOT_W, y: baseY };

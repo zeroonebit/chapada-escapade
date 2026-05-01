@@ -191,6 +191,11 @@ class Jogo extends Phaser.Scene {
         this.hud = {};
         this._createHUD();
         this._positionHUD();
+        // Defensive: chamar _positionHUD novamente no proximo tick. Em algumas
+        // sessoes a primeira chamada tava ocorrendo antes de this.textures
+        // estar 100% pronto pro radar (ring/dome PNGs nao apareciam ate restart).
+        // Re-call cobre o gap sem custo perceptivel.
+        this.time.delayedCall(50, () => { if (this._positionHUD) this._positionHUD(); });
         this.scale.on('resize', () => this._positionHUD());
 
         // MOBILE_MODE teaser: esconde HUD inteiro to player ver so terreno +
