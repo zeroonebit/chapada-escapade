@@ -143,13 +143,23 @@
       "id": "pixapro-spinoff-standalone",
       "title": "Migrar PixaPro pra repo standalone próprio",
       "type": "refactor",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "low",
       "created_at": "2026-04-30T11:00:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
       "context": {
         "summary": "PixaPro hoje vive em tools/asset_gallery.html + tools/pixapro/ + tools/gallery_server.py. Plano completo de migração documentado.",
-        "handoff_doc": "docs/PIXAPRO_HANDOFF.md (251 linhas, detalhado)"
+        "handoff_doc": "docs/PIXAPRO_HANDOFF.md (251 linhas, detalhado)",
+        "phase_1_done_at": "H:/Projects/PixaPro/ (cópia simples)",
+        "next_session_entry_point": "H:/Projects/PixaPro/HANDOFF.md",
+        "files_copied": "7 css + 14 js + index.html + server.py = 23 files",
+        "phase_2_todo": [
+          "Ajustar paths pixapro/* → /* no index.html",
+          "server.py: ROOT.parent → ROOT",
+          "pixapro_config.json com asset_root externo",
+          "Symlink ou HTTP pra assets do projeto-pai",
+          ".gitignore + README + git init"
+        ]
       },
       "spec": "Seguir docs/PIXAPRO_HANDOFF.md fases 1→3. Decisões pendentes (repo nome, multi-projeto?, MANIFEST dinâmico?) precisam input do user antes.",
       "files_to_touch": [
@@ -158,7 +168,9 @@
         "tools/gallery_server.py → server.py (ajusta ROOT)"
       ],
       "verification": "PixaPro funciona standalone em ~/Projects/PixaPro/ apontando pro asset_root do Chapada Escapade",
-      "verified": false
+      "verified": false,
+      "claimed_at": "2026-05-01T00:00:00-03:00",
+      "claimed_by": "asset-gen-session-2026-05-01 (fase 1 done, fase 2 pra próxima sessão)"
     },
     {
       "id": "tutorial-7-9-finish",
@@ -309,6 +321,13 @@
         "pixapro-mark-in-game-assets"
       ],
       "note": "Audit revelou 2 HUDs discarded ainda em uso + 626 PNGs sem decisão + sprites geométricos legados em 03_textures.js"
+    },
+    {
+      "ts": "2026-05-01T00:00:00-03:00",
+      "action": "phase_1_complete",
+      "id": "pixapro-spinoff-standalone",
+      "by": "asset-gen-session-2026-05-01",
+      "note": "Files copied to H:/Projects/PixaPro/. Next session entry: HANDOFF.md"
     }
   ]
 }
