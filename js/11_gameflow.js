@@ -246,7 +246,9 @@ Object.assign(Jogo.prototype, {
 
         let btn = this.add.rectangle(w/2, h/2 + 120, 220, 42, 0x00dd44)
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true });
-        this.add.text(w/2, h/2 + 120, 'JOGAR NOVAMENTE', {
+        const _lang = this.dbg?.behavior?.lang || 'en';
+        const _restartLabel = _lang === 'pt' ? 'JOGAR NOVAMENTE' : 'RESTART';
+        this.add.text(w/2, h/2 + 120, _restartLabel, {
             fontSize: '13px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
         btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
@@ -576,7 +578,9 @@ Object.assign(Jogo.prototype, {
             .setStrokeStyle(2, 0xff5566, 0.9)
             .setInteractive({ useHandCursor: true })
             .setAlpha(0);
-        const btnLbl = this.add.text(w/2, h/2 + 250, 'JOGAR NOVAMENTE', {
+        const _goLang = this.dbg?.behavior?.lang || 'en';
+        const _goLabel = _goLang === 'pt' ? 'JOGAR NOVAMENTE' : 'RESTART';
+        const btnLbl = this.add.text(w/2, h/2 + 250, _goLabel, {
             fontFamily: '"Courier New", monospace',
             fontSize: '14px', fill: '#fff5f5',
             fontStyle: 'bold', letterSpacing: 2,
