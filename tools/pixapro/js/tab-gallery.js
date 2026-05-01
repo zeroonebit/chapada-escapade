@@ -170,10 +170,19 @@ async function renderInGamePanel(){
   }
   const items = [...standalone, ...animGroups.values()];
 
+  // Aplica filtro ativo (window._auditFilter: 'all' | 'in-game' | 'not-in-game')
+  const filter = window._auditFilter || 'all';
+  const filtered = items.filter(it => {
+    if (filter === 'in-game')     return it.inGame;
+    if (filter === 'not-in-game') return !it.inGame;
+    return true;
+  });
+
   // Render no painel unificado
-  $("sumPendingTotal").textContent = items.length;
   const inGameCount = items.filter(x => x.inGame).length;
   const notInGameCount = items.length - inGameCount;
+  $("sumPendingTotal").textContent =
+    filter === 'all' ? items.length : `${filtered.length}/${items.length}`;
   $("sumPendingBd").innerHTML =
     `<span style="color:#9fcfe8;">🔵 ${inGameCount} in-game</span> · ` +
     `<span style="color:#f4c95d;">🟡 ${notInGameCount} not in-game</span> · ` +
@@ -182,7 +191,7 @@ async function renderInGamePanel(){
   const grid = $("sumPendingGridUnified");
   if (!grid) return;
   grid.innerHTML = '';
-  for (const it of items) {
+  for (const it of filtered) {
     const wrap = document.createElement('div');
     wrap.className = 'thumb';
     wrap.style.width = '46px'; wrap.style.height = '46px';
@@ -208,6 +217,21 @@ async function renderInGamePanel(){
 }
 
 // === Filter bar do PROMOTED ===
+// === Audit filter buttons (All / In-game / Not in-game) ===
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.audit-filter');
+  if (!b) return;
+  window._auditFilter = b.dataset.filter;
+  // Visual: active button glow
+  document.querySelectorAll('.audit-filter').forEach(x => {
+    const active = (x === b);
+    x.classList.toggle('active', active);
+    x.style.boxShadow = active ? '0 0 8px rgba(244,201,93,0.5)' : 'none';
+    x.style.fontWeight = active ? 'bold' : 'normal';
+  });
+  if (typeof renderInGamePanel === 'function') renderInGamePanel();
+});
+
 document.querySelectorAll('#promotedFilterBar button').forEach(b => {
   b.onclick = () => {
     promotedFilter = b.dataset.filter;
