@@ -62,7 +62,90 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/pixellab_balance":
             self.handle_pixellab_balance()
             return
+        if self.path == "/scan_in_game_assets":
+            self.handle_scan_in_game_assets()
+            return
         super().do_GET()
+
+    def handle_scan_in_game_assets(self):
+        """Verifica COM CONFIANÇA quais PNGs em assets/pixel_labs/ são realmente
+        carregados pelo código js/. Lê todos os .js, extrai strings que apontam
+        pra assets/pixel_labs/... (literal ou template), e pra cada PNG em disk
+        retorna {path: bool} onde true = referenciado.
+
+        Templates como `assets/pixel_labs/chars/${char}/${dir}.png` são tratados
+        como prefix matchers — qualquer PNG sob esse prefixo (com qualquer subpath)
+        conta como referenciado. Por isso a precisão é melhor que grep simples.
+        """
+        import re
+        js_dir = ROOT / "js"
+        if not js_dir.exists():
+            self._send_json({"error": "no_js_dir"}, status=500)
+            return
+
+        # Concatena todos os .js
+        all_js = ""
+        js_files = list(js_dir.rglob("*.js"))
+        for jf in js_files:
+            try:
+                all_js += "\n" + jf.read_text(encoding="utf-8")
+            except Exception:
+                pass
+
+        # Padrões pra extrair paths assets/pixel_labs/...
+        # Literais simples ou compostos com ${...}
+        # Capture até o primeiro caractere fechador ou interpolação
+        # Regex: assets/pixel_labs/<anything not quote/backtick/parens/space>
+        # Pra templates, vamos extrair tanto literal quanto prefix-with-vars
+        pat_literal  = re.compile(r"['\"`](assets/pixel_labs/[^'\"`]+\.png)['\"`]")
+        pat_template = re.compile(r"['\"`](assets/pixel_labs/[^'\"`]*\$\{[^}]+\}[^'\"`]*\.png)['\"`]")
+
+        literal_paths = set(m.group(1) for m in pat_literal.finditer(all_js))
+        templates = set(m.group(1) for m in pat_template.finditer(all_js))
+
+        # Converte cada template em regex específica:
+        # 'assets/pixel_labs/chars/${char}/${dir}.png' →
+        # '^assets/pixel_labs/chars/[^/]+/[^/]+\.png$'
+        # ${var} é tratado como [^/]+ (path component, não cruza /).
+        template_regexes = []
+        for tpl in templates:
+            esc = re.escape(tpl)
+            # \$\{...\} → [^/]+
+            rgx = re.sub(r'\\\$\\\{[^}]+\\\}', r'[^/]+', esc)
+            try:
+                template_regexes.append(re.compile('^' + rgx + '$'))
+            except re.error:
+                pass
+
+        # Lista PNGs em disco
+        base = ROOT / "assets" / "pixel_labs"
+        result = {}
+        if base.exists():
+            for p in base.rglob("*.png"):
+                rel = p.relative_to(ROOT).as_posix()
+                in_game = False
+                if rel in literal_paths:
+                    in_game = True
+                else:
+                    for rgx in template_regexes:
+                        if rgx.match(rel):
+                            in_game = True
+                            break
+                result[rel] = in_game
+
+        total = len(result)
+        in_game_count = sum(1 for v in result.values() if v)
+        self._send_json({
+            "total": total,
+            "in_game": in_game_count,
+            "not_in_game": total - in_game_count,
+            "paths": result,
+            "stats": {
+                "literal_paths": len(literal_paths),
+                "templates": len(templates),
+                "js_files_scanned": len(js_files),
+            }
+        })
 
     def handle_pixellab_balance(self):
         """Retorna o último saldo postado via POST /pixellab_balance (bookmarklet).
