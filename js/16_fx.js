@@ -111,7 +111,7 @@ Object.assign(Jogo.prototype, {
             g._alpha      = Phaser.Math.FloatBetween(0.18, 0.42);
             g._curveSpeed = Phaser.Math.FloatBetween(2.0, 3.5);
             g._curvePhase = Math.random() * Math.PI * 2;
-            g._curlR      = Phaser.Math.FloatBetween(5, 10);  // raio da espiral
+            g._thickness  = Phaser.Math.FloatBetween(0.8, 3.2); // thickness varia por particula
             g._trails     = Math.random() < 0.5 ? 2 : 1;       // 1 ou 2 linhas paralelas
             this.fxWind.add(g);
             this._windParticles.push(g);
@@ -151,9 +151,11 @@ Object.assign(Jogo.prototype, {
             // Bob vertical (eixo Y oscila no tempo)
             g.y = g._yOff + Math.sin(this._windOscPhase + g._xPhase) * g._yBob;
 
-            // Cartoon wind swirl: trail (linha ondulada) + curl (espiral no head)
+            // Cartoon wind wisp: linha ondulada com thickness por particula,
+            // sem curl/spiral no head (era o "sperm look"). Trail mais longa
+            // e mais delicada — taper nas duas pontas pra dar fade-in/fade-out.
             g.clear();
-            g.lineStyle(1.6, 0xeef5ff, g._alpha);
+            g.lineStyle(g._thickness ?? 1.6, 0xeef5ff, g._alpha);
             const len = g._len;
             const amp = g._amp;
             const tailX = -(len/2) * dirSign;
@@ -162,35 +164,19 @@ Object.assign(Jogo.prototype, {
             const trailOffsets = g._trails === 2 ? [-3, 3] : [0];
             for (const yOff of trailOffsets) {
                 g.beginPath();
-                const SEG = 16;
+                const SEG = 18;
                 for (let k = 0; k <= SEG; k++) {
                     const t = k / SEG;
                     const lx = tailX + (headX - tailX) * t;
-                    // Wave amplitude diminui chegando no head (concentra no tail)
-                    const taper = 1 - t * 0.6;
+                    // Taper bilateral: amp nas pontas tende a 0, max no meio
+                    // (sin(pi*t) = 0 em t=0,1 e 1 em t=0.5)
+                    const taper = Math.sin(Math.PI * t);
                     const ly = Math.sin(g._curvePhase + t * Math.PI * 2.4) * amp * taper + yOff;
                     if (k === 0) g.moveTo(lx, ly);
                     else         g.lineTo(lx, ly);
                 }
                 g.strokePath();
             }
-            // CURL: espiral 1.5 voltas no leading edge (head)
-            const curlR = g._curlR;
-            const curlCx = headX + (curlR * 1.1) * dirSign;
-            const curlCy = 0;
-            g.beginPath();
-            const TURNS = 1.6;
-            const TSEG = 24;
-            for (let k = 0; k <= TSEG; k++) {
-                const t = k / TSEG;
-                const r = curlR * (1 - t * 0.55);  // raio decrescente (espiral fechada)
-                const a = (g._curvePhase * 0.5) + t * TURNS * Math.PI * 2 * dirSign;
-                const px = curlCx + Math.cos(a) * r;
-                const py = curlCy + Math.sin(a) * r;
-                if (k === 0) g.moveTo(px, py);
-                else         g.lineTo(px, py);
-            }
-            g.strokePath();
         }
     },
 
