@@ -136,6 +136,7 @@ const DBG_DEFAULTS = {
         vertThreshold:  0.50,  // 0..1 prob de upper no white noise inicial
         vertCaPasses:   4,     // smoothing iterations (0=raw noise, 6+=convergencia)
         autoSortTiles:  true,  // runtime auto-sort por color sampling (cr31)
+        activeMap:      '',    // nome do map preset salvo no PixaPro (vazio = procedural live)
     },
 };
 
@@ -252,6 +253,7 @@ Object.assign(Jogo.prototype, {
                     <button class="tab-btn active" data-tab="controls" data-i18n="controls">CONTROLS</button>
                     <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
+                    <button class="tab-btn" data-tab="map" data-i18n="map">MAP</button>
                     <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
                 </div>
 
@@ -398,27 +400,48 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                         <label><span data-i18n="explosion">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
-                        <label><span data-i18n="wang">Wang tiles (debug)</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
-                        <label><span data-i18n="wang_debug">Mostrar nº dos tiles (live)</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
-                        <label><span data-i18n="tile_style">Tile style</span>
-                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:200px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="test" data-i18n="opt_tile_test">Test palette</option>
-                                <option value="dirt_grass_32" data-i18n="opt_tile_dirt">Grass / Dirt (32)</option>
-                                <option value="ocean_sand_32" data-i18n="opt_tile_ocean">Ocean / Sand (32)</option>
-                                <option value="mapa1_ocean_dirt"  data-i18n="opt_tile_m1_od">Mapa 1: Ocean+Dirt</option>
-                                <option value="mapa1_ocean_grass" data-i18n="opt_tile_m1_og">Mapa 1: Ocean+Grass</option>
-                                <option value="mapa1_sand_dirt"   data-i18n="opt_tile_m1_sd">Mapa 1: Sand+Dirt</option>
-                                <option value="mapa1_sand_grass"  data-i18n="opt_tile_m1_sg">Mapa 1: Sand+Grass</option>
-                                <option value="mapa2_ocean_dirt"  data-i18n="opt_tile_m2_od">Mapa 2: Ocean+Dirt seco</option>
-                                <option value="mapa2_ocean_grass" data-i18n="opt_tile_m2_og">Mapa 2: Ocean+Grass seco</option>
-                                <option value="mapa2_sand_dirt"   data-i18n="opt_tile_m2_sd">Mapa 2: Sand+Dirt seco</option>
-                                <option value="mapa2_sand_grass"  data-i18n="opt_tile_m2_sg">Mapa 2: Sand+Grass seco</option>
+                    </fieldset>
+                </div>
+
+                <!-- ABA: MAP -->
+                <div class="tab-panel" id="tab-map" style="display:none">
+                    <div class="note">Maps salvos no PixaPro + tweaks live. Aplica ao reiniciar.</div>
+                    <fieldset>
+                        <legend>MAP SELECTOR</legend>
+                        <label><span>Map preset</span>
+                            <select id="map-preset-select" data-cfg="proc.activeMap" style="flex:1;max-width:240px;min-width:180px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="">— procedural live (use sliders abaixo) —</option>
                             </select></label>
-                        <label><span data-i18n="wang_autosort">Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
-                        <label><span data-i18n="wang_threshold">Vertex threshold</span>
+                        <button type="button" id="map-refresh-list" style="padding:3px 8px;font-size:10px;margin-left:6px;">↻ Refresh from PixaPro</button>
+                        <div id="map-status" style="font-size:10px;opacity:0.6;margin-top:4px;">PixaPro server em http://localhost:8090</div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>WANG TILES</legend>
+                        <label><span>Wang tiles ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span>Mostrar nº dos tiles (live)</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
+                        <label><span>Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
+                        <label><span>Tile style</span>
+                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:200px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="test">Test palette</option>
+                                <option value="dirt_grass_32">Grass / Dirt (32)</option>
+                                <option value="ocean_sand_32">Ocean / Sand (32)</option>
+                                <option value="mapa1_ocean_dirt">Mapa 1: Ocean+Dirt</option>
+                                <option value="mapa1_ocean_grass">Mapa 1: Ocean+Grass</option>
+                                <option value="mapa1_sand_dirt">Mapa 1: Sand+Dirt</option>
+                                <option value="mapa1_sand_grass">Mapa 1: Sand+Grass</option>
+                                <option value="mapa2_ocean_dirt">Mapa 2: Ocean+Dirt seco</option>
+                                <option value="mapa2_ocean_grass">Mapa 2: Ocean+Grass seco</option>
+                                <option value="mapa2_sand_dirt">Mapa 2: Sand+Dirt seco</option>
+                                <option value="mapa2_sand_grass">Mapa 2: Sand+Grass seco</option>
+                            </select></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>PROCEDURAL (sliders live)</legend>
+                        <div class="note">Ignorados se um map preset for selecionado acima.</div>
+                        <label><span>Vertex threshold</span>
                             <input type="range" data-cfg="proc.vertThreshold" min="0.20" max="0.80" step="0.01">
                             <input type="number" class="val" data-show="proc.vertThreshold" /></label>
-                        <label><span data-i18n="wang_capasses">CA passes (smoothing)</span>
+                        <label><span>CA passes (smoothing)</span>
                             <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
                             <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
                     </fieldset>
@@ -461,6 +484,8 @@ Object.assign(Jogo.prototype, {
                 root.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
                 btn.classList.add('active');
                 root.querySelector(`#tab-${btn.dataset.tab}`).style.display = 'block';
+                // MAP tab: render test canvas + tilesets grid on demand
+                if (btn.dataset.tab === 'map' && this._refreshMapList) this._refreshMapList();
             });
         });
 
@@ -547,6 +572,14 @@ Object.assign(Jogo.prototype, {
 
         // Applies i18n initial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
+
+        // MAP tab: bind do botao refresh + auto-fetch silencioso
+        const refreshBtn = document.getElementById('map-refresh-list');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this._refreshMapList());
+            // tenta fetch ja na inicializacao (silencioso se PixaPro offline)
+            this._refreshMapList();
+        }
 
         // PREVIEW: 5s timeslice — hides menu + enemies to você ver o mood escolhido
         // Shuffle ON: aleatoriza weather + TOD a each click. Após 5s, restaura tudo e reabre menu.
@@ -637,6 +670,49 @@ Object.assign(Jogo.prototype, {
     _toggleDebugMenu(visible) {
         const el = document.getElementById('debug-menu');
         if (el) el.style.display = visible ? 'block' : 'none';
+    },
+
+    // ── MAP PRESETS via PixaPro API ───────────────────────────────────
+    // PROJECT_INTEGRATION: PixaPro roda em http://localhost:8090 com
+    // endpoint GET /maps?project=<slug> que retorna lista de map presets
+    // salvos no PixaPro pra esse projeto. Doc completa em
+    // PixaPro/PROJECT_INTEGRATION.md
+    PROJECT_SLUG: 'chapada-escapade',
+    PIXAPRO_URL: 'http://localhost:8090',
+
+    async _refreshMapList() {
+        const sel = document.getElementById('map-preset-select');
+        const status = document.getElementById('map-status');
+        if (!sel) return;
+        const url = `${this.PIXAPRO_URL}/maps?project=${this.PROJECT_SLUG}`;
+        try {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            const maps = data.maps || [];
+            const current = sel.value || this.dbg?.proc?.activeMap || '';
+            sel.innerHTML = '<option value="">— procedural live (use sliders abaixo) —</option>' +
+                maps.map(m => `<option value="${m.name}"${m.name === current ? ' selected' : ''}>${m.name} · ${m.bias || 'ca'}</option>`).join('');
+            if (status) status.textContent = `✓ ${maps.length} maps · ${this.PROJECT_SLUG}`;
+        } catch (e) {
+            if (status) status.textContent = `✗ PixaPro offline (${e.message}) — rode \`python tools/gallery_server.py\``;
+            console.warn('[MAP] refresh fail:', e);
+        }
+    },
+
+    async _loadMapPreset(name) {
+        if (!name) return null;
+        const url = `${this.PIXAPRO_URL}/maps/${encodeURIComponent(name)}?project=${this.PROJECT_SLUG}`;
+        try {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const m = await r.json();
+            console.log('[MAP] loaded preset:', name, m);
+            return m;  // { name, seed, threshold, bias, gridW, gridH, tileStyle, ... }
+        } catch (e) {
+            console.warn('[MAP] load fail:', e);
+            return null;
+        }
     }
 
 });

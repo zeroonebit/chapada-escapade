@@ -8,14 +8,16 @@ Object.assign(Jogo.prototype, {
         const COLS = Math.ceil(W / CELL);
         const ROWS = Math.ceil(H / CELL);
 
-        // Procedural cfg via debug menu (defaults sao sane). Cada um override
-        // localStorage via dbg.proc.{seed*, caPasses, ...}.
+        // Procedural cfg via debug menu OU map preset salvo no PixaPro.
+        // Se proc.activeMap setado E _activeMapConfig carregado pelo flow
+        // assincrono em _scenery_loadMapAsync, usa esses valores. Caso
+        // contrario usa sliders live do dbg.proc.
         const proc = this.dbg?.proc || {};
-        const SEED_WATER = proc.seedWater ?? 0.10;
-        const SEED_SAND  = proc.seedSand  ?? 0.18;
-        const SEED_GRASS = proc.seedGrass ?? 0.40;
-        // Resto vira dirt (1 - water - sand - grass = ~0.32)
-        const CA_PASSES  = proc.caPasses  ?? 3;
+        const mapCfg = this._activeMapConfig || {};
+        const SEED_WATER = mapCfg.seedWater ?? proc.seedWater ?? 0.10;
+        const SEED_SAND  = mapCfg.seedSand  ?? proc.seedSand  ?? 0.18;
+        const SEED_GRASS = mapCfg.seedGrass ?? proc.seedGrass ?? 0.40;
+        const CA_PASSES  = mapCfg.caPasses  ?? proc.caPasses  ?? 3;
 
         // ── 1. SEED RANDOM com pesos balanceados (todos os 4 tipos visiveis)
         // Valores defaults: 10% water + 18% sand + 40% grass + 32% dirt
@@ -74,8 +76,8 @@ Object.assign(Jogo.prototype, {
             // Agora: gera um VERTEX GRID binario direto (lower=0, upper=1) via
             // white noise + CA opcional (mesma logica do PixaPro generateTerrainGrid).
             const CW = COLS + 1, CH = ROWS + 1;
-            const VERT_THRESHOLD = proc.vertThreshold ?? 0.50;  // 0..1, prob de upper
-            const VERT_CA_PASSES = proc.vertCaPasses ?? 4;
+            const VERT_THRESHOLD = mapCfg.vertThreshold ?? proc.vertThreshold ?? 0.50;
+            const VERT_CA_PASSES = mapCfg.vertCaPasses ?? proc.vertCaPasses ?? 4;
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];

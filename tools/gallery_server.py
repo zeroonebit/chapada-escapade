@@ -11,6 +11,7 @@ Substitui `python -m http.server 8080` adicionando:
 """
 
 import json
+import re
 import sys
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -65,7 +66,55 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/scan_in_game_assets":
             self.handle_scan_in_game_assets()
             return
+        # Maps API: GET /maps?project=<slug> | GET /maps/<name>?project=<slug>
+        if self.path.startswith("/maps"):
+            self.handle_maps_get()
+            return
         super().do_GET()
+
+    def handle_maps_get(self):
+        """GET /maps?project=<slug>           -> {maps: [{name, bias, ...}]}
+           GET /maps/<name>?project=<slug>    -> {name, seed, threshold, ...}
+        """
+        from urllib.parse import urlparse, parse_qs
+        u = urlparse(self.path)
+        qs = parse_qs(u.query)
+        project = (qs.get("project") or ["chapada-escapade"])[0]
+        # Sanitize: so [a-z0-9-_]
+        project = re.sub(r"[^a-zA-Z0-9_\-]", "", project) or "chapada-escapade"
+        maps_dir = SAVES_DIR / "projects" / project / "maps"
+
+        # Lista
+        if u.path == "/maps":
+            maps_dir.mkdir(parents=True, exist_ok=True)
+            items = []
+            for f in sorted(maps_dir.glob("*.json")):
+                try:
+                    m = json.loads(f.read_text(encoding="utf-8"))
+                    items.append({
+                        "name": m.get("name") or f.stem,
+                        "bias": m.get("bias", "ca-3"),
+                        "seed": m.get("seed", 42),
+                        "tileStyle": m.get("tileStyle", ""),
+                    })
+                except Exception:
+                    pass
+            self._send_json({"project": project, "maps": items})
+            return
+
+        # Detalhe: /maps/<name>
+        m = re.match(r"^/maps/([^/]+)$", u.path)
+        if m:
+            name = re.sub(r"[^a-zA-Z0-9_\-]", "", m.group(1))
+            f = maps_dir / f"{name}.json"
+            if not f.exists():
+                self._send_json({"error": "not_found", "name": name}, status=404)
+                return
+            data = json.loads(f.read_text(encoding="utf-8"))
+            self._send_json(data)
+            return
+
+        self._send_json({"error": "bad_path"}, status=400)
 
     def handle_scan_in_game_assets(self):
         """Verifica COM CONFIANÇA quais PNGs em assets/pixel_labs/ são realmente
@@ -244,12 +293,49 @@ class Handler(SimpleHTTPRequestHandler):
         desc = data.get("description", "")
         print(f"[mcp] {st.upper()} {job_id[:8]}... {desc}")
 
+    def handle_maps_post(self):
+        """POST /maps/<name>?project=<slug>  body=json com cfg do map preset.
+        Salva em tools/saves/projects/<slug>/maps/<name>.json
+        """
+        from urllib.parse import urlparse, parse_qs
+        u = urlparse(self.path)
+        qs = parse_qs(u.query)
+        project = (qs.get("project") or ["chapada-escapade"])[0]
+        project = re.sub(r"[^a-zA-Z0-9_\-]", "", project) or "chapada-escapade"
+        m = re.match(r"^/maps/([^/]+)$", u.path)
+        if not m:
+            self._send_json({"error": "bad_path"}, status=400)
+            return
+        name = re.sub(r"[^a-zA-Z0-9_\-]", "", m.group(1))
+        if not name:
+            self._send_json({"error": "empty_name"}, status=400)
+            return
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self._send_json({"error": f"bad_json: {e}"}, status=400)
+            return
+        data["name"] = name
+        data["_saved_at"] = datetime.now().isoformat()
+        maps_dir = SAVES_DIR / "projects" / project / "maps"
+        maps_dir.mkdir(parents=True, exist_ok=True)
+        f = maps_dir / f"{name}.json"
+        f.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"[maps] saved {project}/{name} -> {f.relative_to(ROOT)}")
+        self._send_json({"ok": True, "name": name, "project": project, "path": str(f.relative_to(ROOT)).replace("\\", "/")})
+
     def do_POST(self):
         if self.path == "/mcp_status":
             self.handle_post_mcp_status()
             return
         if self.path == "/pixellab_balance":
             self.handle_post_pixellab_balance()
+            return
+        # Maps: POST /maps/<name>?project=<slug>  body=json do map preset
+        if self.path.startswith("/maps/"):
+            self.handle_maps_post()
             return
         if self.path == "/mcp_clear":
             _mcp_jobs.clear()
@@ -306,6 +392,7 @@ def main():
     print(f"  Game:    http://localhost:{port}/")
     print(f"  Gallery: http://localhost:{port}/tools/asset_gallery.html")
     print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status, GET /pixellab_balance")
+    print(f"             GET /maps?project=<slug>, GET /maps/<name>, POST /maps/<name>?project=<slug>")
     print(f"  Saves:   {SAVES_DIR.relative_to(ROOT)}/")
     server = ThreadingHTTPServer(("", port), Handler)
     try:
