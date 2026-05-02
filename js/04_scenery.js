@@ -121,6 +121,12 @@ Object.assign(Jogo.prototype, {
             if (style && style !== 'test' && !useStyle) {
                 console.warn('[WANG] style "' + style + '" sem assets carregados — fallback pra test palette');
             }
+            // Auto-sort: detecta cantos por color sampling e remapeia 0..15
+            // pra cr31. Resolve tilesets PixelLab com convencao trocada.
+            // Resultado em this._wangRemap[style] = arr16 (cr31Bits -> srcBits).
+            const remap = (useStyle && this.dbg?.proc?.autoSortTiles)
+                ? this._autoSortWangTiles(style)
+                : null;
             // Salva tile indices pra _renderWangDebug usar (toggle live)
             this._wangIndices = [];
             for (let y = 0; y < ROWS; y++) {
@@ -131,7 +137,9 @@ Object.assign(Jogo.prototype, {
                     // cr31 convention (PixaPro): NW=1, NE=2, SE=4, SW=8
                     const idx = nw + ne*2 + se*4 + sw*8;
                     this._wangIndices[y][x] = idx;
-                    const f = String(idx).padStart(2, '0');
+                    // Se ha remap (auto-sort), substitui idx pelo srcIdx correto
+                    const srcIdx = remap ? remap[idx] : idx;
+                    const f = String(srcIdx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                     this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
@@ -455,6 +463,82 @@ Object.assign(Jogo.prototype, {
     _toggleWangDebug() {
         // Chamado pelo checkbox handler no debug menu. Re-renderiza ou limpa.
         this._renderWangDebug();
+    },
+
+    // ── AUTO-SORT WANG TILES (PixaPro port) ──────────────────────────
+    // PixelLab as vezes gera tilesets com convencao CCW-shifted vs cr31.
+    // Solucao: amostra os 4 cantos de cada tile (tile 0 = all-lower,
+    // tile 15 = all-upper -> referencia de cor), classifica cada canto,
+    // computa cr31 bits do tile, e cria remap[cr31Bits] -> srcIdx.
+    // Cacheado em this._wangRemap[style] pra evitar reprocessar.
+    _autoSortWangTiles(style) {
+        if (!this._wangRemap) this._wangRemap = {};
+        if (this._wangRemap[style]) return this._wangRemap[style];
+        // Carrega texture 00 (all-lower) e 15 (all-upper) pra ref de cor
+        const sampleCorners = (idx) => {
+            const f = String(idx).padStart(2, '0');
+            const tex = this.textures.get(`wang_${style}_${f}`);
+            if (!tex || !tex.source || !tex.source[0]) return null;
+            const src = tex.source[0].image;
+            if (!src) return null;
+            const cv = document.createElement('canvas');
+            cv.width = src.width; cv.height = src.height;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(src, 0, 0);
+            const m = Math.max(1, Math.floor(src.width * 0.10));  // 10% de margem
+            const px = (x, y) => {
+                const d = ctx.getImageData(x, y, 1, 1).data;
+                return [d[0], d[1], d[2]];
+            };
+            return {
+                NW: px(m, m),
+                NE: px(src.width - 1 - m, m),
+                SE: px(src.width - 1 - m, src.height - 1 - m),
+                SW: px(m, src.height - 1 - m),
+            };
+        };
+        // Amostra todos 16 tiles
+        const samples = [];
+        for (let i = 0; i < 16; i++) samples.push(sampleCorners(i));
+        // Refs: tile 0 = lower (todos os 4 cantos), tile 15 = upper
+        if (!samples[0] || !samples[15]) {
+            console.warn('[WANG AUTO-SORT] sem refs (00 ou 15 missing) -- skip');
+            return null;
+        }
+        const avg = (s) => {
+            const r = (s.NW[0]+s.NE[0]+s.SE[0]+s.SW[0])/4;
+            const g = (s.NW[1]+s.NE[1]+s.SE[1]+s.SW[1])/4;
+            const b = (s.NW[2]+s.NE[2]+s.SE[2]+s.SW[2])/4;
+            return [r, g, b];
+        };
+        const lowerRef = avg(samples[0]);
+        const upperRef = avg(samples[15]);
+        const dist = (a, b) =>
+            (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
+        const classify = (rgb) => dist(rgb, upperRef) < dist(rgb, lowerRef) ? 1 : 0;
+        // Pra cada src tile, computa cr31 bits que ele realmente representa
+        const remap = new Array(16);  // remap[cr31Bits] = srcIdx
+        for (let srcIdx = 0; srcIdx < 16; srcIdx++) {
+            const s = samples[srcIdx];
+            if (!s) continue;
+            const nw = classify(s.NW);
+            const ne = classify(s.NE);
+            const se = classify(s.SE);
+            const sw = classify(s.SW);
+            const cr31 = nw + ne*2 + se*4 + sw*8;
+            // Primeira ocorrencia ganha a posicao (resolve duplicatas)
+            if (remap[cr31] === undefined) remap[cr31] = srcIdx;
+        }
+        // Preenche buracos com srcIdx == cr31 (fallback identidade)
+        let moved = 0;
+        for (let i = 0; i < 16; i++) {
+            if (remap[i] === undefined) remap[i] = i;
+            if (remap[i] !== i) moved++;
+        }
+        console.log(`[WANG AUTO-SORT] ${style}: ${moved} tiles remapeados`,
+                    remap.map((v, i) => i !== v ? `${i}<-${v}` : null).filter(Boolean));
+        this._wangRemap[style] = remap;
+        return remap;
     }
 
 });

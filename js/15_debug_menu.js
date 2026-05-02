@@ -131,6 +131,12 @@ const DBG_DEFAULTS = {
         windForce:      0.03,      // -0.05..0.05 (positivo = right)
         quips:          true,      // floating one-liners
     },
+    proc: {
+        // Procedural terrain (PixaPro-style) -- vertex grid binario + CA
+        vertThreshold:  0.50,  // 0..1 prob de upper no white noise inicial
+        vertCaPasses:   4,     // smoothing iterations (0=raw noise, 6+=convergencia)
+        autoSortTiles:  true,  // runtime auto-sort por color sampling (cr31)
+    },
 };
 
 // Migration map: PT key (legacy localStorage) -> EN key (novo padrao).
@@ -158,6 +164,7 @@ Object.assign(Jogo.prototype, {
                 behavior: Object.assign({}, DBG_DEFAULTS.behavior, migrated.behavior),
                 counts:   Object.assign({}, DBG_DEFAULTS.counts,   migrated.counts),
                 fx:       Object.assign({}, DBG_DEFAULTS.fx,       migrated.fx),
+                proc:     Object.assign({}, DBG_DEFAULTS.proc,     migrated.proc),
             };
         } catch (e) {
             this.dbg = JSON.parse(JSON.stringify(DBG_DEFAULTS));
@@ -407,6 +414,13 @@ Object.assign(Jogo.prototype, {
                                 <option value="mapa2_sand_dirt"   data-i18n="opt_tile_m2_sd">Mapa 2: Sand+Dirt seco</option>
                                 <option value="mapa2_sand_grass"  data-i18n="opt_tile_m2_sg">Mapa 2: Sand+Grass seco</option>
                             </select></label>
+                        <label><span data-i18n="wang_autosort">Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
+                        <label><span data-i18n="wang_threshold">Vertex threshold</span>
+                            <input type="range" data-cfg="proc.vertThreshold" min="0.20" max="0.80" step="0.01">
+                            <input type="number" class="val" data-show="proc.vertThreshold" /></label>
+                        <label><span data-i18n="wang_capasses">CA passes (smoothing)</span>
+                            <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
+                            <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
                     </fieldset>
                 </div>
 
