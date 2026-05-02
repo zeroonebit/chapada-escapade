@@ -1,4 +1,4 @@
-﻿// 02_preload.js — Carregamento de assets (PNGs)
+// 02_preload.js — Carregamento de assets (PNGs)
 Object.assign(Jogo.prototype, {
 
     preload() {
@@ -39,7 +39,7 @@ Object.assign(Jogo.prototype, {
         // ── HERO ASSETS 200×200 (single sprite used em algumas situações) ──
         // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
         this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
-        this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
+        this.load.image('beam_halo', 'assets/fx/beam.png');
 
         // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
         // Cow (chubby holstein, 8-dir), Ox, Farmer, UFO: 8 directions
@@ -107,21 +107,21 @@ Object.assign(Jogo.prototype, {
                                   'post_lantern_low','post_lantern_thin','post_double_rope',
                                   'post_carved','post_thin_simple','tower_ornamental_thin',
                                   'segment_tall_dual','beam_horizontal'];
-        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/pixel_labs/chars/nature/rocks/${n}.png`));
-        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/pixel_labs/chars/nature/vegetation/${n}.png`));
-        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences/${n}.png`));
-        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences_v2/${n}.png`));
+        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/env/rocks/${n}.png`));
+        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/env/vegetation/${n}.png`));
+        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/env/fences/${n}.png`));
+        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/env/fences_v2/${n}.png`));
         // Outros itens decorativos (feno, pile de toras)
         const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
-        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/pixel_labs/chars/nature/misc/${n}.png`));
+        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/env/misc/${n}.png`));
         // Objects v3: landmarks (church, windmill, truck, satellite), props (gas, barrel, buckets), terreno (dry_turf)
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
-        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/env/objects/${n}.png`));
         // Currais V2: 5 sprites 200x200 PixelLab (substituem cercas procedural)
         const CURRAIS = ['curral_01_pequeno', 'curral_02_redondo', 'curral_03_hexagonal',
                          'curral_04_rustico', 'curral_05_abandonado'];
-        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/env/objects/${n}.png`));
         this._curralKeys = CURRAIS.map(n => `nat_obj_${n}`);
         // Expor to scenery
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
