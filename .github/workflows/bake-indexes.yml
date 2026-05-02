@@ -1,0 +1,46 @@
+name: Bake static indexes
+
+# Roda automaticamente em pushes pra main que tocam assets/, data/maps/, ou tools/bake_indexes.py.
+# Atualiza data/_assets_index.json + data/maps/_index.json e commita de volta.
+# Esses indexes sao consumidos pelo PixaPro (deployed em GitHub Pages) pra
+# audit/browse READ-ONLY sem precisar de project_server.py rodando local.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/**'
+      - 'data/maps/**'
+      - 'tools/bake_indexes.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Bake indexes
+        run: python tools/bake_indexes.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/maps/_index.json data/_assets_index.json
+          if git diff --staged --quiet; then
+            echo "No changes to indexes"
+          else
+            git commit -m "chore: re-bake static indexes [skip ci]"
+            git push
+          fi

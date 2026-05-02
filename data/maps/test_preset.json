@@ -1,0 +1,10 @@
+{
+  "seed": 42,
+  "threshold": 0.5,
+  "bias": "ca-3",
+  "gridW": 32,
+  "gridH": 24,
+  "vertCaPasses": 3,
+  "name": "test_preset",
+  "_saved_at": "2026-05-02T05:58:24.527471"
+}
