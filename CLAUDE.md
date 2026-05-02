@@ -245,25 +245,11 @@ Executar **todos** os passos abaixo, sem pular nenhum:
   - Todos com base_tile_ids dos 16px existentes pra consistência visual
   - Slice + agrupar em WANG_PRESETS pendente
 
-### ✅ Pronto (cont. — sessão 2026-04-30 madrugada · PixaPro refactor 10 sprints)
+### ✅ Pronto (cont. — sessão 2026-04-30 madrugada · PixaPro refactor 10 sprints) — *HISTÓRICO*
 - **PixaPro modularizado** — `tools/asset_gallery.html` 121kb → 17kb (-86%), zero `<script>` inline (era 2778 linhas)
-- **Estrutura final** `tools/pixapro/`:
-  - `styles/` (S1): 7 CSS por componente — base, components, manager, gallery, editor, tiles, detail
-  - `js/constants.js` (S2): MANIFEST (68), PIXELLAB_TOOLS (19), WANG_PRESETS (5)
-  - `js/store.js` + `js/api.js` (S3): localStorage wrappers + fetch wrappers
-  - `js/utils.js` (S4): `$`, escHtml, timeAgo, suggestTargetFolder, getAssetType, mulberry32
-  - `js/popup.js` (S4): floating popup global (show/hide/attachOrient + self-handlers)
-  - `js/classify.js` (S4): groupBy, classifyGroup, classifiedFlat, buildGroupPopupHTML, findDirectionVariants
-  - `js/thumb.js` (S4): makeThumb, thumbBadge, fillSumGrid (4 modos)
-  - `js/tabs.js` (S10): switchTab, activeTab, API_URL, scroll handlers
-  - `js/tab-manager.js` (S5): idx, decisions, render, keyboard shortcuts, setInterval, initial render
-  - `js/tab-gallery.js` (S6): summaryData, renderGallery, filter bar, refresh button
-  - `js/tab-editor.js` (S7): visualizer 8-dir + tool forms, mcpQueue, queueTool
-  - `js/tab-detail.js` (S8): renderDetailDashboard + MCP live polling 4s
-  - `js/tab-tiles.js` (S9): Wang editor + auto-sort visual + terrain gen + 14 button handlers
+- **Estrutura `tools/pixapro/`:** 7 CSS + 13 JS modules (constants, store, api, utils, popup, classify, thumb, tabs, tab-manager/gallery/editor/detail/tiles)
 - **Padrão usado:** ES script-globals (não module), top-level `let`/`function` visíveis script-wide entre `<script src>` tags
-- **Bug encontrado e corrigido durante o refactor:** Python regex de remoção quebrou em funções com defaults `opts={}` (counter contava o `{}` como abertura de body). Removidos 3 blocos órfãos manualmente
-- **Validação:** preview_eval com 68 thumbs renderizando + todas 5 tabs trocam sem erro
+- **⚠️ DELETADO no audit cleanup de 2026-05-02** — `tools/pixapro/` migrou pra repo standalone `H:/Projects/PixaPro`. `tools/asset_gallery.html` removido (UI antiga). Ver sessão 2026-05-02 abaixo.
 
 ### ✅ Pronto (cont. — sessão 2026-04-30 tarde·noite)
 - **Currais V2 mascotCfg per-variante** — `_buildCorral` push salva `mascotCenografico=true` + `mascotCfg{tipo,anim,dx,dy,bucket}`. `_ensureCowMascot` lê config (cow/bull, anim cow_eat_S/N/cow_angry_S/ox_walk_S). 01 pequeno + 02 redondo: cow eat S+balde. 03 hexagonal: cow drinking N (alinha coxo). 04 rustico: cow lie_down. 05 abandonado: ox walk S
@@ -289,20 +275,70 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Game over cinematic V2** — vinheta + Fibonacci spiral + tremor + smoke + crash crooked
 - **Quips coloridos por tom** + seguem target
 
+### ✅ Pronto (cont. — sessão 2026-05-02 · audit cleanup + PixaPro spinoff + Asset Naming)
+**Audit + cleanup:**
+- **`tools/pixapro/` deletado** — migrou pra repo standalone `H:/Projects/PixaPro` (estava duplicado, drift entre as 2 cópias)
+- **`tools/asset_gallery.html` deletado** — UI antiga substituída pelo PixaPro standalone
+- **`gallery_server.py` → `project_server.py`** — nome reflete papel real (serve estático + API REST consumida pelo PixaPro)
+- **Convenção de portas final:** 8080 game · 8089 PixaPro UI · 8090 project_server
+- Total: -3620 linhas duplicadas removidas
+
+**Wang tiles bugs corrigidos:**
+- **Convenção alinhada com PixaPro/cr31** — código antigo usava `NE=1, SE=2, SW=4, NW=8` (rotacionado). Agora `NW=1 NE=2 SE=4 SW=8` (cr31 standard, mesma do PixaPro)
+- **CA majoritário (vertex grid binário)** em vez de média 3×3 do cell grid — fix bug "tudo idx=15" (média categórica convergia tudo pra grass)
+- **Runtime auto-sort** por color sampling — resolve PixelLab CCW-shifted convention sem mexer no asset
+- **Debug overlay** com nº dos tiles (toggle live) + sliders procedural (vertThreshold, vertCaPasses)
+
+**HUD layout final:**
+- **6 boxes em row no top:** BULLS · COWS · FARMERS · [SCORE] · SHOOTERS · BURGERS (score no meio)
+- **Radar bottom-right** com frame Graphics custom (anel escuro + 4 rivets cardinais), removido PNG perspectivo + glass dome
+- **GeometryMask removido** do radar — era causa do bug "não inicializa primeira sessão"
+- **Labels FUEL/GRAVITON** nos slots pretos do HUD combined (cor `#aaffcc` matching coluna esquerda)
+
+**Atmosphere + game flow:**
+- **Shuffle a cada restart** — TOD random (day/dawn/dusk/sunset/night/midnight) + weather (clear/rain/fog/storm/snow) + wind 50/50 on/off
+- **Fuel drain por movimento** — `(0.4 + 3.1 × speedNorm) × difficulty`
+- **2º game over UI fix** — `_gameOverUiShown` resetado em `_createBody` (scene.restart reusa instância)
+- **Restart i18n** — PT: JOGAR NOVAMENTE / EN: RESTART
+- **Burgers spacing** 32→56px + reposicionados ao **norte** do corral
+
+**Wind cartoon swirls:**
+- Thickness variável por partícula (0.8-3.2px)
+- Removido curl/spiral do leading edge (era "head de espermatozoide")
+- Trail com taper bilateral (`sin(π·t)`)
+
+**Currais V2 mascote:**
+- `mascotCfg` per-variante: 01 pequeno + 02 redondo (cow eat S+balde) · 03 hexagonal (cow drinking N+coxo) · 04 rustico (cow lying down) · 05 abandonado (ox walking S)
+
+**MAP tab no debug menu (CONFIGS → MAP):**
+- Dropdown de map presets fetched do PixaPro server (`http://localhost:8090/maps?project=chapada-escapade`)
+- Selecionou preset → fetch + cache em `localStorage` → próximo `scene.restart` lê sync e usa
+
+**`project_server.py` — endpoints novos:**
+- `GET /maps?project=<slug>` + `POST /maps/<name>` — CRUD de map presets
+- `GET /scan_assets` — walks `assets/`, classifica via regex contra `ASSET_NAMING_STANDARD.md`
+- `GET /asset_naming` — config do projeto
+- `POST /apply_renames` — batch rename com **backup automático** em `tools/saves/asset_rename_backup_<ts>/`
+- `POST /check_refs` — preview dos js files que referenciam paths a serem renomeados (dedup literal/template via regex extraído)
+
+**Test naming audit:** 879 assets, 773 já no padrão, 65 renames sugeridos (`chars/nature/X/` → `env/X/`). Apply testado + rollback completo testado.
+
 ### 🚧 Em andamento
 - **Currais V2 polish** — variantes 02/05 ainda usam `mascotCfg` simples; user revisando curral a curral, pode ajustar offsets
 - **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS (counter de torpedos esquivados) + KILL_SHOOTER (flag) ainda placeholder, gameplay já avança via min-read time
-- **Grass blades anim integration** — 5 base PNGs no disco, mas 20 anim frames wind_sway ainda BLOCKED (URL pattern de anim frames PixelLab desconhecido — `api.pixellab.ai/mcp/animations/{id}` retorna 404, precisa testar outras vias)
+- **Grass blades anim integration** — 5 base PNGs no disco, mas 20 anim frames wind_sway ainda BLOCKED (URL pattern de anim frames PixelLab desconhecido)
+- **Naming rename real** — sistema pronto, não foi usado pra valer ainda. Workflow seguro = 1 categoria por vez fixando js refs entre cada batch
 
 ### 🔜 Próximos passos
-1. **Continuar review curral por curral** — user revisando cada variante, ajustar `mascotCfg.dx/dy` e adicionar novos comportamentos (ex: ox bebendo, cow deitada virada outro lado)
-2. **Wirar completion logic do tutorial 09/10** — contador `_tutTorpedosDodged` em `_updateBody` (incrementa quando bullet passa perto sem hit) + `_tutShooterKilled` flag em `_destroyShooter`
+1. **Apply renames real** — pegar Naming tab e fazer 1 batch (ex: só `chars/nature/fences/` → `env/fences/`) + auto-update dos js refs (ainda falta esse último passo no PixaPro)
+2. **Wirar completion logic do tutorial 09/10** — contador `_tutTorpedosDodged` em `_updateBody` + `_tutShooterKilled` flag em `_destroyShooter`
 3. **Grass blades** — descobrir URL pattern de anim frames OU pedir scrape via Chrome MCP da outra sessão
-4. **Migrar PixaPro pra repo próprio** — seguir `docs/PIXAPRO_HANDOFF.md`
-5. **Audit pendentes**: M3 (slot tweens raro) — done na sessão anterior; L6 (FSM tutorial) — done; só sobra polish
-6. **PixaPro futuras melhorias** (opcional): ES modules reais, Store.subscribe, DRY fillSumGrid
+4. **Map preset end-to-end test** — criar preset no PixaPro → game refresh → load → restart → ver terreno gerado
+5. **PixaPro Project dropdown** — hoje hardcoded `chapada-escapade`, devia ler `pixapro_config.json.linkedProjects`
+6. **PixaPro `server.py` simplificar** — fork antigo do project_server, tem código duplicado que devia ficar só no project_server
 
 ### 🛠 Ferramentas criadas
+- `tools/project_server.py` (era `gallery_server.py`) — server local porta 8090 com API REST consumida pelo PixaPro standalone (8 endpoints: maps, scan_assets, apply_renames, check_refs, etc)
 - `tools/slice_sprites.py` — slicer genérico (qualquer sheet)
 - `tools/process_chars.py` — processador de personagens (flood fill + numeração)
 - `tools/clean_hud.py` — remove dígitos baked-in dos frames HUD

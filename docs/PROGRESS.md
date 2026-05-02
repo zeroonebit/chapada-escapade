@@ -4,6 +4,83 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-05-02 — Audit cleanup + PixaPro spinoff + Asset Naming Standard
+
+**Tema da sessão:** consolidar arquitetura — PixaPro vira repo standalone (`H:/Projects/PixaPro`) com API consumida pelo Chapada via HTTP. Asset naming convention centralizada. ~15 commits Chapada + 8 commits PixaPro.
+
+### Audit cleanup (deletar duplicação)
+- `tools/pixapro/` (Chapada) **DELETADO** — era cópia stale, drift entre as 2 versões. PixaPro canonical agora em `H:/Projects/PixaPro/`
+- `tools/asset_gallery.html` (Chapada) **DELETADO** — UI antiga, substituída pelo PixaPro standalone
+- `gallery_server.py` → **`project_server.py`** — nome reflete papel real (serve estático + API REST consumida pelo PixaPro)
+- Total: -3620 linhas duplicadas removidas
+- **Convenção de portas final:** 8080 game · 8089 PixaPro UI · 8090 project_server (cada projeto roda o próprio)
+
+### Wang tiles bugs — 3 fixes encadeados
+- **Convenção errada** — código usava `NE=1, SE=2, SW=4, NW=8` (rotacionado). PixaPro e os assets são cr31 standard `NW=1 NE=2 SE=4 SW=8`. Fix: `idx = nw + ne*2 + se*4 + sw*8`
+- **CA convergindo tudo pra grass** — média 3×3 arredondada misturava tipos categóricos (water+grass = sand?!). Substituído por **majority vote** (modo, não média) — preserva blobs naturais
+- **Corner grid derivado do cell grid** — dependia de "maioria de grass nos 4 cells vizinhos". Com tudo grass após bug #2, todos os cantos viravam 1 → todos os tiles = 15. Substituído por **vertex grid binário direto** (white noise + CA majoritário, mesma lógica do `generateTerrainGrid` do PixaPro)
+- **Runtime auto-sort** por color sampling — resolve PixelLab CCW-shifted convention sem mexer no asset (port do `autoSortTiles` do PixaPro, cacheado em `_wangRemap[style]`)
+- **Debug overlay** com nº dos tiles (toggle live no menu CONFIGS aba VFX)
+
+### HUD layout final
+- **6 boxes em row no top:** BULLS · COWS · FARMERS · [SCORE] · SHOOTERS · BURGERS (score na 4ª pos, meio da row)
+- **Radar bottom-right** com frame Graphics custom (era PNG perspectivo + glass dome no bottom-left)
+  - Layers: outer glow ellipse → anel escuro principal → bordas finas verde brilhante → 4 rivets cardinais
+  - Cor `0x001a08` matching tutorial bg + tint sutil `alpha 0.20` cobrindo só a cavidade
+- **GeometryMask removido** — era causa do bug "radar não inicializa primeira sessão" (mask shape não aplicava no WebGL até primeiro `scene.restart`)
+- **Labels FUEL/GRAVITON** posicionados nos slots pretos do HUD combined (cor `#aaffcc` matching coluna esquerda)
+
+### Atmosphere + game flow polish
+- **Shuffle a cada restart** (desktop) — TOD random + weather random (clear/rain/fog/storm/snow) + wind 50/50 on/off + intensidade random `±0.045`
+- **Fuel drain por movimento** — `(0.4 + 3.1 × speedNorm) × difficulty`, parado ~0.4/s, full ~3.5/s
+- **2º game over UI fix** — flags `_gameOverUiShown`/`_gameOverFx`/`_gameOverSmokeEvent` resetados em `_createBody` (scene.restart reusa instância)
+- **Restart i18n** — PT: JOGAR NOVAMENTE / EN: RESTART nos 2 botões (vitória + game over)
+- **Burgers spacing** `SLOT_W` 32→56px + reposicionados ao **norte** do corral (era ao sul)
+
+### Wind cartoon swirls
+- `_thickness` randomizado por partícula (0.8-3.2px)
+- Removido o curl/spiral do leading edge (era "head de espermatozoide" 😆)
+- Trail com taper bilateral (`sin(π·t)`) — fade nas duas pontas
+- Segments 16 → 18 (curva mais lisa)
+
+### MAP tab no debug menu (CONFIGS → MAP)
+- **Map selector** — dropdown que fetcha presets do PixaPro server + botão Refresh
+- Wang controls movidos pra essa aba (não estão mais em VFX)
+- `proc.activeMap` salvo em localStorage. Vazio = procedural live
+- Ao selecionar preset: fetch + cache em `localStorage['CEP_DBG__activeMapCache']`
+- Próximo `scene.restart` → `_setupScenery` lê cache sync e usa em vez dos sliders
+
+### `project_server.py` — 5 endpoints novos
+- `GET /maps?project=<slug>` + `GET /maps/<name>` + `POST /maps/<name>` — CRUD de map presets
+- `GET /scan_assets` — walks `assets/`, classifica via regex contra `ASSET_NAMING_STANDARD.md`. Retorna `{total, classified, unclassified, by_category, suggestions, items}`
+- `GET /asset_naming` — config de naming do projeto
+- `POST /apply_renames` — batch rename com **backup automático** em `tools/saves/asset_rename_backup_<ts>/` + manifest JSON pra rollback
+- `POST /check_refs` — preview dos js files que referenciam paths a serem renomeados (extrai todos templates de string `'assets/.../${X}/...'`, converte em regex, testa cada path; dedup literal/template)
+
+### PixaPro standalone — novidades
+- **2 tabs novas:**
+  - 🗺️ **Map** — test render canvas + Save/Load presets por projeto
+  - 📋 **Naming** — audit asset naming, suggestions, check JS refs, apply com backup
+- **2 docs novos:**
+  - `PROJECT_INTEGRATION.md` — como conectar projetos novos ao PixaPro (arquitetura, endpoints obrigatórios/opcionais, schema do map JSON, storage layout)
+  - `ASSET_NAMING_STANDARD.md` — convenção universal de assets (chars/items/hud/env/terrain/fx/ui), naming rules, direcionais, anims, tilesets cr31, auto-classify regex, migration checklist
+
+### Naming Audit testado end-to-end
+- **879 assets** scaneados — 773 já no padrão, 106 unclassified, **65 renames sugeridos** (`chars/nature/X/` → `env/X/`)
+- Apply testado: 65/65 moveram com sucesso, 0 erros, backup completo
+- **Rollback testado:** restaurou 65 arquivos pros locais originais via leitura do `_manifest.json` do backup
+- Adicionada proteção: confirm de Apply auto-checa `/check_refs` antes e mostra aviso com lista de js files affected
+
+### Pendências reais (próximas sessões)
+- **Apply renames real** — sistema pronto, só usar com workflow seguro (1 categoria por vez + auto-update js refs)
+- **PixaPro auto-update js refs** — hoje só DETECTA; deveria oferecer batch update
+- **PixaPro Project dropdown** — hoje hardcoded `chapada-escapade`, devia ler `pixapro_config.json.linkedProjects`
+- **PixaPro `server.py` simplificar** — fork antigo do project_server.py, código duplicado
+- **Map preset end-to-end** — falta teste fim-a-fim (PixaPro → game)
+- **Tutorial 09/10 completion logic** + **grass blades wind_sway anims** — ainda BLOCKED do mês passado
+
+---
+
 ## Sessão 2026-04-30 (tarde·noite) — Polish in-game + sync/merge fix + 8 tilesets unblocked + HUD coluna + game over fixes
 
 **~30 commits, sessão longa pós-merge da outra sessão**
