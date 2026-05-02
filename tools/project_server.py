@@ -617,6 +617,10 @@ class Handler(SimpleHTTPRequestHandler):
             return
 
         # Step 1: extrai diff prefixes UNICOS (cluster renames com mesmo padrao)
+        # Prefix rule SAFE = grupo com >=2 renames OU from_prefix com >=4 segments.
+        # Singletons short-prefix viram literal full-path replace pra evitar
+        # engolir paths irmaos nao-renomeados (ex: pixel_labs/beam.png -> fx/beam.png
+        # NAO deve mexer em pixel_labs/chars/cow/...).
         def diff_prefix(from_p, to_p):
             fp = from_p.split("/")
             tp = to_p.split("/")
@@ -624,11 +628,26 @@ class Handler(SimpleHTTPRequestHandler):
                 fp.pop(); tp.pop()
             return ("/".join(fp), "/".join(tp))
 
-        prefix_map = {}  # from_prefix -> to_prefix
+        group_counts = {}
         for r in renames:
             fp, tp = diff_prefix(r["from"], r["to"])
-            if fp:  # skip if from==to
+            if not fp:
+                continue
+            key = (fp, tp)
+            group_counts[key] = group_counts.get(key, 0) + 1
+
+        prefix_map = {}  # from_prefix -> to_prefix (safe directory moves)
+        literal_renames = []  # singletons short-prefix
+        for r in renames:
+            fp, tp = diff_prefix(r["from"], r["to"])
+            if not fp:
+                continue
+            key = (fp, tp)
+            segs = len(fp.split("/"))
+            if group_counts[key] >= 2 or segs >= 4:
                 prefix_map[fp] = tp
+            else:
+                literal_renames.append({"from": r["from"], "to": r["to"]})
 
         # Step 2: scan js files pra ver quem vai mudar
         js_dir = ROOT / "js"
@@ -641,6 +660,15 @@ class Handler(SimpleHTTPRequestHandler):
                 continue
             file_replacements = []
             new_content = content
+            # 1: literal full-path renames (singletons)
+            for lit in literal_renames:
+                count = new_content.count(lit["from"])
+                if count > 0:
+                    new_content = new_content.replace(lit["from"], lit["to"])
+                    file_replacements.append({
+                        "old": lit["from"], "new": lit["to"], "count": count,
+                    })
+            # 2: prefix rules (directory moves)
             for fp, tp in prefix_map.items():
                 # Procura literal 'fp/' (com / final) pra evitar matches parciais
                 # (ex: 'chars/nature' nao deve matchar 'chars/nature_xyz')
