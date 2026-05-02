@@ -97,20 +97,71 @@ def classify_asset(rel_path: str):
         return ("unclassified", {"name": name}, 0.3, None)
     return ("unclassified", {}, 0.0, None)
 
+# In-game scan: detecta refs literais + templates extraidos dos js
+# Resultado: pra cada asset path, retorna se ta wired in-game.
+def scan_in_game_refs():
+    """Returns: {asset_path: True/False} (True = referenciado em algum js).
+    Usa MESMA logica do project_server /scan_in_game_assets:
+      - Literais: 'assets/.../X.png' direto na string
+      - Templates: 'assets/.../${X}/...' regex-matchable
+    """
+    js_dir = ROOT / "js"
+    if not js_dir.exists():
+        return {}
+    all_js = ""
+    for jf in js_dir.rglob("*.js"):
+        try:
+            all_js += "\n" + jf.read_text(encoding="utf-8")
+        except Exception:
+            pass
+    pat_literal = re.compile(r"['\"`](assets/[^'\"`]+\.png)['\"`]")
+    pat_template = re.compile(r"['\"`](assets/[^'\"`]*\$\{[^}]+\}[^'\"`]*\.png)['\"`]")
+    literals = set(m.group(1) for m in pat_literal.finditer(all_js))
+    templates = set(m.group(1) for m in pat_template.finditer(all_js))
+    template_regexes = []
+    for tpl in templates:
+        esc = re.escape(tpl)
+        rgx = re.sub(r'\\\$\\\{[^}]+\\\}', r'[^/]+', esc)
+        try:
+            template_regexes.append(re.compile('^' + rgx + '$'))
+        except re.error:
+            pass
+    def is_in_game(rel_path):
+        if rel_path in literals:
+            return True
+        for rgx in template_regexes:
+            if rgx.match(rel_path):
+                return True
+        return False
+    return is_in_game
+
 def bake_assets_index():
     assets_dir = ROOT / "assets"
     if not assets_dir.exists():
         print(f"[assets] no {assets_dir} -- skip")
         return
+    in_game_check = scan_in_game_refs()
     items, suggestions = [], []
     by_cat = {}
+    in_game_count, orphan_count = 0, 0
     for png in assets_dir.rglob("*.png"):
         rel = png.relative_to(ROOT).as_posix()
         cat, tags, conf, suggest = classify_asset(rel)
-        entry = {"path": rel, "category": cat, "tags": tags, "confidence": conf}
+        in_game = in_game_check(rel) if callable(in_game_check) else False
+        if in_game:
+            in_game_count += 1
+        else:
+            orphan_count += 1
+        entry = {
+            "path": rel,
+            "category": cat,
+            "tags": tags,
+            "confidence": conf,
+            "inGame": in_game,
+        }
         if suggest:
             entry["suggested_path"] = suggest
-            suggestions.append({"from": rel, "to": suggest, "confidence": conf})
+            suggestions.append({"from": rel, "to": suggest, "confidence": conf, "inGame": in_game})
         items.append(entry)
         by_cat[cat] = by_cat.get(cat, 0) + 1
     classified = sum(1 for i in items if i["category"] != "unclassified")
@@ -118,6 +169,8 @@ def bake_assets_index():
         "total": len(items),
         "classified": classified,
         "unclassified": len(items) - classified,
+        "in_game": in_game_count,
+        "orphan": orphan_count,
         "by_category": by_cat,
         "suggestions": suggestions,
         "items": items,
@@ -126,7 +179,7 @@ def bake_assets_index():
     idx = ROOT / "data" / "_assets_index.json"
     idx.parent.mkdir(parents=True, exist_ok=True)
     idx.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"[assets] baked {len(items)} assets ({classified} classified, {len(suggestions)} suggestions) -> {idx.relative_to(ROOT)}")
+    print(f"[assets] baked {len(items)} assets ({classified} classified, {in_game_count} in-game, {orphan_count} orphan, {len(suggestions)} suggestions) -> {idx.relative_to(ROOT)}")
 
 if __name__ == "__main__":
     bake_maps_index()

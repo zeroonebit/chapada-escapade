@@ -585,10 +585,172 @@ class Handler(SimpleHTTPRequestHandler):
             "details": results,
         })
 
+    def handle_apply_renames_with_refs(self):
+        """POST body: {renames: [{from, to}], dry_run?: bool}
+        Aplica renames + auto-update js refs em uma transacao:
+          1. Detecta path-component diff prefixes (ex: 'pixel_labs/chars/nature/X/'
+             -> 'env/X/') e gera replacements pros js
+          2. (se nao dry_run) Backup .js modificados + arquivos .png antes
+          3. (se nao dry_run) Replace nos js + move .png
+          4. Re-bake indexes (data/_assets_index.json + data/maps/_index.json)
+          5. Retorna manifest completo
+
+        Algoritmo de diff prefix:
+          from='assets/pixel_labs/chars/nature/fences/fence_X.png'
+          to  ='assets/env/fences/fence_X.png'
+          Pop common path-suffix components: 'fence_X.png', 'fences'
+          remaining: from='assets/pixel_labs/chars/nature', to='assets/env'
+          -> Replace 'assets/pixel_labs/chars/nature/' por 'assets/env/' nos js
+        """
+        import shutil
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self._send_json({"error": f"bad_json: {e}"}, status=400)
+            return
+        renames = data.get("renames") if isinstance(data, dict) else data
+        dry_run = bool(data.get("dry_run", False)) if isinstance(data, dict) else False
+        if not renames:
+            self._send_json({"error": "no_renames"}, status=400)
+            return
+
+        # Step 1: extrai diff prefixes UNICOS (cluster renames com mesmo padrao)
+        def diff_prefix(from_p, to_p):
+            fp = from_p.split("/")
+            tp = to_p.split("/")
+            while fp and tp and fp[-1] == tp[-1]:
+                fp.pop(); tp.pop()
+            return ("/".join(fp), "/".join(tp))
+
+        prefix_map = {}  # from_prefix -> to_prefix
+        for r in renames:
+            fp, tp = diff_prefix(r["from"], r["to"])
+            if fp:  # skip if from==to
+                prefix_map[fp] = tp
+
+        # Step 2: scan js files pra ver quem vai mudar
+        js_dir = ROOT / "js"
+        js_files = list(js_dir.rglob("*.js")) if js_dir.exists() else []
+        js_changes = []  # [{file, replacements: [{old, new, count}]}]
+        for jf in js_files:
+            try:
+                content = jf.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            file_replacements = []
+            new_content = content
+            for fp, tp in prefix_map.items():
+                # Procura literal 'fp/' (com / final) pra evitar matches parciais
+                # (ex: 'chars/nature' nao deve matchar 'chars/nature_xyz')
+                old_token = fp + "/"
+                new_token = tp + "/" if tp else ""
+                count = new_content.count(old_token)
+                if count > 0:
+                    new_content = new_content.replace(old_token, new_token)
+                    file_replacements.append({
+                        "old": old_token, "new": new_token, "count": count,
+                    })
+            if file_replacements:
+                js_changes.append({
+                    "file": jf.relative_to(ROOT).as_posix(),
+                    "replacements": file_replacements,
+                    "_new_content": new_content,  # interno, nao retorna
+                })
+
+        # Step 3: dry_run? Retorna preview
+        if dry_run:
+            return self._send_json({
+                "dry_run": True,
+                "renames_count": len(renames),
+                "prefix_changes": prefix_map,
+                "js_files_affected": len(js_changes),
+                "js_changes_preview": [
+                    {"file": c["file"], "replacements": c["replacements"]}
+                    for c in js_changes
+                ],
+            })
+
+        # Step 4: Apply (com backup)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = SAVES_DIR / f"asset_rename_backup_{ts}"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        js_backup_dir = backup_dir / "js_backup"
+        js_backup_dir.mkdir(parents=True, exist_ok=True)
+
+        # 4a: Backup .js + write new content
+        js_results = []
+        for c in js_changes:
+            f = ROOT / c["file"]
+            try:
+                bkp = js_backup_dir / c["file"].replace("/", "__")
+                shutil.copy2(f, bkp)
+                f.write_text(c["_new_content"], encoding="utf-8")
+                js_results.append({"file": c["file"], "replacements": c["replacements"], "ok": True})
+            except Exception as e:
+                js_results.append({"file": c["file"], "error": str(e)})
+
+        # 4b: Move .png files
+        png_results, png_errors = [], []
+        for r in renames:
+            src = ROOT / r["from"]
+            dst = ROOT / r["to"]
+            if not src.exists():
+                png_errors.append({"from": r["from"], "error": "src_missing"})
+                continue
+            if dst.exists():
+                png_errors.append({"from": r["from"], "to": r["to"], "error": "dst_exists"})
+                continue
+            try:
+                bkp = backup_dir / r["from"].replace("/", "__")
+                shutil.copy2(src, bkp)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(src), str(dst))
+                png_results.append({"from": r["from"], "to": r["to"], "ok": True})
+            except Exception as e:
+                png_errors.append({"from": r["from"], "error": str(e)})
+
+        # 4c: Manifest pra rollback
+        manifest = {
+            "ts": ts,
+            "renames": renames,
+            "prefix_map": prefix_map,
+            "png_results": png_results,
+            "png_errors": png_errors,
+            "js_results": js_results,
+        }
+        (backup_dir / "_manifest.json").write_text(
+            json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        # Step 5: Re-bake indexes (best effort)
+        try:
+            import subprocess
+            subprocess.run(
+                ["python", str(ROOT / "tools" / "bake_indexes.py")],
+                cwd=str(ROOT), capture_output=True, timeout=30,
+            )
+        except Exception as e:
+            print(f"[apply_renames_with_refs] bake_indexes failed: {e}")
+
+        print(f"[apply_renames_with_refs] {len(png_results)} pngs moved, {len(js_results)} js files updated")
+        print(f"                          backup: {backup_dir.relative_to(ROOT)}")
+
+        self._send_json({
+            "ok": True,
+            "renames_applied": len(png_results),
+            "renames_errors": png_errors,
+            "js_files_updated": len(js_results),
+            "js_results": js_results,
+            "backup_dir": str(backup_dir.relative_to(ROOT)).replace("\\", "/"),
+        })
+
     def handle_apply_renames(self):
         """POST body: [{from: "...", to: "..."}, ...] | {renames: [...]}
         Move arquivos no disk, salva backup em
         tools/saves/asset_rename_backup_<ts>/.
+        Versao SIMPLES (so .png, sem update de js refs). Pra full
+        transacional, ver /apply_renames_with_refs.
         """
         import shutil
         length = int(self.headers.get("Content-Length", 0))
@@ -650,6 +812,10 @@ class Handler(SimpleHTTPRequestHandler):
         # Apply renames batch (com backup)
         if self.path == "/apply_renames":
             self.handle_apply_renames()
+            return
+        # Apply renames + auto-update js refs (com backup + dry_run)
+        if self.path == "/apply_renames_with_refs":
+            self.handle_apply_renames_with_refs()
             return
         # Check JS refs for a list of paths (preview before apply_renames)
         if self.path == "/check_refs":
