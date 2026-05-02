@@ -4,6 +4,81 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-05-02 (continuação · noite) — Pages-only mode + GitHub API write + Browse tab
+
+**Tema:** Eliminar dependência de servers locais. PixaPro 100% serverless via GitHub Pages + GitHub API. ~12 commits Chapada + 12 commits PixaPro.
+
+### Pages-only mode (read sem servers)
+- `tools/bake_indexes.py`: gera `data/maps/_index.json` + `data/_assets_index.json` (manifest static)
+- `bake_indexes.py` agora inclui `inGame: bool` em cada asset (porta a lógica do `/scan_in_game_assets`): 879 total, 751 in-game, 128 órfãos
+- `.github/workflows/bake-indexes.yml`: GitHub Action auto-roda bake em pushes que tocam `assets/`, `data/maps/`, ou o script. Commita de volta com `[skip ci]`
+- `.nojekyll` adicionado (Pages ignora `_-prefix` por default sem isso)
+- Maps movidos de `tools/saves/projects/<slug>/maps/` (privado) → `data/maps/` (committed → Pages serve)
+
+### PixaPro deployed em Pages
+- Repo criado: `https://github.com/zeroonebit/pixapro` (push -u origin main)
+- Pages enabled via `gh api`: `https://zeroonebit.github.io/pixapro/`
+- `config.js` estático com defaults (substituí o dinâmico do server.py em deploy Pages)
+- `tab-map.js` + `tab-naming.js`: `fetchWithFallback(serverPath, pagesPath)` — tenta server local (timeout 2s), senão Pages
+- UI mostra source ativa: `(local · read+write)` vs `(Pages · read-only)`. Save/Apply desabilitam em modo Pages quando sem PAT
+
+### Multi-project support
+- `js/projects.js`: `PixaProjects` API global — `getActiveSlug`, `getActiveCfg`, `fetchWithFallback`, `populateSelector`
+- Lê `linkedProjects` de `window.PIXAPRO_CFG` (`config.js`)
+- Active project persiste em `localStorage`
+- Custom event `pixapro:project-changed` notifica tabs
+- `tab-map.js` + `tab-naming.js` deduplicados (-44 linhas comuns)
+- Dropdowns auto-populam de `<select data-pixa-projects>`
+
+### Asset naming features
+- `project_server.py` ganhou `POST /apply_renames_with_refs` (transacional + dry_run)
+- Algoritmo `diff_prefix`: detecta clusters de renames com mesmo padrão (ex: `chars/nature/X/` → `env/X/`)
+- Auto-update de prefixes nos `js/*.js` (substituição literal + template-based via regex)
+- Backup completo em `tools/saves/asset_rename_backup_<ts>/` com `js_backup/` pra rollback
+- Re-bake automático dos indexes após apply
+- PixaPro UI: 2 stat cards (in-game / órfãos) + filtro radio na Naming tab + badge IN/ORF por linha
+- Botão verde **"✨ Apply + Update JS"** com preview detalhado no confirm
+
+### GitHub API write (zero local server)
+- `js/github-api.js`: PAT management + Contents API helpers (`getFile`, `putFile`, `saveTextFile`) + `batchTreeOperations` (atomic multi-file commits via Trees API)
+- `js/github-modal.js`: UI handler do modal **🔑 GitHub** no header
+- Modal: instruções de gerar PAT (scope `repo`) + Test/Save/Remove · PAT em `localStorage`
+- `tab-map.js` Save: tenta server local primeiro, senão Contents API com PAT — commita `data/maps/<name>.json`
+- `tab-naming.js` Apply: se Pages mode + PAT, usa `applyWithRefsViaGithub` — calcula prefix changes + js updates client-side, executa via `batchTreeOperations` (1 commit atomico)
+- GitHub Action existente faz re-bake automático em ~30s
+
+### PixaPro audit cleanup
+- `PixaPro/server.py`: 390 → 88 linhas (-77%) — só serve static + `/config.js` dinâmico. Endpoints duplicados removidos (vivem no project_server.py de cada projeto)
+- `tools/saves/projects/` deletado do Chapada (data/maps/ é canonical agora)
+- `project_server.py`: maps_dir agora lê de `data/maps/` direto (alinha com Pages flow)
+
+### Browse tab (gallery completa)
+- Nova aba **🔍 Browse** mostra todos os 879 assets do projeto ativo
+- Filtros: category dropdown (auto-populated de by_category), in-game radio, search com debounce, view grid/list
+- Grid: thumbs 110px lazy-loaded com badge IN/ORF, max 200 por render
+- Detail panel: imagem 200px + path + category + in-game + tags JSON + suggested_path + link "Open in new tab"
+- Asset URLs apontam pra `<project.pages>/<asset.path>` (cross-origin Pages-to-Pages funciona)
+- **Tag filter syntax:** `char:cow dir:N anim:walk frame:0 style:dirt_grass_32 bits:5` + negação com `-` + texto livre
+
+### Convenção de portas final
+- **8080** = game canvas
+- **8089** = PixaPro UI standalone (opcional — só pra dev local)
+- **8090** = project_server.py do projeto (opcional — só pra dev local)
+- **Pages** = ambos (PixaPro + project) — zero local
+
+### URLs ativas
+- 🌐 PixaPro UI: https://zeroonebit.github.io/pixapro/
+- 📦 PixaPro repo: https://github.com/zeroonebit/pixapro
+- 📦 Chapada data: https://zeroonebit.github.io/chapada-escapade/data/...
+
+### Pendências reais
+- Apply renames real end-to-end (sistema todo pronto, é 1 clique)
+- Map presets reais (criar 5-6 variados, wirar pro splash)
+- Tutorial 09/10 completion logic (ainda placeholder)
+- Grass blades wind_sway anims (BLOCKED externamente)
+
+---
+
 ## Sessão 2026-05-02 — Audit cleanup + PixaPro spinoff + Asset Naming Standard
 
 **Tema da sessão:** consolidar arquitetura — PixaPro vira repo standalone (`H:/Projects/PixaPro`) com API consumida pelo Chapada via HTTP. Asset naming convention centralizada. ~15 commits Chapada + 8 commits PixaPro.

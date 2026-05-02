@@ -275,7 +275,48 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Game over cinematic V2** — vinheta + Fibonacci spiral + tremor + smoke + crash crooked
 - **Quips coloridos por tom** + seguem target
 
-### ✅ Pronto (cont. — sessão 2026-05-02 · audit cleanup + PixaPro spinoff + Asset Naming)
+### ✅ Pronto (cont. — sessão 2026-05-02 noite · Pages-only mode + GitHub API write + Browse tab)
+**Pages-only (read sem servers locais):**
+- `tools/bake_indexes.py` gera `data/maps/_index.json` + `data/_assets_index.json` (manifest static com `inGame: bool` por asset)
+- `.github/workflows/bake-indexes.yml` auto-roda bake em pushes (commits com `[skip ci]`)
+- `.nojekyll` adicionado pra Pages servir `_-prefix` files
+- Maps movidos pra `data/maps/` committed (era em `tools/saves/projects/<slug>/maps/` privado)
+
+**PixaPro deployed em Pages:**
+- Repo standalone: https://github.com/zeroonebit/pixapro
+- UI live: https://zeroonebit.github.io/pixapro/
+- `config.js` estático (substituí o dinâmico em deploy)
+- `tab-map.js` + `tab-naming.js` com `fetchWithFallback(serverPath, pagesPath)` — server local primeiro, Pages fallback
+
+**Multi-project support:**
+- `js/projects.js` (`PixaProjects` API global): `getActiveSlug`, `getActiveCfg`, `fetchWithFallback`, `populateSelector`
+- Lê `linkedProjects` de `window.PIXAPRO_CFG`
+- Active project persiste em `localStorage` + custom event `pixapro:project-changed`
+- Dropdowns auto-populam via `<select data-pixa-projects>`
+
+**GitHub API write (zero local server):**
+- `js/github-api.js` (Contents + Trees API helpers) + `js/github-modal.js` (PAT setup UI)
+- Modal **🔑 GitHub** no header — PAT em localStorage (scope `repo`)
+- Save preset via Contents API quando offline + PAT
+- Apply renames via `batchTreeOperations` (1 commit atomico)
+
+**Asset naming features:**
+- `project_server.py` ganhou `POST /apply_renames_with_refs` (transacional, dry_run)
+- Algoritmo `diff_prefix` clusters renames com mesmo padrão
+- Auto-update de prefixes nos `js/*.js` + backup completo (.js + .png)
+- PixaPro UI: 2 stat cards (in-game / órfãos) + filtro radio + badge IN/ORF + botão verde **"✨ Apply + Update JS"**
+
+**Browse tab:**
+- Aba **🔍 Browse** com gallery completa (879 assets) + filtros (category, in-game, search, view grid/list)
+- Detail panel + tag chips
+- Tag filter syntax: `char:cow dir:N anim:walk frame:0 style:dirt_grass_32 -wang_meta`
+
+**PixaPro audit cleanup:**
+- `PixaPro/server.py`: 390 → 88 linhas (-77%) — só static + `/config.js` dinâmico
+- `tools/saves/projects/` deletado (`data/maps/` é canonical)
+- `project_server.py` lê maps de `data/maps/` direto
+
+### ✅ Pronto (cont. — sessão 2026-05-02 · audit cleanup + PixaPro spinoff + Asset Naming) — *primeira parte*
 **Audit + cleanup:**
 - **`tools/pixapro/` deletado** — migrou pra repo standalone `H:/Projects/PixaPro` (estava duplicado, drift entre as 2 cópias)
 - **`tools/asset_gallery.html` deletado** — UI antiga substituída pelo PixaPro standalone
@@ -324,18 +365,15 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 **Test naming audit:** 879 assets, 773 já no padrão, 65 renames sugeridos (`chars/nature/X/` → `env/X/`). Apply testado + rollback completo testado.
 
 ### 🚧 Em andamento
-- **Currais V2 polish** — variantes 02/05 ainda usam `mascotCfg` simples; user revisando curral a curral, pode ajustar offsets
-- **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS (counter de torpedos esquivados) + KILL_SHOOTER (flag) ainda placeholder, gameplay já avança via min-read time
-- **Grass blades anim integration** — 5 base PNGs no disco, mas 20 anim frames wind_sway ainda BLOCKED (URL pattern de anim frames PixelLab desconhecido)
-- **Naming rename real** — sistema pronto, não foi usado pra valer ainda. Workflow seguro = 1 categoria por vez fixando js refs entre cada batch
+- **Apply renames real end-to-end** — sistema completo (server local + GitHub API + auto-update js + dry_run + backup), só falta clicar e validar 1x
+- **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
+- **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
 ### 🔜 Próximos passos
-1. **Apply renames real** — pegar Naming tab e fazer 1 batch (ex: só `chars/nature/fences/` → `env/fences/`) + auto-update dos js refs (ainda falta esse último passo no PixaPro)
-2. **Wirar completion logic do tutorial 09/10** — contador `_tutTorpedosDodged` em `_updateBody` + `_tutShooterKilled` flag em `_destroyShooter`
-3. **Grass blades** — descobrir URL pattern de anim frames OU pedir scrape via Chrome MCP da outra sessão
-4. **Map preset end-to-end test** — criar preset no PixaPro → game refresh → load → restart → ver terreno gerado
-5. **PixaPro Project dropdown** — hoje hardcoded `chapada-escapade`, devia ler `pixapro_config.json.linkedProjects`
-6. **PixaPro `server.py` simplificar** — fork antigo do project_server, tem código duplicado que devia ficar só no project_server
+1. **Voltar pro jogo** (foco original): map presets reais (5-6 variados), wirar pro splash escolher, dar variedade visual
+2. **Apply renames real** — clicar `✨ Apply + Update JS` no PixaPro Naming, validar end-to-end
+3. **Tutorial 09/10 completion logic** — contadores em `_updateBody` + flag em `_destroyShooter`
+4. **PixaPro polish bonus** (opcional): Browse aba Stats agregadas, Naming rename history, etc
 
 ### 🛠 Ferramentas criadas
 - `tools/project_server.py` (era `gallery_server.py`) — server local porta 8090 com API REST consumida pelo PixaPro standalone (8 endpoints: maps, scan_assets, apply_renames, check_refs, etc)
