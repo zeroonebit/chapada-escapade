@@ -8,35 +8,51 @@ Object.assign(Jogo.prototype, {
         const COLS = Math.ceil(W / CELL);
         const ROWS = Math.ceil(H / CELL);
 
-        // ── 1. SEED RANDOM with pesos: 6% water, 14% sand, 50% grass, 30% dirt
+        // Procedural cfg via debug menu (defaults sao sane). Cada um override
+        // localStorage via dbg.proc.{seed*, caPasses, ...}.
+        const proc = this.dbg?.proc || {};
+        const SEED_WATER = proc.seedWater ?? 0.10;
+        const SEED_SAND  = proc.seedSand  ?? 0.18;
+        const SEED_GRASS = proc.seedGrass ?? 0.40;
+        // Resto vira dirt (1 - water - sand - grass = ~0.32)
+        const CA_PASSES  = proc.caPasses  ?? 3;
+
+        // ── 1. SEED RANDOM com pesos balanceados (todos os 4 tipos visiveis)
+        // Valores defaults: 10% water + 18% sand + 40% grass + 32% dirt
         let grid = [];
         for (let y = 0; y < ROWS; y++) {
             grid[y] = [];
             for (let x = 0; x < COLS; x++) {
                 const r = Math.random();
-                if (r < 0.06)      grid[y][x] = 0;  // water
-                else if (r < 0.20) grid[y][x] = 1;  // sand
-                else if (r < 0.70) grid[y][x] = 2;  // grass
-                else               grid[y][x] = 3;  // dirt
+                if (r < SEED_WATER)                          grid[y][x] = 0;  // water
+                else if (r < SEED_WATER + SEED_SAND)         grid[y][x] = 1;  // sand
+                else if (r < SEED_WATER + SEED_SAND + SEED_GRASS) grid[y][x] = 2;  // grass
+                else                                          grid[y][x] = 3;  // dirt
             }
         }
 
-        // ── 2. SMOOTHING: 5 passes de média 3×3 arredondada (cellular automata)
-        for (let pass = 0; pass < 5; pass++) {
+        // ── 2. SMOOTHING via MAJORITY VOTE (modo, nao media)
+        // Media com tipos categoricos misturava tudo (water+grass = sand?!)
+        // e convergia tudo pra grass. Majority vote preserva blobs/manchas.
+        for (let pass = 0; pass < CA_PASSES; pass++) {
             const next = [];
             for (let y = 0; y < ROWS; y++) {
                 next[y] = [];
                 for (let x = 0; x < COLS; x++) {
-                    let sum = 0, count = 0;
+                    const counts = [0, 0, 0, 0];  // count por tipo
                     for (let dy = -1; dy <= 1; dy++) {
                         for (let dx = -1; dx <= 1; dx++) {
                             const ny = y + dy, nx = x + dx;
                             if (ny < 0 || ny >= ROWS || nx < 0 || nx >= COLS) continue;
-                            sum += grid[ny][nx];
-                            count++;
+                            counts[grid[ny][nx]]++;
                         }
                     }
-                    next[y][x] = Math.round(sum / count);
+                    // Pega o tipo com mais votos (tiebreak: tipo atual ou maior id)
+                    let best = grid[y][x], bestCount = -1;
+                    for (let t = 0; t < 4; t++) {
+                        if (counts[t] > bestCount) { bestCount = counts[t]; best = t; }
+                    }
+                    next[y][x] = best;
                 }
             }
             grid = next;
@@ -49,55 +65,52 @@ Object.assign(Jogo.prototype, {
         // ── 3. RENDER ─────────────────────────────────────────────────
         const useWang = this.dbg?.fx?.wangtiles;
         if (useWang) {
-            // Wang tiles cr31 corner convention.
-            // Convenção tools/wang_test_palette.py: NE=1, SE=2, SW=4, NW=8.
-            // each CELL is renderizada with 4 cantos compartilhados with vizinhos.
-            // Construímos um corner grid (COLS+1)×(ROWS+1) — não is o cell grid,
-            // são os cantos between cells. Fica robusto: cantos compartilhados always
-            // batem between cells vizinhas (without costura).
+            // Wang tiles cr31 corner convention (mesma do PixaPro):
+            //   NW=1, NE=2, SE=4, SW=8 -> bits = nw + ne*2 + se*4 + sw*8
+            // ANTES o codigo usava NE=1, NW=8 (rotacionado). Cantos eram derivados
+            // do cell grid via "majoria de grass" -- com CA convergindo tudo pra
+            // grass, todos os cantos viravam 1 e todo tile = 15.
+            //
+            // Agora: gera um VERTEX GRID binario direto (lower=0, upper=1) via
+            // white noise + CA opcional (mesma logica do PixaPro generateTerrainGrid).
             const CW = COLS + 1, CH = ROWS + 1;
-            // Canto = 1 (UPPER, grass verde) only se a maioria dos 4 cells ao redor is
-            // PURO grass (===2). Sand/water/dirt all contam as 0 (LOWER, sand).
-            // this avoids o bug "tudo idx=15" when grass+dirt dominavam o grid.
+            const VERT_THRESHOLD = proc.vertThreshold ?? 0.50;  // 0..1, prob de upper
+            const VERT_CA_PASSES = proc.vertCaPasses ?? 4;
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
                 for (let x = 0; x < CW; x++) {
-                    let hi = 0, total = 0;
-                    for (let dy = -1; dy <= 0; dy++) {
-                        for (let dx = -1; dx <= 0; dx++) {
-                            const cy = y + dy, cx = x + dx;
-                            if (cy < 0 || cy >= ROWS || cx < 0 || cx >= COLS) continue;
-                            total++;
-                            if (grid[cy][cx] === 2) hi++;
-                        }
-                    }
-                    // 50%+ de pureza to ser upper
-                    corners[y][x] = (total > 0 && hi * 2 >= total) ? 1 : 0;
+                    corners[y][x] = Math.random() < VERT_THRESHOLD ? 1 : 0;
                 }
             }
-            // Pass extra de smoothing nos cantos to fechar manchas isoladas
-            for (let pass = 0; pass < 2; pass++) {
+            // CA majoritario no vertex grid (preserva blobs naturais)
+            for (let pass = 0; pass < VERT_CA_PASSES; pass++) {
                 const next = [];
                 for (let y = 0; y < CH; y++) {
                     next[y] = [];
                     for (let x = 0; x < CW; x++) {
-                        let s = 0, c = 0;
-                        for (let dy = -1; dy <= 1; dy++)
+                        let count = 0, total = 0;
+                        for (let dy = -1; dy <= 1; dy++) {
                             for (let dx = -1; dx <= 1; dx++) {
                                 const ny = y+dy, nx = x+dx;
-                                if (ny<0||ny>=CH||nx<0||nx>=CW) continue;
-                                s += corners[ny][nx]; c++;
+                                if (ny<0 || ny>=CH || nx<0 || nx>=CW) {
+                                    // borda: conta como 1 (upper) -- evita ilhas de
+                                    // lower nas bordas. PixaPro faz igual.
+                                    count++; total++; continue;
+                                }
+                                count += corners[ny][nx];
+                                total++;
                             }
-                        next[y][x] = (s/c) >= 0.5 ? 1 : 0;
+                        }
+                        next[y][x] = count >= Math.ceil(total/2) ? 1 : 0;
                     }
                 }
-                corners.length = 0; corners.push(...next);
+                for (let y = 0; y < CH; y++) corners[y] = next[y];
             }
             // Cell (x,y) reads seus 4 cantos:
             //   NW = corners[y][x],  NE = corners[y][x+1]
             //   SW = corners[y+1][x], SE = corners[y+1][x+1]
-            // Bits cr31: NE=1, SE=2, SW=4, NW=8
+            // Bits cr31 (PixaPro convention): NW=1, NE=2, SE=4, SW=8
             // tileStyle: 'test' (placeholder), 'dirt_grass_32' ou 'ocean_sand_32'
             const style = this.dbg?.fx?.tileStyle;
             const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
@@ -115,7 +128,8 @@ Object.assign(Jogo.prototype, {
                 for (let x = 0; x < COLS; x++) {
                     const nw = corners[y][x],     ne = corners[y][x+1];
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
-                    const idx = (ne * 1) | (se * 2) | (sw * 4) | (nw * 8);
+                    // cr31 convention (PixaPro): NW=1, NE=2, SE=4, SW=8
+                    const idx = nw + ne*2 + se*4 + sw*8;
                     this._wangIndices[y][x] = idx;
                     const f = String(idx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
