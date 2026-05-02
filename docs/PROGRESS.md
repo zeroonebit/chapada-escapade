@@ -4,6 +4,48 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-05-02 (continuação · tarde) — Apply renames bug-fix + Audit Pages fallback
+
+**Tema:** Caçar e corrigir bug do Apply renames (PixaPro live) que quebrou jogo em produção. Iniciar plano de debug PixaPro tab-by-tab.
+
+### Triagem inicial
+- Conflito de stash em `data/maps/_index.json` (só timestamp do bake) — resolvido via `bake_indexes.py`
+- Working tree local corrupto: `js/02_preload.js` + `js/03_textures.js` com prefixos `assets/fx/...` (resíduo de Apply anterior, nunca commitado). HEAD limpo. `git restore js/ assets/` reverteu working copy. Untracked `assets/env/` + `assets/fx/` (duplicatas) deletados após confirmação.
+
+### Apply renames quebrou produção
+- Após restore, rodei Apply pelo PixaPro live (PAT salvo em `H:/Projects/.pat_pixapro`). Commit `dd0a9a5`: 65 PNGs movidos OK, **17+ js refs reescritas erradas** (todos `pixel_labs/` → `fx/` indiscriminado, incluindo `chars/cow/`, `items/`, `hud/` que não foram renomeados).
+- Revert via `git revert dd0a9a5 a6ed349` (sem force-push, 2 commits novos), produção desbloqueada.
+
+### Bug raiz — `diffPrefix` over-broad
+- `tab-naming.js` (PixaPro) e `project_server.py:handle_apply_renames_with_refs` tinham mesmo algoritmo: pop sufixos comuns ate o fim, gerando uma prefix rule por rename.
+- Caso patológico: singleton `assets/pixel_labs/beam.png` → `assets/fx/beam.png` gerava prefix `assets/pixel_labs` → `assets/fx` (2 segs). Substring replace daí engolia todos os `pixel_labs/*` irmãos.
+- **Fix nos 2 lados:** prefix rule só é safe se `(grupo >=2 renames)` OU `(prefix >=4 segments)`. Singletons short-prefix viram literal full-path replace (substring exato). Validado com simulação: 64 nature/* → SAFE prefix, 1 beam → LITERAL.
+
+### Re-Apply pelo PixaPro live
+- Commit `17d7986`: 65 pngs + 1 js refs (`02_preload.js`). Diff toca SÓ `nature/` → `env/` (template) + `beam.png` → `fx/beam.png` (literal). `chars/cow/`, `chars/ufo/`, `items/`, `hud/`, anims = intactos. **Bug fix funcional.**
+- Empty commit cosmético `217bb91` (segundo Apply, nada pra renomear) — pode ficar.
+- Verificação: 0 broken literals, 13 templates resolvidos.
+
+### PixaPro live discussion
+- Pages privado requer GitHub Pro ($4/mo) ou alternativa Cloudflare/Netlify. Sem urgência: PAT vive só no localStorage do navegador de quem digita, código já é open.
+- Integração PixelLab: geração via MCP server-side (Claude Code), saldo via bookmarklet → server local. Privar Pages não muda nada.
+
+### Plano debug PixaPro tab-by-tab
+- 8 tabs ordenadas por dependência: Browse → Naming → Map → Tiles → Gallery → Manager (Audit) → Editor → Detail.
+- User pediu começar por **Audit** porque já tem painel pendente (in-game/not-in-game) + histórico.
+
+### Audit (Manager) — fix Pages fallback
+- `renderInGamePanel` (em `tab-gallery.js`) já é color-coded blue=in-game / yellow=not-in-game, mas dependia de 2 endpoints server-only: `/list_assets` + `/scan_in_game_assets`.
+- **Fix em `PixaPro/js/api.js`:** ambos caem pra fetch de `cfg.pages + /data/_assets_index.json` (baked). Cache 60s, invalidado em `pixapro:project-changed`. Asset URLs em Pages mode usam `cfg.pages` absoluto (vs `'../'` relativo do server mode), pra resolver corretamente quando PixaPro está em `zeroonebit.github.io/pixapro/` e os assets em `zeroonebit.github.io/<projeto>/`.
+- Commit PixaPro `6db6df7`. Aguardando user testar Audit live e iniciar curadoria one-by-one.
+
+### Resíduos
+- Inbox `assets/pixel_labs/chars/nature/v2/inbox/` (67 arquivos, depth 4) não é matched pela regex `chars/nature/X/Y.png` (depth 3). Suggests podem precisar de regra extra ou flatten.
+- `MANIFEST` hardcoded em `PixaPro/js/constants.js` (322 linhas) ainda iterado pelas setas Prev/Next — escopo separado da curadoria do filesystem audit panel. Eventual unificação pendente.
+- `H:/Projects/.pat_pixapro` salvo plain-text — rotacionar PAT após uso.
+
+---
+
 ## Sessão 2026-05-02 (continuação · noite) — Pages-only mode + GitHub API write + Browse tab
 
 **Tema:** Eliminar dependência de servers locais. PixaPro 100% serverless via GitHub Pages + GitHub API. ~12 commits Chapada + 12 commits PixaPro.

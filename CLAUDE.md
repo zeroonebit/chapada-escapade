@@ -364,8 +364,16 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 
 **Test naming audit:** 879 assets, 773 já no padrão, 65 renames sugeridos (`chars/nature/X/` → `env/X/`). Apply testado + rollback completo testado.
 
+### ✅ Pronto (cont. — sessão 2026-05-02 tarde · Apply renames bug-fix + Audit Pages fallback)
+- **Apply renames bug-fix** — `diffPrefix` algoritmo era over-broad: singleton `pixel_labs/beam.png`→`fx/beam.png` gerava prefix `pixel_labs`→`fx` que engolia paths irmãos. Fix: prefix rule só safe se grupo>=2 OU prefix>=4 segs; senão literal full-path replace. Aplicado nos 2 lados (`PixaPro/js/tab-naming.js` + `ChapadaEscapade/tools/project_server.py`)
+- **65 PNGs renomeados via PixaPro live** — `chars/nature/{rocks,vegetation,fences,...}/X.png` → `env/X/Y.png` + `pixel_labs/beam.png` → `fx/beam.png`. Commit `17d7986` limpo, 0 broken refs
+- **Audit panel Pages fallback** — `Api.listAssets()` + `Api.scanInGameAssets()` em `PixaPro/js/api.js` agora caem pra `cfg.pages + /data/_assets_index.json` quando server local off. Cache 60s, invalidado em `pixapro:project-changed`. URLs absolutos via `cfg.pages` em Pages mode. Commit PixaPro `6db6df7`
+- **Plano debug PixaPro tab-by-tab** definido: ordem Browse → Naming → Map → Tiles → Gallery → Manager (Audit) → Editor → Detail. Iniciado pela Audit
+- **PAT GitHub salvo** em `H:/Projects/.pat_pixapro` (plain-text — rotacionar após uso)
+
 ### 🚧 Em andamento
-- **Apply renames real end-to-end** — sistema completo (server local + GitHub API + auto-update js + dry_run + backup), só falta clicar e validar 1x
+- **Audit live testing** — fallback Pages pushed, falta user validar painel popula + walk through one-by-one (P/D/R/C hotkeys)
+- **Apply renames** — sistema validado end-to-end com bug-fix; pode ser usado livremente agora
 - **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
 - **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
