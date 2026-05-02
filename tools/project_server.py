@@ -469,6 +469,105 @@ class Handler(SimpleHTTPRequestHandler):
         print(f"[maps] saved {project}/{name} -> {f.relative_to(ROOT)}")
         self._send_json({"ok": True, "name": name, "project": project, "path": str(f.relative_to(ROOT)).replace("\\", "/")})
 
+    def handle_check_refs(self):
+        """POST body: {paths: ["assets/pixel_labs/x.png", ...]}
+        Retorna pra cada path: lista de arquivos js que o referenciam +
+        line numbers + tipo (literal | template-match).
+
+        Use case: antes de apply_renames, mostrar pro user quais js files
+        precisarao de update manual.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self._send_json({"error": f"bad_json: {e}"}, status=400)
+            return
+        paths = data.get("paths", [])
+        if not paths:
+            self._send_json({"error": "no_paths"}, status=400)
+            return
+        js_dir = ROOT / "js"
+        if not js_dir.exists():
+            self._send_json({"error": "no_js_dir"}, status=500)
+            return
+        # Le todos js files mantendo line info
+        js_files = list(js_dir.rglob("*.js"))
+        per_file_lines = {}
+        for jf in js_files:
+            try:
+                per_file_lines[jf.relative_to(ROOT).as_posix()] = jf.read_text(encoding="utf-8").splitlines()
+            except Exception:
+                pass
+
+        # Extrai TODOS templates de string nos js: 'assets/pixel_labs/...${X}...'
+        # Cada template vira um regex que matcha paths concretos
+        # (${X} substitui por [^/]+ -- nao cruza /)
+        tpl_pat = re.compile(r"['\"`](assets/pixel_labs/[^'\"`]*\$\{[^}]+\}[^'\"`]*\.png)['\"`]")
+        # template -> [(file, line, snippet, regex)]
+        templates_with_loc = []
+        for jsf, lines in per_file_lines.items():
+            for i, line in enumerate(lines):
+                for m in tpl_pat.finditer(line):
+                    tpl = m.group(1)
+                    esc = re.escape(tpl)
+                    rgx_str = re.sub(r'\\\$\\\{[^}]+\\\}', r'[^/]+', esc)
+                    try:
+                        templates_with_loc.append({
+                            "regex": re.compile('^' + rgx_str + '$'),
+                            "file": jsf,
+                            "line": i + 1,
+                            "snippet": line.strip()[:120],
+                            "tpl": tpl,
+                        })
+                    except re.error:
+                        pass
+
+        results = {}
+        for path in paths:
+            hits = []
+            seen = set()  # (file, line) pra dedup literal vs template
+            # Literal: procura o path completo
+            for jsf, lines in per_file_lines.items():
+                for i, line in enumerate(lines):
+                    if path in line:
+                        key = (jsf, i + 1)
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        hits.append({
+                            "file": jsf, "line": i + 1,
+                            "snippet": line.strip()[:120],
+                            "kind": "literal",
+                        })
+            # Template: testa o path contra cada template extraido
+            for t in templates_with_loc:
+                if t["regex"].match(path):
+                    key = (t["file"], t["line"])
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    hits.append({
+                        "file": t["file"], "line": t["line"],
+                        "snippet": t["snippet"],
+                        "kind": "template",
+                        "template": t["tpl"],
+                    })
+            results[path] = hits
+        # Summary: total hits, files unicos affected
+        all_files = set()
+        for p, hits in results.items():
+            for h in hits:
+                all_files.add(h["file"])
+        self._send_json({
+            "paths_checked": len(paths),
+            "paths_with_refs": sum(1 for p in results if results[p]),
+            "files_affected": sorted(all_files),
+            "files_count": len(all_files),
+            "details": results,
+        })
+
     def handle_apply_renames(self):
         """POST body: [{from: "...", to: "..."}, ...] | {renames: [...]}
         Move arquivos no disk, salva backup em
@@ -535,6 +634,10 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/apply_renames":
             self.handle_apply_renames()
             return
+        # Check JS refs for a list of paths (preview before apply_renames)
+        if self.path == "/check_refs":
+            self.handle_check_refs()
+            return
         if self.path == "/mcp_clear":
             _mcp_jobs.clear()
             mcp_path = SAVES_DIR / "mcp_live.json"
@@ -591,7 +694,7 @@ def main():
     print(f"  Gallery: http://localhost:{port}/tools/asset_gallery.html")
     print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status, GET /pixellab_balance")
     print(f"             GET /maps?project=<slug>, GET /maps/<name>, POST /maps/<name>?project=<slug>")
-    print(f"             GET /scan_assets, GET /asset_naming, POST /apply_renames")
+    print(f"             GET /scan_assets, GET /asset_naming, POST /apply_renames, POST /check_refs")
     print(f"  Saves:   {SAVES_DIR.relative_to(ROOT)}/")
     server = ThreadingHTTPServer(("", port), Handler)
     try:
