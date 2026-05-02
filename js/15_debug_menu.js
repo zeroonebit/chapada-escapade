@@ -567,6 +567,11 @@ Object.assign(Jogo.prototype, {
                     if (this._applyMenuI18n) this._applyMenuI18n();
                     if (this._applyHudI18n) this._applyHudI18n();
                 }
+                // MAP preset selecionado -> fetch + cache em localStorage
+                // (proximo scene.restart vai pegar o cache em _createBody)
+                if (section === 'proc' && key === 'activeMap') {
+                    this._loadMapPreset(sel.value);
+                }
             });
         });
 
@@ -701,13 +706,19 @@ Object.assign(Jogo.prototype, {
     },
 
     async _loadMapPreset(name) {
-        if (!name) return null;
+        if (!name) {
+            // Selecionou "procedural live" -> limpa cache + nao re-fetch
+            try { localStorage.removeItem('CEP_DBG__activeMapCache'); } catch {}
+            return null;
+        }
         const url = `${this.PIXAPRO_URL}/maps/${encodeURIComponent(name)}?project=${this.PROJECT_SLUG}`;
         try {
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const m = await r.json();
             console.log('[MAP] loaded preset:', name, m);
+            // Cache sync em localStorage -> _createBody le no proximo restart
+            try { localStorage.setItem('CEP_DBG__activeMapCache', JSON.stringify(m)); } catch {}
             return m;  // { name, seed, threshold, bias, gridW, gridH, tileStyle, ... }
         } catch (e) {
             console.warn('[MAP] load fail:', e);

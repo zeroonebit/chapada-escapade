@@ -9,11 +9,23 @@ Object.assign(Jogo.prototype, {
         const ROWS = Math.ceil(H / CELL);
 
         // Procedural cfg via debug menu OU map preset salvo no PixaPro.
-        // Se proc.activeMap setado E _activeMapConfig carregado pelo flow
-        // assincrono em _scenery_loadMapAsync, usa esses valores. Caso
-        // contrario usa sliders live do dbg.proc.
+        // Cache do preset esta em localStorage (escrito quando user seleciona
+        // no dropdown da MAP tab via _loadMapPreset). Le sync aqui no scene
+        // init -- nao precisa async fetch durante create.
         const proc = this.dbg?.proc || {};
-        const mapCfg = this._activeMapConfig || {};
+        let mapCfg = {};
+        if (proc.activeMap) {
+            try {
+                const cached = localStorage.getItem('CEP_DBG__activeMapCache');
+                if (cached) {
+                    mapCfg = JSON.parse(cached);
+                    this._activeMapConfig = mapCfg;
+                    console.log('[MAP] using preset:', mapCfg.name || proc.activeMap, mapCfg);
+                }
+            } catch (e) { console.warn('[MAP] cache parse fail:', e); }
+        } else {
+            this._activeMapConfig = null;
+        }
         const SEED_WATER = mapCfg.seedWater ?? proc.seedWater ?? 0.10;
         const SEED_SAND  = mapCfg.seedSand  ?? proc.seedSand  ?? 0.18;
         const SEED_GRASS = mapCfg.seedGrass ?? proc.seedGrass ?? 0.40;
@@ -114,7 +126,8 @@ Object.assign(Jogo.prototype, {
             //   SW = corners[y+1][x], SE = corners[y+1][x+1]
             // Bits cr31 (PixaPro convention): NW=1, NE=2, SE=4, SW=8
             // tileStyle: 'test' (placeholder), 'dirt_grass_32' ou 'ocean_sand_32'
-            const style = this.dbg?.fx?.tileStyle;
+            // Preset pode override o tileStyle escolhido nos sliders
+            const style = mapCfg.tileStyle || this.dbg?.fx?.tileStyle;
             const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
             // Diagnostico: log style escolhido + se assets carregaram
             console.log('[WANG] tileStyle=', style, 'useStyle=', useStyle,
