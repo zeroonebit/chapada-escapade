@@ -1,4 +1,4 @@
-﻿// 02_preload.js — Carregamento de assets (PNGs)
+// 02_preload.js — Carregamento de assets (PNGs)
 Object.assign(Jogo.prototype, {
 
     preload() {
@@ -38,8 +38,8 @@ Object.assign(Jogo.prototype, {
 
         // ── HERO ASSETS 200×200 (single sprite used em algumas situações) ──
         // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
-        this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
-        this.load.image('beam_halo', 'assets/pixel_labs/beam.png');
+        this.load.image('nave',      'assets/fx/chars/ufo/south.png');
+        this.load.image('beam_halo', 'assets/fx/beam.png');
 
         // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
         // Cow (chubby holstein, 8-dir), Ox, Farmer, UFO: 8 directions
@@ -48,22 +48,22 @@ Object.assign(Jogo.prototype, {
             'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
         };
         Object.entries(dirs8).forEach(([d, k]) => {
-            this.load.image(`cow_${k}`, `assets/pixel_labs/chars/cow/${d}.png`);
-            this.load.image(`ox_${k}`,  `assets/pixel_labs/chars/ox/${d}.png`);
-            this.load.image(`farmer_${k}`,  `assets/pixel_labs/chars/farmer/${d}.png`);
-            this.load.image(`ufo_${k}`,  `assets/pixel_labs/chars/ufo/${d}.png`);
+            this.load.image(`cow_${k}`, `assets/fx/chars/cow/${d}.png`);
+            this.load.image(`ox_${k}`,  `assets/fx/chars/ox/${d}.png`);
+            this.load.image(`farmer_${k}`,  `assets/fx/chars/farmer/${d}.png`);
+            this.load.image(`ufo_${k}`,  `assets/fx/chars/ufo/${d}.png`);
         });
 
         // ── LEGACY KEYS (pointam to direcional sul, compat with código antigo) ──
-        this.load.image('cow_frente',     'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('cow_cima_sobe',  'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('cow_cima_desce', 'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('ox_frente',      'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('ox_cima_sobe',   'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('ox_cima_desce',  'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('farmer',      'assets/pixel_labs/chars/farmer/south.png');
+        this.load.image('cow_frente',     'assets/fx/chars/cow/south.png');
+        this.load.image('cow_cima_sobe',  'assets/fx/chars/cow/south.png');
+        this.load.image('cow_cima_desce', 'assets/fx/chars/cow/south.png');
+        this.load.image('ox_frente',      'assets/fx/chars/ox/south.png');
+        this.load.image('ox_cima_sobe',   'assets/fx/chars/ox/south.png');
+        this.load.image('ox_cima_desce',  'assets/fx/chars/ox/south.png');
+        this.load.image('farmer',      'assets/fx/chars/farmer/south.png');
         // burger now vem do PixelLab (substitui geometria antiga)
-        this.load.image('burger',      'assets/pixel_labs/items/burger_classic.png');
+        this.load.image('burger',      'assets/fx/items/burger_classic.png');
 
         // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
         // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
@@ -87,7 +87,7 @@ Object.assign(Jogo.prototype, {
                 for (let i = 0; i < frames; i++) {
                     const f = String(i).padStart(3, '0');
                     this.load.image(`${prefix}_${d}_${i}`,
-                        `assets/pixel_labs/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
+                        `assets/fx/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
                 }
             });
         });
@@ -107,21 +107,21 @@ Object.assign(Jogo.prototype, {
                                   'post_lantern_low','post_lantern_thin','post_double_rope',
                                   'post_carved','post_thin_simple','tower_ornamental_thin',
                                   'segment_tall_dual','beam_horizontal'];
-        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/pixel_labs/chars/nature/rocks/${n}.png`));
-        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/pixel_labs/chars/nature/vegetation/${n}.png`));
-        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences/${n}.png`));
-        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/pixel_labs/chars/nature/fences_v2/${n}.png`));
+        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/fx/chars/nature/rocks/${n}.png`));
+        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/fx/chars/nature/vegetation/${n}.png`));
+        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/fx/chars/nature/fences/${n}.png`));
+        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/fx/chars/nature/fences_v2/${n}.png`));
         // Outros itens decorativos (feno, pile de toras)
         const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
-        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/pixel_labs/chars/nature/misc/${n}.png`));
+        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/fx/chars/nature/misc/${n}.png`));
         // Objects v3: landmarks (church, windmill, truck, satellite), props (gas, barrel, buckets), terreno (dry_turf)
         const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
                                 'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
-        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/fx/chars/nature/objects/${n}.png`));
         // Currais V2: 5 sprites 200x200 PixelLab (substituem cercas procedural)
         const CURRAIS = ['curral_01_pequeno', 'curral_02_redondo', 'curral_03_hexagonal',
                          'curral_04_rustico', 'curral_05_abandonado'];
-        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/pixel_labs/chars/nature/objects/${n}.png`));
+        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/fx/chars/nature/objects/${n}.png`));
         this._curralKeys = CURRAIS.map(n => `nat_obj_${n}`);
         // Expor to scenery
         this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
@@ -134,26 +134,26 @@ Object.assign(Jogo.prototype, {
         // ── HUD PIXELLAB ──────────────────────────────────────────
         // Layout final (limpo): 6 boxes nameless + bars combinadas + radar v2
         // Score boxes (top): label PT/EN overlay via Phaser
-        this.load.image('hud_score_v2',          'assets/pixel_labs/hud/score_v2.png');
-        this.load.image('hud_burgers_v2',        'assets/pixel_labs/hud/burgers_v2.png');
-        this.load.image('hud_cows_v2',           'assets/pixel_labs/hud/cows_v2.png');
-        this.load.image('hud_bulls_v2',           'assets/pixel_labs/hud/bulls_v2.png');
-        this.load.image('hud_farmers_v2',        'assets/pixel_labs/hud/farmers_v2.png');
-        this.load.image('hud_shooters_v2',       'assets/pixel_labs/hud/shooters_v2.png');
+        this.load.image('hud_score_v2',          'assets/fx/hud/score_v2.png');
+        this.load.image('hud_burgers_v2',        'assets/fx/hud/burgers_v2.png');
+        this.load.image('hud_cows_v2',           'assets/fx/hud/cows_v2.png');
+        this.load.image('hud_bulls_v2',           'assets/fx/hud/bulls_v2.png');
+        this.load.image('hud_farmers_v2',        'assets/fx/hud/farmers_v2.png');
+        this.load.image('hud_shooters_v2',       'assets/fx/hud/shooters_v2.png');
         // Radar v2 (sandwich: ring base + dome glass top)
-        this.load.image('hud_radar_dome_v2',     'assets/pixel_labs/hud/radar_dome_v2.png');
-        this.load.image('hud_radar_ring_v2',     'assets/pixel_labs/hud/radar_ring_v2.png');
+        this.load.image('hud_radar_dome_v2',     'assets/fx/hud/radar_dome_v2.png');
+        this.load.image('hud_radar_ring_v2',     'assets/fx/hud/radar_ring_v2.png');
         // Bars combinadas (FUEL+GRAVITON num PNG so) — _empty_nameless = mascara
         // preta + _full-nameless = barras coloridas cropadas pelo pct
-        this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty_nameless.png');
-        this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
+        this.load.image('hud_combined_empty',    'assets/fx/hud/combustivel-graviton_empty_nameless.png');
+        this.load.image('hud_combined_full',     'assets/fx/hud/combustivel-graviton_full-nameless.png');
         // Bars individuais (fallback antigo, mantido pra cobrir caminhos legados)
-        this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
-        this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
+        this.load.image('hud_combustivel_full',  'assets/fx/hud/combustivel_full.png');
+        this.load.image('hud_graviton_full',     'assets/fx/hud/graviton_full.png');
         // ── BURGERS (3 variantes) ────────────────────────────────────
-        this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
-        this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');
-        this.load.image('burger_double',  'assets/pixel_labs/items/burger_double.png');
+        this.load.image('burger_classic', 'assets/fx/items/burger_classic.png');
+        this.load.image('burger_cheese',  'assets/fx/items/burger_cheese.png');
+        this.load.image('burger_double',  'assets/fx/items/burger_double.png');
 
         // ── SPLASH + ICON ────────────────────────────────────────────
         this.load.image('splash', 'splashv4.png');

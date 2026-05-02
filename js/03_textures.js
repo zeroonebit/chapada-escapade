@@ -6,10 +6,10 @@ Object.assign(Jogo.prototype, {
     _setupGeometricTextures() {
         let g = this.add.graphics();
 
-        // ufo — now vem de assets/pixel_labs/ship.png (carregado no preload)
+        // ufo — now vem de assets/fx/ship.png (carregado no preload)
         // Geometria antiga removida to não sobrescrever o PNG.
 
-        // burger — now vem de assets/pixel_labs/items/burger_classic.png
+        // burger — now vem de assets/fx/items/burger_classic.png
 
         // corral — chão de dirt with fence de madeira
         g.clear();
@@ -54,7 +54,7 @@ Object.assign(Jogo.prototype, {
         g.lineStyle(2, 0x440000, 1); g.strokeRect(2, 2, 28, 28);
         g.generateTexture('atirador', 32, 32);
 
-        // farmer — now vem de assets/pixel_labs/chars/farmer/*.png (8 dir)
+        // farmer — now vem de assets/fx/chars/farmer/*.png (8 dir)
 
         g.destroy();
     }
