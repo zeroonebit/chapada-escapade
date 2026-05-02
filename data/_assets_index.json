@@ -1,419 +1,20 @@
 {
   "total": 879,
-  "classified": 773,
-  "unclassified": 106,
+  "classified": 709,
+  "unclassified": 170,
   "in_game": 751,
   "orphan": 128,
   "by_category": {
-    "unclassified": 106,
+    "unclassified": 170,
     "fx": 1,
     "wang_tile": 176,
     "wang_meta": 11,
     "hud": 14,
     "item": 3,
     "char_static": 32,
-    "char_anim_frame": 472,
-    "env_objects": 14,
-    "env_fences_v2": 14,
-    "env_placas": 4,
-    "env_misc": 2,
-    "env_fences": 10,
-    "env_grass_v2": 5,
-    "env_vegetation": 12,
-    "env_rocks": 3
+    "char_anim_frame": 472
   },
-  "suggestions": [
-    {
-      "from": "assets/pixel_labs/beam.png",
-      "to": "assets/fx/beam.png",
-      "confidence": 0.7,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/satellite_dish_rusty.png",
-      "to": "assets/env/objects/satellite_dish_rusty.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/curral_01_pequeno.png",
-      "to": "assets/env/objects/curral_01_pequeno.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/bucket_empty.png",
-      "to": "assets/env/objects/bucket_empty.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/curral_03_hexagonal.png",
-      "to": "assets/env/objects/curral_03_hexagonal.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/windmill.png",
-      "to": "assets/env/objects/windmill.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/curral_05_abandonado.png",
-      "to": "assets/env/objects/curral_05_abandonado.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/barrel_rusty.png",
-      "to": "assets/env/objects/barrel_rusty.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/old_truck.png",
-      "to": "assets/env/objects/old_truck.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/curral_02_redondo.png",
-      "to": "assets/env/objects/curral_02_redondo.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/dry_turf.png",
-      "to": "assets/env/objects/dry_turf.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/church.png",
-      "to": "assets/env/objects/church.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/bucket_milk.png",
-      "to": "assets/env/objects/bucket_milk.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/curral_04_rustico.png",
-      "to": "assets/env/objects/curral_04_rustico.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/objects/gas_can.png",
-      "to": "assets/env/objects/gas_can.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/gate_closed_solid.png",
-      "to": "assets/env/fences_v2/gate_closed_solid.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/post_double_rope.png",
-      "to": "assets/env/fences_v2/post_double_rope.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/segment_tall_dual.png",
-      "to": "assets/env/fences_v2/segment_tall_dual.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/beam_horizontal.png",
-      "to": "assets/env/fences_v2/beam_horizontal.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/post_lantern_thin.png",
-      "to": "assets/env/fences_v2/post_lantern_thin.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/post_lantern_low.png",
-      "to": "assets/env/fences_v2/post_lantern_low.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/post_carved.png",
-      "to": "assets/env/fences_v2/post_carved.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/gate_thin_double.png",
-      "to": "assets/env/fences_v2/gate_thin_double.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/tower_ornamental_thin.png",
-      "to": "assets/env/fences_v2/tower_ornamental_thin.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/fence_curved_short.png",
-      "to": "assets/env/fences_v2/fence_curved_short.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/fence_double_short_h.png",
-      "to": "assets/env/fences_v2/fence_double_short_h.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/gate_open_double.png",
-      "to": "assets/env/fences_v2/gate_open_double.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/fence_curved_long.png",
-      "to": "assets/env/fences_v2/fence_curved_long.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences_v2/post_thin_simple.png",
-      "to": "assets/env/fences_v2/post_thin_simple.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/placas/placa_seta_dir.png",
-      "to": "assets/env/placas/placa_seta_dir.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/placas/placa_procurado.png",
-      "to": "assets/env/placas/placa_procurado.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/placas/placa_madeira.png",
-      "to": "assets/env/placas/placa_madeira.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/placas/placa_pintada.png",
-      "to": "assets/env/placas/placa_pintada.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/misc/hay_bale.png",
-      "to": "assets/env/misc/hay_bale.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/misc/pile_logs.png",
-      "to": "assets/env/misc/pile_logs.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/plank_v.png",
-      "to": "assets/env/fences/plank_v.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/post_thin.png",
-      "to": "assets/env/fences/post_thin.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_gate_open.png",
-      "to": "assets/env/fences/fence_gate_open.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_corner.png",
-      "to": "assets/env/fences/fence_corner.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_normal.png",
-      "to": "assets/env/fences/fence_normal.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_broken.png",
-      "to": "assets/env/fences/fence_broken.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/post_single.png",
-      "to": "assets/env/fences/post_single.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_short.png",
-      "to": "assets/env/fences/fence_short.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_long.png",
-      "to": "assets/env/fences/fence_long.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/fences/fence_full_h.png",
-      "to": "assets/env/fences/fence_full_h.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/grass_v2/grass_02_dark.png",
-      "to": "assets/env/grass_v2/grass_02_dark.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/grass_v2/grass_01_vibrant.png",
-      "to": "assets/env/grass_v2/grass_01_vibrant.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/grass_v2/grass_03_lime.png",
-      "to": "assets/env/grass_v2/grass_03_lime.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/grass_v2/grass_05_yellow.png",
-      "to": "assets/env/grass_v2/grass_05_yellow.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/grass_v2/grass_04_olive.png",
-      "to": "assets/env/grass_v2/grass_04_olive.png",
-      "confidence": 0.85,
-      "inGame": false
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/agave_dark.png",
-      "to": "assets/env/vegetation/agave_dark.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_medium.png",
-      "to": "assets/env/vegetation/cactus_medium.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_branching.png",
-      "to": "assets/env/vegetation/cactus_branching.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/bush_round.png",
-      "to": "assets/env/vegetation/bush_round.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_dead_dry.png",
-      "to": "assets/env/vegetation/cactus_dead_dry.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_dead_vine.png",
-      "to": "assets/env/vegetation/cactus_dead_vine.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_saguaro_2.png",
-      "to": "assets/env/vegetation/cactus_saguaro_2.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/bush_dry.png",
-      "to": "assets/env/vegetation/bush_dry.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/patch_cluster.png",
-      "to": "assets/env/vegetation/patch_cluster.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/bush_round_dense.png",
-      "to": "assets/env/vegetation/bush_round_dense.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_cluster_low.png",
-      "to": "assets/env/vegetation/cactus_cluster_low.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/vegetation/cactus_saguaro_tall.png",
-      "to": "assets/env/vegetation/cactus_saguaro_tall.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/rocks/rock_pillar_tall.png",
-      "to": "assets/env/rocks/rock_pillar_tall.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/rocks/boulder_red_cluster.png",
-      "to": "assets/env/rocks/boulder_red_cluster.png",
-      "confidence": 0.85,
-      "inGame": true
-    },
-    {
-      "from": "assets/pixel_labs/chars/nature/rocks/rock_small_smooth.png",
-      "to": "assets/env/rocks/rock_small_smooth.png",
-      "confidence": 0.85,
-      "inGame": true
-    }
-  ],
+  "suggestions": [],
   "items": [
     {
       "path": "assets/pixel_labs/vaca.png",
@@ -443,14 +44,13 @@
       "inGame": false
     },
     {
-      "path": "assets/pixel_labs/beam.png",
+      "path": "assets/fx/beam.png",
       "category": "fx",
       "tags": {
         "name": "beam"
       },
-      "confidence": 0.7,
-      "inGame": true,
-      "suggested_path": "assets/fx/beam.png"
+      "confidence": 1.0,
+      "inGame": true
     },
     {
       "path": "assets/terrain/test/wang_02.png",
@@ -5964,710 +5564,6 @@
       "inGame": true
     },
     {
-      "path": "assets/pixel_labs/chars/nature/objects/satellite_dish_rusty.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "satellite_dish_rusty"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/satellite_dish_rusty.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/curral_01_pequeno.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "curral_01_pequeno"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/curral_01_pequeno.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/bucket_empty.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "bucket_empty"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/bucket_empty.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/curral_03_hexagonal.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "curral_03_hexagonal"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/curral_03_hexagonal.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/windmill.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "windmill"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/windmill.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/curral_05_abandonado.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "curral_05_abandonado"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/curral_05_abandonado.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/barrel_rusty.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "barrel_rusty"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/barrel_rusty.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/old_truck.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "old_truck"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/old_truck.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/curral_02_redondo.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "curral_02_redondo"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/curral_02_redondo.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/dry_turf.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "dry_turf"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/dry_turf.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/church.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "church"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/church.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/bucket_milk.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "bucket_milk"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/bucket_milk.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/curral_04_rustico.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "curral_04_rustico"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/curral_04_rustico.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/objects/gas_can.png",
-      "category": "env_objects",
-      "tags": {
-        "category": "objects",
-        "name": "gas_can"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/objects/gas_can.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/gate_closed_solid.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "gate_closed_solid"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/gate_closed_solid.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/post_double_rope.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "post_double_rope"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/post_double_rope.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/segment_tall_dual.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "segment_tall_dual"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/segment_tall_dual.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/beam_horizontal.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "beam_horizontal"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/beam_horizontal.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/post_lantern_thin.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "post_lantern_thin"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/post_lantern_thin.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/post_lantern_low.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "post_lantern_low"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/post_lantern_low.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/post_carved.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "post_carved"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/post_carved.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/gate_thin_double.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "gate_thin_double"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/gate_thin_double.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/tower_ornamental_thin.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "tower_ornamental_thin"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/tower_ornamental_thin.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/fence_curved_short.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "fence_curved_short"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/fence_curved_short.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/fence_double_short_h.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "fence_double_short_h"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/fence_double_short_h.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/gate_open_double.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "gate_open_double"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/gate_open_double.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/fence_curved_long.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "fence_curved_long"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/fence_curved_long.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences_v2/post_thin_simple.png",
-      "category": "env_fences_v2",
-      "tags": {
-        "category": "fences_v2",
-        "name": "post_thin_simple"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences_v2/post_thin_simple.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/placas/placa_seta_dir.png",
-      "category": "env_placas",
-      "tags": {
-        "category": "placas",
-        "name": "placa_seta_dir"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/placas/placa_seta_dir.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/placas/placa_procurado.png",
-      "category": "env_placas",
-      "tags": {
-        "category": "placas",
-        "name": "placa_procurado"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/placas/placa_procurado.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/placas/placa_madeira.png",
-      "category": "env_placas",
-      "tags": {
-        "category": "placas",
-        "name": "placa_madeira"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/placas/placa_madeira.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/placas/placa_pintada.png",
-      "category": "env_placas",
-      "tags": {
-        "category": "placas",
-        "name": "placa_pintada"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/placas/placa_pintada.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/misc/hay_bale.png",
-      "category": "env_misc",
-      "tags": {
-        "category": "misc",
-        "name": "hay_bale"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/misc/hay_bale.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/misc/pile_logs.png",
-      "category": "env_misc",
-      "tags": {
-        "category": "misc",
-        "name": "pile_logs"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/misc/pile_logs.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/plank_v.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "plank_v"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/plank_v.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/post_thin.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "post_thin"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/post_thin.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_gate_open.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_gate_open"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_gate_open.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_corner.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_corner"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_corner.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_normal.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_normal"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_normal.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_broken.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_broken"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_broken.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/post_single.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "post_single"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/post_single.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_short.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_short"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_short.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_long.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_long"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_long.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/fences/fence_full_h.png",
-      "category": "env_fences",
-      "tags": {
-        "category": "fences",
-        "name": "fence_full_h"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/fences/fence_full_h.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/grass_v2/grass_02_dark.png",
-      "category": "env_grass_v2",
-      "tags": {
-        "category": "grass_v2",
-        "name": "grass_02_dark"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/grass_v2/grass_02_dark.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/grass_v2/grass_01_vibrant.png",
-      "category": "env_grass_v2",
-      "tags": {
-        "category": "grass_v2",
-        "name": "grass_01_vibrant"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/grass_v2/grass_01_vibrant.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/grass_v2/grass_03_lime.png",
-      "category": "env_grass_v2",
-      "tags": {
-        "category": "grass_v2",
-        "name": "grass_03_lime"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/grass_v2/grass_03_lime.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/grass_v2/grass_05_yellow.png",
-      "category": "env_grass_v2",
-      "tags": {
-        "category": "grass_v2",
-        "name": "grass_05_yellow"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/grass_v2/grass_05_yellow.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/grass_v2/grass_04_olive.png",
-      "category": "env_grass_v2",
-      "tags": {
-        "category": "grass_v2",
-        "name": "grass_04_olive"
-      },
-      "confidence": 0.85,
-      "inGame": false,
-      "suggested_path": "assets/env/grass_v2/grass_04_olive.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/agave_dark.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "agave_dark"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/agave_dark.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_medium.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_medium"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_medium.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_branching.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_branching"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_branching.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/bush_round.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "bush_round"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/bush_round.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_dead_dry.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_dead_dry"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_dead_dry.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_dead_vine.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_dead_vine"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_dead_vine.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_saguaro_2.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_saguaro_2"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_saguaro_2.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/bush_dry.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "bush_dry"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/bush_dry.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/patch_cluster.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "patch_cluster"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/patch_cluster.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/bush_round_dense.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "bush_round_dense"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/bush_round_dense.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_cluster_low.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_cluster_low"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_cluster_low.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/vegetation/cactus_saguaro_tall.png",
-      "category": "env_vegetation",
-      "tags": {
-        "category": "vegetation",
-        "name": "cactus_saguaro_tall"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/vegetation/cactus_saguaro_tall.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/rocks/rock_pillar_tall.png",
-      "category": "env_rocks",
-      "tags": {
-        "category": "rocks",
-        "name": "rock_pillar_tall"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/rocks/rock_pillar_tall.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/rocks/boulder_red_cluster.png",
-      "category": "env_rocks",
-      "tags": {
-        "category": "rocks",
-        "name": "boulder_red_cluster"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/rocks/boulder_red_cluster.png"
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/rocks/rock_small_smooth.png",
-      "category": "env_rocks",
-      "tags": {
-        "category": "rocks",
-        "name": "rock_small_smooth"
-      },
-      "confidence": 0.85,
-      "inGame": true,
-      "suggested_path": "assets/env/rocks/rock_small_smooth.png"
-    },
-    {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/alien_artifact_glowing.png",
       "category": "unclassified",
       "tags": {},
@@ -9883,7 +8779,455 @@
       },
       "confidence": 1.0,
       "inGame": true
+    },
+    {
+      "path": "assets/env/objects/satellite_dish_rusty.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/curral_01_pequeno.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/bucket_empty.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/curral_03_hexagonal.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/windmill.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/curral_05_abandonado.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/barrel_rusty.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/old_truck.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/curral_02_redondo.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/dry_turf.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/church.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/bucket_milk.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/curral_04_rustico.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/objects/gas_can.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/gate_closed_solid.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/post_double_rope.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/segment_tall_dual.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/beam_horizontal.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/post_lantern_thin.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/post_lantern_low.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/post_carved.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/gate_thin_double.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/tower_ornamental_thin.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/fence_curved_short.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/fence_double_short_h.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/gate_open_double.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/fence_curved_long.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences_v2/post_thin_simple.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/placas/placa_seta_dir.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/placas/placa_procurado.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/placas/placa_madeira.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/placas/placa_pintada.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/misc/hay_bale.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/misc/pile_logs.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/plank_v.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/post_thin.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_gate_open.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_corner.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_normal.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_broken.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/post_single.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_short.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_long.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/fences/fence_full_h.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/grass_v2/grass_02_dark.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/grass_v2/grass_01_vibrant.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/grass_v2/grass_03_lime.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/grass_v2/grass_05_yellow.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/grass_v2/grass_04_olive.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": false
+    },
+    {
+      "path": "assets/env/vegetation/agave_dark.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_medium.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_branching.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/bush_round.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_dead_dry.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_dead_vine.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_saguaro_2.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/bush_dry.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/patch_cluster.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/bush_round_dense.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_cluster_low.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/vegetation/cactus_saguaro_tall.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/rocks/rock_pillar_tall.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/rocks/boulder_red_cluster.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/env/rocks/rock_small_smooth.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
     }
   ],
-  "_baked_at": "2026-05-02T18:26:14.738103"
+  "_baked_at": "2026-05-02T18:31:08.176631"
 }
