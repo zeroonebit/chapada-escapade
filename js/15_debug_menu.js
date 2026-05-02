@@ -700,7 +700,7 @@ Object.assign(Jogo.prototype, {
                 maps.map(m => `<option value="${m.name}"${m.name === current ? ' selected' : ''}>${m.name} · ${m.bias || 'ca'}</option>`).join('');
             if (status) status.textContent = `✓ ${maps.length} maps · ${this.PROJECT_SLUG}`;
         } catch (e) {
-            if (status) status.textContent = `✗ PixaPro offline (${e.message}) — rode \`python tools/gallery_server.py\``;
+            if (status) status.textContent = `✗ project server offline (${e.message}) — rode \`python tools/project_server.py\``;
             console.warn('[MAP] refresh fail:', e);
         }
     },

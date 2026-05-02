@@ -1,13 +1,36 @@
 #!/usr/bin/env python3
 """
-gallery_server.py — Servidor estático + endpoint POST /save_decisions
+project_server.py — Project server do Chapada Escapade.
+
+Servidor estático (porta 8090) que serve:
+  - Static files do projeto (assets, html, js, etc)
+  - API REST consumida pelo PixaPro standalone (H:/Projects/PixaPro)
 
 Uso:
-  python tools/gallery_server.py [port]
+  python tools/project_server.py [port]    # default 8090
 
-Substitui `python -m http.server 8080` adicionando:
-  POST /save_decisions  → grava JSON em tools/saves/decisions.json
-                          + cópia timestamped em tools/saves/history/
+Endpoints:
+  POST /save_decisions         → tools/saves/decisions.json
+  POST /save_configs           → tools/saves/configs.json
+  POST /save_mcp_queue         → tools/saves/mcp_queue.json
+  POST /save_wang_corrections  → tools/saves/wang_corrections.json
+  POST /save_asset_tags        → tools/saves/asset_tags.json
+  GET  /list_assets            → lista PNGs de assets/pixel_labs
+  GET  /scan_in_game_assets    → quais PNGs estão wireados in-game
+  GET  /mcp_status             → estado dos jobs PixelLab MCP
+  POST /mcp_status             → atualiza job
+  GET  /pixellab_balance       → saldo (cache)
+  POST /pixellab_balance       → bookmarklet posta o saldo aqui
+  GET  /maps?project=<slug>    → lista map presets
+  GET  /maps/<name>?project=<slug>  → detalhe
+  POST /maps/<name>?project=<slug>  → salva map preset
+
+Convenção de portas:
+  8080 = projetos jogo (game canvas)
+  8089 = PixaPro UI standalone (H:/Projects/PixaPro/server.py)
+  8090 = project server (este script) — onde PixaPro fala via API
+
+Renomeado de gallery_server.py em 2026-05-02 (audit cleanup).
 """
 
 import json

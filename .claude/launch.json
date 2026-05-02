@@ -12,10 +12,10 @@
       "port": 8080
     },
     {
-      "name": "PixaPro Gallery",
+      "name": "Project Server (API + static)",
       "runtimeExecutable": "python",
       "runtimeArgs": [
-        "tools/gallery_server.py"
+        "tools/project_server.py"
       ],
       "port": 8090
     }

@@ -33,17 +33,27 @@
 - **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
 - **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
-### 💾 Servidor de tools (`tools/gallery_server.py`) — porta 8090
-**8080 é reservada pro game.** Tools (gallery, persistência) rodam em **8090** por default. O server bloqueia se tentar 8080.
+### 💾 Project server (`tools/project_server.py`) — porta 8090
 
-Endpoints POST que gravam JSON em disco:
-- `POST /save_decisions` → `tools/saves/decisions.json` (+ history). Botão **Export** do `tools/asset_gallery.html` posta same-origin (gallery aberto em 8090).
-- `POST /save_configs` → `tools/saves/configs.json` (+ history). Auto-salvo pelo `_saveDebugCfg()` no `js/15_debug_menu.js` via cross-origin fetch pra `http://localhost:8090` (CORS habilitado, fire-and-forget, debounce 500ms — silencioso se 8090 não estiver rodando).
-- Histórico timestamped em `tools/saves/history/`.
+**Convenção de portas (após audit cleanup 2026-05-02):**
+- **8080** = game canvas (`python -m http.server 8080`)
+- **8089** = PixaPro UI standalone (`H:/Projects/PixaPro/server.py`)
+- **8090** = project server deste projeto (este script) — onde PixaPro standalone fala via API
 
-**Rodar 2 servers em paralelo:**
-- `python -m http.server 8080` (raiz) → game em http://localhost:8080
-- `python tools/gallery_server.py` (raiz, default 8090) → gallery em http://localhost:8090/tools/asset_gallery.html + endpoints
+Endpoints — ver docstring de `tools/project_server.py` pra lista completa. Principais:
+- `POST /save_decisions`, `POST /save_configs`, `POST /save_mcp_queue` → persistem em `tools/saves/`
+- `GET /list_assets`, `GET /scan_in_game_assets` → inventário de assets
+- `GET /maps?project=<slug>` + `POST /maps/<name>` → CRUD de map presets pro PixaPro
+- `GET|POST /mcp_status`, `GET|POST /pixellab_balance` → integração MCP/PixelLab
+
+**Rodar:**
+```
+python -m http.server 8080                # game em http://localhost:8080
+python tools/project_server.py            # API/static em http://localhost:8090
+python H:/Projects/PixaPro/server.py 8089 # PixaPro UI em http://localhost:8089
+```
+
+PixaPro NÃO vive mais dentro do Chapada (era em `tools/pixapro/`, deletado no audit). Repo standalone: `H:/Projects/PixaPro`. Doc de integração: `H:/Projects/PixaPro/PROJECT_INTEGRATION.md`.
 
 ### ⚡ No INÍCIO de toda sessão, rodar:
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
