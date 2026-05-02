@@ -93,7 +93,127 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path.startswith("/maps"):
             self.handle_maps_get()
             return
+        # Asset naming convention API (ver PixaPro/ASSET_NAMING_STANDARD.md)
+        if self.path == "/scan_assets":
+            self.handle_scan_assets()
+            return
+        if self.path == "/asset_naming":
+            self.handle_asset_naming()
+            return
         super().do_GET()
+
+    def handle_scan_assets(self):
+        """Scan assets/ + classifica cada PNG segundo ASSET_NAMING_STANDARD.md.
+        Returns:
+          {total, classified, unclassified, by_category: {...},
+           items: [{path, category, tags, suggested_path?, confidence}],
+           suggestions: [{from, to, confidence}] (so unclassified)}
+        """
+        assets_dir = ROOT / "assets"
+        if not assets_dir.exists():
+            self._send_json({"error": "no_assets_dir", "path": str(assets_dir)}, status=404)
+            return
+        items, suggestions = [], []
+        by_cat = {}
+        for png in assets_dir.rglob("*.png"):
+            rel = png.relative_to(ROOT).as_posix()
+            cat, tags, conf, suggest = self._classify_asset(rel)
+            entry = {"path": rel, "category": cat, "tags": tags, "confidence": conf}
+            if suggest:
+                entry["suggested_path"] = suggest
+                suggestions.append({"from": rel, "to": suggest, "confidence": conf})
+            items.append(entry)
+            by_cat[cat] = by_cat.get(cat, 0) + 1
+        classified = sum(1 for i in items if i["category"] != "unclassified")
+        self._send_json({
+            "total": len(items),
+            "classified": classified,
+            "unclassified": len(items) - classified,
+            "by_category": by_cat,
+            "suggestions": suggestions,
+            "items": items,
+        })
+
+    def _classify_asset(self, rel_path: str):
+        """Classifica path segundo ASSET_NAMING_STANDARD.md regex rules.
+        Returns: (category, tags_dict, confidence, suggested_new_path_or_None)
+        """
+        p = rel_path.replace("\\", "/")
+        # chars/<X>/<DIR>.png ou chars/<X>/<dir>.png (south.png, S.png, etc)
+        m = re.match(r"^assets/(?:pixel_labs/)?chars/([^/]+)/([NSEW]|north|south|east|west|north-east|north-west|south-east|south-west|NE|NW|SE|SW)\.png$", p, re.IGNORECASE)
+        if m:
+            char, d = m.group(1), m.group(2)
+            return ("char_static", {"char": char, "dir": d.upper()}, 1.0, None)
+        # chars/<X>/anims/<A>/<DIR>/frame_NNN.png
+        m = re.match(r"^assets/(?:pixel_labs/)?chars/([^/]+)/anims/([^/]+)/([NSEW]+)/frame_(\d+)\.png$", p, re.IGNORECASE)
+        if m:
+            char, anim, d, frame = m.groups()
+            return ("char_anim_frame", {"char": char, "anim": anim, "dir": d.upper(), "frame": int(frame)}, 1.0, None)
+        # nature reclass -> env
+        m = re.match(r"^assets/(?:pixel_labs/)?chars/nature/([^/]+)/([^/]+)\.png$", p)
+        if m:
+            sub, name = m.group(1), m.group(2)
+            new = f"assets/env/{sub}/{name}.png"
+            return (f"env_{sub}", {"category": sub, "name": name}, 0.85, new)
+        # items/<cat>/<X>.png
+        m = re.match(r"^assets/(?:pixel_labs/)?items/([^/]+)\.png$", p)
+        if m:
+            return ("item", {"name": m.group(1)}, 0.95, None)
+        m = re.match(r"^assets/(?:pixel_labs/)?items/([^/]+)/([^/]+)\.png$", p)
+        if m:
+            cat, name = m.group(1), m.group(2)
+            return ("item", {"category": cat, "name": name}, 1.0, None)
+        # hud/<X>.png
+        m = re.match(r"^assets/(?:pixel_labs/)?hud/([^/]+)\.png$", p)
+        if m:
+            return ("hud", {"name": m.group(1)}, 1.0, None)
+        # terrain/<style>/wang_NN.png
+        m = re.match(r"^assets/terrain/([^/]+)/wang_(\d+)\.png$", p)
+        if m:
+            style, bits = m.group(1), int(m.group(2))
+            return ("wang_tile", {"style": style, "bits": bits}, 1.0, None)
+        # terrain/<style>/_tileset.png ou _montage.png
+        m = re.match(r"^assets/terrain/([^/]+)/_(tileset|montage)\.png$", p)
+        if m:
+            return ("wang_meta", {"style": m.group(1), "kind": m.group(2)}, 1.0, None)
+        # fx/<X>.png
+        m = re.match(r"^assets/(?:pixel_labs/)?fx/([^/]+)\.png$", p)
+        if m:
+            return ("fx", {"name": m.group(1)}, 1.0, None)
+        # ui/<X>.png ou splash.png direto na raiz
+        m = re.match(r"^assets/(?:pixel_labs/)?ui/([^/]+)\.png$", p)
+        if m:
+            return ("ui", {"name": m.group(1)}, 1.0, None)
+        m = re.match(r"^assets/(?:pixel_labs/)?(splash|favicon|icon)([^/]*)\.png$", p)
+        if m:
+            return ("ui", {"name": m.group(1) + m.group(2)}, 0.9, None)
+        # pixel_labs root level (sem subfolder reconhecido)
+        m = re.match(r"^assets/pixel_labs/([^/]+)\.png$", p)
+        if m:
+            name = m.group(1)
+            # Heuristica: nomes que parecem char/item/fx
+            if re.search(r"(beam|halo|glow|spark)", name):
+                return ("fx", {"name": name}, 0.7, f"assets/fx/{name}.png")
+            return ("unclassified", {"name": name}, 0.3, None)
+        return ("unclassified", {}, 0.0, None)
+
+    def handle_asset_naming(self):
+        """Returns o standard JSON do projeto (extends PixaPro base).
+        Lê <project>/asset_naming.json se existe, senão retorna defaults.
+        """
+        cfg_file = ROOT / "asset_naming.json"
+        if cfg_file.exists():
+            data = json.loads(cfg_file.read_text(encoding="utf-8"))
+        else:
+            data = {
+                "extends": "PixaPro/ASSET_NAMING_STANDARD.md",
+                "categories": ["chars", "items", "hud", "env", "terrain", "fx", "ui"],
+                "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+                "additional_categories": {},
+                "biome_tags": [],
+                "season_tags": [],
+            }
+        self._send_json(data)
 
     def handle_maps_get(self):
         """GET /maps?project=<slug>           -> {maps: [{name, bias, ...}]}
@@ -349,6 +469,57 @@ class Handler(SimpleHTTPRequestHandler):
         print(f"[maps] saved {project}/{name} -> {f.relative_to(ROOT)}")
         self._send_json({"ok": True, "name": name, "project": project, "path": str(f.relative_to(ROOT)).replace("\\", "/")})
 
+    def handle_apply_renames(self):
+        """POST body: [{from: "...", to: "..."}, ...] | {renames: [...]}
+        Move arquivos no disk, salva backup em
+        tools/saves/asset_rename_backup_<ts>/.
+        """
+        import shutil
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            self._send_json({"error": f"bad_json: {e}"}, status=400)
+            return
+        renames = data if isinstance(data, list) else data.get("renames", [])
+        if not renames:
+            self._send_json({"error": "no_renames"}, status=400)
+            return
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = SAVES_DIR / f"asset_rename_backup_{ts}"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        results, errors = [], []
+        for r in renames:
+            src = ROOT / r["from"]
+            dst = ROOT / r["to"]
+            if not src.exists():
+                errors.append({"from": r["from"], "error": "src_missing"})
+                continue
+            if dst.exists():
+                errors.append({"from": r["from"], "to": r["to"], "error": "dst_exists"})
+                continue
+            try:
+                # Backup do src antes de mover
+                bkp = backup_dir / r["from"].replace("/", "__")
+                shutil.copy2(src, bkp)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(src), str(dst))
+                results.append({"from": r["from"], "to": r["to"], "ok": True})
+            except Exception as e:
+                errors.append({"from": r["from"], "error": str(e)})
+        manifest = {"ts": ts, "renames": renames, "results": results, "errors": errors}
+        (backup_dir / "_manifest.json").write_text(
+            json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"[renames] applied {len(results)}/{len(renames)} (errors: {len(errors)})")
+        print(f"          backup: {backup_dir.relative_to(ROOT)}")
+        self._send_json({
+            "ok": True,
+            "applied": len(results),
+            "errors": errors,
+            "backup_dir": str(backup_dir.relative_to(ROOT)).replace("\\", "/"),
+        })
+
     def do_POST(self):
         if self.path == "/mcp_status":
             self.handle_post_mcp_status()
@@ -359,6 +530,10 @@ class Handler(SimpleHTTPRequestHandler):
         # Maps: POST /maps/<name>?project=<slug>  body=json do map preset
         if self.path.startswith("/maps/"):
             self.handle_maps_post()
+            return
+        # Apply renames batch (com backup)
+        if self.path == "/apply_renames":
+            self.handle_apply_renames()
             return
         if self.path == "/mcp_clear":
             _mcp_jobs.clear()
@@ -416,6 +591,7 @@ def main():
     print(f"  Gallery: http://localhost:{port}/tools/asset_gallery.html")
     print(f"  Endpoints: POST /save_decisions, POST /save_configs, GET|POST /mcp_status, GET /pixellab_balance")
     print(f"             GET /maps?project=<slug>, GET /maps/<name>, POST /maps/<name>?project=<slug>")
+    print(f"             GET /scan_assets, GET /asset_naming, POST /apply_renames")
     print(f"  Saves:   {SAVES_DIR.relative_to(ROOT)}/")
     server = ThreadingHTTPServer(("", port), Handler)
     try:
