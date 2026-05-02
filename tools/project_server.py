@@ -225,7 +225,12 @@ class Handler(SimpleHTTPRequestHandler):
         project = (qs.get("project") or ["chapada-escapade"])[0]
         # Sanitize: so [a-z0-9-_]
         project = re.sub(r"[^a-zA-Z0-9_\-]", "", project) or "chapada-escapade"
-        maps_dir = SAVES_DIR / "projects" / project / "maps"
+        # data/maps/ vive committed no repo -> Pages serve esses JSONs.
+        # Antes ficava em tools/saves/projects/<slug>/maps/ (privado), mas isso
+        # impedia o flow Pages-only. Agora project=<slug> e ignorado pra path
+        # local (single-project repo), mas mantido na URL pra compat futura.
+        maps_dir = ROOT / "data" / "maps"
+        _ = project  # suppress unused warning
 
         # Lista
         if u.path == "/maps":
@@ -438,7 +443,14 @@ class Handler(SimpleHTTPRequestHandler):
 
     def handle_maps_post(self):
         """POST /maps/<name>?project=<slug>  body=json com cfg do map preset.
-        Salva em tools/saves/projects/<slug>/maps/<name>.json
+        Salva em data/maps/<name>.json (committed -> Pages serve apos push).
+
+        Apos save, dev deve:
+          1. python tools/bake_indexes.py    # atualiza data/maps/_index.json
+          2. git add data/maps/ && git commit && git push
+          3. ~30s -> Pages atualiza com novo preset
+        (GitHub Action auto-roda bake em pushes, esses passos podem ser
+         consolidados se dev push direto sem rodar bake local.)
         """
         from urllib.parse import urlparse, parse_qs
         u = urlparse(self.path)
@@ -462,7 +474,12 @@ class Handler(SimpleHTTPRequestHandler):
             return
         data["name"] = name
         data["_saved_at"] = datetime.now().isoformat()
-        maps_dir = SAVES_DIR / "projects" / project / "maps"
+        # data/maps/ vive committed no repo -> Pages serve esses JSONs.
+        # Antes ficava em tools/saves/projects/<slug>/maps/ (privado), mas isso
+        # impedia o flow Pages-only. Agora project=<slug> e ignorado pra path
+        # local (single-project repo), mas mantido na URL pra compat futura.
+        maps_dir = ROOT / "data" / "maps"
+        _ = project  # suppress unused warning
         maps_dir.mkdir(parents=True, exist_ok=True)
         f = maps_dir / f"{name}.json"
         f.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
