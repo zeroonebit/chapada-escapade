@@ -694,6 +694,14 @@ Object.assign(Jogo.prototype, {
         const sel = document.getElementById('map-preset-select');
         const status = document.getElementById('map-status');
         if (!sel) return;
+        // Skip fetch em production (Pages) — feature só funciona com server local
+        // rodando em localhost:8090. Sem isso, browser logaria CORS/refused warn
+        // a cada boot na Pages, poluindo console.
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!isLocal) {
+            if (status) status.textContent = '— map presets só com server local (rode tools/project_server.py)';
+            return;
+        }
         const url = `${this.PIXAPRO_URL}/maps?project=${this.PROJECT_SLUG}`;
         try {
             const r = await fetch(url);
@@ -705,8 +713,9 @@ Object.assign(Jogo.prototype, {
                 maps.map(m => `<option value="${m.name}"${m.name === current ? ' selected' : ''}>${m.name} · ${m.bias || 'ca'}</option>`).join('');
             if (status) status.textContent = `✓ ${maps.length} maps · ${this.PROJECT_SLUG}`;
         } catch (e) {
+            // Em localhost, server pode tar off — informa no UI mas debug-only no console
             if (status) status.textContent = `✗ project server offline (${e.message}) — rode \`python tools/project_server.py\``;
-            console.warn('[MAP] refresh fail:', e);
+            console.debug('[MAP] refresh fail:', e);
         }
     },
 
