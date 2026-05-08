@@ -67,22 +67,19 @@ Object.assign(Jogo.prototype, {
 
         // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
         // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
+        // BOOT-CRÍTICAS (carregam no preload, bloqueiam splash):
+        //   walk loops das criaturas + ufo hover (são vistos no segundo 0 de gameplay)
+        // DEFERRED (carregam após create() em background, usam fallback static enquanto):
+        //   cow_eat (88f), cow_angry (64f, só mascote curral), ox_idle (77f)
+        //   = 229 frames a menos no boot crítico (-21% do total)
         const D8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const ANIM8 = [
-            // Cow chubby (8d) — walk + idle_head_shake (eat) + lie_down (angry-ish)
+        const ANIM_CRITICAS = [
             { char: 'cow',       prefix: 'cow_walk',  anim: 'walk',            frames: 4 },
-            { char: 'cow',       prefix: 'cow_eat',   anim: 'idle_head_shake', frames: 11 },
-            { char: 'cow',       prefix: 'cow_angry', anim: 'lie_down',        frames: 8 },
-            // Farmer running, Ox walk
             { char: 'farmer', prefix: 'farmer_run',    anim: 'running',         frames: 4 },
             { char: 'ox',        prefix: 'ox_walk',   anim: 'walk',            frames: 4 },
-            // UFO hovering 8-dir (idle bob/light flicker)
             { char: 'ufo',        prefix: 'ufo_hover',  anim: 'hovering_idle',   frames: 4 },
-            // Ox idle_head_shake — without N (7 dirs)
-            { char: 'ox', prefix: 'ox_idle', anim: 'idle_head_shake', frames: 11,
-              dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
-        ANIM8.forEach(({char, prefix, anim, frames, dirs}) => {
+        ANIM_CRITICAS.forEach(({char, prefix, anim, frames, dirs}) => {
             (dirs || D8).forEach(d => {
                 for (let i = 0; i < frames; i++) {
                     const f = String(i).padStart(3, '0');
@@ -91,6 +88,13 @@ Object.assign(Jogo.prototype, {
                 }
             });
         });
+        // Lista das anims deferred — _loadDeferredAnims() em 01_scene.js create() consome
+        this._deferredAnimSpecs = [
+            { char: 'cow',       prefix: 'cow_eat',   anim: 'idle_head_shake', frames: 11 },
+            { char: 'cow',       prefix: 'cow_angry', anim: 'lie_down',        frames: 8 },
+            { char: 'ox', prefix: 'ox_idle', anim: 'idle_head_shake', frames: 11,
+              dirs: ['S','E','W','SE','NE','NW','SW'] },
+        ];
 
         // ── NATURE POOL (rocks + bushes/cactus to scenery) ──────────
         const NATURE_PEDRAS = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];
@@ -159,19 +163,30 @@ Object.assign(Jogo.prototype, {
         this.load.image('splash', 'splashv4.png');
         this.load.image('game_icon', 'icon.png');
 
-        // ── WANG TILES — 3 styles disponíveis (toggle via dbg.fx.tileStyle) ──
+        // ── WANG TILES — LAZY LOADING (só estilo ativo carrega no boot) ──
         // 'test' = paleta sólida cr31 placeholder
-        // 'dirt_grass_32' = grass <-> dirt transitions (32px, gerado outra sessao)
-        // 'ocean_sand_32' = ocean <-> sand transitions (32px)
-        // _wangStyles fica disponivel pro 04_scenery escolher por nome
-        const WANG_STYLES = ['test', 'dirt_grass_32', 'ocean_sand_32', 'mapa1_ocean_dirt', 'mapa1_ocean_grass', 'mapa1_sand_dirt', 'mapa1_sand_grass', 'mapa2_ocean_dirt', 'mapa2_ocean_grass', 'mapa2_sand_dirt', 'mapa2_sand_grass'];
-        for (const style of WANG_STYLES) {
+        // 'dirt_grass_32', 'ocean_sand_32', 'mapa1_*', 'mapa2_*' = transitions PixelLab
+        // Antes: carregava 11 styles × 16 = 176 PNGs (mas só 1 é usado por sessão).
+        // Agora: lê tileStyle do localStorage e carrega só esse + 'test' (fallback).
+        // Se user trocar style live no menu CONFIGS, _ensureWangStyleLoaded() em
+        // 15_debug_menu.js dispara load assíncrono.
+        this._allWangStyles = ['test', 'dirt_grass_32', 'ocean_sand_32',
+            'mapa1_ocean_dirt', 'mapa1_ocean_grass', 'mapa1_sand_dirt', 'mapa1_sand_grass',
+            'mapa2_ocean_dirt', 'mapa2_ocean_grass', 'mapa2_sand_dirt', 'mapa2_sand_grass'];
+        let activeStyle = 'dirt_grass_32';   // default (matches DBG_DEFAULTS)
+        try {
+            const raw = JSON.parse(localStorage.getItem('chapEscapadeDebug') || '{}');
+            if (raw?.fx?.tileStyle) activeStyle = raw.fx.tileStyle;
+        } catch(e) {}
+        // Conjunto de styles a carregar agora (active + test fallback, dedupe)
+        this._loadedWangStyles = new Set([activeStyle, 'test']);
+        this._loadedWangStyles.forEach(style => {
             for (let i = 0; i < 16; i++) {
                 const f = String(i).padStart(2, '0');
                 this.load.image(`wang_${style}_${f}`, `assets/terrain/${style}/wang_${f}.png`);
             }
-        }
-        // Aliases pro estilo default (test) — mantem caminho legado wang_NN funcional
+        });
+        // Aliases legacy wang_NN — pointam pro 'test' (mesmo comportamento de antes)
         for (let i = 0; i < 16; i++) {
             const f = String(i).padStart(2, '0');
             this.load.image(`wang_${f}`, `assets/terrain/test/wang_${f}.png`);

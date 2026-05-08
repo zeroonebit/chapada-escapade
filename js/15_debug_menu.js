@@ -572,6 +572,11 @@ Object.assign(Jogo.prototype, {
                 if (section === 'proc' && key === 'activeMap') {
                     this._loadMapPreset(sel.value);
                 }
+                // Wang style trocado live -> lazy-load se ainda nao carregado
+                // (preload só baixa o ativo + 'test', outros vem sob demanda)
+                if (section === 'fx' && key === 'tileStyle') {
+                    if (this._ensureWangStyleLoaded) this._ensureWangStyleLoaded(sel.value);
+                }
             });
         });
 

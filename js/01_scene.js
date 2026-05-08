@@ -59,23 +59,21 @@ class Jogo extends Phaser.Scene {
 
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' used below)
 
-        // ── REGISTRA ANIMS 8-DIR (cow chubby, faz, ox) ─────────────
-        // Cow chubby: walk(4f), idle_head_shake→eat(11f), lie_down→angry(8f).
-        // "run" reusa walk with fps maior (anim chubby não has run dedicado).
+        // ── REGISTRA ANIMS 8-DIR — boot-críticas só ─────────────────
+        // ANIM_CRITICAS (loaded em preload, registrados agora):
+        //   cow_walk, farmer_run, ox_walk, ufo_hover
+        // ANIM_DEFERRED (loaded async pós-create, registrados em _loadDeferredAnims):
+        //   cow_eat, cow_angry, ox_idle  → fallback gracioso (anims.exists() skips)
         const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const ANIM8 = [
+        const ANIM_CRITICAS = [
             { prefix: 'cow_walk',  frames: 4,  fps: 6  },
-            { prefix: 'cow_eat',   frames: 11, fps: 4  },
-            { prefix: 'cow_angry', frames: 8,  fps: 8  },
             { prefix: 'farmer_run',    frames: 4,  fps: 10 },
             { prefix: 'ox_walk',   frames: 4,  fps: 6  },
             { prefix: 'ufo_hover',  frames: 4,  fps: 8  },
-            // ox_idle: 7 dirs (without N) — fallback to static em N
-            { prefix: 'ox_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         DIRS8.forEach(d => {
-            ANIM8.forEach(({prefix, frames, fps, dirs}) => {
-                if (dirs && !dirs.includes(d)) return;  // pula dirs não disponíveis
+            ANIM_CRITICAS.forEach(({prefix, frames, fps, dirs}) => {
+                if (dirs && !dirs.includes(d)) return;
                 const key = `${prefix}_${d}`;
                 if (this.anims.exists(key)) return;
                 const fr = [];
@@ -90,6 +88,10 @@ class Jogo extends Phaser.Scene {
                 this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
             }
         });
+        // Dispara load deferred (não bloqueia create); roda 200ms após boot pra
+        // não competir com setup inicial. Vacas sem cow_eat usam static; ox sem
+        // ox_idle também — fallback já existente em 07_cows.js.
+        this.time.delayedCall(200, () => this._loadDeferredAnims(), [], this);
 
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
@@ -604,5 +606,93 @@ class Jogo extends Phaser.Scene {
         }
 
         this._updateMinimap();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Deferred anim loader — chamado 200ms after create() pra não bloquear
+    // splash. Carrega cow_eat (88f) + cow_angry (64f) + ox_idle (77f) =
+    // 229 frames em background. Cria anims após complete; vacas/bois que
+    // já existem trocam pra anim assim que próximo state-machine update
+    // chamar v.play(animKey, true) — fallback static-texture cobre o gap.
+    _loadDeferredAnims() {
+        if (!this._deferredAnimSpecs || !this._deferredAnimSpecs.length) return;
+        if (this._deferredAnimsStarted) return;
+        this._deferredAnimsStarted = true;
+
+        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
+        const specs = this._deferredAnimSpecs;
+        let queued = 0;
+
+        specs.forEach(({char, prefix, anim, frames, dirs}) => {
+            (dirs || D8).forEach(d => {
+                for (let i = 0; i < frames; i++) {
+                    const f = String(i).padStart(3, '0');
+                    const key = `${prefix}_${d}_${i}`;
+                    if (!this.textures.exists(key)) {
+                        this.load.image(key, `assets/pixel_labs/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
+                        queued++;
+                    }
+                }
+            });
+        });
+
+        if (queued === 0) {
+            this._registerDeferredAnims();
+            return;
+        }
+
+        this.load.once('complete', () => {
+            this._registerDeferredAnims();
+            console.log('[DEFERRED ANIMS] loaded', queued, 'frames');
+        });
+        this.load.start();
+    }
+
+    _registerDeferredAnims() {
+        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
+        const ANIM_DEFERRED = [
+            { prefix: 'cow_eat',   frames: 11, fps: 4  },
+            { prefix: 'cow_angry', frames: 8,  fps: 8  },
+            { prefix: 'ox_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
+        ];
+        D8.forEach(d => {
+            ANIM_DEFERRED.forEach(({prefix, frames, fps, dirs}) => {
+                if (dirs && !dirs.includes(d)) return;
+                const key = `${prefix}_${d}`;
+                if (this.anims.exists(key)) return;
+                // Confirma que os frames estão de fato no cache
+                const firstFrameKey = `${prefix}_${d}_0`;
+                if (!this.textures.exists(firstFrameKey)) return;
+                const fr = [];
+                for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
+                this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
+            });
+        });
+    }
+
+    // Lazy loader pra Wang style trocado live no menu CONFIGS.
+    // Chamado por 15_debug_menu quando user troca tileStyle no select.
+    _ensureWangStyleLoaded(style, onReady) {
+        if (!this._loadedWangStyles) this._loadedWangStyles = new Set();
+        if (this._loadedWangStyles.has(style)) {
+            onReady && onReady();
+            return;
+        }
+        let queued = 0;
+        for (let i = 0; i < 16; i++) {
+            const f = String(i).padStart(2, '0');
+            const key = `wang_${style}_${f}`;
+            if (!this.textures.exists(key)) {
+                this.load.image(key, `assets/terrain/${style}/wang_${f}.png`);
+                queued++;
+            }
+        }
+        this._loadedWangStyles.add(style);
+        if (queued === 0) { onReady && onReady(); return; }
+        this.load.once('complete', () => {
+            console.log('[WANG LAZY]', style, 'loaded', queued, 'tiles');
+            onReady && onReady();
+        });
+        this.load.start();
     }
 }
