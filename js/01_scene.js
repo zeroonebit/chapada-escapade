@@ -439,6 +439,27 @@ class Jogo extends Phaser.Scene {
             if (this._keysWASD.S.isDown) dy += 1;
             if (this._keysWASD.A.isDown) dx -= 1;
             if (this._keysWASD.D.isDown) dx += 1;
+            // Tap responsiveness: ao detectar tecla just-pressed, aplica
+            // impulso instantâneo no UFO (kick de velocidade). Sem isso,
+            // tap rápido = 1 frame de força = movimento imperceptível.
+            if (this.ufo?.body && !this._tutFreezeNave) {
+                const KB = Phaser.Input.Keyboard;
+                let kx = 0, ky = 0;
+                if (KB.JustDown(this._keysWASD.W)) ky -= 1;
+                if (KB.JustDown(this._keysWASD.S)) ky += 1;
+                if (KB.JustDown(this._keysWASD.A)) kx -= 1;
+                if (KB.JustDown(this._keysWASD.D)) kx += 1;
+                if (kx !== 0 || ky !== 0) {
+                    const klen = Math.hypot(kx, ky);
+                    const KICK = 1.8;   // velocidade adicional one-shot (matter units/sec)
+                    const sens = this.dbg?.behavior?.sensitivity ?? 1.0;
+                    const v = this.ufo.body.velocity;
+                    this.ufo.setVelocity(
+                        v.x + (kx/klen) * KICK * sens,
+                        v.y + (ky/klen) * KICK * sens
+                    );
+                }
+            }
             if (dx !== 0 || dy !== 0) {
                 const len = Math.hypot(dx, dy);
                 const REACH = 220;
@@ -639,14 +660,13 @@ class Jogo extends Phaser.Scene {
         this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_cima_desce');
         this._aliasAtlasFrame('farmer_atlas', 'farmer_S', 'farmer');
 
-        // HUD frames — todos os 10 do atlas viram texturas individuais
+        // HUD frames — só os 8 efetivamente usados em add.image() viram textura
+        // alias. hud_comb_v2 + hud_grav_v2 não são mais referenciados em código
+        // (audit 2026-05-08 — substituídos pelos hud_combined_empty/full bars).
         ['hud_score_v2','hud_burgers_v2','hud_cows_v2','hud_bulls_v2',
-         'hud_farmers_v2','hud_shooters_v2','hud_comb_v2','hud_grav_v2',
+         'hud_farmers_v2','hud_shooters_v2',
          'hud_radar_dome_v2','hud_radar_ring_v2'
         ].forEach(fn => this._aliasAtlasFrame('hud_atlas', fn, fn));
-        // Legacy alias hud_combustivel_v2 / hud_graviton_v2 (preload key antigo)
-        this._aliasAtlasFrame('hud_atlas', 'hud_comb_v2', 'hud_combustivel_v2');
-        this._aliasAtlasFrame('hud_atlas', 'hud_grav_v2', 'hud_graviton_v2');
 
         // Items — 3 burgers + legacy 'burger' alias (= burger_classic)
         ['burger_classic','burger_cheese','burger_double'].forEach(
