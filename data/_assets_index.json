@@ -1,11 +1,11 @@
 {
-  "total": 883,
+  "total": 886,
   "classified": 709,
-  "unclassified": 174,
-  "in_game": 251,
-  "orphan": 632,
+  "unclassified": 177,
+  "in_game": 188,
+  "orphan": 698,
   "by_category": {
-    "unclassified": 174,
+    "unclassified": 177,
     "fx": 1,
     "wang_tile": 176,
     "wang_meta": 11,
@@ -60,6 +60,20 @@
       "inGame": true
     },
     {
+      "path": "assets/atlases/hud.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/items.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
       "path": "assets/atlases/ufo.png",
       "category": "unclassified",
       "tags": {},
@@ -75,6 +89,13 @@
     },
     {
       "path": "assets/atlases/cow.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/nature.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
@@ -1957,7 +1978,7 @@
         "name": "farmers_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/graviton_full.png",
@@ -1975,7 +1996,7 @@
         "name": "score_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/cows_v2.png",
@@ -1984,7 +2005,7 @@
         "name": "cows_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/combustivel-graviton_empty_nameless.png",
@@ -2020,7 +2041,7 @@
         "name": "radar_dome_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/combustivel_v2.png",
@@ -2038,7 +2059,7 @@
         "name": "shooters_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/radar_ring_v2.png",
@@ -2047,7 +2068,7 @@
         "name": "radar_ring_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/bulls_v2.png",
@@ -2056,7 +2077,7 @@
         "name": "bulls_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/hud/combustivel-graviton_full-nameless.png",
@@ -2074,7 +2095,7 @@
         "name": "burgers_v2"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/items/burger_double.png",
@@ -2083,7 +2104,7 @@
         "name": "burger_double"
       },
       "confidence": 0.95,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/items/burger_classic.png",
@@ -2092,7 +2113,7 @@
         "name": "burger_classic"
       },
       "confidence": 0.95,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/items/burger_cheese.png",
@@ -2101,7 +2122,7 @@
         "name": "burger_cheese"
       },
       "confidence": 0.95,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/east.png",
@@ -8813,196 +8834,196 @@
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/curral_01_pequeno.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/bucket_empty.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/curral_03_hexagonal.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/windmill.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/curral_05_abandonado.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/barrel_rusty.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/old_truck.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/curral_02_redondo.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/dry_turf.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/church.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/bucket_milk.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/curral_04_rustico.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/gas_can.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/gate_closed_solid.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/post_double_rope.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/segment_tall_dual.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/beam_horizontal.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/post_lantern_thin.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/post_lantern_low.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/post_carved.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/gate_thin_double.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/tower_ornamental_thin.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/fence_curved_short.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/fence_double_short_h.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/gate_open_double.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/fence_curved_long.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences_v2/post_thin_simple.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/placas/placa_seta_dir.png",
@@ -9037,84 +9058,84 @@
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/misc/pile_logs.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/plank_v.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/post_thin.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_gate_open.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_corner.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_normal.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_broken.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/post_single.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_short.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_long.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/fences/fence_full_h.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/grass_v2/grass_02_dark.png",
@@ -9156,106 +9177,106 @@
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_medium.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_branching.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/bush_round.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_dead_dry.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_dead_vine.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_saguaro_2.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/bush_dry.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/patch_cluster.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/bush_round_dense.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_cluster_low.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/vegetation/cactus_saguaro_tall.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/rocks/rock_pillar_tall.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/rocks/boulder_red_cluster.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/rocks/rock_small_smooth.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
-      "inGame": true
+      "inGame": false
     }
   ],
-  "_baked_at": "2026-05-08T11:35:04.973669"
+  "_baked_at": "2026-05-08T11:47:04.795219"
 }
