@@ -14,6 +14,8 @@ Object.assign(Jogo.prototype, {
             // Coleta via beam (atrai burgers ready)
             this._attractBurgersBeam(c);
         }
+        // Fallback: destrava slots em 'loading' há > 5s
+        this._sweepStuckSlots();
     },
 
     // Cow chubby representativa with anims rotativas + counter "xN"
@@ -150,16 +152,43 @@ Object.assign(Jogo.prototype, {
             const pisca = this.tweens.add({
                 targets: icon, alpha: 0.95, duration: 280, yoyo: true, repeat: -1
             });
-            curral.slots[slotIdx] = { state: 'loading', icon, pisca, vaca: v, slotIdx };
+            curral.slots[slotIdx] = {
+                state: 'loading', icon, pisca, vaca: v, slotIdx,
+                // loadStartT: timestamp da transição -> 'loading'. Usado pelo
+                // fallback em _checkDelivery pra destravar slots cujo
+                // delayedCall foi perdido (race com pause/restart/throttle).
+                loadStartT: this.time.now,
+            };
 
             // Removes a cow real do world (mascot representa)
             this.cows = this.cows.filter(x => x !== v);
             this._destroyCow(v);
 
-            // Após 3s vira ready
+            // Após 3s vira ready (caminho primário). Fallback em _checkDelivery
+            // cobre casos onde este timer não dispara (Phaser race conditions).
             this.time.delayedCall(3000, () => this._processSlot(curral, slotIdx));
         }
         this.cameras.main.flash(150, 100, 200, 100);
+    },
+
+    // Sentinela: detecta slots travados em 'loading' por mais de 5s
+    // (3s expected + 2s tolerance) e força a transição. Chamado por
+    // _checkDelivery a cada frame.
+    _sweepStuckSlots() {
+        if (!this.corrals) return;
+        const now = this.time.now;
+        for (const cor of this.corrals) {
+            if (!cor?.slots) continue;
+            for (let i = 0; i < cor.slots.length; i++) {
+                const s = cor.slots[i];
+                if (!s || s.state !== 'loading') continue;
+                if (s.loadStartT == null) continue;
+                if (now - s.loadStartT > 5000) {
+                    console.warn('[CORRAL] sentinel: slot stuck loading >5s, forcing ready', i);
+                    this._processSlot(cor, i);
+                }
+            }
+        }
     },
 
     // M3: cleanup completo de um slot (tweens + icon)
