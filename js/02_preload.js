@@ -36,65 +36,22 @@ Object.assign(Jogo.prototype, {
             });
         }
 
-        // ── HERO ASSETS 200×200 (single sprite used em algumas situações) ──
-        // Ship aponta to UFO south (versão dome opaca, without alien visível inside)
-        this.load.image('nave',      'assets/pixel_labs/chars/ufo/south.png');
+        // ── ATLASES PIXELLAB (4 sprite atlases, gerados via tools/pack_atlas.py) ──
+        // Substituem 389 PNGs individuais (32 static + 357 anim frames) por 4 atlases
+        // de ~70-125kb cada (-95% requests, -70% bytes graças a pngquant).
+        // Frame names DENTRO do atlas seguem keys legacy: cow_S, cow_walk_S_0,
+        // farmer_NE, ox_idle_W_5, ufo_hover_NW_2 etc — ver tools/pack_atlas.py.
+        // 01_scene.js _registerAtlasFrameTextures() faz aliasing automático
+        // pra setTexture('cow_S') continuar funcionando sem rewrite massivo.
+        this.load.atlas('cow_atlas',    'assets/atlases/cow.png',    'assets/atlases/cow.json');
+        this.load.atlas('ox_atlas',     'assets/atlases/ox.png',     'assets/atlases/ox.json');
+        this.load.atlas('farmer_atlas', 'assets/atlases/farmer.png', 'assets/atlases/farmer.json');
+        this.load.atlas('ufo_atlas',    'assets/atlases/ufo.png',    'assets/atlases/ufo.json');
+
+        // Hero assets (1 sprite cada, fora dos atlases) — beam_halo é PNG fora dos chars
         this.load.image('beam_halo', 'assets/fx/beam.png');
-
-        // ── DIRECTIONAL SPRITES PIXELLAB ─────────────────────────────
-        // Cow (chubby holstein, 8-dir), Ox, Farmer, UFO: 8 directions
-        const dirs8 = {
-            'south':'S','east':'E','north':'N','west':'W',
-            'south-east':'SE','north-east':'NE','north-west':'NW','south-west':'SW'
-        };
-        Object.entries(dirs8).forEach(([d, k]) => {
-            this.load.image(`cow_${k}`, `assets/pixel_labs/chars/cow/${d}.png`);
-            this.load.image(`ox_${k}`,  `assets/pixel_labs/chars/ox/${d}.png`);
-            this.load.image(`farmer_${k}`,  `assets/pixel_labs/chars/farmer/${d}.png`);
-            this.load.image(`ufo_${k}`,  `assets/pixel_labs/chars/ufo/${d}.png`);
-        });
-
-        // ── LEGACY KEYS (pointam to direcional sul, compat with código antigo) ──
-        this.load.image('cow_frente',     'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('cow_cima_sobe',  'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('cow_cima_desce', 'assets/pixel_labs/chars/cow/south.png');
-        this.load.image('ox_frente',      'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('ox_cima_sobe',   'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('ox_cima_desce',  'assets/pixel_labs/chars/ox/south.png');
-        this.load.image('farmer',      'assets/pixel_labs/chars/farmer/south.png');
-        // burger now vem do PixelLab (substitui geometria antiga)
-        this.load.image('burger',      'assets/pixel_labs/items/burger_classic.png');
-
-        // ── ANIMAÇÕES 8-DIR ──────────────────────────────────────────
-        // Mapping: <prefixo do texture key> ← <pasta de anim no disk> × N frames
-        // BOOT-CRÍTICAS (carregam no preload, bloqueiam splash):
-        //   walk loops das criaturas + ufo hover (são vistos no segundo 0 de gameplay)
-        // DEFERRED (carregam após create() em background, usam fallback static enquanto):
-        //   cow_eat (88f), cow_angry (64f, só mascote curral), ox_idle (77f)
-        //   = 229 frames a menos no boot crítico (-21% do total)
-        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const ANIM_CRITICAS = [
-            { char: 'cow',       prefix: 'cow_walk',  anim: 'walk',            frames: 4 },
-            { char: 'farmer', prefix: 'farmer_run',    anim: 'running',         frames: 4 },
-            { char: 'ox',        prefix: 'ox_walk',   anim: 'walk',            frames: 4 },
-            { char: 'ufo',        prefix: 'ufo_hover',  anim: 'hovering_idle',   frames: 4 },
-        ];
-        ANIM_CRITICAS.forEach(({char, prefix, anim, frames, dirs}) => {
-            (dirs || D8).forEach(d => {
-                for (let i = 0; i < frames; i++) {
-                    const f = String(i).padStart(3, '0');
-                    this.load.image(`${prefix}_${d}_${i}`,
-                        `assets/pixel_labs/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
-                }
-            });
-        });
-        // Lista das anims deferred — _loadDeferredAnims() em 01_scene.js create() consome
-        this._deferredAnimSpecs = [
-            { char: 'cow',       prefix: 'cow_eat',   anim: 'idle_head_shake', frames: 11 },
-            { char: 'cow',       prefix: 'cow_angry', anim: 'lie_down',        frames: 8 },
-            { char: 'ox', prefix: 'ox_idle', anim: 'idle_head_shake', frames: 11,
-              dirs: ['S','E','W','SE','NE','NW','SW'] },
-        ];
+        // burger (item — fica fora pois pode evoluir pra item atlas)
+        this.load.image('burger',         'assets/pixel_labs/items/burger_classic.png');
 
         // ── NATURE POOL (rocks + bushes/cactus to scenery) ──────────
         const NATURE_PEDRAS = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];

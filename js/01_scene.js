@@ -59,39 +59,44 @@ class Jogo extends Phaser.Scene {
 
         this._setupGeometricTextures();   // 03_textures.js (textura 'ship' used below)
 
-        // ── REGISTRA ANIMS 8-DIR — boot-críticas só ─────────────────
-        // ANIM_CRITICAS (loaded em preload, registrados agora):
-        //   cow_walk, farmer_run, ox_walk, ufo_hover
-        // ANIM_DEFERRED (loaded async pós-create, registrados em _loadDeferredAnims):
-        //   cow_eat, cow_angry, ox_idle  → fallback gracioso (anims.exists() skips)
+        // ── ATLAS FRAME ALIASING ──────────────────────────────────────
+        // Atlases carregam frames como cow_S, cow_walk_S_0 etc internamente.
+        // Pra manter setTexture('cow_S') funcionando sem rewrite massivo de
+        // call sites em 6 arquivos, registra cada frame como texture indep.
+        // (extração via canvas — ~40 texturas pequenas, ~5MB GPU adicional, ok)
+        this._registerAtlasFrameTextures();
+
+        // ── REGISTRA ANIMS 8-DIR usando frames do atlas ─────────────
+        // Antes: cada frame era texture separada, anim.frames[i].key = 'cow_walk_S_0'.
+        // Agora: anim.frames[i] = { key: 'cow_atlas', frame: 'cow_walk_S_0' }.
         const DIRS8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const ANIM_CRITICAS = [
-            { prefix: 'cow_walk',  frames: 4,  fps: 6  },
-            { prefix: 'farmer_run',    frames: 4,  fps: 10 },
-            { prefix: 'ox_walk',   frames: 4,  fps: 6  },
-            { prefix: 'ufo_hover',  frames: 4,  fps: 8  },
+        const ANIM8 = [
+            { atlas: 'cow_atlas',    prefix: 'cow_walk',   frames: 4,  fps: 6  },
+            { atlas: 'cow_atlas',    prefix: 'cow_eat',    frames: 11, fps: 4  },
+            { atlas: 'cow_atlas',    prefix: 'cow_angry',  frames: 8,  fps: 8  },
+            { atlas: 'farmer_atlas', prefix: 'farmer_run', frames: 4,  fps: 10 },
+            { atlas: 'ox_atlas',     prefix: 'ox_walk',    frames: 4,  fps: 6  },
+            { atlas: 'ufo_atlas',    prefix: 'ufo_hover',  frames: 4,  fps: 8  },
+            { atlas: 'ox_atlas',     prefix: 'ox_idle',    frames: 11, fps: 4,
+              dirs: ['S','E','W','SE','NE','NW','SW'] },
         ];
         DIRS8.forEach(d => {
-            ANIM_CRITICAS.forEach(({prefix, frames, fps, dirs}) => {
+            ANIM8.forEach(({atlas, prefix, frames, fps, dirs}) => {
                 if (dirs && !dirs.includes(d)) return;
                 const key = `${prefix}_${d}`;
                 if (this.anims.exists(key)) return;
                 const fr = [];
-                for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
+                for (let i = 0; i < frames; i++) fr.push({ key: atlas, frame: `${prefix}_${d}_${i}` });
                 this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
             });
-            // cow_run is cow_walk em fps×2 — registra as anim separado
+            // cow_run é cow_walk @ fps×2 — usa mesmas frames do atlas
             const runKey = `cow_run_${d}`;
             if (!this.anims.exists(runKey)) {
                 const fr = [];
-                for (let i = 0; i < 4; i++) fr.push({ key: `cow_walk_${d}_${i}` });
+                for (let i = 0; i < 4; i++) fr.push({ key: 'cow_atlas', frame: `cow_walk_${d}_${i}` });
                 this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
             }
         });
-        // Dispara load deferred (não bloqueia create); roda 200ms após boot pra
-        // não competir com setup inicial. Vacas sem cow_eat usam static; ox sem
-        // ox_idle também — fallback já existente em 07_cows.js.
-        this.time.delayedCall(200, () => this._loadDeferredAnims(), [], this);
 
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
@@ -609,66 +614,54 @@ class Jogo extends Phaser.Scene {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Deferred anim loader — chamado 200ms after create() pra não bloquear
-    // splash. Carrega cow_eat (88f) + cow_angry (64f) + ox_idle (77f) =
-    // 229 frames em background. Cria anims após complete; vacas/bois que
-    // já existem trocam pra anim assim que próximo state-machine update
-    // chamar v.play(animKey, true) — fallback static-texture cobre o gap.
-    _loadDeferredAnims() {
-        if (!this._deferredAnimSpecs || !this._deferredAnimSpecs.length) return;
-        if (this._deferredAnimsStarted) return;
-        this._deferredAnimsStarted = true;
-
-        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const specs = this._deferredAnimSpecs;
-        let queued = 0;
-
-        specs.forEach(({char, prefix, anim, frames, dirs}) => {
-            (dirs || D8).forEach(d => {
-                for (let i = 0; i < frames; i++) {
-                    const f = String(i).padStart(3, '0');
-                    const key = `${prefix}_${d}_${i}`;
-                    if (!this.textures.exists(key)) {
-                        this.load.image(key, `assets/pixel_labs/chars/${char}/anims/${anim}/${d}/frame_${f}.png`);
-                        queued++;
-                    }
-                }
-            });
+    // Atlas frame aliasing — extrai static dirs (cow_S, ox_E etc) e legacy
+    // keys (nave, farmer, cow_frente etc) do atlas em texturas individuais
+    // via canvas. Permite código existente continuar usando setTexture('cow_S')
+    // sem rewrite. Anim frames continuam in-atlas (acessadas via {key, frame}).
+    _registerAtlasFrameTextures() {
+        const ATLAS_STATIC_KEYS = [
+            ['cow_atlas',    ['cow_S','cow_E','cow_N','cow_W','cow_SE','cow_NE','cow_NW','cow_SW']],
+            ['ox_atlas',     ['ox_S','ox_E','ox_N','ox_W','ox_SE','ox_NE','ox_NW','ox_SW']],
+            ['farmer_atlas', ['farmer_S','farmer_E','farmer_N','farmer_W','farmer_SE','farmer_NE','farmer_NW','farmer_SW']],
+            ['ufo_atlas',    ['ufo_S','ufo_E','ufo_N','ufo_W','ufo_SE','ufo_NE','ufo_NW','ufo_SW']],
+        ];
+        ATLAS_STATIC_KEYS.forEach(([atlasKey, frameNames]) => {
+            frameNames.forEach(fn => this._aliasAtlasFrame(atlasKey, fn, fn));
         });
+        // Legacy aliases pointing to south frame (compat com código antigo)
+        this._aliasAtlasFrame('ufo_atlas',    'ufo_S',    'nave');
+        this._aliasAtlasFrame('cow_atlas',    'cow_S',    'cow_frente');
+        this._aliasAtlasFrame('cow_atlas',    'cow_S',    'cow_cima_sobe');
+        this._aliasAtlasFrame('cow_atlas',    'cow_S',    'cow_cima_desce');
+        this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_frente');
+        this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_cima_sobe');
+        this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_cima_desce');
+        this._aliasAtlasFrame('farmer_atlas', 'farmer_S', 'farmer');
+    }
 
-        if (queued === 0) {
-            this._registerDeferredAnims();
+    _aliasAtlasFrame(atlasKey, frameName, aliasKey) {
+        if (this.textures.exists(aliasKey)) return;
+        const atlas = this.textures.get(atlasKey);
+        if (!atlas || !atlas.has(frameName)) {
+            console.warn('[ATLAS ALIAS] missing frame', atlasKey, frameName);
             return;
         }
-
-        this.load.once('complete', () => {
-            this._registerDeferredAnims();
-            console.log('[DEFERRED ANIMS] loaded', queued, 'frames');
-        });
-        this.load.start();
+        const frame = atlas.get(frameName);
+        const canvas = document.createElement('canvas');
+        canvas.width = frame.cutWidth;
+        canvas.height = frame.cutHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(
+            frame.source.image,
+            frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight,
+            0, 0, frame.cutWidth, frame.cutHeight
+        );
+        this.textures.addCanvas(aliasKey, canvas);
     }
 
-    _registerDeferredAnims() {
-        const D8 = ['S','E','N','W','SE','NE','NW','SW'];
-        const ANIM_DEFERRED = [
-            { prefix: 'cow_eat',   frames: 11, fps: 4  },
-            { prefix: 'cow_angry', frames: 8,  fps: 8  },
-            { prefix: 'ox_idle',   frames: 11, fps: 4,  dirs: ['S','E','W','SE','NE','NW','SW'] },
-        ];
-        D8.forEach(d => {
-            ANIM_DEFERRED.forEach(({prefix, frames, fps, dirs}) => {
-                if (dirs && !dirs.includes(d)) return;
-                const key = `${prefix}_${d}`;
-                if (this.anims.exists(key)) return;
-                // Confirma que os frames estão de fato no cache
-                const firstFrameKey = `${prefix}_${d}_0`;
-                if (!this.textures.exists(firstFrameKey)) return;
-                const fr = [];
-                for (let i = 0; i < frames; i++) fr.push({ key: `${prefix}_${d}_${i}` });
-                this.anims.create({ key, frames: fr, frameRate: fps, repeat: -1 });
-            });
-        });
-    }
+    // ─────────────────────────────────────────────────────────────
+    // Lazy loader pra Wang style trocado live no menu CONFIGS.
+    // Chamado por 15_debug_menu quando user troca tileStyle no select.
 
     // Lazy loader pra Wang style trocado live no menu CONFIGS.
     // Chamado por 15_debug_menu quando user troca tileStyle no select.
