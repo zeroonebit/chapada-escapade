@@ -1,11 +1,11 @@
 {
-  "total": 879,
+  "total": 883,
   "classified": 709,
-  "unclassified": 170,
-  "in_game": 751,
-  "orphan": 128,
+  "unclassified": 174,
+  "in_game": 251,
+  "orphan": 632,
   "by_category": {
-    "unclassified": 170,
+    "unclassified": 174,
     "fx": 1,
     "wang_tile": 176,
     "wang_meta": 11,
@@ -50,6 +50,34 @@
         "name": "beam"
       },
       "confidence": 1.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/ox.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/ufo.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/farmer.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/atlases/cow.png",
+      "category": "unclassified",
+      "tags": {},
+      "confidence": 0.0,
       "inGame": true
     },
     {
@@ -2083,7 +2111,7 @@
         "dir": "EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/north-east.png",
@@ -2093,7 +2121,7 @@
         "dir": "NORTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/north-west.png",
@@ -2103,7 +2131,7 @@
         "dir": "NORTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/north.png",
@@ -2113,7 +2141,7 @@
         "dir": "NORTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/west.png",
@@ -2123,7 +2151,7 @@
         "dir": "WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/south-east.png",
@@ -2133,7 +2161,7 @@
         "dir": "SOUTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/south.png",
@@ -2143,7 +2171,7 @@
         "dir": "SOUTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/south-west.png",
@@ -2153,7 +2181,7 @@
         "dir": "SOUTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/east.png",
@@ -2163,7 +2191,7 @@
         "dir": "EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/north-east.png",
@@ -2173,7 +2201,7 @@
         "dir": "NORTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/north-west.png",
@@ -2183,7 +2211,7 @@
         "dir": "NORTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/north.png",
@@ -2193,7 +2221,7 @@
         "dir": "NORTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/west.png",
@@ -2203,7 +2231,7 @@
         "dir": "WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/south-east.png",
@@ -2213,7 +2241,7 @@
         "dir": "SOUTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/south.png",
@@ -2223,7 +2251,7 @@
         "dir": "SOUTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/south-west.png",
@@ -2233,7 +2261,7 @@
         "dir": "SOUTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/east.png",
@@ -2243,7 +2271,7 @@
         "dir": "EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/north-east.png",
@@ -2253,7 +2281,7 @@
         "dir": "NORTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/north-west.png",
@@ -2263,7 +2291,7 @@
         "dir": "NORTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/north.png",
@@ -2273,7 +2301,7 @@
         "dir": "NORTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/west.png",
@@ -2283,7 +2311,7 @@
         "dir": "WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/south-east.png",
@@ -2293,7 +2321,7 @@
         "dir": "SOUTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/south.png",
@@ -2303,7 +2331,7 @@
         "dir": "SOUTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/south-west.png",
@@ -2313,7 +2341,7 @@
         "dir": "SOUTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/east.png",
@@ -2323,7 +2351,7 @@
         "dir": "EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/north-east.png",
@@ -2333,7 +2361,7 @@
         "dir": "NORTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/north-west.png",
@@ -2343,7 +2371,7 @@
         "dir": "NORTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/north.png",
@@ -2353,7 +2381,7 @@
         "dir": "NORTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/west.png",
@@ -2363,7 +2391,7 @@
         "dir": "WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/south-east.png",
@@ -2373,7 +2401,7 @@
         "dir": "SOUTH-EAST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/south.png",
@@ -2383,7 +2411,7 @@
         "dir": "SOUTH"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/south-west.png",
@@ -2393,7 +2421,7 @@
         "dir": "SOUTH-WEST"
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/S/frame_003.png",
@@ -2405,7 +2433,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/S/frame_001.png",
@@ -2417,7 +2445,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/S/frame_000.png",
@@ -2429,7 +2457,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/S/frame_002.png",
@@ -2441,7 +2469,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/E/frame_003.png",
@@ -2453,7 +2481,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/E/frame_001.png",
@@ -2465,7 +2493,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/E/frame_000.png",
@@ -2477,7 +2505,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/E/frame_002.png",
@@ -2489,7 +2517,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SE/frame_003.png",
@@ -2501,7 +2529,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SE/frame_001.png",
@@ -2513,7 +2541,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SE/frame_000.png",
@@ -2525,7 +2553,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SE/frame_002.png",
@@ -2537,7 +2565,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SW/frame_003.png",
@@ -2549,7 +2577,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SW/frame_001.png",
@@ -2561,7 +2589,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SW/frame_000.png",
@@ -2573,7 +2601,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/SW/frame_002.png",
@@ -2585,7 +2613,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/W/frame_003.png",
@@ -2597,7 +2625,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/W/frame_001.png",
@@ -2609,7 +2637,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/W/frame_000.png",
@@ -2621,7 +2649,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/W/frame_002.png",
@@ -2633,7 +2661,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NW/frame_003.png",
@@ -2645,7 +2673,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NW/frame_001.png",
@@ -2657,7 +2685,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NW/frame_000.png",
@@ -2669,7 +2697,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NW/frame_002.png",
@@ -2681,7 +2709,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/N/frame_003.png",
@@ -2693,7 +2721,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/N/frame_001.png",
@@ -2705,7 +2733,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/N/frame_000.png",
@@ -2717,7 +2745,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/N/frame_002.png",
@@ -2729,7 +2757,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NE/frame_003.png",
@@ -2741,7 +2769,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NE/frame_001.png",
@@ -2753,7 +2781,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NE/frame_000.png",
@@ -2765,7 +2793,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/farmer/anims/running/NE/frame_002.png",
@@ -2777,7 +2805,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_003.png",
@@ -2789,7 +2817,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_001.png",
@@ -2801,7 +2829,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_004.png",
@@ -2813,7 +2841,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_000.png",
@@ -2825,7 +2853,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_005.png",
@@ -2837,7 +2865,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/S/frame_002.png",
@@ -2849,7 +2877,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_003.png",
@@ -2861,7 +2889,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_001.png",
@@ -2873,7 +2901,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_004.png",
@@ -2885,7 +2913,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_000.png",
@@ -2897,7 +2925,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_005.png",
@@ -2909,7 +2937,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/E/frame_002.png",
@@ -2921,7 +2949,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_003.png",
@@ -2933,7 +2961,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_001.png",
@@ -2945,7 +2973,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_004.png",
@@ -2957,7 +2985,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_000.png",
@@ -2969,7 +2997,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_005.png",
@@ -2981,7 +3009,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SE/frame_002.png",
@@ -2993,7 +3021,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_003.png",
@@ -3005,7 +3033,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_001.png",
@@ -3017,7 +3045,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_004.png",
@@ -3029,7 +3057,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_000.png",
@@ -3041,7 +3069,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_005.png",
@@ -3053,7 +3081,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/SW/frame_002.png",
@@ -3065,7 +3093,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_003.png",
@@ -3077,7 +3105,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_001.png",
@@ -3089,7 +3117,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_004.png",
@@ -3101,7 +3129,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_000.png",
@@ -3113,7 +3141,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_005.png",
@@ -3125,7 +3153,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/W/frame_002.png",
@@ -3137,7 +3165,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_003.png",
@@ -3149,7 +3177,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_001.png",
@@ -3161,7 +3189,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_004.png",
@@ -3173,7 +3201,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_000.png",
@@ -3185,7 +3213,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_005.png",
@@ -3197,7 +3225,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NW/frame_002.png",
@@ -3209,7 +3237,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_003.png",
@@ -3221,7 +3249,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_001.png",
@@ -3233,7 +3261,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_004.png",
@@ -3245,7 +3273,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_000.png",
@@ -3257,7 +3285,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_005.png",
@@ -3269,7 +3297,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/N/frame_002.png",
@@ -3281,7 +3309,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_003.png",
@@ -3293,7 +3321,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_001.png",
@@ -3305,7 +3333,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_004.png",
@@ -3317,7 +3345,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_000.png",
@@ -3329,7 +3357,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_005.png",
@@ -3341,7 +3369,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/stand_up/NE/frame_002.png",
@@ -3353,7 +3381,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/S/frame_003.png",
@@ -3365,7 +3393,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/S/frame_001.png",
@@ -3377,7 +3405,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/S/frame_000.png",
@@ -3389,7 +3417,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/S/frame_002.png",
@@ -3401,7 +3429,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/E/frame_003.png",
@@ -3413,7 +3441,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/E/frame_001.png",
@@ -3425,7 +3453,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/E/frame_000.png",
@@ -3437,7 +3465,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/E/frame_002.png",
@@ -3449,7 +3477,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SE/frame_003.png",
@@ -3461,7 +3489,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SE/frame_001.png",
@@ -3473,7 +3501,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SE/frame_000.png",
@@ -3485,7 +3513,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SE/frame_002.png",
@@ -3497,7 +3525,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SW/frame_003.png",
@@ -3509,7 +3537,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SW/frame_001.png",
@@ -3521,7 +3549,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SW/frame_000.png",
@@ -3533,7 +3561,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/SW/frame_002.png",
@@ -3545,7 +3573,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/W/frame_003.png",
@@ -3557,7 +3585,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/W/frame_001.png",
@@ -3569,7 +3597,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/W/frame_000.png",
@@ -3581,7 +3609,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/W/frame_002.png",
@@ -3593,7 +3621,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NW/frame_003.png",
@@ -3605,7 +3633,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NW/frame_001.png",
@@ -3617,7 +3645,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NW/frame_000.png",
@@ -3629,7 +3657,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NW/frame_002.png",
@@ -3641,7 +3669,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/N/frame_003.png",
@@ -3653,7 +3681,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/N/frame_001.png",
@@ -3665,7 +3693,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/N/frame_000.png",
@@ -3677,7 +3705,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/N/frame_002.png",
@@ -3689,7 +3717,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NE/frame_003.png",
@@ -3701,7 +3729,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NE/frame_001.png",
@@ -3713,7 +3741,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NE/frame_000.png",
@@ -3725,7 +3753,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/walk/NE/frame_002.png",
@@ -3737,7 +3765,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_003.png",
@@ -3749,7 +3777,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_001.png",
@@ -3761,7 +3789,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_004.png",
@@ -3773,7 +3801,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_009.png",
@@ -3785,7 +3813,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_000.png",
@@ -3797,7 +3825,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_007.png",
@@ -3809,7 +3837,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_005.png",
@@ -3821,7 +3849,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_008.png",
@@ -3833,7 +3861,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_010.png",
@@ -3845,7 +3873,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_002.png",
@@ -3857,7 +3885,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/S/frame_006.png",
@@ -3869,7 +3897,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_003.png",
@@ -3881,7 +3909,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_001.png",
@@ -3893,7 +3921,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_004.png",
@@ -3905,7 +3933,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_009.png",
@@ -3917,7 +3945,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_000.png",
@@ -3929,7 +3957,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_007.png",
@@ -3941,7 +3969,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_005.png",
@@ -3953,7 +3981,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_008.png",
@@ -3965,7 +3993,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_010.png",
@@ -3977,7 +4005,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_002.png",
@@ -3989,7 +4017,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/E/frame_006.png",
@@ -4001,7 +4029,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_003.png",
@@ -4013,7 +4041,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_001.png",
@@ -4025,7 +4053,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_004.png",
@@ -4037,7 +4065,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_009.png",
@@ -4049,7 +4077,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_000.png",
@@ -4061,7 +4089,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_007.png",
@@ -4073,7 +4101,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_005.png",
@@ -4085,7 +4113,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_008.png",
@@ -4097,7 +4125,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_010.png",
@@ -4109,7 +4137,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_002.png",
@@ -4121,7 +4149,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SE/frame_006.png",
@@ -4133,7 +4161,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_003.png",
@@ -4145,7 +4173,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_001.png",
@@ -4157,7 +4185,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_004.png",
@@ -4169,7 +4197,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_009.png",
@@ -4181,7 +4209,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_000.png",
@@ -4193,7 +4221,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_007.png",
@@ -4205,7 +4233,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_005.png",
@@ -4217,7 +4245,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_008.png",
@@ -4229,7 +4257,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_010.png",
@@ -4241,7 +4269,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_002.png",
@@ -4253,7 +4281,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/SW/frame_006.png",
@@ -4265,7 +4293,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_003.png",
@@ -4277,7 +4305,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_001.png",
@@ -4289,7 +4317,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_004.png",
@@ -4301,7 +4329,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_009.png",
@@ -4313,7 +4341,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_000.png",
@@ -4325,7 +4353,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_007.png",
@@ -4337,7 +4365,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_005.png",
@@ -4349,7 +4377,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_008.png",
@@ -4361,7 +4389,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_010.png",
@@ -4373,7 +4401,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_002.png",
@@ -4385,7 +4413,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/W/frame_006.png",
@@ -4397,7 +4425,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_003.png",
@@ -4409,7 +4437,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_001.png",
@@ -4421,7 +4449,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_004.png",
@@ -4433,7 +4461,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_009.png",
@@ -4445,7 +4473,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_000.png",
@@ -4457,7 +4485,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_007.png",
@@ -4469,7 +4497,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_005.png",
@@ -4481,7 +4509,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_008.png",
@@ -4493,7 +4521,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_010.png",
@@ -4505,7 +4533,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_002.png",
@@ -4517,7 +4545,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NW/frame_006.png",
@@ -4529,7 +4557,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_003.png",
@@ -4541,7 +4569,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_001.png",
@@ -4553,7 +4581,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_004.png",
@@ -4565,7 +4593,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_009.png",
@@ -4577,7 +4605,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_000.png",
@@ -4589,7 +4617,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_007.png",
@@ -4601,7 +4629,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_005.png",
@@ -4613,7 +4641,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_008.png",
@@ -4625,7 +4653,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_010.png",
@@ -4637,7 +4665,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_002.png",
@@ -4649,7 +4677,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/N/frame_006.png",
@@ -4661,7 +4689,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_003.png",
@@ -4673,7 +4701,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_001.png",
@@ -4685,7 +4713,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_004.png",
@@ -4697,7 +4725,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_009.png",
@@ -4709,7 +4737,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_000.png",
@@ -4721,7 +4749,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_007.png",
@@ -4733,7 +4761,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_005.png",
@@ -4745,7 +4773,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_008.png",
@@ -4757,7 +4785,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_010.png",
@@ -4769,7 +4797,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_002.png",
@@ -4781,7 +4809,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/idle_head_shake/NE/frame_006.png",
@@ -4793,7 +4821,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_003.png",
@@ -4805,7 +4833,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_001.png",
@@ -4817,7 +4845,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_004.png",
@@ -4829,7 +4857,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_000.png",
@@ -4841,7 +4869,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_007.png",
@@ -4853,7 +4881,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_005.png",
@@ -4865,7 +4893,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_002.png",
@@ -4877,7 +4905,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/S/frame_006.png",
@@ -4889,7 +4917,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_003.png",
@@ -4901,7 +4929,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_001.png",
@@ -4913,7 +4941,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_004.png",
@@ -4925,7 +4953,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_000.png",
@@ -4937,7 +4965,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_007.png",
@@ -4949,7 +4977,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_005.png",
@@ -4961,7 +4989,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_002.png",
@@ -4973,7 +5001,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/E/frame_006.png",
@@ -4985,7 +5013,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_003.png",
@@ -4997,7 +5025,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_001.png",
@@ -5009,7 +5037,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_004.png",
@@ -5021,7 +5049,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_000.png",
@@ -5033,7 +5061,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_007.png",
@@ -5045,7 +5073,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_005.png",
@@ -5057,7 +5085,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_002.png",
@@ -5069,7 +5097,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SE/frame_006.png",
@@ -5081,7 +5109,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_003.png",
@@ -5093,7 +5121,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_001.png",
@@ -5105,7 +5133,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_004.png",
@@ -5117,7 +5145,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_000.png",
@@ -5129,7 +5157,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_007.png",
@@ -5141,7 +5169,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_005.png",
@@ -5153,7 +5181,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_002.png",
@@ -5165,7 +5193,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/SW/frame_006.png",
@@ -5177,7 +5205,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_003.png",
@@ -5189,7 +5217,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_001.png",
@@ -5201,7 +5229,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_004.png",
@@ -5213,7 +5241,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_000.png",
@@ -5225,7 +5253,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_007.png",
@@ -5237,7 +5265,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_005.png",
@@ -5249,7 +5277,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_002.png",
@@ -5261,7 +5289,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/W/frame_006.png",
@@ -5273,7 +5301,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_003.png",
@@ -5285,7 +5313,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_001.png",
@@ -5297,7 +5325,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_004.png",
@@ -5309,7 +5337,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_000.png",
@@ -5321,7 +5349,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_007.png",
@@ -5333,7 +5361,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_005.png",
@@ -5345,7 +5373,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_002.png",
@@ -5357,7 +5385,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NW/frame_006.png",
@@ -5369,7 +5397,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_003.png",
@@ -5381,7 +5409,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_001.png",
@@ -5393,7 +5421,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_004.png",
@@ -5405,7 +5433,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_000.png",
@@ -5417,7 +5445,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_007.png",
@@ -5429,7 +5457,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_005.png",
@@ -5441,7 +5469,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_002.png",
@@ -5453,7 +5481,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/N/frame_006.png",
@@ -5465,7 +5493,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_003.png",
@@ -5477,7 +5505,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_001.png",
@@ -5489,7 +5517,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_004.png",
@@ -5501,7 +5529,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_000.png",
@@ -5513,7 +5541,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_007.png",
@@ -5525,7 +5553,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_005.png",
@@ -5537,7 +5565,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_002.png",
@@ -5549,7 +5577,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/cow/anims/lie_down/NE/frame_006.png",
@@ -5561,7 +5589,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/alien_artifact_glowing.png",
@@ -6294,7 +6322,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_001.png",
@@ -6306,7 +6334,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_004.png",
@@ -6318,7 +6346,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_000.png",
@@ -6330,7 +6358,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_007.png",
@@ -6342,7 +6370,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_005.png",
@@ -6354,7 +6382,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_008.png",
@@ -6366,7 +6394,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_002.png",
@@ -6378,7 +6406,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/S/frame_006.png",
@@ -6390,7 +6418,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_003.png",
@@ -6402,7 +6430,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_001.png",
@@ -6414,7 +6442,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_004.png",
@@ -6426,7 +6454,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_000.png",
@@ -6438,7 +6466,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_007.png",
@@ -6450,7 +6478,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_005.png",
@@ -6462,7 +6490,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_008.png",
@@ -6474,7 +6502,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_002.png",
@@ -6486,7 +6514,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/SW/frame_006.png",
@@ -6498,7 +6526,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_003.png",
@@ -6510,7 +6538,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_001.png",
@@ -6522,7 +6550,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_004.png",
@@ -6534,7 +6562,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_000.png",
@@ -6546,7 +6574,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_007.png",
@@ -6558,7 +6586,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_005.png",
@@ -6570,7 +6598,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_008.png",
@@ -6582,7 +6610,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_002.png",
@@ -6594,7 +6622,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/W/frame_006.png",
@@ -6606,7 +6634,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_003.png",
@@ -6618,7 +6646,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_001.png",
@@ -6630,7 +6658,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_004.png",
@@ -6642,7 +6670,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_000.png",
@@ -6654,7 +6682,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_007.png",
@@ -6666,7 +6694,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_005.png",
@@ -6678,7 +6706,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_008.png",
@@ -6690,7 +6718,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_002.png",
@@ -6702,7 +6730,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NW/frame_006.png",
@@ -6714,7 +6742,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_003.png",
@@ -6726,7 +6754,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_001.png",
@@ -6738,7 +6766,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_004.png",
@@ -6750,7 +6778,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_000.png",
@@ -6762,7 +6790,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_007.png",
@@ -6774,7 +6802,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_005.png",
@@ -6786,7 +6814,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_008.png",
@@ -6798,7 +6826,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_002.png",
@@ -6810,7 +6838,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/N/frame_006.png",
@@ -6822,7 +6850,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_003.png",
@@ -6834,7 +6862,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_001.png",
@@ -6846,7 +6874,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_004.png",
@@ -6858,7 +6886,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_000.png",
@@ -6870,7 +6898,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_007.png",
@@ -6882,7 +6910,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_005.png",
@@ -6894,7 +6922,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_008.png",
@@ -6906,7 +6934,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_002.png",
@@ -6918,7 +6946,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/rest_idle/NE/frame_006.png",
@@ -6930,7 +6958,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/S/frame_003.png",
@@ -6942,7 +6970,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/S/frame_001.png",
@@ -6954,7 +6982,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/S/frame_000.png",
@@ -6966,7 +6994,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/S/frame_002.png",
@@ -6978,7 +7006,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/E/frame_003.png",
@@ -6990,7 +7018,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/E/frame_001.png",
@@ -7002,7 +7030,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/E/frame_000.png",
@@ -7014,7 +7042,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/E/frame_002.png",
@@ -7026,7 +7054,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SE/frame_003.png",
@@ -7038,7 +7066,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SE/frame_001.png",
@@ -7050,7 +7078,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SE/frame_000.png",
@@ -7062,7 +7090,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SE/frame_002.png",
@@ -7074,7 +7102,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SW/frame_003.png",
@@ -7086,7 +7114,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SW/frame_001.png",
@@ -7098,7 +7126,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SW/frame_000.png",
@@ -7110,7 +7138,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/SW/frame_002.png",
@@ -7122,7 +7150,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/W/frame_003.png",
@@ -7134,7 +7162,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/W/frame_001.png",
@@ -7146,7 +7174,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/W/frame_000.png",
@@ -7158,7 +7186,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/W/frame_002.png",
@@ -7170,7 +7198,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NW/frame_003.png",
@@ -7182,7 +7210,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NW/frame_001.png",
@@ -7194,7 +7222,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NW/frame_000.png",
@@ -7206,7 +7234,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NW/frame_002.png",
@@ -7218,7 +7246,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/N/frame_003.png",
@@ -7230,7 +7258,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/N/frame_001.png",
@@ -7242,7 +7270,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/N/frame_000.png",
@@ -7254,7 +7282,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/N/frame_002.png",
@@ -7266,7 +7294,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NE/frame_003.png",
@@ -7278,7 +7306,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NE/frame_001.png",
@@ -7290,7 +7318,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NE/frame_000.png",
@@ -7302,7 +7330,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/walk/NE/frame_002.png",
@@ -7314,7 +7342,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_003.png",
@@ -7326,7 +7354,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_001.png",
@@ -7338,7 +7366,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_004.png",
@@ -7350,7 +7378,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_000.png",
@@ -7362,7 +7390,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_007.png",
@@ -7374,7 +7402,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_005.png",
@@ -7386,7 +7414,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_002.png",
@@ -7398,7 +7426,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/attack/S/frame_006.png",
@@ -7410,7 +7438,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_003.png",
@@ -7422,7 +7450,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_001.png",
@@ -7434,7 +7462,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_004.png",
@@ -7446,7 +7474,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_009.png",
@@ -7458,7 +7486,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_000.png",
@@ -7470,7 +7498,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_007.png",
@@ -7482,7 +7510,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_005.png",
@@ -7494,7 +7522,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_008.png",
@@ -7506,7 +7534,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_010.png",
@@ -7518,7 +7546,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_002.png",
@@ -7530,7 +7558,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/S/frame_006.png",
@@ -7542,7 +7570,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_003.png",
@@ -7554,7 +7582,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_001.png",
@@ -7566,7 +7594,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_004.png",
@@ -7578,7 +7606,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_009.png",
@@ -7590,7 +7618,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_000.png",
@@ -7602,7 +7630,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_007.png",
@@ -7614,7 +7642,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_005.png",
@@ -7626,7 +7654,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_008.png",
@@ -7638,7 +7666,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_010.png",
@@ -7650,7 +7678,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_002.png",
@@ -7662,7 +7690,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/E/frame_006.png",
@@ -7674,7 +7702,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_003.png",
@@ -7686,7 +7714,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_001.png",
@@ -7698,7 +7726,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_004.png",
@@ -7710,7 +7738,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_009.png",
@@ -7722,7 +7750,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_000.png",
@@ -7734,7 +7762,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_007.png",
@@ -7746,7 +7774,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_005.png",
@@ -7758,7 +7786,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_008.png",
@@ -7770,7 +7798,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_010.png",
@@ -7782,7 +7810,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_002.png",
@@ -7794,7 +7822,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SE/frame_006.png",
@@ -7806,7 +7834,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_003.png",
@@ -7818,7 +7846,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_001.png",
@@ -7830,7 +7858,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_004.png",
@@ -7842,7 +7870,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_009.png",
@@ -7854,7 +7882,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_000.png",
@@ -7866,7 +7894,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_007.png",
@@ -7878,7 +7906,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_005.png",
@@ -7890,7 +7918,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_008.png",
@@ -7902,7 +7930,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_010.png",
@@ -7914,7 +7942,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_002.png",
@@ -7926,7 +7954,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/SW/frame_006.png",
@@ -7938,7 +7966,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_003.png",
@@ -7950,7 +7978,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_001.png",
@@ -7962,7 +7990,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_004.png",
@@ -7974,7 +8002,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_009.png",
@@ -7986,7 +8014,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_000.png",
@@ -7998,7 +8026,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_007.png",
@@ -8010,7 +8038,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_005.png",
@@ -8022,7 +8050,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_008.png",
@@ -8034,7 +8062,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_010.png",
@@ -8046,7 +8074,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_002.png",
@@ -8058,7 +8086,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/W/frame_006.png",
@@ -8070,7 +8098,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_003.png",
@@ -8082,7 +8110,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_001.png",
@@ -8094,7 +8122,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_004.png",
@@ -8106,7 +8134,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_009.png",
@@ -8118,7 +8146,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_000.png",
@@ -8130,7 +8158,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_007.png",
@@ -8142,7 +8170,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_005.png",
@@ -8154,7 +8182,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_008.png",
@@ -8166,7 +8194,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_010.png",
@@ -8178,7 +8206,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_002.png",
@@ -8190,7 +8218,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NW/frame_006.png",
@@ -8202,7 +8230,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_003.png",
@@ -8214,7 +8242,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_001.png",
@@ -8226,7 +8254,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_004.png",
@@ -8238,7 +8266,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_009.png",
@@ -8250,7 +8278,7 @@
         "frame": 9
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_000.png",
@@ -8262,7 +8290,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_007.png",
@@ -8274,7 +8302,7 @@
         "frame": 7
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_005.png",
@@ -8286,7 +8314,7 @@
         "frame": 5
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_008.png",
@@ -8298,7 +8326,7 @@
         "frame": 8
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_010.png",
@@ -8310,7 +8338,7 @@
         "frame": 10
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_002.png",
@@ -8322,7 +8350,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/idle_head_shake/NE/frame_006.png",
@@ -8334,7 +8362,7 @@
         "frame": 6
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/eating/S/frame_003.png",
@@ -8346,7 +8374,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/eating/S/frame_001.png",
@@ -8358,7 +8386,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/eating/S/frame_004.png",
@@ -8370,7 +8398,7 @@
         "frame": 4
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/eating/S/frame_000.png",
@@ -8382,7 +8410,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ox/anims/eating/S/frame_002.png",
@@ -8394,7 +8422,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/S/frame_003.png",
@@ -8406,7 +8434,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/S/frame_001.png",
@@ -8418,7 +8446,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/S/frame_000.png",
@@ -8430,7 +8458,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/S/frame_002.png",
@@ -8442,7 +8470,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/E/frame_003.png",
@@ -8454,7 +8482,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/E/frame_001.png",
@@ -8466,7 +8494,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/E/frame_000.png",
@@ -8478,7 +8506,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/E/frame_002.png",
@@ -8490,7 +8518,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SE/frame_003.png",
@@ -8502,7 +8530,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SE/frame_001.png",
@@ -8514,7 +8542,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SE/frame_000.png",
@@ -8526,7 +8554,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SE/frame_002.png",
@@ -8538,7 +8566,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SW/frame_003.png",
@@ -8550,7 +8578,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SW/frame_001.png",
@@ -8562,7 +8590,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SW/frame_000.png",
@@ -8574,7 +8602,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/SW/frame_002.png",
@@ -8586,7 +8614,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/W/frame_003.png",
@@ -8598,7 +8626,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/W/frame_001.png",
@@ -8610,7 +8638,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/W/frame_000.png",
@@ -8622,7 +8650,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/W/frame_002.png",
@@ -8634,7 +8662,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NW/frame_003.png",
@@ -8646,7 +8674,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NW/frame_001.png",
@@ -8658,7 +8686,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NW/frame_000.png",
@@ -8670,7 +8698,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NW/frame_002.png",
@@ -8682,7 +8710,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/N/frame_003.png",
@@ -8694,7 +8722,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/N/frame_001.png",
@@ -8706,7 +8734,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/N/frame_000.png",
@@ -8718,7 +8746,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/N/frame_002.png",
@@ -8730,7 +8758,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NE/frame_003.png",
@@ -8742,7 +8770,7 @@
         "frame": 3
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NE/frame_001.png",
@@ -8754,7 +8782,7 @@
         "frame": 1
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NE/frame_000.png",
@@ -8766,7 +8794,7 @@
         "frame": 0
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/pixel_labs/chars/ufo/anims/hovering_idle/NE/frame_002.png",
@@ -8778,7 +8806,7 @@
         "frame": 2
       },
       "confidence": 1.0,
-      "inGame": true
+      "inGame": false
     },
     {
       "path": "assets/env/objects/satellite_dish_rusty.png",
@@ -9229,5 +9257,5 @@
       "inGame": true
     }
   ],
-  "_baked_at": "2026-05-02T18:31:08.176631"
+  "_baked_at": "2026-05-08T11:35:04.973669"
 }
