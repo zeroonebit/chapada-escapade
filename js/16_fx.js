@@ -218,6 +218,8 @@ Object.assign(Jogo.prototype, {
         };
         const fall = () => {
             if (!drop || !drop.scene) return;
+            // Stop chain quando rain off (evita 250 tweens vazando quando weather muda)
+            if (!this.dbg?.fx?.rain) return;
             const c = this.dbg?.fx || {};
             // wind override: se ativo, angulo da rain eh _windAngle (driven
             // pelo sistema de wind). Senao usa slider rainAngle direto.
@@ -277,6 +279,8 @@ Object.assign(Jogo.prototype, {
         };
         const fall = () => {
             if (!flake || !flake.scene) return;
+            // Stop chain quando snow off (evita 100 tweens vazando)
+            if (!this.dbg?.fx?.snow) return;
             // Speed: flocos maiores caem more fast (peso visual)
             const baseDur = Phaser.Math.Between(3000, 6000);
             const sizeFactor = 1.0 / Math.max(0.5, flake._radius * 0.6);
@@ -345,18 +349,36 @@ Object.assign(Jogo.prototype, {
         }
         if (this.fxRain) {
             const visible = !!cfg.rain;
+            const wasVisible = !!this._rainWasVisible;
             this.fxRain.setVisible(visible);
             if (visible) this.fxRain.setAlpha(cfg.rainIntensity ?? 0.5);
-            // H3: debounce 200ms to avoid churn em slider drag
             const targetCount = Math.max(0, Math.round(cfg.rainCount ?? 80));
-            if (targetCount !== this._rainCountAtual) this._scheduleRebuildRain();
+            if (targetCount !== this._rainCountAtual) {
+                this._scheduleRebuildRain();
+            } else if (visible && !wasVisible) {
+                // Rain transitiou off→on sem mudar count: tweens das gotas pararam
+                // (early-return em fall()). Restart manual aqui.
+                this._rainDrops?.forEach(drop => this._startRainDrop(drop));
+            } else if (!visible && wasVisible) {
+                // Off→limpa tweens em queue p/ não acumular durante fall onComplete
+                this._rainDrops?.forEach(d => this.tweens.killTweensOf(d));
+            }
+            this._rainWasVisible = visible;
         }
         if (this.fxSnow) {
             const visible = !!cfg.snow;
+            const wasVisible = !!this._snowWasVisible;
             this.fxSnow.setVisible(visible);
             if (visible) this.fxSnow.setAlpha(cfg.snowIntensity ?? 0.85);
             const targetCount = Math.max(0, Math.round(cfg.snowCount ?? 100));
-            if (targetCount !== this._snowCountAtual) this._scheduleRebuildSnow();
+            if (targetCount !== this._snowCountAtual) {
+                this._scheduleRebuildSnow();
+            } else if (visible && !wasVisible) {
+                this._snowFlakes?.forEach(flake => this._startSnowFlake(flake));
+            } else if (!visible && wasVisible) {
+                this._snowFlakes?.forEach(f => this.tweens.killTweensOf(f));
+            }
+            this._snowWasVisible = visible;
         }
         if (this.fxFog) {
             const visible = !!cfg.fog;
