@@ -619,6 +619,7 @@ class Jogo extends Phaser.Scene {
     // via canvas. Permite código existente continuar usando setTexture('cow_S')
     // sem rewrite. Anim frames continuam in-atlas (acessadas via {key, frame}).
     _registerAtlasFrameTextures() {
+        // Char static dirs (cow_S, ox_E, farmer_NW, ufo_SE etc)
         const ATLAS_STATIC_KEYS = [
             ['cow_atlas',    ['cow_S','cow_E','cow_N','cow_W','cow_SE','cow_NE','cow_NW','cow_SW']],
             ['ox_atlas',     ['ox_S','ox_E','ox_N','ox_W','ox_SE','ox_NE','ox_NW','ox_SW']],
@@ -628,7 +629,7 @@ class Jogo extends Phaser.Scene {
         ATLAS_STATIC_KEYS.forEach(([atlasKey, frameNames]) => {
             frameNames.forEach(fn => this._aliasAtlasFrame(atlasKey, fn, fn));
         });
-        // Legacy aliases pointing to south frame (compat com código antigo)
+        // Char legacy aliases pointing to south frame (compat com código antigo)
         this._aliasAtlasFrame('ufo_atlas',    'ufo_S',    'nave');
         this._aliasAtlasFrame('cow_atlas',    'cow_S',    'cow_frente');
         this._aliasAtlasFrame('cow_atlas',    'cow_S',    'cow_cima_sobe');
@@ -637,6 +638,29 @@ class Jogo extends Phaser.Scene {
         this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_cima_sobe');
         this._aliasAtlasFrame('ox_atlas',     'ox_S',     'ox_cima_desce');
         this._aliasAtlasFrame('farmer_atlas', 'farmer_S', 'farmer');
+
+        // HUD frames — todos os 10 do atlas viram texturas individuais
+        ['hud_score_v2','hud_burgers_v2','hud_cows_v2','hud_bulls_v2',
+         'hud_farmers_v2','hud_shooters_v2','hud_comb_v2','hud_grav_v2',
+         'hud_radar_dome_v2','hud_radar_ring_v2'
+        ].forEach(fn => this._aliasAtlasFrame('hud_atlas', fn, fn));
+        // Legacy alias hud_combustivel_v2 / hud_graviton_v2 (preload key antigo)
+        this._aliasAtlasFrame('hud_atlas', 'hud_comb_v2', 'hud_combustivel_v2');
+        this._aliasAtlasFrame('hud_atlas', 'hud_grav_v2', 'hud_graviton_v2');
+
+        // Items — 3 burgers + legacy 'burger' alias (= burger_classic)
+        ['burger_classic','burger_cheese','burger_double'].forEach(
+            fn => this._aliasAtlasFrame('items_atlas', fn, fn));
+        this._aliasAtlasFrame('items_atlas', 'burger_classic', 'burger');
+
+        // Nature — 55 frames, alias automático lendo o atlas JSON
+        const natureAtlas = this.textures.get('nature_atlas');
+        if (natureAtlas && natureAtlas.frames) {
+            Object.keys(natureAtlas.frames).forEach(fn => {
+                if (fn === '__BASE') return;
+                this._aliasAtlasFrame('nature_atlas', fn, fn);
+            });
+        }
     }
 
     _aliasAtlasFrame(atlasKey, frameName, aliasKey) {

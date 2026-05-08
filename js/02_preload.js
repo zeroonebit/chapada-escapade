@@ -43,78 +43,49 @@ Object.assign(Jogo.prototype, {
         // farmer_NE, ox_idle_W_5, ufo_hover_NW_2 etc — ver tools/pack_atlas.py.
         // 01_scene.js _registerAtlasFrameTextures() faz aliasing automático
         // pra setTexture('cow_S') continuar funcionando sem rewrite massivo.
+        // 7 atlases via tools/pack_atlas.py (chars + hud + nature + items)
+        // - chars (cow/ox/farmer/ufo): static dirs + anim frames
+        // - hud: score boxes + small bars + radar (4 PNGs gigantes ficam fora)
+        // - nature: rocks + veg + fences + misc + objects (~55 frames)
+        // - items: 3 burger variantes
         this.load.atlas('cow_atlas',    'assets/atlases/cow.png',    'assets/atlases/cow.json');
         this.load.atlas('ox_atlas',     'assets/atlases/ox.png',     'assets/atlases/ox.json');
         this.load.atlas('farmer_atlas', 'assets/atlases/farmer.png', 'assets/atlases/farmer.json');
         this.load.atlas('ufo_atlas',    'assets/atlases/ufo.png',    'assets/atlases/ufo.json');
+        this.load.atlas('hud_atlas',    'assets/atlases/hud.png',    'assets/atlases/hud.json');
+        this.load.atlas('nature_atlas', 'assets/atlases/nature.png', 'assets/atlases/nature.json');
+        this.load.atlas('items_atlas',  'assets/atlases/items.png',  'assets/atlases/items.json');
 
-        // Hero assets (1 sprite cada, fora dos atlases) — beam_halo é PNG fora dos chars
+        // Beam halo (single PNG fora de atlas — usado em FX layer separada)
         this.load.image('beam_halo', 'assets/fx/beam.png');
-        // burger (item — fica fora pois pode evoluir pra item atlas)
-        this.load.image('burger',         'assets/pixel_labs/items/burger_classic.png');
 
-        // ── NATURE POOL (rocks + bushes/cactus to scenery) ──────────
-        const NATURE_PEDRAS = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];
-        const NATURE_VEGE   = ['bush_round_dense','cactus_saguaro_tall','cactus_medium',
-                               'cactus_dead_dry','cactus_branching','cactus_cluster_low',
-                               'cactus_saguaro_2','cactus_dead_vine','bush_round',
-                               'patch_cluster','bush_dry','agave_dark'];
-        const NATURE_CERCAS = ['fence_full_h','fence_normal','fence_long','fence_short',
-                               'fence_broken','fence_gate_open','fence_corner',
-                               'post_single','post_thin','plank_v'];
-        // fences v2 (paleta clara consistente, design ornamental)
-        const NATURE_CERCAS_V2 = ['fence_double_short_h','fence_curved_short','fence_curved_long',
-                                  'gate_open_double','gate_closed_solid','gate_thin_double',
-                                  'post_lantern_low','post_lantern_thin','post_double_rope',
-                                  'post_carved','post_thin_simple','tower_ornamental_thin',
-                                  'segment_tall_dual','beam_horizontal'];
-        NATURE_PEDRAS.forEach(n => this.load.image(`nat_rock_${n}`, `assets/env/rocks/${n}.png`));
-        NATURE_VEGE.forEach(n   => this.load.image(`nat_veg_${n}`,  `assets/env/vegetation/${n}.png`));
-        NATURE_CERCAS.forEach(n => this.load.image(`nat_fence_${n}`, `assets/env/fences/${n}.png`));
-        NATURE_CERCAS_V2.forEach(n => this.load.image(`nat_fence_${n}`, `assets/env/fences_v2/${n}.png`));
-        // Outros itens decorativos (feno, pile de toras)
-        const NATURE_OUTROS = ['hay_bale', 'pile_logs'];
-        NATURE_OUTROS.forEach(n => this.load.image(`nat_misc_${n}`, `assets/env/misc/${n}.png`));
-        // Objects v3: landmarks (church, windmill, truck, satellite), props (gas, barrel, buckets), terreno (dry_turf)
-        const NATURE_OBJECTS = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty',
-                                'gas_can', 'barrel_rusty', 'bucket_empty', 'bucket_milk', 'dry_turf'];
-        NATURE_OBJECTS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/env/objects/${n}.png`));
-        // Currais V2: 5 sprites 200x200 PixelLab (substituem cercas procedural)
-        const CURRAIS = ['curral_01_pequeno', 'curral_02_redondo', 'curral_03_hexagonal',
-                         'curral_04_rustico', 'curral_05_abandonado'];
-        CURRAIS.forEach(n => this.load.image(`nat_obj_${n}`, `assets/env/objects/${n}.png`));
-        this._curralKeys = CURRAIS.map(n => `nat_obj_${n}`);
-        // Expor to scenery
-        this._natureLandmarkKeys = ['church', 'windmill', 'old_truck', 'satellite_dish_rusty']
-            .map(n => `nat_obj_${n}`);
-        this._natureIndustrialKeys = ['gas_can', 'barrel_rusty'].map(n => `nat_obj_${n}`);
-        // Expor to outros módulos (D+R2: renomeado de _naturePedras/Vege/fences)
-        this._natureRocksKeys  = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
-        this._natureVegKeys    = NATURE_VEGE.map(n   => `nat_veg_${n}`);
-        this._natureFencesKeys = NATURE_CERCAS.map(n => `nat_fence_${n}`);
-        // ── HUD PIXELLAB ──────────────────────────────────────────
-        // Layout final (limpo): 6 boxes nameless + bars combinadas + radar v2
-        // Score boxes (top): label PT/EN overlay via Phaser
-        this.load.image('hud_score_v2',          'assets/pixel_labs/hud/score_v2.png');
-        this.load.image('hud_burgers_v2',        'assets/pixel_labs/hud/burgers_v2.png');
-        this.load.image('hud_cows_v2',           'assets/pixel_labs/hud/cows_v2.png');
-        this.load.image('hud_bulls_v2',           'assets/pixel_labs/hud/bulls_v2.png');
-        this.load.image('hud_farmers_v2',        'assets/pixel_labs/hud/farmers_v2.png');
-        this.load.image('hud_shooters_v2',       'assets/pixel_labs/hud/shooters_v2.png');
-        // Radar v2 (sandwich: ring base + dome glass top)
-        this.load.image('hud_radar_dome_v2',     'assets/pixel_labs/hud/radar_dome_v2.png');
-        this.load.image('hud_radar_ring_v2',     'assets/pixel_labs/hud/radar_ring_v2.png');
-        // Bars combinadas (FUEL+GRAVITON num PNG so) — _empty_nameless = mascara
-        // preta + _full-nameless = barras coloridas cropadas pelo pct
+        // 4 HUD bars 1536x1024 — ficam individuais (atlas com eles desperdiça espaço)
         this.load.image('hud_combined_empty',    'assets/pixel_labs/hud/combustivel-graviton_empty_nameless.png');
         this.load.image('hud_combined_full',     'assets/pixel_labs/hud/combustivel-graviton_full-nameless.png');
-        // Bars individuais (fallback antigo, mantido pra cobrir caminhos legados)
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
-        // ── BURGERS (3 variantes) ────────────────────────────────────
-        this.load.image('burger_classic', 'assets/pixel_labs/items/burger_classic.png');
-        this.load.image('burger_cheese',  'assets/pixel_labs/items/burger_cheese.png');
-        this.load.image('burger_double',  'assets/pixel_labs/items/burger_double.png');
+
+        // ── EXPÕE keys de nature pra outros módulos consumirem ────────
+        // (mantém API legacy: _natureRocksKeys, _natureVegKeys etc são consumidos
+        //  por 04_scenery.js — apontam pros mesmos texture keys, agora aliases
+        //  do atlas via _registerAtlasFrameTextures em 01_scene.js)
+        const NATURE_PEDRAS  = ['boulder_red_cluster','rock_small_smooth','rock_pillar_tall'];
+        const NATURE_VEGE    = ['bush_round_dense','cactus_saguaro_tall','cactus_medium',
+                                'cactus_dead_dry','cactus_branching','cactus_cluster_low',
+                                'cactus_saguaro_2','cactus_dead_vine','bush_round',
+                                'patch_cluster','bush_dry','agave_dark'];
+        const NATURE_CERCAS  = ['fence_full_h','fence_normal','fence_long','fence_short',
+                                'fence_broken','fence_gate_open','fence_corner',
+                                'post_single','post_thin','plank_v'];
+        const CURRAIS = ['curral_01_pequeno','curral_02_redondo','curral_03_hexagonal',
+                         'curral_04_rustico','curral_05_abandonado'];
+        this._natureRocksKeys      = NATURE_PEDRAS.map(n => `nat_rock_${n}`);
+        this._natureVegKeys        = NATURE_VEGE.map(n   => `nat_veg_${n}`);
+        this._natureFencesKeys     = NATURE_CERCAS.map(n => `nat_fence_${n}`);
+        this._curralKeys           = CURRAIS.map(n => `nat_obj_${n}`);
+        this._natureLandmarkKeys   = ['church','windmill','old_truck','satellite_dish_rusty']
+                                       .map(n => `nat_obj_${n}`);
+        this._natureIndustrialKeys = ['gas_can','barrel_rusty'].map(n => `nat_obj_${n}`);
 
         // ── SPLASH + ICON ────────────────────────────────────────────
         this.load.image('splash', 'splashv4.png');

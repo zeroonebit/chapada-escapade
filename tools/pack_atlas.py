@@ -39,12 +39,15 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-PIXEL_LABS = ROOT / "assets" / "pixel_labs" / "chars"
-ATLAS_DIR = ROOT / "assets" / "atlases"
+ASSETS = ROOT / "assets"
+PIXEL_LABS = ASSETS / "pixel_labs" / "chars"
+ATLAS_DIR = ASSETS / "atlases"
 ATLAS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Configurações dos atlases — ordem importa pra packing eficiente.
-# 'static' = sprites únicos por dir; 'anims' = lista de animações × dirs × frames
+# Configs de atlases. Tipos:
+#   'char'  → 8-dir + anims (cow/ox/farmer/ufo). Static dirs + anim frames.
+#   'flat'  → lista de PNGs avulsos, framename = key esperado pelo Phaser.
+#             Suporta 'files' (lista direta) ou 'groups' (subdirs por prefix).
 ATLASES = {
     "cow": {
         "char_dir": "cow",
@@ -86,6 +89,47 @@ ATLASES = {
             ("hovering_idle", "ufo_hover", 4, None),
         ],
     },
+    # ── HUD atlas — score boxes + small bars + radar (10 PNGs ~200-700 wide).
+    # NÃO inclui os 4 PNGs gigantes 1536x1024 (combined bars) — esses ficam
+    # individuais (atlas com eles desperdiçaria 90% do espaço).
+    "hud": {
+        "type": "flat",
+        "files": [
+            ("pixel_labs/hud/score_v2.png",     "hud_score_v2"),
+            ("pixel_labs/hud/burgers_v2.png",   "hud_burgers_v2"),
+            ("pixel_labs/hud/cows_v2.png",      "hud_cows_v2"),
+            ("pixel_labs/hud/bulls_v2.png",     "hud_bulls_v2"),
+            ("pixel_labs/hud/farmers_v2.png",   "hud_farmers_v2"),
+            ("pixel_labs/hud/shooters_v2.png",  "hud_shooters_v2"),
+            ("pixel_labs/hud/combustivel_v2.png","hud_comb_v2"),
+            ("pixel_labs/hud/graviton_v2.png",  "hud_grav_v2"),
+            ("pixel_labs/hud/radar_dome_v2.png","hud_radar_dome_v2"),
+            ("pixel_labs/hud/radar_ring_v2.png","hud_radar_ring_v2"),
+        ],
+    },
+    # ── Nature atlas — rocks + vegetation + fences + misc + objects (~55 PNGs).
+    # Mistura tamanhos (64x64 a 200x200) mas todos sub-200, então grid eficiente.
+    "nature": {
+        "type": "flat",
+        "groups": [
+            # (subdir, key_prefix)  — auto-coleta todos *.png
+            ("env/rocks",       "nat_rock"),
+            ("env/vegetation",  "nat_veg"),
+            ("env/fences",      "nat_fence"),
+            ("env/fences_v2",   "nat_fence"),  # mesmo prefix nat_fence (v2 sobrescreve v1)
+            ("env/misc",        "nat_misc"),
+            ("env/objects",     "nat_obj"),
+        ],
+    },
+    # ── Items atlas — 3 variantes de burger.
+    "items": {
+        "type": "flat",
+        "files": [
+            ("pixel_labs/items/burger_classic.png", "burger_classic"),
+            ("pixel_labs/items/burger_cheese.png",  "burger_cheese"),
+            ("pixel_labs/items/burger_double.png",  "burger_double"),
+        ],
+    },
 }
 
 # Map dir-short → dir-long (filename na pasta pixel_labs)
@@ -97,10 +141,15 @@ DIR_LONG = {
 
 def collect_frames(cfg):
     """Retorna lista de (framename, PIL.Image) pra todos sprites do atlas."""
+    if cfg.get("type") == "flat":
+        return collect_frames_flat(cfg)
+    return collect_frames_char(cfg)
+
+
+def collect_frames_char(cfg):
+    """Char atlas — static dirs + anims via folder structure."""
     base = PIXEL_LABS / cfg["char_dir"]
     frames = []
-
-    # Static directional sprites
     for d in cfg["dirs8"]:
         path = base / cfg["static_pattern"].format(dir_long=DIR_LONG[d])
         if not path.exists():
@@ -109,7 +158,6 @@ def collect_frames(cfg):
         framename = cfg["static_keys"].format(D=d)
         frames.append((framename, Image.open(path).convert("RGBA")))
 
-    # Animation frames
     for anim_folder, prefix, count, dirs_override in cfg["anims"]:
         dirs = dirs_override or cfg["dirs8"]
         for d in dirs:
@@ -121,6 +169,30 @@ def collect_frames(cfg):
                     continue
                 framename = f"{prefix}_{d}_{i}"
                 frames.append((framename, Image.open(path).convert("RGBA")))
+    return frames
+
+
+def collect_frames_flat(cfg):
+    """Flat atlas — lista de PNGs avulsos, ou auto-coleta de subdirs com prefix."""
+    frames = []
+
+    # Modo 1: lista explícita de (relpath, framename)
+    for relpath, framename in cfg.get("files", []):
+        path = ASSETS / relpath
+        if not path.exists():
+            print(f"  WARN: missing {path}", file=sys.stderr)
+            continue
+        frames.append((framename, Image.open(path).convert("RGBA")))
+
+    # Modo 2: auto-coleta por subdir; framename = "<prefix>_<basename_sem_ext>"
+    for subdir, prefix in cfg.get("groups", []):
+        d = ASSETS / subdir
+        if not d.exists():
+            print(f"  WARN: missing dir {d}", file=sys.stderr)
+            continue
+        for png in sorted(d.glob("*.png")):
+            framename = f"{prefix}_{png.stem}"
+            frames.append((framename, Image.open(png).convert("RGBA")))
 
     return frames
 
