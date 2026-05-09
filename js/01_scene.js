@@ -1223,38 +1223,33 @@ class Jogo extends Phaser.Scene {
             const isActive = preset.styleKey === current;
             const biomeColor = colors[preset.biome] || '#aaffcc';
             card.dataset.style = preset.styleKey;
+            card.title = preset.name;
             card.style.cssText = `
                 background: #1a1410;
-                border: 2px solid ${isActive ? '#ffcc44' : biomeColor};
-                border-radius: 5px;
-                padding: 5px;
+                border: 1.5px solid ${isActive ? '#ffcc44' : biomeColor};
+                border-radius: 4px;
+                padding: 3px;
                 cursor: pointer;
-                ${isActive ? 'box-shadow: 0 0 8px rgba(255,204,68,0.4);' : ''}
+                ${isActive ? 'box-shadow: 0 0 6px rgba(255,204,68,0.4);' : ''}
             `;
-            // Thumbnail container
+            // Thumbnail container (square)
             const thumb = document.createElement('div');
             thumb.style.cssText = `
-                background: #001a08; border-radius: 3px; aspect-ratio: 1;
-                margin-bottom: 4px; image-rendering: pixelated;
+                background: #001a08; border-radius: 2px; aspect-ratio: 1;
+                image-rendering: pixelated;
             `;
             this._renderStyleThumbnail(thumb, preset.styleKey);
             card.appendChild(thumb);
-            // Name (curto, 1 linha)
-            const name = document.createElement('div');
-            name.style.cssText = `
-                font-size: 9px; color: #aaffcc; line-height: 1.2;
+            // Tag curtinho (sem nome verbose)
+            const tag = document.createElement('div');
+            const shortName = preset.name.replace(/^\[[A-Z0-9 ]+\]\s*/, '').replace(/\s*\(.+\)/, '');
+            tag.style.cssText = `
+                font-size: 7px; color: ${biomeColor}; margin-top: 2px;
+                line-height: 1.1; text-align: center;
                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
             `;
-            name.textContent = preset.name.replace(/^\[[A-Z0-9 ]+\]\s*/, '');
-            card.appendChild(name);
-            // Biome chip
-            const chip = document.createElement('div');
-            chip.style.cssText = `
-                font-size: 8px; color: ${biomeColor}; margin-top: 2px;
-                font-style: italic;
-            `;
-            chip.textContent = `${preset.biome}${preset.tileSize ? ' · ' + preset.tileSize + 'px' : ''}`;
-            card.appendChild(chip);
+            tag.textContent = shortName;
+            card.appendChild(tag);
             card.addEventListener('click', () => {
                 this._selectWangStyle(preset.styleKey);
                 this._renderCompareGrid();
@@ -1298,40 +1293,40 @@ class Jogo extends Phaser.Scene {
                 : { srcIdx: i, rot: 0, flipH: false, flipV: false };
             const f = String(t.srcIdx).padStart(2, '0');
             const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
-            // Render via canvas pra aplicar rot/flip
+            // Render via canvas pra aplicar rot/flip (32px é suficiente)
             const canvas = document.createElement('canvas');
-            canvas.width = 48; canvas.height = 48;
+            canvas.width = 32; canvas.height = 32;
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = false;
             const tex = this.textures.get(key);
             const src = tex?.getSourceImage?.();
             if (src && src.width) {
                 ctx.save();
-                ctx.translate(24, 24);
+                ctx.translate(16, 16);
                 if (t.rot)   ctx.rotate(t.rot * Math.PI / 180);
                 if (t.flipH) ctx.scale(-1, 1);
                 if (t.flipV) ctx.scale(1, -1);
-                ctx.drawImage(src, -24, -24, 48, 48);
+                ctx.drawImage(src, -16, -16, 32, 32);
                 ctx.restore();
             }
             const dataUrl = canvas.toDataURL();
             cell.style.cssText = `
                 position: relative; aspect-ratio: 1;
                 background: #001a08 url(${dataUrl}) center/contain no-repeat;
-                border: 1.5px solid #224433;
-                border-radius: 3px;
+                border: 1px solid #224433;
+                border-radius: 2px;
                 cursor: pointer;
                 image-rendering: pixelated;
                 transition: border-color 0.1s;
             `;
-            // Indicators
+            // Indicators (pequenos, top-left + bottom)
             const idxLbl = document.createElement('div');
             idxLbl.textContent = i;
             idxLbl.style.cssText = `
-                position: absolute; top: 1px; left: 2px;
-                font-size: 8px; color: #ffcc44;
+                position: absolute; top: 0; left: 1px;
+                font-size: 7px; color: #ffcc44;
                 text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
-                pointer-events: none;
+                pointer-events: none; line-height: 1;
             `;
             cell.appendChild(idxLbl);
             const stateLbl = document.createElement('div');
@@ -1344,9 +1339,10 @@ class Jogo extends Phaser.Scene {
                 stateLbl.textContent = parts.join(' ');
                 stateLbl.style.cssText = `
                     position: absolute; bottom: 0; left: 0; right: 0;
-                    font-size: 7px; color: #aaffcc;
-                    background: rgba(0,16,8,0.85); padding: 1px 0;
+                    font-size: 6px; color: #aaffcc;
+                    background: rgba(0,16,8,0.85); padding: 0;
                     text-align: center; pointer-events: none;
+                    line-height: 1.2;
                 `;
                 cell.appendChild(stateLbl);
             }
