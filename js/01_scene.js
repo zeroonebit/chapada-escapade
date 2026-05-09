@@ -1084,29 +1084,43 @@ class Jogo extends Phaser.Scene {
     }
 
     _renderStyleThumbnail(cell, style) {
-        // Composite 4x4 com os 16 tiles do style. Para styles não-loaded
-        // mostra placeholder "?" + dispara load on click.
+        // Composite 4x4 com os 16 tiles do style EM ORDEM cr31 (aplicando
+        // CR31_TO_PIXELLAB permutation + transforms do user). Garante que
+        // o thumbnail reflete EXATAMENTE o que aparece no terreno final —
+        // se 2 tilesets parecem repetidos no preview, é porque o conteúdo
+        // visualmente é similar (não é bug do render).
         const firstKey = style === 'test' ? 'wang_15' : `wang_${style}_15`;
         const isLoaded = this.textures.exists(firstKey);
         if (!isLoaded) {
             cell.style.background = '#001a08 url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><text x=%2224%22 y=%2230%22 font-family=%22monospace%22 font-size=%2222%22 fill=%22%23446655%22 text-anchor=%22middle%22>?</text></svg>") center/contain no-repeat';
             return;
         }
-        // Render composite via canvas
         const SIZE = 64;
         const canvas = document.createElement('canvas');
         canvas.width = SIZE; canvas.height = SIZE;
         const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false;  // pixel art
-        const cellPx = SIZE / 4;  // 4x4 grid
-        for (let i = 0; i < 16; i++) {
-            const f = String(i).padStart(2, '0');
+        ctx.imageSmoothingEnabled = false;
+        const cellPx = SIZE / 4;
+        // Itera em ordem cr31 (0..15), resolve transform pra cada cell
+        for (let cr31 = 0; cr31 < 16; cr31++) {
+            const t = (typeof resolveTileTransform === 'function')
+                ? resolveTileTransform(style, cr31)
+                : { srcIdx: cr31, rot: 0, flipH: false, flipV: false };
+            const f = String(t.srcIdx).padStart(2, '0');
             const k = style === 'test' ? `wang_${f}` : `wang_${style}_${f}`;
             const tex = this.textures.get(k);
             const src = tex?.getSourceImage?.();
             if (src && src.width) {
-                const col = i % 4, row = Math.floor(i / 4);
-                ctx.drawImage(src, col * cellPx, row * cellPx, cellPx, cellPx);
+                const col = cr31 % 4, row = Math.floor(cr31 / 4);
+                const cx = col * cellPx + cellPx / 2;
+                const cy = row * cellPx + cellPx / 2;
+                ctx.save();
+                ctx.translate(cx, cy);
+                if (t.rot)   ctx.rotate(t.rot * Math.PI / 180);
+                if (t.flipH) ctx.scale(-1, 1);
+                if (t.flipV) ctx.scale(1, -1);
+                ctx.drawImage(src, -cellPx/2, -cellPx/2, cellPx, cellPx);
+                ctx.restore();
             }
         }
         cell.style.background = `url(${canvas.toDataURL()}) center/cover #001a08`;
