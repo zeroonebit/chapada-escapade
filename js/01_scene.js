@@ -1223,33 +1223,26 @@ class Jogo extends Phaser.Scene {
             const isActive = preset.styleKey === current;
             const biomeColor = colors[preset.biome] || '#aaffcc';
             card.dataset.style = preset.styleKey;
-            card.title = preset.name;
-            card.style.cssText = `
-                background: #1a1410;
-                border: 1.5px solid ${isActive ? '#ffcc44' : biomeColor};
-                border-radius: 4px;
-                padding: 3px;
-                cursor: pointer;
-                ${isActive ? 'box-shadow: 0 0 6px rgba(255,204,68,0.4);' : ''}
-            `;
-            // Thumbnail container (square)
-            const thumb = document.createElement('div');
-            thumb.style.cssText = `
-                background: #001a08; border-radius: 2px; aspect-ratio: 1;
-                image-rendering: pixelated;
-            `;
-            this._renderStyleThumbnail(thumb, preset.styleKey);
-            card.appendChild(thumb);
-            // Tag curtinho (sem nome verbose)
-            const tag = document.createElement('div');
+            // Tooltip: nome completo + bioma (em vez de label visível)
             const shortName = preset.name.replace(/^\[[A-Z0-9 ]+\]\s*/, '').replace(/\s*\(.+\)/, '');
-            tag.style.cssText = `
-                font-size: 7px; color: ${biomeColor}; margin-top: 2px;
-                line-height: 1.1; text-align: center;
-                overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            card.title = `${preset.name}\n${preset.biome} · ${preset.season}${preset.tileSize ? ' · ' + preset.tileSize + 'px' : ''}`;
+            card.style.cssText = `
+                width: 44px; height: 44px;
+                background: #001a08;
+                border: 1.5px solid ${isActive ? '#ffcc44' : biomeColor};
+                border-radius: 3px;
+                cursor: pointer;
+                image-rendering: pixelated;
+                ${isActive ? 'box-shadow: 0 0 6px rgba(255,204,68,0.5); transform: scale(1.08);' : ''}
+                transition: transform 0.1s, border-color 0.1s;
             `;
-            tag.textContent = shortName;
-            card.appendChild(tag);
+            this._renderStyleThumbnail(card, preset.styleKey);
+            card.addEventListener('mouseenter', () => {
+                if (!isActive) card.style.borderColor = '#88ddaa';
+            });
+            card.addEventListener('mouseleave', () => {
+                if (!isActive) card.style.borderColor = biomeColor;
+            });
             card.addEventListener('click', () => {
                 this._selectWangStyle(preset.styleKey);
                 this._renderCompareGrid();
@@ -1311,7 +1304,7 @@ class Jogo extends Phaser.Scene {
             }
             const dataUrl = canvas.toDataURL();
             cell.style.cssText = `
-                position: relative; aspect-ratio: 1;
+                position: relative;
                 background: #001a08 url(${dataUrl}) center/contain no-repeat;
                 border: 1px solid #224433;
                 border-radius: 2px;
@@ -1319,32 +1312,24 @@ class Jogo extends Phaser.Scene {
                 image-rendering: pixelated;
                 transition: border-color 0.1s;
             `;
-            // Indicators (pequenos, top-left + bottom)
-            const idxLbl = document.createElement('div');
-            idxLbl.textContent = i;
-            idxLbl.style.cssText = `
-                position: absolute; top: 0; left: 1px;
-                font-size: 7px; color: #ffcc44;
-                text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
-                pointer-events: none; line-height: 1;
-            `;
-            cell.appendChild(idxLbl);
-            const stateLbl = document.createElement('div');
-            const parts = [];
-            if (t.srcIdx !== i) parts.push(`s${t.srcIdx}`);
-            if (t.rot)   parts.push(`r${t.rot}`);
-            if (t.flipH) parts.push('H');
-            if (t.flipV) parts.push('V');
-            if (parts.length) {
-                stateLbl.textContent = parts.join(' ');
-                stateLbl.style.cssText = `
-                    position: absolute; bottom: 0; left: 0; right: 0;
-                    font-size: 6px; color: #aaffcc;
-                    background: rgba(0,16,8,0.85); padding: 0;
-                    text-align: center; pointer-events: none;
-                    line-height: 1.2;
+            // Tooltip + state badges (sem labels permanentes — viraram busy)
+            const parts2 = [];
+            if (t.srcIdx !== i) parts2.push(`s${t.srcIdx}`);
+            if (t.rot)   parts2.push(`r${t.rot}`);
+            if (t.flipH) parts2.push('H');
+            if (t.flipV) parts2.push('V');
+            cell.title = `cr31 ${i}${parts2.length ? ' · ' + parts2.join(' ') : ''}`;
+            // Indicador minimalista no canto: número só se tiver override
+            const hasOverride = parts2.length > 0;
+            if (hasOverride) {
+                const dot = document.createElement('div');
+                dot.style.cssText = `
+                    position: absolute; top: 1px; right: 1px;
+                    width: 6px; height: 6px; border-radius: 50%;
+                    background: #ffcc44; box-shadow: 0 0 3px #ffcc44;
+                    pointer-events: none;
                 `;
-                cell.appendChild(stateLbl);
+                cell.appendChild(dot);
             }
             cell.addEventListener('mouseenter', () => cell.style.borderColor = '#88ddaa');
             cell.addEventListener('mouseleave', () => cell.style.borderColor = '#224433');

@@ -225,8 +225,12 @@ Object.assign(Jogo.prototype, {
             #debug-menu #tab-tiles { grid-template-columns:1.4fr 1fr 1fr; }
             #debug-menu .t-filter { grid-column:1 / -1; }
             #debug-menu .t-compare { grid-column:1; grid-row:span 3; }
-            #debug-menu #tiles-compare-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; }
-            #debug-menu #tiles-cell-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:2px; margin-top:3px; }
+            /* Compare All: stamps fixos 44px (auto-fill empacota o que cabe) */
+            #debug-menu #tiles-compare-grid { display:grid; grid-template-columns:repeat(auto-fill, 44px); gap:3px; justify-content:start; }
+            #debug-menu #tiles-compare-grid > div { width:44px !important; }
+            /* Cell editor: cells fixos 28px (4 cols compactas) */
+            #debug-menu #tiles-cell-grid { display:grid; grid-template-columns:repeat(4, 28px); gap:2px; margin-top:3px; justify-content:start; }
+            #debug-menu #tiles-cell-grid > div { width:28px !important; height:28px !important; }
             #debug-menu #tab-tiles fieldset { padding:4px 8px; margin:0; }
             #debug-menu #tab-tiles legend { font-size:9px; padding:0 4px; }
             #debug-menu #tab-tiles label { font-size:10px; margin:1px 0; }
