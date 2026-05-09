@@ -420,20 +420,9 @@ Object.assign(Jogo.prototype, {
                         <label><span>Wang tiles ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                         <label><span>Mostrar nº dos tiles (live)</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
                         <label><span>Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
-                        <label><span>Tile style</span>
-                            <select data-cfg="fx.tileStyle" style="flex:1;max-width:200px;min-width:130px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="test">Test palette</option>
-                                <option value="dirt_grass_32">Grass / Dirt (32)</option>
-                                <option value="ocean_sand_32">Ocean / Sand (32)</option>
-                                <option value="mapa1_ocean_dirt">Mapa 1: Ocean+Dirt</option>
-                                <option value="mapa1_ocean_grass">Mapa 1: Ocean+Grass</option>
-                                <option value="mapa1_sand_dirt">Mapa 1: Sand+Dirt</option>
-                                <option value="mapa1_sand_grass">Mapa 1: Sand+Grass</option>
-                                <option value="mapa2_ocean_dirt">Mapa 2: Ocean+Dirt seco</option>
-                                <option value="mapa2_ocean_grass">Mapa 2: Ocean+Grass seco</option>
-                                <option value="mapa2_sand_dirt">Mapa 2: Sand+Dirt seco</option>
-                                <option value="mapa2_sand_grass">Mapa 2: Sand+Grass seco</option>
-                            </select></label>
+                        <div style="margin:4px 0 2px 0; color:#aaffcc; font-size:11px;">Tile style</div>
+                        <div id="wang-style-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px;"></div>
+                        <div id="wang-style-label" style="font-size:10px;color:#558877;text-align:center;margin-top:2px;letter-spacing:0.5px;">—</div>
                     </fieldset>
                     <fieldset>
                         <legend>PROCEDURAL (sliders live)</legend>
@@ -594,6 +583,9 @@ Object.assign(Jogo.prototype, {
 
         // Applies i18n initial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
+
+        // Wang style grid (substitui dropdown) — populado dinamicamente
+        if (this._buildWangStyleGrid) this._buildWangStyleGrid();
 
         // MAP tab: bind do botao refresh + auto-fetch silencioso
         const refreshBtn = document.getElementById('map-refresh-list');

@@ -1000,6 +1000,134 @@ class Jogo extends Phaser.Scene {
         });
     }
 
+    // Wang style grid — substitui dropdown por row de thumbnails 4x4 mini-composite
+    // de cada tilestyle. Click = troca tileStyle + lazy-load se necessário +
+    // re-render terrain (em WANG_DEBUG) + atualiza highlight no grid.
+    _buildWangStyleGrid() {
+        const grid = document.getElementById('wang-style-grid');
+        const labelEl = document.getElementById('wang-style-label');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const STYLES = [
+            { key: 'test',              short: 'Test'  },
+            { key: 'dirt_grass_32',     short: 'D/G 32'},
+            { key: 'ocean_sand_32',     short: 'O/S 32'},
+            { key: 'mapa1_ocean_dirt',  short: 'M1 OD' },
+            { key: 'mapa1_ocean_grass', short: 'M1 OG' },
+            { key: 'mapa1_sand_dirt',   short: 'M1 SD' },
+            { key: 'mapa1_sand_grass',  short: 'M1 SG' },
+            { key: 'mapa2_ocean_dirt',  short: 'M2 OD' },
+            { key: 'mapa2_ocean_grass', short: 'M2 OG' },
+            { key: 'mapa2_sand_dirt',   short: 'M2 SD' },
+            { key: 'mapa2_sand_grass',  short: 'M2 SG' },
+        ];
+        const current = this.dbg?.fx?.tileStyle || 'dirt_grass_32';
+        if (labelEl) {
+            const cur = STYLES.find(s => s.key === current);
+            labelEl.textContent = cur ? `▸ ${cur.key}` : '—';
+        }
+        STYLES.forEach(({ key, short }) => {
+            const cell = document.createElement('div');
+            cell.dataset.style = key;
+            cell.style.cssText = `
+                position: relative; aspect-ratio: 1;
+                background: #001a08;
+                border: 2px solid ${key === current ? '#ffcc00' : '#224433'};
+                border-radius: 4px;
+                cursor: pointer;
+                overflow: hidden;
+                transition: border-color 0.15s, transform 0.1s;
+                ${key === current ? 'transform: scale(1.05); box-shadow: 0 0 6px rgba(255,204,0,0.5);' : ''}
+            `;
+            const label = document.createElement('div');
+            label.textContent = short;
+            label.style.cssText = `
+                position: absolute; bottom: 1px; left: 0; right: 0;
+                font-size: 8px; text-align: center; color: #aaffcc;
+                background: rgba(0,16,8,0.8); padding: 1px 0;
+                font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+                pointer-events: none;
+            `;
+            cell.appendChild(label);
+            // Renderiza thumbnail (composite 4x4 das tiles do style)
+            this._renderStyleThumbnail(cell, key);
+            // Hover effect (não substitui a borda do selecionado)
+            cell.addEventListener('mouseenter', () => {
+                if (key !== this.dbg?.fx?.tileStyle) cell.style.borderColor = '#88ddaa';
+            });
+            cell.addEventListener('mouseleave', () => {
+                if (key !== this.dbg?.fx?.tileStyle) cell.style.borderColor = '#224433';
+            });
+            cell.addEventListener('click', () => this._selectWangStyle(key));
+            grid.appendChild(cell);
+        });
+    }
+
+    _renderStyleThumbnail(cell, style) {
+        // Composite 4x4 com os 16 tiles do style. Para styles não-loaded
+        // mostra placeholder "?" + dispara load on click.
+        const firstKey = style === 'test' ? 'wang_15' : `wang_${style}_15`;
+        const isLoaded = this.textures.exists(firstKey);
+        if (!isLoaded) {
+            cell.style.background = '#001a08 url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><text x=%2224%22 y=%2230%22 font-family=%22monospace%22 font-size=%2222%22 fill=%22%23446655%22 text-anchor=%22middle%22>?</text></svg>") center/contain no-repeat';
+            return;
+        }
+        // Render composite via canvas
+        const SIZE = 64;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE; canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;  // pixel art
+        const cellPx = SIZE / 4;  // 4x4 grid
+        for (let i = 0; i < 16; i++) {
+            const f = String(i).padStart(2, '0');
+            const k = style === 'test' ? `wang_${f}` : `wang_${style}_${f}`;
+            const tex = this.textures.get(k);
+            const src = tex?.getSourceImage?.();
+            if (src && src.width) {
+                const col = i % 4, row = Math.floor(i / 4);
+                ctx.drawImage(src, col * cellPx, row * cellPx, cellPx, cellPx);
+            }
+        }
+        cell.style.background = `url(${canvas.toDataURL()}) center/cover #001a08`;
+        cell.style.imageRendering = 'pixelated';
+    }
+
+    _selectWangStyle(style) {
+        if (!this.dbg?.fx) return;
+        const prev = this.dbg.fx.tileStyle;
+        if (prev === style) return;   // já selecionado
+        this.dbg.fx.tileStyle = style;
+        if (this._saveDebugCfg) this._saveDebugCfg();
+
+        // Atualiza border + label imediatamente (UI feedback antes do load)
+        const grid = document.getElementById('wang-style-grid');
+        const labelEl = document.getElementById('wang-style-label');
+        if (grid) {
+            grid.querySelectorAll('[data-style]').forEach(c => {
+                const isSel = c.dataset.style === style;
+                c.style.borderColor = isSel ? '#ffcc00' : '#224433';
+                c.style.transform = isSel ? 'scale(1.05)' : 'scale(1)';
+                c.style.boxShadow = isSel ? '0 0 6px rgba(255,204,0,0.5)' : 'none';
+            });
+        }
+        if (labelEl) labelEl.textContent = `▸ ${style}`;
+
+        // Lazy-load + re-render
+        if (this._ensureWangStyleLoaded) {
+            this._ensureWangStyleLoaded(style, () => {
+                // Re-render thumbnail dessa cell agora que carregou
+                if (grid) {
+                    const cell = grid.querySelector(`[data-style="${style}"]`);
+                    if (cell) this._renderStyleThumbnail(cell, style);
+                }
+                if (this.WANG_DEBUG && this._scheduleWangLiveRender) {
+                    this._scheduleWangLiveRender();
+                }
+            });
+        }
+    }
+
     // Debounced live re-render — chamado por sliders Wang em 15_debug_menu.js.
     // 80ms cobre drag rápido sem re-render N vezes. Cada nova chamada reseta
     // o timer (clearTimeout).
