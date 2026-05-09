@@ -526,6 +526,13 @@ Object.assign(Jogo.prototype, {
                 if (section === 'fx' && key === 'wangDebug' && this._toggleWangDebug) {
                     this._toggleWangDebug();
                 }
+                // WANG_DEBUG mode: live re-render do terrain quando sliders Wang
+                // mudam (vertThreshold, vertCaPasses). Debounce 80ms evita
+                // re-render N vezes durante drag.
+                if (this.WANG_DEBUG && section === 'proc' &&
+                    (key === 'vertThreshold' || key === 'vertCaPasses' || key === 'autoSortTiles')) {
+                    this._scheduleWangLiveRender();
+                }
             });
         });
 
@@ -575,7 +582,12 @@ Object.assign(Jogo.prototype, {
                 // Wang style trocado live -> lazy-load se ainda nao carregado
                 // (preload só baixa o ativo + 'test', outros vem sob demanda)
                 if (section === 'fx' && key === 'tileStyle') {
-                    if (this._ensureWangStyleLoaded) this._ensureWangStyleLoaded(sel.value);
+                    if (this._ensureWangStyleLoaded) {
+                        this._ensureWangStyleLoaded(sel.value, () => {
+                            // WANG_DEBUG: re-render imediato após assets carregarem
+                            if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+                        });
+                    }
                 }
             });
         });
