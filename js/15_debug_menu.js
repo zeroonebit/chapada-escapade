@@ -211,8 +211,16 @@ Object.assign(Jogo.prototype, {
             #debug-menu { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
                 background:rgba(0,16,8,0.96); border:2px solid #00ff55; color:#aaffcc;
                 padding:14px 18px; font-family:'Courier New',monospace; font-size:12px;
-                z-index:9999; display:none; max-height:90vh; overflow-y:auto;
-                min-width:340px; max-width:520px; box-shadow:0 0 24px rgba(0,255,85,0.25); }
+                z-index:9999; display:none; max-height:80vh; overflow-y:auto;
+                min-width:600px; max-width:min(1100px, 92vw); box-shadow:0 0 24px rgba(0,255,85,0.25); }
+            /* Tab panels: 2-col grid layout (3-col em viewports largos) pra ficar
+               horizontal vs vertical. Notas e btn-rows spannam todas as colunas. */
+            #debug-menu .tab-panel { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; align-items:start; }
+            #debug-menu .tab-panel > .note { grid-column:1 / -1; }
+            #debug-menu .tab-panel > div[id^="tiles-"] { grid-column:1 / -1; }
+            @media (min-width:1180px) {
+                #debug-menu .tab-panel { grid-template-columns:1fr 1fr 1fr; }
+            }
             #debug-menu h2 { color:#00ff55; margin:0 0 8px 0; font-size:14px; letter-spacing:2px; }
             #debug-menu .tab-bar { display:flex; gap:3px; margin-bottom:10px; }
             #debug-menu .tab-btn { flex:1; background:#001a08; color:#558877;
@@ -233,7 +241,7 @@ Object.assign(Jogo.prototype, {
                 font-weight:bold; background:#001a08; border:1px solid #224433;
                 padding:2px 4px; font-family:inherit; font-size:11px; }
             #debug-menu input.val:focus { outline:1px solid #00ff55; }
-            #debug-menu .btn-row { display:flex; gap:6px; margin-top:10px; }
+            #debug-menu .btn-row { display:flex; gap:6px; margin-top:10px; max-width:600px; margin-left:auto; margin-right:auto; }
             #debug-menu button { flex:1; background:#00aa44; color:#001a08; border:none;
                 padding:7px 8px; font-family:inherit; font-weight:bold; cursor:pointer;
                 font-size:11px; letter-spacing:1px; }
