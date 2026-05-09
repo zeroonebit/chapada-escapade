@@ -711,17 +711,27 @@ class Jogo extends Phaser.Scene {
         // Pause handler (ESC abre menu)
         this._setupPause();
 
-        // Banner topo informando modo
-        const banner = this.add.text(this.scale.width/2, 14,
+        // Banner topo full-width — 5× maior e ancorado no topo da tela
+        const W_screen = this.scale.width;
+        const BANNER_H = 80;
+        const bannerBg = this.add.rectangle(W_screen / 2, 0, W_screen, BANNER_H, 0x0a0a0a, 0.94)
+            .setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999)
+            .setStrokeStyle(2, 0xffcc44, 0.6);
+        const banner = this.add.text(W_screen / 2, BANNER_H / 2,
             '🧪 WANG_DEBUG   ·   WASD/Arrows: scroll   ·   [ / ]: zoom   ·   R: regen   ·   ESC: configs', {
             fontFamily: '"Courier New", monospace',
-            fontSize: '20px',
+            fontSize: '32px',
             fill: '#ffcc44',
             fontStyle: 'bold',
-            stroke: '#000000', strokeThickness: 4,
-            backgroundColor: '#0a0a0a',
-            padding: { x: 18, y: 10 },
-        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999);
+            stroke: '#000000', strokeThickness: 5,
+        }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(10000);
+        // Resize handler: adapta width quando tela muda
+        this.scale.on('resize', () => {
+            const w = this.scale.width;
+            bannerBg.setSize(w, BANNER_H);
+            bannerBg.setPosition(w / 2, 0);
+            banner.setPosition(w / 2, BANNER_H / 2);
+        });
 
         // Atalho R: regenera o terrain (re-roll do CA + invalida sort cache)
         this.input.keyboard.on('keydown-R', () => {
