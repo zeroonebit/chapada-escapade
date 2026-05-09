@@ -706,10 +706,15 @@ class Jogo extends Phaser.Scene {
         this._setupPause();
 
         // Banner topo informando modo
-        const banner = this.add.text(this.scale.width/2, 18,
-            '🧪 WANG_DEBUG  ·  WASD/Arrows: scroll  ·  [/] zoom  ·  R: regen  ·  ESC: configs', {
-            fontSize: '13px', fill: '#ffaa44', fontStyle: 'bold',
-            backgroundColor: '#000000', padding: { x: 10, y: 5 },
+        const banner = this.add.text(this.scale.width/2, 14,
+            '🧪 WANG_DEBUG   ·   WASD/Arrows: scroll   ·   [ / ]: zoom   ·   R: regen   ·   ESC: configs', {
+            fontFamily: '"Courier New", monospace',
+            fontSize: '20px',
+            fill: '#ffcc44',
+            fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 4,
+            backgroundColor: '#0a0a0a',
+            padding: { x: 18, y: 10 },
         }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999);
 
         // Atalho R: regenera o terrain (re-roll do CA)
