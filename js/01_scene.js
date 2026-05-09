@@ -1144,14 +1144,20 @@ class Jogo extends Phaser.Scene {
         if (this._refreshActivePresetInfo) this._refreshActivePresetInfo();
         if (this._refreshCellEditor) this._refreshCellEditor();
 
-        // Lazy-load + re-render
+        // Lazy-load + re-render — chama callback após textures carregarem
         if (this._ensureWangStyleLoaded) {
             this._ensureWangStyleLoaded(style, () => {
-                // Re-render thumbnail dessa cell agora que carregou
+                // Re-render thumbnail no grid antigo (style picker)
                 if (grid) {
                     const cell = grid.querySelector(`[data-style="${style}"]`);
                     if (cell) this._renderStyleThumbnail(cell, style);
                 }
+                // Re-render Compare All (cards refletem novo active)
+                if (this._renderCompareGrid) this._renderCompareGrid();
+                // Re-render Cell Editor (PRESET cells agora têm tiles loaded)
+                if (this._refreshCellEditor) this._refreshCellEditor();
+                if (this._refreshActivePresetInfo) this._refreshActivePresetInfo();
+                // Wang_debug: re-render terrain
                 if (this.WANG_DEBUG && this._scheduleWangLiveRender) {
                     this._scheduleWangLiveRender();
                 }
@@ -1289,6 +1295,9 @@ class Jogo extends Phaser.Scene {
         const current = this.dbg?.fx?.tileStyle;
 
         const filtered = presets.filter(p => {
+            // Ground truth / cr31-native nunca aparece no Compare All
+            // (só dentro do REF cr31 do CELL EDITOR como referência).
+            if (p.cr31Native || p.biome === 'ref') return false;
             if (filter.biome === 'all') return true;
             return p.biome === filter.biome;
         });

@@ -456,7 +456,6 @@ Object.assign(Jogo.prototype, {
                             <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-verde" style="background:#001a08;color:#9fe89f;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">verde</button>
                             <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-seco" style="background:#001a08;color:#dfa6df;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">seco</button>
                             <button class="filter-chip" data-filter-type="biome" data-filter-val="costa" style="background:#001a08;color:#9fcfe8;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">costa</button>
-                            <button class="filter-chip" data-filter-type="biome" data-filter-val="ref" style="background:#001a08;color:#a89368;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">ref</button>
                         </div>
                     </fieldset>
 
