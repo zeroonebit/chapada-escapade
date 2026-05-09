@@ -211,8 +211,8 @@ Object.assign(Jogo.prototype, {
             #debug-menu { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
                 background:rgba(0,16,8,0.96); border:2px solid #00ff55; color:#aaffcc;
                 padding:14px 18px; font-family:'Courier New',monospace; font-size:12px;
-                z-index:9999; display:none; max-height:86vh; overflow-y:auto;
-                min-width:320px; max-width:380px; box-shadow:0 0 24px rgba(0,255,85,0.25); }
+                z-index:9999; display:none; max-height:90vh; overflow-y:auto;
+                min-width:340px; max-width:520px; box-shadow:0 0 24px rgba(0,255,85,0.25); }
             #debug-menu h2 { color:#00ff55; margin:0 0 8px 0; font-size:14px; letter-spacing:2px; }
             #debug-menu .tab-bar { display:flex; gap:3px; margin-bottom:10px; }
             #debug-menu .tab-btn { flex:1; background:#001a08; color:#558877;
@@ -437,6 +437,57 @@ Object.assign(Jogo.prototype, {
                     </fieldset>
                 </div>
 
+                <!-- ABA: TILES — wang tilesets + cell editor (PixaPro port) -->
+                <div class="tab-panel" id="tab-tiles" style="display:none">
+                    <div class="note">Tile management completo. Click no preset card pra trocar. Cell editor permite rotation/flip por tile.</div>
+
+                    <fieldset>
+                        <legend>BIOMA / SEASON FILTER</legend>
+                        <div id="tiles-filter" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;">
+                            <button class="filter-chip active" data-filter-type="biome" data-filter-val="all" style="background:#003311;color:#aaffcc;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">all</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-verde" style="background:#001a08;color:#9fe89f;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">verde</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-seco" style="background:#001a08;color:#dfa6df;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">seco</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="costa" style="background:#001a08;color:#9fcfe8;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">costa</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="ref" style="background:#001a08;color:#a89368;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">ref</button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>COMPARE ALL — TILESETS</legend>
+                        <div id="tiles-compare-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>ACTIVE PRESET INFO</legend>
+                        <div id="tiles-info-panel" style="font-size:10px;line-height:1.5;color:#aaffcc;">
+                            <div id="tiles-info-name" style="color:#ffcc44;font-weight:bold;font-size:12px;">—</div>
+                            <div id="tiles-info-meta" style="color:#88aa99;margin-top:2px;">—</div>
+                            <div id="tiles-info-desc" style="margin-top:4px;color:#aaffcc;">—</div>
+                            <div id="tiles-info-id" style="margin-top:4px;color:#446655;font-size:9px;font-family:monospace;">—</div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>CELL EDITOR (cr31 16 tiles)</legend>
+                        <div class="note" style="font-size:10px;">Click: rotate · Shift+click: flipH · Alt+click: flipV · Right-click: cycle srcIdx · Double-click: reset</div>
+                        <div id="tiles-cell-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:6px;"></div>
+                        <button id="tiles-reset-transforms" class="secondary" style="margin-top:6px;width:100%;background:#332211;color:#ffaa44;border:1px solid #553311;padding:4px;font-family:inherit;font-size:10px;cursor:pointer;">RESET ALL TRANSFORMS DESTE PRESET</button>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>PROCEDURAL (sliders live)</legend>
+                        <label><span>Vertex threshold</span>
+                            <input type="range" data-cfg="proc.vertThreshold" min="0.20" max="0.80" step="0.01">
+                            <input type="number" class="val" data-show="proc.vertThreshold" /></label>
+                        <label><span>CA passes (smoothing)</span>
+                            <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
+                            <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
+                        <label><span>Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
+                        <label><span>Wang tiles ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span>Mostrar nº dos tiles</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
+                    </fieldset>
+                </div>
+
                 <!-- ABA: DEBUG -->
                 <div class="tab-panel" id="tab-debug" style="display:none">
                     <div class="note" data-i18n="note_debug">Toggles aplicam live.</div>
@@ -589,6 +640,8 @@ Object.assign(Jogo.prototype, {
 
         // Wang style grid (substitui dropdown) — populado dinamicamente
         if (this._buildWangStyleGrid) this._buildWangStyleGrid();
+        // TILES tab: Compare All grid + cell editor + info panel
+        if (this._buildTilesTab) this._buildTilesTab();
 
         // MAP tab: bind do botao refresh + auto-fetch silencioso
         const refreshBtn = document.getElementById('map-refresh-list');

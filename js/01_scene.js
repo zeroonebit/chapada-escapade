@@ -1143,6 +1143,10 @@ class Jogo extends Phaser.Scene {
                 ? WANG_PRESETS.find(p => p.styleKey === style) : null;
             labelEl.textContent = preset ? `▸ ${preset.name}` : `▸ ${style}`;
         }
+        // Refresh TILES tab elements (compare grid border + info + cell editor)
+        if (this._renderCompareGrid) this._renderCompareGrid();
+        if (this._refreshActivePresetInfo) this._refreshActivePresetInfo();
+        if (this._refreshCellEditor) this._refreshCellEditor();
 
         // Lazy-load + re-render
         if (this._ensureWangStyleLoaded) {
@@ -1157,6 +1161,243 @@ class Jogo extends Phaser.Scene {
                 }
             });
         }
+    }
+
+    // ── TILES TAB (PixaPro port: Compare All + cell editor + info panel) ──
+    // Chamado uma vez no menu setup. Re-builda quando preset muda.
+    _buildTilesTab() {
+        if (!this._tilesFilter) this._tilesFilter = { biome: 'all' };
+        // Filter chip clicks
+        document.querySelectorAll('#tiles-filter .filter-chip').forEach(btn => {
+            if (btn._wired) return;
+            btn._wired = true;
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.filterType;
+                const val = btn.dataset.filterVal;
+                this._tilesFilter[type] = val;
+                document.querySelectorAll(`#tiles-filter .filter-chip[data-filter-type="${type}"]`)
+                    .forEach(b => {
+                        const isActive = b.dataset.filterVal === val;
+                        b.classList.toggle('active', isActive);
+                        b.style.background = isActive ? '#003311' : '#001a08';
+                    });
+                this._renderCompareGrid();
+            });
+        });
+        // Reset transforms button
+        const resetBtn = document.getElementById('tiles-reset-transforms');
+        if (resetBtn && !resetBtn._wired) {
+            resetBtn._wired = true;
+            resetBtn.addEventListener('click', () => {
+                const style = this.dbg?.fx?.tileStyle;
+                if (!style || typeof resetTileTransforms !== 'function') return;
+                if (!confirm(`Resetar todos os transforms do preset '${style}'?`)) return;
+                resetTileTransforms(style);
+                this._refreshCellEditor();
+                if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+                else this._scheduleSceneryRebuild && this._scheduleSceneryRebuild();
+            });
+        }
+        // Initial render
+        this._renderCompareGrid();
+        this._refreshActivePresetInfo();
+        this._refreshCellEditor();
+    }
+
+    _renderCompareGrid() {
+        const grid = document.getElementById('tiles-compare-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const presets = (typeof WANG_PRESETS !== 'undefined') ? WANG_PRESETS : [];
+        const filter = this._tilesFilter || { biome: 'all' };
+        const colors = (typeof WANG_BIOME_COLORS !== 'undefined') ? WANG_BIOME_COLORS : {};
+        const current = this.dbg?.fx?.tileStyle;
+
+        const filtered = presets.filter(p => {
+            if (filter.biome === 'all') return true;
+            return p.biome === filter.biome;
+        });
+
+        filtered.forEach(preset => {
+            const card = document.createElement('div');
+            const isActive = preset.styleKey === current;
+            const biomeColor = colors[preset.biome] || '#aaffcc';
+            card.dataset.style = preset.styleKey;
+            card.style.cssText = `
+                background: #1a1410;
+                border: 2px solid ${isActive ? '#ffcc44' : biomeColor};
+                border-radius: 5px;
+                padding: 5px;
+                cursor: pointer;
+                ${isActive ? 'box-shadow: 0 0 8px rgba(255,204,68,0.4);' : ''}
+            `;
+            // Thumbnail container
+            const thumb = document.createElement('div');
+            thumb.style.cssText = `
+                background: #001a08; border-radius: 3px; aspect-ratio: 1;
+                margin-bottom: 4px; image-rendering: pixelated;
+            `;
+            this._renderStyleThumbnail(thumb, preset.styleKey);
+            card.appendChild(thumb);
+            // Name (curto, 1 linha)
+            const name = document.createElement('div');
+            name.style.cssText = `
+                font-size: 9px; color: #aaffcc; line-height: 1.2;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            `;
+            name.textContent = preset.name.replace(/^\[[A-Z0-9 ]+\]\s*/, '');
+            card.appendChild(name);
+            // Biome chip
+            const chip = document.createElement('div');
+            chip.style.cssText = `
+                font-size: 8px; color: ${biomeColor}; margin-top: 2px;
+                font-style: italic;
+            `;
+            chip.textContent = `${preset.biome}${preset.tileSize ? ' · ' + preset.tileSize + 'px' : ''}`;
+            card.appendChild(chip);
+            card.addEventListener('click', () => {
+                this._selectWangStyle(preset.styleKey);
+                this._renderCompareGrid();
+                this._refreshActivePresetInfo();
+                this._refreshCellEditor();
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    _refreshActivePresetInfo() {
+        const style = this.dbg?.fx?.tileStyle;
+        const preset = (typeof getWangPresetByStyleKey === 'function')
+            ? getWangPresetByStyleKey(style) : null;
+        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+        if (!preset) {
+            set('tiles-info-name', '—');
+            set('tiles-info-meta', '—');
+            set('tiles-info-desc', '—');
+            set('tiles-info-id', '—');
+            return;
+        }
+        set('tiles-info-name', preset.name);
+        set('tiles-info-meta', `${preset.biome} · ${preset.season}${preset.tileSize ? ' · ' + preset.tileSize + 'px' : ''}`);
+        set('tiles-info-desc', preset.info || '—');
+        set('tiles-info-id', preset.id);
+    }
+
+    _refreshCellEditor() {
+        const grid = document.getElementById('tiles-cell-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const style = this.dbg?.fx?.tileStyle;
+        const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
+
+        for (let i = 0; i < 16; i++) {
+            const cell = document.createElement('div');
+            cell.dataset.cr31 = i;
+            const t = (typeof resolveTileTransform === 'function')
+                ? resolveTileTransform(style, i)
+                : { srcIdx: i, rot: 0, flipH: false, flipV: false };
+            const f = String(t.srcIdx).padStart(2, '0');
+            const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+            // Render via canvas pra aplicar rot/flip
+            const canvas = document.createElement('canvas');
+            canvas.width = 48; canvas.height = 48;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            const tex = this.textures.get(key);
+            const src = tex?.getSourceImage?.();
+            if (src && src.width) {
+                ctx.save();
+                ctx.translate(24, 24);
+                if (t.rot)   ctx.rotate(t.rot * Math.PI / 180);
+                if (t.flipH) ctx.scale(-1, 1);
+                if (t.flipV) ctx.scale(1, -1);
+                ctx.drawImage(src, -24, -24, 48, 48);
+                ctx.restore();
+            }
+            const dataUrl = canvas.toDataURL();
+            cell.style.cssText = `
+                position: relative; aspect-ratio: 1;
+                background: #001a08 url(${dataUrl}) center/contain no-repeat;
+                border: 1.5px solid #224433;
+                border-radius: 3px;
+                cursor: pointer;
+                image-rendering: pixelated;
+                transition: border-color 0.1s;
+            `;
+            // Indicators
+            const idxLbl = document.createElement('div');
+            idxLbl.textContent = i;
+            idxLbl.style.cssText = `
+                position: absolute; top: 1px; left: 2px;
+                font-size: 8px; color: #ffcc44;
+                text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+                pointer-events: none;
+            `;
+            cell.appendChild(idxLbl);
+            const stateLbl = document.createElement('div');
+            const parts = [];
+            if (t.srcIdx !== i) parts.push(`s${t.srcIdx}`);
+            if (t.rot)   parts.push(`r${t.rot}`);
+            if (t.flipH) parts.push('H');
+            if (t.flipV) parts.push('V');
+            if (parts.length) {
+                stateLbl.textContent = parts.join(' ');
+                stateLbl.style.cssText = `
+                    position: absolute; bottom: 0; left: 0; right: 0;
+                    font-size: 7px; color: #aaffcc;
+                    background: rgba(0,16,8,0.85); padding: 1px 0;
+                    text-align: center; pointer-events: none;
+                `;
+                cell.appendChild(stateLbl);
+            }
+            cell.addEventListener('mouseenter', () => cell.style.borderColor = '#88ddaa');
+            cell.addEventListener('mouseleave', () => cell.style.borderColor = '#224433');
+            cell.addEventListener('click', (e) => this._cellEditorClick(i, e));
+            cell.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this._cellEditorRightClick(i);
+            });
+            cell.addEventListener('dblclick', () => this._cellEditorReset(i));
+            grid.appendChild(cell);
+        }
+    }
+
+    _cellEditorClick(cr31Idx, e) {
+        const style = this.dbg?.fx?.tileStyle;
+        if (!style || typeof setTileTransform !== 'function') return;
+        const cur = resolveTileTransform(style, cr31Idx);
+        let next = { ...cur };
+        if (e.shiftKey) {
+            next.flipH = !cur.flipH;
+        } else if (e.altKey) {
+            next.flipV = !cur.flipV;
+        } else {
+            next.rot = (cur.rot + 90) % 360;
+        }
+        setTileTransform(style, cr31Idx, next);
+        this._refreshCellEditor();
+        if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+        else if (this._scheduleSceneryRebuild) this._scheduleSceneryRebuild();
+    }
+
+    _cellEditorRightClick(cr31Idx) {
+        const style = this.dbg?.fx?.tileStyle;
+        if (!style || typeof setTileTransform !== 'function') return;
+        const cur = resolveTileTransform(style, cr31Idx);
+        const nextSrc = (cur.srcIdx + 1) % 16;
+        setTileTransform(style, cr31Idx, { ...cur, srcIdx: nextSrc });
+        this._refreshCellEditor();
+        if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+        else if (this._scheduleSceneryRebuild) this._scheduleSceneryRebuild();
+    }
+
+    _cellEditorReset(cr31Idx) {
+        const style = this.dbg?.fx?.tileStyle;
+        if (!style || typeof setTileTransform !== 'function') return;
+        setTileTransform(style, cr31Idx, null);  // null clears override
+        this._refreshCellEditor();
+        if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+        else if (this._scheduleSceneryRebuild) this._scheduleSceneryRebuild();
     }
 
     // Debounced live re-render — chamado por sliders Wang em 15_debug_menu.js.
