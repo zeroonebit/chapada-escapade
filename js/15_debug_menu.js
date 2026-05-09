@@ -41,8 +41,8 @@ const MENU_I18N = {
         ufo:'NAVE', entities:'ENTIDADES', entities_onoff:'ENTIDADES (ON/OFF)',
         amounts:'QUANTIDADES (reiniciar)', scales:'ESCALAS', camera:'CÂMERA',
         time_of_day:'HORA DO DIA', weather:'CLIMA', rain:'CHUVA', fog:'NEBLINA',
-        note_live:'Aplicam ao vivo sem reiniciar.', note_visual:'Escalas aplicam ao reiniciar. Barrel aplica ao vivo.',
-        note_vfx:'Todos aplicam ao vivo.', note_debug:'Toggles aplicam ao reiniciar.',
+        note_live:'Aplicam ao vivo sem reiniciar.', note_visual:'Tudo aplica live.',
+        note_vfx:'Tudo live.', note_debug:'Toggles aplicam live.',
         btn_apply:'APLICAR + REINICIAR', btn_reset:'RESETAR', btn_preview:'👁 PRÉVIA (ao vivo)',
         input:'Controle', sensitivity:'Sensibilidade', ufo_rot:'Rotação do disco', beam_force:'Força do beam (atração)',
         vel_cows:'Velocidade vacas/bois', vel_farmer:'Velocidade fazendeiros', shooter_dmg:'Dano dos atiradores',
@@ -254,6 +254,7 @@ Object.assign(Jogo.prototype, {
                     <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
                     <button class="tab-btn" data-tab="map" data-i18n="map">MAP</button>
+                    <button class="tab-btn" data-tab="tiles">TILES</button>
                     <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
                 </div>
 
@@ -303,7 +304,7 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: LOOKS -->
                 <div class="tab-panel" id="tab-looks" style="display:none">
-                    <div class="note" data-i18n="note_visual">Escalas aplicam ao reiniciar. Barrel aplica live.</div>
+                    <div class="note" data-i18n="note_visual">Tudo aplica live.</div>
                     <fieldset>
                         <legend data-i18n="scales">ESCALAS</legend>
                         <label><span data-i18n="cow">Vaca</span>
@@ -405,7 +406,7 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: MAP -->
                 <div class="tab-panel" id="tab-map" style="display:none">
-                    <div class="note">Maps salvos no PixaPro + tweaks live. Aplica ao reiniciar.</div>
+                    <div class="note">Maps salvos no PixaPro + tweaks live.</div>
                     <fieldset>
                         <legend>MAP SELECTOR</legend>
                         <label><span>Map preset</span>
@@ -438,7 +439,7 @@ Object.assign(Jogo.prototype, {
 
                 <!-- ABA: DEBUG -->
                 <div class="tab-panel" id="tab-debug" style="display:none">
-                    <div class="note" data-i18n="note_debug">Toggles aplicam ao reiniciar.</div>
+                    <div class="note" data-i18n="note_debug">Toggles aplicam live.</div>
                     <fieldset>
                         <legend data-i18n="entities_onoff">ENTIDADES (ON/OFF)</legend>
                         <label><span data-i18n="cows_e">Vacas</span><input type="checkbox" data-cfg="enabled.cows"></label>
@@ -454,11 +455,10 @@ Object.assign(Jogo.prototype, {
                     <button id="dbg-preview" style="background:#003355;color:#aaffcc;" data-i18n="btn_preview">👁 PREVIEW (live)</button>
                 </div>
                 <div class="btn-row">
-                    <button id="dbg-apply" data-i18n="btn_apply">APPLY + RESTART</button>
                     <button id="dbg-reset" class="secondary" data-i18n="btn_reset">RESET</button>
                 </div>
                 <div style="text-align:center; margin-top:6px; font-size:10px; color:#446655;">
-                    ESC fecha • salvo em localStorage
+                    ✓ Tudo aplica live · ESC fecha · salvo em localStorage
                 </div>
             </div>
         `;
@@ -522,6 +522,8 @@ Object.assign(Jogo.prototype, {
                     (key === 'vertThreshold' || key === 'vertCaPasses' || key === 'autoSortTiles')) {
                     this._scheduleWangLiveRender();
                 }
+                // Live config dispatcher: scales/enabled/counts/proc
+                if (this._applyConfigLive) this._applyConfigLive(section, key, val);
             });
         });
 
@@ -544,6 +546,7 @@ Object.assign(Jogo.prototype, {
                 this._saveDebugCfg();
                 numInp.value = val.toFixed(2);
                 if (section === 'fx' && this._applyFXVisibility) this._applyFXVisibility();
+                if (this._applyConfigLive) this._applyConfigLive(section, key, val);
             };
             numInp.addEventListener('change', apply);  // confirma with Enter ou blur
             numInp.addEventListener('blur', apply);
@@ -658,10 +661,6 @@ Object.assign(Jogo.prototype, {
             });
         });
 
-        document.getElementById('dbg-apply').addEventListener('click', () => {
-            this._saveDebugCfg();
-            window.location.reload();
-        });
         document.getElementById('dbg-reset').addEventListener('click', () => {
             if (!confirm('Resetar todas as configs de debug?')) return;
             localStorage.removeItem(DBG_KEY);
@@ -742,6 +741,192 @@ Object.assign(Jogo.prototype, {
             console.warn('[MAP] load fail:', e);
             return null;
         }
+    },
+
+    // ── LIVE CONFIG DISPATCHER ───────────────────────────────────────
+    // Chamado por todo input handler do menu DEPOIS de _saveDebugCfg.
+    // Aplica a mudança em tempo real conforme a categoria.
+    //
+    // Categorias:
+    //   scale.* → resize entities existentes
+    //   enabled.* → spawn/despawn dinâmico
+    //   counts.* → reconcile contagem (dispara re-spawn se necessário)
+    //   proc.* → re-render scenery (em WANG_DEBUG já é live; no jogo: scene.restart)
+    //   behavior.* / fx.* → já tratados upstream (live nativo)
+    _applyConfigLive(section, key, val) {
+        if (this.WANG_DEBUG) {
+            // Em WANG_DEBUG, só proc.* importa (já handled em scheduleWangLiveRender)
+            return;
+        }
+        // Soft debounce pra changes em proc.* (evita scene.restart durante drag)
+        if (section === 'proc') {
+            this._scheduleSceneryRebuild();
+            return;
+        }
+        if (section === 'scale') {
+            this._applyScaleLive(key, val);
+            return;
+        }
+        if (section === 'enabled') {
+            this._applyEnabledLive(key, val);
+            return;
+        }
+        if (section === 'counts') {
+            this._applyCountsLive(key, val);
+            return;
+        }
+    },
+
+    // Aplica scale.X live em entities existentes
+    _applyScaleLive(key, val) {
+        if (key === 'cow' && this.cows) {
+            this.cows.forEach(v => {
+                if (!v?.scene || v.tipo === 'bull' || v.isBurger) return;
+                v.setDisplaySize(60 * val, 60 * val);
+            });
+        } else if (key === 'bull' && this.cows) {
+            this.cows.forEach(v => {
+                if (!v?.scene || v.tipo !== 'bull') return;
+                v.setDisplaySize(60 * val, 60 * val);
+            });
+        } else if (key === 'farmer' && this.farmers) {
+            this.farmers.forEach(f => {
+                if (!f?.scene) return;
+                f.setDisplaySize(60 * val, 60 * val);
+            });
+        } else if (key === 'ufo' && this.ufo?.scene) {
+            this.ufo.setDisplaySize(80 * val, 80 * val);
+        } else if (key === 'burger' && this.cows) {
+            this.cows.forEach(b => {
+                if (!b?.scene || !b.isBurger) return;
+                b.setDisplaySize(28 * val, 28 * val);
+            });
+        } else if (key === 'beam') {
+            // Beam radius: redesenha cone com novo radius
+            this.coneRadius = (40 * 5.55 / 2) * val;
+            if (this._desenharCone) this._desenharCone(this.coneRadius);
+        }
+    },
+
+    // Aplica enabled.X live (spawn/despawn dinâmico)
+    _applyEnabledLive(key, val) {
+        if (key === 'cows') {
+            if (val) {
+                if (!this.cows) this.cows = [];
+                if (this._spawnVacas) this._spawnVacas(this.dbg.counts?.cows || 30);
+            } else {
+                this._despawnByType('cow');
+            }
+        } else if (key === 'bulls') {
+            if (val) {
+                if (!this.cows) this.cows = [];
+                if (this._spawnVacas) this._spawnVacas(this.dbg.counts?.cows || 30);
+            } else {
+                this._despawnByType('bull');
+            }
+        } else if (key === 'farmers') {
+            if (val) {
+                if (!this.farmers) this.farmers = [];
+                if (this._spawnFarmers) this._spawnFarmers(this.dbg.counts?.farmers || 6);
+            } else {
+                this._despawnByType('farmer');
+            }
+        } else if (key === 'shooters') {
+            if (val) {
+                if (this._setupShooters) this._setupShooters();
+            } else {
+                this._despawnByType('shooter');
+            }
+        } else if (key === 'beam') {
+            if (this.lightCone) this.lightCone.setAlpha(val ? 1 : 0);
+        } else if (key === 'scenery') {
+            this._scheduleSceneryRebuild();
+        }
+    },
+
+    // Despawna por tipo
+    _despawnByType(type) {
+        if (type === 'cow' || type === 'bull') {
+            if (!this.cows) return;
+            this.cows = this.cows.filter(v => {
+                if (!v?.scene) return false;
+                if (type === 'cow' && v.tipo !== 'bull' && !v.isBurger) {
+                    if (this._destroyCow) this._destroyCow(v); else v.destroy();
+                    return false;
+                }
+                if (type === 'bull' && v.tipo === 'bull') {
+                    if (this._destroyCow) this._destroyCow(v); else v.destroy();
+                    return false;
+                }
+                return true;
+            });
+        } else if (type === 'farmer') {
+            if (!this.farmers) return;
+            this.farmers.forEach(f => {
+                if (f?.scene) {
+                    if (this._destroyCow) this._destroyCow(f); else f.destroy();
+                }
+            });
+            this.farmers = [];
+        } else if (type === 'shooter') {
+            if (!this.shooters) return;
+            this.shooters.forEach(s => {
+                if (s?.scene) s.destroy();
+            });
+            this.shooters = [];
+            if (this.bullets) {
+                this.bullets.forEach(b => b?.scene && b.destroy());
+                this.bullets = [];
+            }
+        }
+    },
+
+    // Aplica counts.X live (ajusta contagem por spawn/despawn)
+    _applyCountsLive(key, val) {
+        const target = Math.max(0, parseInt(val, 10) || 0);
+        if (key === 'cows') {
+            if (!this.cows) this.cows = [];
+            const live = this.cows.filter(v => v?.scene && !v.isBurger);
+            const diff = target - live.length;
+            if (diff > 0 && this._spawnVacas) this._spawnVacas(diff);
+            else if (diff < 0) {
+                // Remove o excedente
+                let toRemove = -diff;
+                for (const v of live) {
+                    if (toRemove <= 0) break;
+                    if (this._destroyCow) this._destroyCow(v); else v.destroy();
+                    toRemove--;
+                }
+                this.cows = this.cows.filter(v => v?.scene);
+            }
+        } else if (key === 'farmers') {
+            if (!this.farmers) this.farmers = [];
+            const live = this.farmers.filter(f => f?.scene);
+            const diff = target - live.length;
+            if (diff > 0 && this._spawnFarmers) this._spawnFarmers(diff);
+            else if (diff < 0) {
+                let toRemove = -diff;
+                for (const f of live) {
+                    if (toRemove <= 0) break;
+                    if (this._destroyCow) this._destroyCow(f); else f.destroy();
+                    toRemove--;
+                }
+                this.farmers = this.farmers.filter(f => f?.scene);
+            }
+        }
+    },
+
+    // Schedule scenery rebuild (debounce 200ms — evita restart em drag de slider).
+    // No jogo normal, chama scene.restart() (preserva localStorage). Em WANG_DEBUG,
+    // já é tratado em _scheduleWangLiveRender.
+    _scheduleSceneryRebuild() {
+        if (this.WANG_DEBUG) return;  // wang_debug tem path próprio
+        if (this._sceneryRebuildTimer) clearTimeout(this._sceneryRebuildTimer);
+        this._sceneryRebuildTimer = setTimeout(() => {
+            this._sceneryRebuildTimer = null;
+            // scene.restart() preserva localStorage e recria tudo com novas configs
+            if (this.scene && this.scene.restart) this.scene.restart();
+        }, 250);
     }
 
 });

@@ -939,14 +939,16 @@ class Jogo extends Phaser.Scene {
             filterAppliedKeys.add(key);
         };
 
-        // CR31 ↔ PixelLab permutation (descoberto via Ground Truth no PixaPro).
-        // Aplica a presets sem cr31Native flag. WANG_PRESETS carregado via
-        // wang_presets.js (top-level const visível como global).
-        const CR31_PERM = (typeof CR31_TO_PIXELLAB !== 'undefined')
-            ? CR31_TO_PIXELLAB : [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
-        const preset = (typeof getWangPresetByStyleKey === 'function')
-            ? getWangPresetByStyleKey(style) : null;
-        const isPixelLabStyle = useStyle && !(preset && preset.cr31Native) && style !== 'test';
+        // Transform resolution (PixaPro-style): srcIdx + rot + flipH/V por cr31Idx.
+        // Lê WANG_TRANSFORMS_KEY do localStorage; fallback: CR31_TO_PIXELLAB
+        // pra PixelLab styles, identidade pra cr31Native.
+        const styleKey = useStyle ? style : 'test';
+        const resolveT = (typeof resolveTileTransform === 'function')
+            ? (i) => resolveTileTransform(styleKey, i)
+            : (i) => ({ srcIdx: i, rot: 0, flipH: false, flipV: false });
+        // Pre-resolve os 16 transforms (uma vez, cacheia)
+        const tileT = [];
+        for (let i = 0; i < 16; i++) tileT.push(resolveT(i));
 
         this._wangIndices = [];
         for (let y = 0; y < ROWS; y++) {
@@ -956,20 +958,18 @@ class Jogo extends Phaser.Scene {
                 const sw = corners[y+1][x],   se = corners[y+1][x+1];
                 const idx = nw + ne*2 + se*4 + sw*8;   // cr31
                 this._wangIndices[y][x] = idx;
-                // PixelLab styles: aplica permutation hardcoded (PixaPro ground truth).
-                // Custom remap (color-sampling) tem precedência se existir.
-                let srcIdx;
-                if (remap) srcIdx = remap[idx];
-                else if (isPixelLabStyle) srcIdx = CR31_PERM[idx];
-                else srcIdx = idx;
+                const t = tileT[idx];
+                // Custom remap (color-sampling) ainda tem precedência se existir
+                const srcIdx = remap ? remap[idx] : t.srcIdx;
                 const f = String(srcIdx).padStart(2, '0');
                 const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                 ensureFilter(key);
-                // 2px overlap cobre micro-gaps em zooms patológicos. Com
-                // pixelArt:true global + NEAREST filter + roundPixels camera,
-                // o overlap só serve pra fechar o último resíduo.
+                // 2px overlap + transforms (rotation + flip)
                 const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                     .setDisplaySize(CELL + 2, CELL + 2).setDepth(0);
+                if (t.rot)   img.setAngle(t.rot);
+                if (t.flipH) img.setFlipX(true);
+                if (t.flipV) img.setFlipY(true);
                 this._wangTileImages.push(img);
             }
         }
