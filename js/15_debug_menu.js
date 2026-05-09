@@ -474,6 +474,7 @@ Object.assign(Jogo.prototype, {
                         <legend>CELL EDITOR</legend>
                         <div class="note" style="font-size:9px;margin:0 0 3px 0;">Click rot · Shift flipH · Alt flipV · Right cycle src · Dbl reset</div>
                         <div id="tiles-cell-grid"></div>
+                        <button id="tiles-auto-sort" style="margin-top:4px;width:100%;background:#003311;color:#aaffcc;border:1px solid #00aa44;padding:4px;font-family:inherit;font-size:10px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔍 AUTO-SORT (color sample)</button>
                         <button id="tiles-reset-transforms" class="secondary" style="margin-top:4px;width:100%;background:#332211;color:#ffaa44;border:1px solid #553311;padding:3px;font-family:inherit;font-size:9px;cursor:pointer;">RESET TRANSFORMS</button>
                     </fieldset>
 
