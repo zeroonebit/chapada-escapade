@@ -681,6 +681,12 @@ class Jogo extends Phaser.Scene {
 
         this._loadDebugCfg();
 
+        // WANG_DEBUG: força autoSortTiles ON (override localStorage de sessões
+        // antigas que possam ter ficado false). PixelLab tilesets vêm com
+        // convenção de cantos diferente (NW=8 NE=4 SW=2 SE=1) vs cr31 nosso
+        // (NW=1 NE=2 SE=4 SW=8). Auto-sort por color sampling resolve.
+        if (this.dbg?.proc) this.dbg.proc.autoSortTiles = true;
+
         // Background preto pra contraste com tiles
         this.cameras.main.setBackgroundColor('#000000');
 
@@ -717,8 +723,11 @@ class Jogo extends Phaser.Scene {
             padding: { x: 18, y: 10 },
         }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999);
 
-        // Atalho R: regenera o terrain (re-roll do CA)
+        // Atalho R: regenera o terrain (re-roll do CA + invalida sort cache)
         this.input.keyboard.on('keydown-R', () => {
+            // Clear remap cache pra re-sort do style atual com textures frescas
+            const style = this.dbg?.fx?.tileStyle;
+            if (style && this._wangRemap) delete this._wangRemap[style];
             this._renderWangOnly(W, H);
         });
 
@@ -1104,6 +1113,13 @@ class Jogo extends Phaser.Scene {
         if (prev === style) return;   // já selecionado
         this.dbg.fx.tileStyle = style;
         if (this._saveDebugCfg) this._saveDebugCfg();
+        // Invalida cache de auto-sort do style anterior — força re-classificação
+        // (textures podem ter sido carregadas após a primeira sort, dando
+        // amostras incorretas se canvas estava vazio na hora)
+        if (this._wangRemap) {
+            delete this._wangRemap[prev];
+            delete this._wangRemap[style];
+        }
 
         // Atualiza border + label imediatamente (UI feedback antes do load)
         const grid = document.getElementById('wang-style-grid');
