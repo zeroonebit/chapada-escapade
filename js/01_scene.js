@@ -731,8 +731,9 @@ class Jogo extends Phaser.Scene {
             this._renderWangOnly(W, H);
         });
 
-        // Tile preview gallery (DOM panel bottom-right) com seleção
-        this._buildWangTilePreview();
+        // Floating WANG TILES panel removido — redundante com REF cr31
+        // dentro do CELL EDITOR no menu CONFIGS → TILES. Estado de seleção
+        // (cell highlight) deprecated: agora usa Compare All grid no menu.
 
         console.log('[WANG_DEBUG] Pure terrain mode active. Use ESC pra menu.');
     }
@@ -976,23 +977,8 @@ class Jogo extends Phaser.Scene {
         // Re-render overlay se debug nº dos tiles tava on
         if (this.dbg?.fx?.wangDebug && this._renderWangDebug) this._renderWangDebug();
 
-        // Reset preview seleção: tiles novos não têm tint, então só zerar state
-        // e re-build painel se style mudou (thumbnails refletem o style atual)
-        if (this._wangPreviewPanel) {
-            const currentStyle = this.dbg?.fx?.tileStyle;
-            if (this._wangPreviewLastStyle !== currentStyle) {
-                this._wangPreviewLastStyle = currentStyle;
-                this._buildWangTilePreview();
-            }
-            this._wangPreviewSelected = null;
-            if (this._wangPreviewCells) {
-                this._wangPreviewCells.forEach(c => {
-                    c.style.borderColor = '#224433';
-                    c.style.transform = 'scale(1)';
-                    c.style.boxShadow = 'none';
-                });
-            }
-        }
+        // Refresh REF cr31 (cells reusam canvas quando tile style muda)
+        if (this._buildRefGrid) this._buildRefGrid();
     }
 
     _setupWangDebugCamera() {
@@ -1239,8 +1225,9 @@ class Jogo extends Phaser.Scene {
     }
 
     // Ground truth reference grid (test palette, cr31-native).
-    // Mostra os 16 tiles de referência com seus cr31 idx, pra comparar
-    // visualmente com o preset ativo. Sempre usa wang_NN (test palette).
+    // Renderiza cada tile via canvas → toDataURL pra evitar problemas com
+    // blob: URLs do Phaser (CSS background:url(blob:) às vezes falha por
+    // timing/CORS). Mesmo padrão usado em _renderStyleThumbnail.
     _buildRefGrid() {
         const grid = document.getElementById('tiles-ref-grid');
         if (!grid) return;
@@ -1249,19 +1236,25 @@ class Jogo extends Phaser.Scene {
             const f = String(i).padStart(2, '0');
             const key = `wang_${f}`;
             const cell = document.createElement('div');
+            // Render tile via canvas (HTMLImageElement.src = blob: URL falha
+            // no CSS background; canvas.toDataURL é base64 estável)
+            const SIZE = 32;
+            const canvas = document.createElement('canvas');
+            canvas.width = SIZE; canvas.height = SIZE;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            const tex = this.textures.get(key);
+            const src = tex?.getSourceImage?.();
+            if (src && src.width) {
+                ctx.drawImage(src, 0, 0, SIZE, SIZE);
+            }
             cell.style.cssText = `
                 position: relative;
-                background: #001a08;
+                background: #001a08 url(${canvas.toDataURL()}) center/contain no-repeat;
                 border: 1px solid #335544;
                 border-radius: 2px;
                 image-rendering: pixelated;
             `;
-            const tex = this.textures.get(key);
-            const src = tex?.getSourceImage?.();
-            if (src && (src.toDataURL || src.src)) {
-                const url = src.toDataURL ? src.toDataURL() : src.src;
-                cell.style.background = `#001a08 url(${url}) center/contain no-repeat`;
-            }
             const lbl = document.createElement('div');
             lbl.textContent = i;
             lbl.style.cssText = `
