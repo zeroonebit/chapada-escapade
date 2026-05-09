@@ -210,17 +210,27 @@ Object.assign(Jogo.prototype, {
         const css = `
             #debug-menu { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
                 background:rgba(0,16,8,0.96); border:2px solid #00ff55; color:#aaffcc;
-                padding:14px 18px; font-family:'Courier New',monospace; font-size:12px;
-                z-index:9999; display:none; max-height:80vh; overflow-y:auto;
-                min-width:600px; max-width:min(1100px, 92vw); box-shadow:0 0 24px rgba(0,255,85,0.25); }
-            /* Tab panels: 2-col grid layout (3-col em viewports largos) pra ficar
-               horizontal vs vertical. Notas e btn-rows spannam todas as colunas. */
-            #debug-menu .tab-panel { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; align-items:start; }
+                padding:12px 16px; font-family:'Courier New',monospace; font-size:11px;
+                z-index:9999; display:none; max-height:78vh; overflow-y:auto;
+                min-width:760px; max-width:min(1400px, 95vw); box-shadow:0 0 24px rgba(0,255,85,0.25); }
+            /* Tab panels: 3-col grid default (4-col em telas largas). Layout
+               landscape-first: fieldsets side-by-side, scroll vertical mínimo. */
+            #debug-menu .tab-panel { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px 12px; align-items:start; }
             #debug-menu .tab-panel > .note { grid-column:1 / -1; }
-            #debug-menu .tab-panel > div[id^="tiles-"] { grid-column:1 / -1; }
-            @media (min-width:1180px) {
-                #debug-menu .tab-panel { grid-template-columns:1fr 1fr 1fr; }
+            @media (min-width:1280px) {
+                #debug-menu .tab-panel { grid-template-columns:repeat(4, 1fr); }
             }
+            /* TILES tab: layout específico landscape — Compare All à esquerda,
+               outros à direita stackados. */
+            #debug-menu #tab-tiles { grid-template-columns:1.4fr 1fr 1fr; }
+            #debug-menu .t-filter { grid-column:1 / -1; }
+            #debug-menu .t-compare { grid-column:1; grid-row:span 3; }
+            #debug-menu #tiles-compare-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; }
+            #debug-menu #tiles-cell-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:2px; margin-top:3px; }
+            #debug-menu #tab-tiles fieldset { padding:4px 8px; margin:0; }
+            #debug-menu #tab-tiles legend { font-size:9px; padding:0 4px; }
+            #debug-menu #tab-tiles label { font-size:10px; margin:1px 0; }
+            #debug-menu #tab-tiles label span { font-size:10px; }
             #debug-menu h2 { color:#00ff55; margin:0 0 8px 0; font-size:14px; letter-spacing:2px; }
             #debug-menu .tab-bar { display:flex; gap:3px; margin-bottom:10px; }
             #debug-menu .tab-btn { flex:1; background:#001a08; color:#558877;
@@ -412,87 +422,68 @@ Object.assign(Jogo.prototype, {
                     </fieldset>
                 </div>
 
-                <!-- ABA: MAP -->
+                <!-- ABA: MAP — apenas seletor de preset (wang tiles + procedural ficam em TILES) -->
                 <div class="tab-panel" id="tab-map" style="display:none">
-                    <div class="note">Maps salvos no PixaPro + tweaks live.</div>
+                    <div class="note">Maps salvos no PixaPro. Tile config completo em → TILES.</div>
                     <fieldset>
                         <legend>MAP SELECTOR</legend>
-                        <label><span>Map preset</span>
+                        <label><span>Preset</span>
                             <select id="map-preset-select" data-cfg="proc.activeMap" style="flex:1;max-width:240px;min-width:180px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
-                                <option value="">— procedural live (use sliders abaixo) —</option>
+                                <option value="">— procedural live —</option>
                             </select></label>
-                        <button type="button" id="map-refresh-list" style="padding:3px 8px;font-size:10px;margin-left:6px;">↻ Refresh from PixaPro</button>
+                        <button type="button" id="map-refresh-list" style="padding:3px 8px;font-size:10px;margin-top:4px;">↻ Refresh from PixaPro</button>
                         <div id="map-status" style="font-size:10px;opacity:0.6;margin-top:4px;">PixaPro server em http://localhost:8090</div>
-                    </fieldset>
-                    <fieldset>
-                        <legend>WANG TILES</legend>
-                        <label><span>Wang tiles ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
-                        <label><span>Mostrar nº dos tiles (live)</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
-                        <label><span>Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
-                        <div style="margin:4px 0 2px 0; color:#aaffcc; font-size:11px;">Tile style</div>
-                        <div id="wang-style-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px;"></div>
-                        <div id="wang-style-label" style="font-size:10px;color:#558877;text-align:center;margin-top:2px;letter-spacing:0.5px;">—</div>
-                    </fieldset>
-                    <fieldset>
-                        <legend>PROCEDURAL (sliders live)</legend>
-                        <div class="note">Ignorados se um map preset for selecionado acima.</div>
-                        <label><span>Vertex threshold</span>
-                            <input type="range" data-cfg="proc.vertThreshold" min="0.20" max="0.80" step="0.01">
-                            <input type="number" class="val" data-show="proc.vertThreshold" /></label>
-                        <label><span>CA passes (smoothing)</span>
-                            <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
-                            <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
                     </fieldset>
                 </div>
 
                 <!-- ABA: TILES — wang tilesets + cell editor (PixaPro port) -->
                 <div class="tab-panel" id="tab-tiles" style="display:none">
-                    <div class="note">Tile management completo. Click no preset card pra trocar. Cell editor permite rotation/flip por tile.</div>
+                    <div class="note">Click preset card → troca live. Cell editor: rotate/flip por tile.</div>
 
-                    <fieldset>
-                        <legend>BIOMA / SEASON FILTER</legend>
-                        <div id="tiles-filter" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;">
-                            <button class="filter-chip active" data-filter-type="biome" data-filter-val="all" style="background:#003311;color:#aaffcc;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">all</button>
-                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-verde" style="background:#001a08;color:#9fe89f;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">verde</button>
-                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-seco" style="background:#001a08;color:#dfa6df;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">seco</button>
-                            <button class="filter-chip" data-filter-type="biome" data-filter-val="costa" style="background:#001a08;color:#9fcfe8;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">costa</button>
-                            <button class="filter-chip" data-filter-type="biome" data-filter-val="ref" style="background:#001a08;color:#a89368;border:1px solid #224433;padding:3px 8px;border-radius:10px;cursor:pointer;font-family:inherit;">ref</button>
+                    <fieldset class="t-filter">
+                        <legend>FILTER</legend>
+                        <div id="tiles-filter" style="display:flex;flex-wrap:wrap;gap:3px;font-size:10px;">
+                            <button class="filter-chip active" data-filter-type="biome" data-filter-val="all" style="background:#003311;color:#aaffcc;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">all</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-verde" style="background:#001a08;color:#9fe89f;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">verde</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="cerrado-seco" style="background:#001a08;color:#dfa6df;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">seco</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="costa" style="background:#001a08;color:#9fcfe8;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">costa</button>
+                            <button class="filter-chip" data-filter-type="biome" data-filter-val="ref" style="background:#001a08;color:#a89368;border:1px solid #224433;padding:2px 6px;border-radius:8px;cursor:pointer;font-family:inherit;">ref</button>
                         </div>
                     </fieldset>
 
-                    <fieldset>
-                        <legend>COMPARE ALL — TILESETS</legend>
-                        <div id="tiles-compare-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+                    <fieldset class="t-compare">
+                        <legend>COMPARE ALL</legend>
+                        <div id="tiles-compare-grid"></div>
                     </fieldset>
 
-                    <fieldset>
-                        <legend>ACTIVE PRESET INFO</legend>
-                        <div id="tiles-info-panel" style="font-size:10px;line-height:1.5;color:#aaffcc;">
-                            <div id="tiles-info-name" style="color:#ffcc44;font-weight:bold;font-size:12px;">—</div>
+                    <fieldset class="t-info">
+                        <legend>INFO</legend>
+                        <div id="tiles-info-panel" style="font-size:9px;line-height:1.4;color:#aaffcc;">
+                            <div id="tiles-info-name" style="color:#ffcc44;font-weight:bold;font-size:11px;">—</div>
                             <div id="tiles-info-meta" style="color:#88aa99;margin-top:2px;">—</div>
-                            <div id="tiles-info-desc" style="margin-top:4px;color:#aaffcc;">—</div>
-                            <div id="tiles-info-id" style="margin-top:4px;color:#446655;font-size:9px;font-family:monospace;">—</div>
+                            <div id="tiles-info-desc" style="margin-top:3px;color:#aaffcc;">—</div>
+                            <div id="tiles-info-id" style="margin-top:3px;color:#446655;font-size:8px;font-family:monospace;word-break:break-all;">—</div>
                         </div>
                     </fieldset>
 
-                    <fieldset>
-                        <legend>CELL EDITOR (cr31 16 tiles)</legend>
-                        <div class="note" style="font-size:10px;">Click: rotate · Shift+click: flipH · Alt+click: flipV · Right-click: cycle srcIdx · Double-click: reset</div>
-                        <div id="tiles-cell-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:6px;"></div>
-                        <button id="tiles-reset-transforms" class="secondary" style="margin-top:6px;width:100%;background:#332211;color:#ffaa44;border:1px solid #553311;padding:4px;font-family:inherit;font-size:10px;cursor:pointer;">RESET ALL TRANSFORMS DESTE PRESET</button>
+                    <fieldset class="t-cell">
+                        <legend>CELL EDITOR</legend>
+                        <div class="note" style="font-size:9px;margin:0 0 3px 0;">Click rot · Shift flipH · Alt flipV · Right cycle src · Dbl reset</div>
+                        <div id="tiles-cell-grid"></div>
+                        <button id="tiles-reset-transforms" class="secondary" style="margin-top:4px;width:100%;background:#332211;color:#ffaa44;border:1px solid #553311;padding:3px;font-family:inherit;font-size:9px;cursor:pointer;">RESET TRANSFORMS</button>
                     </fieldset>
 
-                    <fieldset>
-                        <legend>PROCEDURAL (sliders live)</legend>
-                        <label><span>Vertex threshold</span>
+                    <fieldset class="t-proc">
+                        <legend>PROCEDURAL</legend>
+                        <label><span>Threshold</span>
                             <input type="range" data-cfg="proc.vertThreshold" min="0.20" max="0.80" step="0.01">
                             <input type="number" class="val" data-show="proc.vertThreshold" /></label>
-                        <label><span>CA passes (smoothing)</span>
+                        <label><span>CA passes</span>
                             <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
                             <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
-                        <label><span>Auto-sort tiles (color sampling)</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
-                        <label><span>Wang tiles ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
-                        <label><span>Mostrar nº dos tiles</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
+                        <label><span>Auto-sort</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
+                        <label><span>Wang ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
+                        <label><span>Mostrar nº</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
                     </fieldset>
                 </div>
 
