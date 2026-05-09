@@ -1198,6 +1198,39 @@ class Jogo extends Phaser.Scene {
                 else this._scheduleSceneryRebuild && this._scheduleSceneryRebuild();
             });
         }
+        // Auto-sort button — força re-classificação por color sampling
+        const sortBtn = document.getElementById('tiles-auto-sort');
+        if (sortBtn && !sortBtn._wired) {
+            sortBtn._wired = true;
+            sortBtn.addEventListener('click', () => {
+                const style = this.dbg?.fx?.tileStyle;
+                if (!style || !this._autoSortWangTiles) return;
+                // Limpa cache + transforms anteriores pra re-sort fresh
+                if (this._wangRemap) delete this._wangRemap[style];
+                if (typeof resetTileTransforms === 'function') resetTileTransforms(style);
+                // Roda sort
+                const remap = this._autoSortWangTiles(style);
+                if (!remap) {
+                    sortBtn.textContent = '⚠ falha (ver console)';
+                    setTimeout(() => sortBtn.textContent = '🔍 AUTO-SORT (color sample)', 2000);
+                    return;
+                }
+                // Aplica resultado como transforms persistidos (override CR31_TO_PIXELLAB)
+                if (typeof setTileTransform === 'function') {
+                    for (let i = 0; i < 16; i++) {
+                        if (remap[i] !== i) {
+                            setTileTransform(style, i, { srcIdx: remap[i], rot: 0, flipH: false, flipV: false });
+                        }
+                    }
+                }
+                const moved = remap.reduce((acc, v, i) => acc + (v !== i ? 1 : 0), 0);
+                sortBtn.textContent = `✓ ${moved} tiles remapeados`;
+                setTimeout(() => sortBtn.textContent = '🔍 AUTO-SORT (color sample)', 2500);
+                this._refreshCellEditor();
+                if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+                else this._scheduleSceneryRebuild && this._scheduleSceneryRebuild();
+            });
+        }
         // Initial render
         this._renderCompareGrid();
         this._refreshActivePresetInfo();

@@ -499,50 +499,98 @@ Object.assign(Jogo.prototype, {
     _autoSortWangTiles(style) {
         if (!this._wangRemap) this._wangRemap = {};
         if (this._wangRemap[style]) return this._wangRemap[style];
-        // Carrega texture 00 (all-lower) e 15 (all-upper) pra ref de cor
+
+        // Sample 4 corners de cada tile via 3×3 region averaging (PixaPro algorithm).
+        // Single getImageData por tile (full image), depois indexa pixels do buffer
+        // — ~50× mais rápido que getImageData per-pixel.
         const sampleCorners = (idx) => {
             const f = String(idx).padStart(2, '0');
             const tex = this.textures.get(`wang_${style}_${f}`);
             if (!tex || !tex.source || !tex.source[0]) return null;
             const src = tex.source[0].image;
-            if (!src) return null;
+            if (!src || !src.width) return null;
+            const w = src.width, h = src.height;
             const cv = document.createElement('canvas');
-            cv.width = src.width; cv.height = src.height;
+            cv.width = w; cv.height = h;
             const ctx = cv.getContext('2d');
             ctx.drawImage(src, 0, 0);
-            const m = Math.max(1, Math.floor(src.width * 0.10));  // 10% de margem
-            const px = (x, y) => {
-                const d = ctx.getImageData(x, y, 1, 1).data;
-                return [d[0], d[1], d[2]];
+            let buf;
+            try { buf = ctx.getImageData(0, 0, w, h).data; }
+            catch(e) { console.warn('[WANG SORT] getImageData fail (CORS?):', e); return null; }
+            const margin = Math.max(1, Math.floor(w * 0.08));   // 8% (vs 10% antes — match PixaPro)
+            // Average 3×3 region centrada em (cx, cy) pra robustez vs noise
+            const sampleRegion = (cx, cy) => {
+                let r=0, g=0, b=0, n=0;
+                for (let dy=-1; dy<=1; dy++) {
+                    for (let dx=-1; dx<=1; dx++) {
+                        const x = Math.max(0, Math.min(w-1, cx+dx));
+                        const y = Math.max(0, Math.min(h-1, cy+dy));
+                        const i = (y * w + x) * 4;
+                        r += buf[i]; g += buf[i+1]; b += buf[i+2]; n++;
+                    }
+                }
+                return [r/n, g/n, b/n];
             };
             return {
-                NW: px(m, m),
-                NE: px(src.width - 1 - m, m),
-                SE: px(src.width - 1 - m, src.height - 1 - m),
-                SW: px(m, src.height - 1 - m),
+                NW: sampleRegion(margin, margin),
+                NE: sampleRegion(w - 1 - margin, margin),
+                SE: sampleRegion(w - 1 - margin, h - 1 - margin),
+                SW: sampleRegion(margin, h - 1 - margin),
             };
         };
-        // Amostra todos 16 tiles
+
         const samples = [];
         for (let i = 0; i < 16; i++) samples.push(sampleCorners(i));
-        // Refs: tile 0 = lower (todos os 4 cantos), tile 15 = upper
-        if (!samples[0] || !samples[15]) {
-            console.warn('[WANG AUTO-SORT] sem refs (00 ou 15 missing) -- skip');
-            return null;
+
+        // Refs: tile 0 = lower (avg dos 4 cantos), tile 15 = upper.
+        // Se um deles falhar, tenta variance-based fallback (PixaPro fallback path).
+        const avg = (s) => [
+            (s.NW[0]+s.NE[0]+s.SE[0]+s.SW[0])/4,
+            (s.NW[1]+s.NE[1]+s.SE[1]+s.SW[1])/4,
+            (s.NW[2]+s.NE[2]+s.SE[2]+s.SW[2])/4,
+        ];
+        let lowerRef, upperRef;
+        if (samples[0] && samples[15]) {
+            lowerRef = avg(samples[0]);
+            upperRef = avg(samples[15]);
+        } else {
+            // Fallback: 2 mais uniformes (low variance), lum menor = lower.
+            // Variance score: soma das distâncias entre cantos vs média do tile.
+            const variance = (s) => {
+                const a = avg(s);
+                const ks = ['NW','NE','SE','SW'];
+                let v = 0;
+                for (const k of ks) {
+                    for (let i=0;i<3;i++) v += (s[k][i] - a[i]) ** 2;
+                }
+                return { v, a };
+            };
+            const scored = samples.map((s, idx) => s ? { idx, ...variance(s) } : null).filter(Boolean);
+            if (scored.length < 2) {
+                console.warn(`[WANG SORT] ${style}: not enough samples — skip`);
+                return null;
+            }
+            scored.sort((x, y) => x.v - y.v);
+            const ref1 = scored[0];
+            let ref2 = null;
+            for (let i = 1; i < scored.length; i++) {
+                const d = (scored[i].a[0]-ref1.a[0])**2 + (scored[i].a[1]-ref1.a[1])**2 + (scored[i].a[2]-ref1.a[2])**2;
+                if (d > 3000) { ref2 = scored[i]; break; }
+            }
+            if (!ref2) {
+                console.warn(`[WANG SORT] ${style}: 2 distinct colors not found — skip`);
+                return null;
+            }
+            const lum = (rgb) => 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2];
+            lowerRef = lum(ref1.a) < lum(ref2.a) ? ref1.a : ref2.a;
+            upperRef = lowerRef === ref1.a ? ref2.a : ref1.a;
         }
-        const avg = (s) => {
-            const r = (s.NW[0]+s.NE[0]+s.SE[0]+s.SW[0])/4;
-            const g = (s.NW[1]+s.NE[1]+s.SE[1]+s.SW[1])/4;
-            const b = (s.NW[2]+s.NE[2]+s.SE[2]+s.SW[2])/4;
-            return [r, g, b];
-        };
-        const lowerRef = avg(samples[0]);
-        const upperRef = avg(samples[15]);
-        const dist = (a, b) =>
-            (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
+        const dist = (a, b) => (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
         const classify = (rgb) => dist(rgb, upperRef) < dist(rgb, lowerRef) ? 1 : 0;
-        // Pra cada src tile, computa cr31 bits que ele realmente representa
-        const remap = new Array(16);  // remap[cr31Bits] = srcIdx
+
+        // Pra cada src tile, computa cr31 bits que ele representa
+        const remap = new Array(16);   // remap[cr31Bits] = srcIdx
+        const conflicts = [];
         for (let srcIdx = 0; srcIdx < 16; srcIdx++) {
             const s = samples[srcIdx];
             if (!s) continue;
@@ -551,17 +599,25 @@ Object.assign(Jogo.prototype, {
             const se = classify(s.SE);
             const sw = classify(s.SW);
             const cr31 = nw + ne*2 + se*4 + sw*8;
-            // Primeira ocorrencia ganha a posicao (resolve duplicatas)
-            if (remap[cr31] === undefined) remap[cr31] = srcIdx;
+            if (remap[cr31] === undefined) {
+                remap[cr31] = srcIdx;
+            } else {
+                conflicts.push({ cr31, kept: remap[cr31], dropped: srcIdx });
+            }
         }
         // Preenche buracos com srcIdx == cr31 (fallback identidade)
-        let moved = 0;
+        let filled = 0, moved = 0;
         for (let i = 0; i < 16; i++) {
             if (remap[i] === undefined) remap[i] = i;
+            else filled++;
             if (remap[i] !== i) moved++;
         }
-        console.log(`[WANG AUTO-SORT] ${style}: ${moved} tiles remapeados`,
-                    remap.map((v, i) => i !== v ? `${i}<-${v}` : null).filter(Boolean));
+        console.log(
+            `[WANG SORT] ${style}: ${moved} moved · ${filled}/16 classified · ${conflicts.length} conflicts ·`,
+            `lower=rgb(${lowerRef.map(v => Math.round(v)).join(',')})`,
+            `upper=rgb(${upperRef.map(v => Math.round(v)).join(',')})`
+        );
+        if (conflicts.length) console.log('[WANG SORT] conflicts:', conflicts);
         this._wangRemap[style] = remap;
         return remap;
     }
