@@ -824,6 +824,19 @@ class Jogo extends Phaser.Scene {
         });
     }
 
+    // Debounced live re-render — chamado por sliders Wang em 15_debug_menu.js.
+    // 80ms cobre drag rápido sem re-render N vezes. Cada nova chamada reseta
+    // o timer (clearTimeout).
+    _scheduleWangLiveRender() {
+        if (!this.WANG_DEBUG) return;
+        if (this._wangLiveRenderTimer) clearTimeout(this._wangLiveRenderTimer);
+        this._wangLiveRenderTimer = setTimeout(() => {
+            this._wangLiveRenderTimer = null;
+            const b = this.cameras.main.getBounds();
+            this._renderWangOnly(b.width, b.height);
+        }, 80);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Atlas frame aliasing — extrai static dirs (cow_S, ox_E etc) e legacy
     // keys (nave, farmer, cow_frente etc) do atlas em texturas individuais
