@@ -22,6 +22,17 @@ class Jogo extends Phaser.Scene {
         this.matter.world.setBounds(0, 0, W, H);
         this.cameras.main.setBounds(0, 0, W, H);
 
+        // ── WANG_DEBUG: ?debug=wang na URL → modo isolado de auditoria ──
+        // Renderiza só o wang tile terrain. Sem splash, UFO, NPCs, HUD, FX,
+        // atmosphere, tutorial, beam. Só ESC abre o debug menu pra tweakar
+        // sliders Wang (threshold, CA passes, tile style).
+        // Camera: WASD/arrows pra scroll, [/] pra zoom.
+        try {
+            const flag = new URLSearchParams(location.search).get('debug');
+            this.WANG_DEBUG = flag === 'wang';
+        } catch(e) { this.WANG_DEBUG = false; }
+        if (this.WANG_DEBUG) return this._createBodyWangDebug(W, H);
+
         // EXPERIMENT_MODE forçado OFF (debug — shader patch tava travando)
         this.EXPERIMENT_MODE = false;
         localStorage.setItem('experimentMode', '0');
@@ -380,6 +391,17 @@ class Jogo extends Phaser.Scene {
         // F3 + debug overlay funcionam since o splash
         if (this._updateDebugOverlay) this._updateDebugOverlay();
 
+        // WANG_DEBUG: skip normal update loop, só roda camera scroll
+        if (this.WANG_DEBUG) {
+            if (this._wangUpdate) this._wangUpdate(time, delta);
+            // ESC continua funcionando pra abrir/fechar debug menu
+            if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
+                this._splashConfigsOpen = !this._splashConfigsOpen;
+                this._toggleDebugMenu(this._splashConfigsOpen);
+            }
+            return;
+        }
+
         // ESC funciona since o splash to abrir CONFIGS before do game iniciar
         if (!this.gameStarted) {
             if (this.teclaEsc && Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
@@ -633,6 +655,174 @@ class Jogo extends Phaser.Scene {
 
         this._updateMinimap();
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // WANG_DEBUG mode — scene isolada só com wang tile terrain.
+    // Skip splash, UFO, NPCs, HUD, FX, atmosphere, tutorial, beam.
+    // Mantém: terrain rendering, debug menu (ESC), camera scroll WASD/[],
+    // wang debug overlay (numero do tile).
+    _createBodyWangDebug(W, H) {
+        // Stubs vazios pra outros módulos não crasharem ao acessar listas
+        this.cows = []; this.abductedCows = []; this.farmers = []; this.bullets = [];
+        this.shooters = []; this.corrals = []; this.grassPatches = [];
+        this.terrainGrid = null; this._wangIndices = null;
+        this.score = 0; this.burgerCount = 0;
+        this.fuelMax = 100; this.fuelCurrent = 100;
+        this.energiaMax = 100; this.energiaLed = 100;
+        this.bullsTotal = this.cowsTotal = this.farmersTotal = this.shootersTotal = 0;
+        this.gameStarted = true;   // skip splash
+        this.gameOver = false;
+        this.tutorialMode = false;
+        this.coneRadius = 0;
+        this.hud = {};
+        // Mata o pre-loader DOM (normalmente é o splash que dispara o fade)
+        const preLoader = document.getElementById('pre-loader');
+        if (preLoader) preLoader.classList.add('fade');
+
+        this._loadDebugCfg();
+
+        // Background preto pra contraste com tiles
+        this.cameras.main.setBackgroundColor('#000000');
+
+        // Render só os wang tiles (cellular automata + cr31 corner grid)
+        // Reaproveita o pipeline do _setupScenery mas só a parte wang.
+        this._renderWangOnly(W, H);
+
+        // Camera no centro do mapa, zoom inicial confortável (vê ~25% do mapa)
+        this.cameras.main.centerOn(W/2, H/2);
+        this.cameras.main.setZoom(0.4);
+
+        // Camera controls: WASD/arrows pra scroll + [/] pra zoom
+        this._setupWangDebugCamera();
+
+        // Debug menu (ESC) pra tweakar sliders Wang
+        this._setupDebugMenu();
+
+        // Pause handler (ESC abre menu)
+        this._setupPause();
+
+        // Banner topo informando modo
+        const banner = this.add.text(this.scale.width/2, 18,
+            '🧪 WANG_DEBUG  ·  WASD/Arrows: scroll  ·  [/] zoom  ·  R: regen  ·  ESC: configs', {
+            fontSize: '13px', fill: '#ffaa44', fontStyle: 'bold',
+            backgroundColor: '#000000', padding: { x: 10, y: 5 },
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999);
+
+        // Atalho R: regenera o terrain (re-roll do CA)
+        this.input.keyboard.on('keydown-R', () => {
+            this._renderWangOnly(W, H);
+        });
+
+        console.log('[WANG_DEBUG] Pure terrain mode active. Use ESC pra menu.');
+    },
+
+    _renderWangOnly(W, H) {
+        // Remove tiles antigos se for regen
+        if (this._wangTileImages) {
+            this._wangTileImages.forEach(img => img && img.scene && img.destroy());
+        }
+        this._wangTileImages = [];
+        // Remove wang debug overlay antigo
+        if (this._wangDebugTexts) {
+            this._wangDebugTexts.forEach(t => t && t.scene && t.destroy());
+            this._wangDebugTexts = [];
+        }
+
+        const CELL = 80;
+        const COLS = Math.ceil(W / CELL);
+        const ROWS = Math.ceil(H / CELL);
+        const proc = this.dbg?.proc || {};
+        const VERT_THRESHOLD = proc.vertThreshold ?? 0.50;
+        const VERT_CA_PASSES = proc.vertCaPasses ?? 4;
+
+        // Vertex grid binário (cr31 cantos compartilhados)
+        const CW = COLS + 1, CH = ROWS + 1;
+        let corners = [];
+        for (let y = 0; y < CH; y++) {
+            corners[y] = [];
+            for (let x = 0; x < CW; x++) {
+                corners[y][x] = Math.random() < VERT_THRESHOLD ? 1 : 0;
+            }
+        }
+        // CA majoritário no vertex grid
+        for (let pass = 0; pass < VERT_CA_PASSES; pass++) {
+            const next = [];
+            for (let y = 0; y < CH; y++) {
+                next[y] = [];
+                for (let x = 0; x < CW; x++) {
+                    let count = 0, total = 0;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            const ny = y+dy, nx = x+dx;
+                            if (ny<0||ny>=CH||nx<0||nx>=CW) { count++; total++; continue; }
+                            count += corners[ny][nx]; total++;
+                        }
+                    }
+                    next[y][x] = count >= Math.ceil(total/2) ? 1 : 0;
+                }
+            }
+            corners = next;
+        }
+
+        // Render
+        const style = this.dbg?.fx?.tileStyle;
+        const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
+        console.log('[WANG_DEBUG] tileStyle=', style, 'useStyle=', useStyle);
+        const remap = (useStyle && this.dbg?.proc?.autoSortTiles && this._autoSortWangTiles)
+            ? this._autoSortWangTiles(style) : null;
+
+        this._wangIndices = [];
+        for (let y = 0; y < ROWS; y++) {
+            this._wangIndices[y] = [];
+            for (let x = 0; x < COLS; x++) {
+                const nw = corners[y][x],     ne = corners[y][x+1];
+                const sw = corners[y+1][x],   se = corners[y+1][x+1];
+                const idx = nw + ne*2 + se*4 + sw*8;   // cr31
+                this._wangIndices[y][x] = idx;
+                const srcIdx = remap ? remap[idx] : idx;
+                const f = String(srcIdx).padStart(2, '0');
+                const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+                const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
+                    .setDisplaySize(CELL, CELL).setDepth(0);
+                this._wangTileImages.push(img);
+            }
+        }
+        // Re-render overlay se debug nº dos tiles tava on
+        if (this.dbg?.fx?.wangDebug && this._renderWangDebug) this._renderWangDebug();
+    },
+
+    _setupWangDebugCamera() {
+        const SPEED = 600;   // px/sec
+        const ZOOM_STEP = 1.15;
+        this._wangKeys = this.input.keyboard.addKeys({
+            up: 'W', down: 'S', left: 'A', right: 'D',
+            upArr: 'UP', downArr: 'DOWN', leftArr: 'LEFT', rightArr: 'RIGHT',
+            zoomIn: 'CLOSED_BRACKET', zoomOut: 'OPEN_BRACKET',
+        });
+        // Override do update loop só pra esse modo (pula _updateBody normal)
+        this._wangUpdate = (time, delta) => {
+            const k = this._wangKeys;
+            const cam = this.cameras.main;
+            const dt = delta / 1000;
+            let dx = 0, dy = 0;
+            if (k.up.isDown    || k.upArr.isDown)    dy -= 1;
+            if (k.down.isDown  || k.downArr.isDown)  dy += 1;
+            if (k.left.isDown  || k.leftArr.isDown)  dx -= 1;
+            if (k.right.isDown || k.rightArr.isDown) dx += 1;
+            if (dx || dy) {
+                const len = Math.hypot(dx, dy);
+                cam.scrollX += (dx/len) * SPEED * dt / cam.zoom;
+                cam.scrollY += (dy/len) * SPEED * dt / cam.zoom;
+            }
+        };
+        // Zoom em key down (one-shot)
+        this.input.keyboard.on('keydown-CLOSED_BRACKET', () => {
+            this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom * ZOOM_STEP, 0.1, 3));
+        });
+        this.input.keyboard.on('keydown-OPEN_BRACKET', () => {
+            this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom / ZOOM_STEP, 0.1, 3));
+        });
+    },
 
     // ─────────────────────────────────────────────────────────────
     // Atlas frame aliasing — extrai static dirs (cow_S, ox_E etc) e legacy
