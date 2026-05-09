@@ -1242,6 +1242,35 @@ class Jogo extends Phaser.Scene {
         this._refreshActivePresetInfo();
         this._buildRefGrid();
         this._refreshCellEditor();
+        // Eager-load todos os styles unloaded em background pra Compare All
+        // popular os ? placeholders. Cada style ~1-2s, paralelo.
+        this._eagerLoadAllWangStyles();
+    }
+
+    // Carrega em background os tilesets não carregados, atualizando o Compare
+    // All thumbnail conforme cada um termina. Chamado quando user abre o
+    // TILES tab pela primeira vez na sessão.
+    _eagerLoadAllWangStyles() {
+        if (typeof WANG_PRESETS === 'undefined') return;
+        if (this._eagerLoadDone) return;
+        this._eagerLoadDone = true;
+        const grid = document.getElementById('tiles-compare-grid');
+        const presets = WANG_PRESETS.filter(p => !p.cr31Native && p.biome !== 'ref');
+        for (const preset of presets) {
+            const styleKey = preset.styleKey;
+            if (!styleKey) continue;
+            const firstKey = `wang_${styleKey}_15`;
+            if (this.textures.exists(firstKey)) continue;   // já carregado
+            // Dispara load assíncrono. Callback re-renderiza o card específico
+            // dessa preset key em Compare All quando completar.
+            if (this._ensureWangStyleLoaded) {
+                this._ensureWangStyleLoaded(styleKey, () => {
+                    if (!grid) return;
+                    const cell = grid.querySelector(`[data-style="${styleKey}"]`);
+                    if (cell) this._renderStyleThumbnail(cell, styleKey);
+                });
+            }
+        }
     }
 
     // Ground truth reference grid (test palette, cr31-native).
