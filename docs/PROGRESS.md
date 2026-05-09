@@ -4,6 +4,90 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-05-09 — WANG_DEBUG mode + PixaPro tiles port + tudo live
+
+**Tema:** Auditoria element-by-element começando pelo terreno. Modo isolado `?debug=wang` que strippa tudo. Port completo do sistema de tiles do PixaPro (catalog, transforms, cell editor, auto-sort robusto). Live config — botão APPLY+RESTART morreu.
+
+### WANG_DEBUG mode (URL flag isolado)
+- `?debug=wang` na URL → `_createBodyWangDebug` que skipa splash, UFO, NPCs, HUD, FX, atmosphere, tutorial, beam, quips, barrel post-fx
+- Mantém: terrain rendering, debug menu (ESC), camera scroll WASD/arrows, zoom `[/]`, R regen
+- Banner topo full-width via DOM overlay (`position: fixed; left/right: 0`) — fix bug de Phaser Rectangle que reportava `scale.width` errado
+- Stubs vazios pras listas (cows=[], farmers=[]) pra outros módulos não crasharem
+
+### PixaPro full port — sistema de tiles
+- **`js/wang_presets.js` novo:** catalog de 11 tilesets importado do PixaPro (1 ground truth + 2 32px game-actives + 4 mapa1 verde + 4 mapa2 seco). 3 tilesets BASE/SHARED comentados pra import futuro via slice_tilesets.py. Cada preset: id, biome, season, name, meta, styleKey, tileSize, info, cr31Native (opcional)
+- **`WANG_BIOME_COLORS`** dict (cerrado-verde/seco/costa/ref) pra UI cards
+- **`CR31_TO_PIXELLAB` permutation** [0,8,1,9,...,15] hardcoded (PixaPro Ground Truth) — PixelLab gera CCW-shifted vs cr31
+- **Tile transforms data layer:** `resolveTileTransform(styleKey, cr31Idx)` → `{srcIdx, rot, flipH, flipV}`. Override custom > CR31_TO_PIXELLAB > identidade. `setTileTransform/resetTileTransforms` persistem em `localStorage[chapEscapadeWangTransforms]`
+- **Aba TILES dedicada** no CONFIGS (entre MAP e DEBUG): BIOMA filter chips, COMPARE ALL grid (3-col cards com thumbnail composite + biome chip + tag curto), ACTIVE PRESET INFO panel (nome + meta + descrição + UUID), CELL EDITOR (REF cr31 + PRESET grids side-by-side), PROCEDURAL sliders
+- **Cell editor handlers:** Click rotate · Shift flipH · Alt flipV · Right-click cycle srcIdx · Double-click reset · drag-drop swap entre cells
+- **REF cr31 grid** mostra test palette (ground truth cr31-native) à esquerda do PRESET — reference pra correção visual
+- **AUTO-SORT button** verde dedicado: limpa cache + transforms, roda `_autoSortWangTiles`, aplica resultado como transforms persistidos
+- **Auto-sort algorithm portado do PixaPro:** 3×3 region sampling (era single-pixel — broke em pixel-art com noise nas bordas), 8% margin, single getImageData per tile (50× faster), variance-based fallback, conflict detection, logs ricos
+- MAP tab dedupe: removido WANG TILES + PROCEDURAL (estavam duplicados em TILES)
+
+### Live config — APPLY+RESTART removido
+- Botão "APPLY + RESTART" morto. Tudo aplica em tempo real via `_applyConfigLive(section, key, val)`:
+  - `scale.*` → resize entities existentes (cow/bull/farmer/ufo/burger/beam)
+  - `enabled.*` → spawn/despawn dinâmico via `_despawnByType`
+  - `counts.*` → reconcile diff (spawn add ou despawn excess)
+  - `proc.*` → `_scheduleSceneryRebuild` com debounce 250ms (scene.restart preserva localStorage)
+  - `behavior.*` / `fx.*` → live nativo (já era)
+- Notes UI atualizadas pra "Tudo live"
+
+### Menu landscape mode
+- max-width `min(1100, 92vw)` → `min(1400, 95vw)`, min-width 600 → 760
+- Padding 14/16 → 12/16, font-size 12 → 11
+- Tab panels grid 2-col → 3-col default, 4-col em ≥1280px
+- TILES tab layout específico 1.4fr·1fr·1fr (Compare à esquerda, Info+Cell+Proc à direita)
+- Btn-row centered max-600px
+
+### Bleeding fix definitivo
+- `pixelArt: true` no Phaser config global (`js/99_main.js`) — antialias=false + roundPixels=true automáticos pra tudo. Engine-level fix.
+- 2px overlap (`setDisplaySize(CELL+2)`) belt-and-suspenders pra zooms patológicos
+- NEAREST filter explícito nas wang textures + `cameras.main.setRoundPixels(true)` em WANG_DEBUG
+
+### Random orientation em tiles uniformes
+- Pra cells cr31=0 (all-lower) ou cr31=15 (all-upper): hash determinístico `(x*73856093) ^ (y*19349663)` gera 4 bits → rot 0/90/180/270 + flipH + flipV
+- Quebra "grid feel" nas áreas grandes de mesmo material sem violar cr31 contracts (uniformes têm 4 cantos iguais)
+- 16 variantes possíveis por cell, deterministic re-render
+
+### Eager-load TILES tab
+- `_eagerLoadAllWangStyles` itera WANG_PRESETS (filter cr31Native + ref), dispara `_ensureWangStyleLoaded` paralelo. Idempotente via `_eagerLoadDone` flag — só roda 1× por sessão.
+- Antes Compare All ficava com `?` permanente até user clicar individualmente
+
+### Bugs corrigidos
+- **Trailing commas em class methods** (SyntaxError travou tudo) — class body não aceita virgula entre métodos (vs object literals)
+- **REF cr31 vazio** — usava `src.src` (blob URL falha em CSS background); fix: render via canvas + toDataURL
+- **Floating WANG TILES panel duplicado** — removido (`_buildWangTilePreview` deprecated)
+- **Banner Phaser Rectangle bug** — `scale.width` reportava menor que viewport; troca pra DOM overlay full-width
+- **Thumbnail Compare All com presets parecendo iguais** — desenhava em ordem PixelLab raw; fix: itera ordem cr31 + aplica transforms via canvas
+
+### Commits da sessão (selection)
+- `feat(debug): WANG_DEBUG isolated mode (?debug=wang URL flag)` — bootstrap
+- `feat(wang-debug): live re-render quando sliders mudam`
+- `fix(wang-debug): elimina pixel bleeding entre tiles` (3 fixes)
+- `feat(wang-debug): tile preview gallery + pixelArt global`
+- `feat(wang-debug): grid de thumbnails substitui dropdown`
+- `fix(wang): aplica CR31_TO_PIXELLAB permutation (PixaPro ground truth)`
+- `feat(wang): import WANG_PRESETS catalog do PixaPro (Fase 1)`
+- `feat(debug): tudo live + remove APPLY+RESTART`
+- `feat(tiles): aba TILES dedicada com PixaPro full port`
+- `ui(debug): menu landscape-mode + dedupe MAP/TILES`
+- `feat(wang): port PixaPro auto-sort algorithm + UI button`
+- `feat(tiles): ground truth ref grid + drag-drop swap entre cells`
+- `fix(tiles): REF cr31 renderiza tiles via canvas + remove floating WANG TILES panel`
+- `fix(wang-debug): banner via DOM overlay (Phaser Rectangle bugava)`
+- `feat(tiles): eager-load todos tilesets ao abrir TILES tab`
+- `fix(tiles): thumbnail Compare All aplica transforms (cr31 + rot/flip)`
+- `ui(wang): random rotation+flip em tiles uniformes (quebra grid feel)`
+
+### Pendente / proxima sessão
+- Fase 4: `tools/slice_tilesets.py` melhorado pra import dos 3 tilesets BASE/SHARED faltantes (mapa1_dirt_grass, mapa2_dirt_grass, shared_ocean_sand_16)
+- Voltar pro audit element-by-element: agora que terrain tá robusto, próximos elements (UFO, beam, cow AI, etc) — mas pipeline pra adicionar elemento-por-elemento já tá pronto via WANG_DEBUG opt-in
+
+---
+
 ## Sessão 2026-05-08 — Golden path audit + Boot perf rework (Fix D atlases) + 3 bugs
 
 **Tema:** Audit element-by-element em Pages live. Cair tempo de boot de 200s → 30s via sprite atlases. Corrigir tween leak + corral slot timer.
