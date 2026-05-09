@@ -176,3 +176,73 @@ function getWangPresetByStyleKey(key) {
 // PixelLab tiles vêm em convenção CCW-shifted vs cr31 (NW=1 NE=2 SE=4 SW=8).
 // Aplicar a presets sem cr31Native: srcIdx = CR31_TO_PIXELLAB[cr31Bits].
 const CR31_TO_PIXELLAB = [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
+
+// ════════════════════════════════════════════════════════════
+// TILE TRANSFORMS — per-cell (cr31Idx 0..15) por preset
+// ════════════════════════════════════════════════════════════
+// Cada cr31 cell pode ter:
+//   - srcIdx: 0..15 (qual tile da fonte usar; default = cr31Idx OR CR31_TO_PIXELLAB[cr31Idx])
+//   - rot: 0|90|180|270 (rotação clockwise em graus)
+//   - flipH: bool (espelha horizontal)
+//   - flipV: bool (espelha vertical)
+// Ausência de override = transform default (resolvido em render).
+// Persistido em localStorage[WANG_TRANSFORMS_KEY] como JSON.
+
+const WANG_TRANSFORMS_KEY = 'chapEscapadeWangTransforms';
+
+// Lê todos os overrides do localStorage. Forma:
+//   { [styleKey]: { [cr31Idx]: {srcIdx,rot,flipH,flipV} } }
+function loadAllTileTransforms() {
+    try {
+        const raw = localStorage.getItem(WANG_TRANSFORMS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+}
+
+function saveAllTileTransforms(all) {
+    try { localStorage.setItem(WANG_TRANSFORMS_KEY, JSON.stringify(all)); }
+    catch(e) { console.warn('[WANG] save transforms fail:', e); }
+}
+
+// Resolve o transform efetivo de um cr31Idx num style.
+// Prioridade: override → CR31_TO_PIXELLAB (PixelLab styles) → identidade.
+function resolveTileTransform(styleKey, cr31Idx) {
+    const all = loadAllTileTransforms();
+    const userT = all?.[styleKey]?.[cr31Idx];
+    if (userT) {
+        // Sanitiza valores (defensive)
+        return {
+            srcIdx: typeof userT.srcIdx === 'number' ? userT.srcIdx : cr31Idx,
+            rot:    [0,90,180,270].includes(userT.rot) ? userT.rot : 0,
+            flipH:  !!userT.flipH,
+            flipV:  !!userT.flipV,
+        };
+    }
+    // Sem override: usa permutation default
+    const preset = getWangPresetByStyleKey(styleKey);
+    const isCr31Native = (preset && preset.cr31Native) || styleKey === 'test';
+    const srcIdx = isCr31Native ? cr31Idx : CR31_TO_PIXELLAB[cr31Idx];
+    return { srcIdx, rot: 0, flipH: false, flipV: false };
+}
+
+// Set/clear override de uma cell. Passa null pra clear.
+function setTileTransform(styleKey, cr31Idx, transform) {
+    const all = loadAllTileTransforms();
+    if (!all[styleKey]) all[styleKey] = {};
+    if (transform === null || transform === undefined) {
+        delete all[styleKey][cr31Idx];
+        if (Object.keys(all[styleKey]).length === 0) delete all[styleKey];
+    } else {
+        all[styleKey][cr31Idx] = transform;
+    }
+    saveAllTileTransforms(all);
+}
+
+// Reset todos os overrides de um style (volta pra default permutation).
+function resetTileTransforms(styleKey) {
+    const all = loadAllTileTransforms();
+    if (all[styleKey]) {
+        delete all[styleKey];
+        saveAllTileTransforms(all);
+    }
+}

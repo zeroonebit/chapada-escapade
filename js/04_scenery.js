@@ -142,12 +142,14 @@ Object.assign(Jogo.prototype, {
             const remap = (useStyle && this.dbg?.proc?.autoSortTiles)
                 ? this._autoSortWangTiles(style)
                 : null;
-            // CR31 ↔ PixelLab permutation (PixaPro ground truth via wang_presets.js).
-            const CR31_PERM = (typeof CR31_TO_PIXELLAB !== 'undefined')
-                ? CR31_TO_PIXELLAB : [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
-            const preset = (typeof getWangPresetByStyleKey === 'function')
-                ? getWangPresetByStyleKey(style) : null;
-            const isPixelLabStyle = useStyle && !(preset && preset.cr31Native) && style !== 'test';
+            // Tile transforms via wang_presets.js: resolve srcIdx + rot + flip
+            // por cr31Idx. Pre-resolve os 16 (uma vez por _setupScenery call).
+            const styleKey = useStyle ? style : 'test';
+            const resolveT = (typeof resolveTileTransform === 'function')
+                ? (i) => resolveTileTransform(styleKey, i)
+                : (i) => ({ srcIdx: i, rot: 0, flipH: false, flipV: false });
+            const tileT = [];
+            for (let i = 0; i < 16; i++) tileT.push(resolveT(i));
             // Salva tile indices pra _renderWangDebug usar (toggle live)
             this._wangIndices = [];
             for (let y = 0; y < ROWS; y++) {
@@ -155,21 +157,17 @@ Object.assign(Jogo.prototype, {
                 for (let x = 0; x < COLS; x++) {
                     const nw = corners[y][x],     ne = corners[y][x+1];
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
-                    // cr31 convention (PixaPro): NW=1, NE=2, SE=4, SW=8
-                    const idx = nw + ne*2 + se*4 + sw*8;
+                    const idx = nw + ne*2 + se*4 + sw*8;   // cr31
                     this._wangIndices[y][x] = idx;
-                    // Resolução do srcIdx (prioridade):
-                    //   1. remap (color-sampling auto-sort, opcional via toggle)
-                    //   2. CR31_TO_PIXELLAB hardcoded (styles PixelLab)
-                    //   3. identidade (test palette ou unrecognized)
-                    let srcIdx;
-                    if (remap) srcIdx = remap[idx];
-                    else if (isPixelLabStyle) srcIdx = CR31_PERM[idx];
-                    else srcIdx = idx;
+                    const t = tileT[idx];
+                    const srcIdx = remap ? remap[idx] : t.srcIdx;
                     const f = String(srcIdx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
-                    this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
+                    const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
+                    if (t.rot)   img.setAngle(t.rot);
+                    if (t.flipH) img.setFlipX(true);
+                    if (t.flipV) img.setFlipY(true);
                 }
             }
             // Re-render overlay caso ja estivesse on antes do scenery
