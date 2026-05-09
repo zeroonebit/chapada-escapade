@@ -1026,63 +1026,55 @@ class Jogo extends Phaser.Scene {
         });
     }
 
-    // Wang style grid — substitui dropdown por row de thumbnails 4x4 mini-composite
-    // de cada tilestyle. Click = troca tileStyle + lazy-load se necessário +
-    // re-render terrain (em WANG_DEBUG) + atualiza highlight no grid.
+    // Wang style grid — usa WANG_PRESETS (importado do PixaPro) como fonte de verdade.
+    // Click no card = troca tileStyle + lazy-load + re-render. Cards mostram:
+    //   - thumbnail composite 4x4 dos tiles
+    //   - nome do preset (ex: "[MAPA 1] sand ↔ cerrado_grass")
+    //   - bioma badge colorido
     _buildWangStyleGrid() {
         const grid = document.getElementById('wang-style-grid');
         const labelEl = document.getElementById('wang-style-label');
         if (!grid) return;
         grid.innerHTML = '';
-        const STYLES = [
-            { key: 'test',              short: 'Test'  },
-            { key: 'dirt_grass_32',     short: 'D/G 32'},
-            { key: 'ocean_sand_32',     short: 'O/S 32'},
-            { key: 'mapa1_ocean_dirt',  short: 'M1 OD' },
-            { key: 'mapa1_ocean_grass', short: 'M1 OG' },
-            { key: 'mapa1_sand_dirt',   short: 'M1 SD' },
-            { key: 'mapa1_sand_grass',  short: 'M1 SG' },
-            { key: 'mapa2_ocean_dirt',  short: 'M2 OD' },
-            { key: 'mapa2_ocean_grass', short: 'M2 OG' },
-            { key: 'mapa2_sand_dirt',   short: 'M2 SD' },
-            { key: 'mapa2_sand_grass',  short: 'M2 SG' },
+
+        // Fallback: se WANG_PRESETS não carregou, usa lista mínima
+        const presets = (typeof WANG_PRESETS !== 'undefined') ? WANG_PRESETS : [
+            { styleKey: 'test', name: 'Test palette', biome: 'ref' },
+            { styleKey: 'dirt_grass_32', name: 'Dirt/Grass 32', biome: 'cerrado-verde' },
         ];
         const current = this.dbg?.fx?.tileStyle || 'dirt_grass_32';
+        const colors = (typeof WANG_BIOME_COLORS !== 'undefined') ? WANG_BIOME_COLORS : {};
+
         if (labelEl) {
-            const cur = STYLES.find(s => s.key === current);
-            labelEl.textContent = cur ? `▸ ${cur.key}` : '—';
+            const cur = presets.find(p => p.styleKey === current);
+            labelEl.textContent = cur ? `▸ ${cur.name}` : '—';
         }
-        STYLES.forEach(({ key, short }) => {
+        presets.forEach(preset => {
+            const key = preset.styleKey;
+            if (!key) return;
             const cell = document.createElement('div');
             cell.dataset.style = key;
+            const isCurrent = key === current;
+            const biomeColor = colors[preset.biome] || '#aaffcc';
             cell.style.cssText = `
                 position: relative; aspect-ratio: 1;
                 background: #001a08;
-                border: 2px solid ${key === current ? '#ffcc00' : '#224433'};
+                border: 2px solid ${isCurrent ? '#ffcc00' : biomeColor};
                 border-radius: 4px;
                 cursor: pointer;
                 overflow: hidden;
                 transition: border-color 0.15s, transform 0.1s;
-                ${key === current ? 'transform: scale(1.05); box-shadow: 0 0 6px rgba(255,204,0,0.5);' : ''}
+                ${isCurrent ? 'transform: scale(1.05); box-shadow: 0 0 6px rgba(255,204,0,0.5);' : ''}
             `;
-            const label = document.createElement('div');
-            label.textContent = short;
-            label.style.cssText = `
-                position: absolute; bottom: 1px; left: 0; right: 0;
-                font-size: 8px; text-align: center; color: #aaffcc;
-                background: rgba(0,16,8,0.8); padding: 1px 0;
-                font-family: 'Courier New', monospace; letter-spacing: 0.5px;
-                pointer-events: none;
-            `;
-            cell.appendChild(label);
+            cell.title = preset.name + (preset.info ? `\n\n${preset.info}` : '');
             // Renderiza thumbnail (composite 4x4 das tiles do style)
             this._renderStyleThumbnail(cell, key);
-            // Hover effect (não substitui a borda do selecionado)
+            // Hover (não substitui borda do selecionado)
             cell.addEventListener('mouseenter', () => {
                 if (key !== this.dbg?.fx?.tileStyle) cell.style.borderColor = '#88ddaa';
             });
             cell.addEventListener('mouseleave', () => {
-                if (key !== this.dbg?.fx?.tileStyle) cell.style.borderColor = '#224433';
+                if (key !== this.dbg?.fx?.tileStyle) cell.style.borderColor = biomeColor;
             });
             cell.addEventListener('click', () => this._selectWangStyle(key));
             grid.appendChild(cell);
@@ -1144,7 +1136,11 @@ class Jogo extends Phaser.Scene {
                 c.style.boxShadow = isSel ? '0 0 6px rgba(255,204,0,0.5)' : 'none';
             });
         }
-        if (labelEl) labelEl.textContent = `▸ ${style}`;
+        if (labelEl) {
+            const preset = (typeof WANG_PRESETS !== 'undefined')
+                ? WANG_PRESETS.find(p => p.styleKey === style) : null;
+            labelEl.textContent = preset ? `▸ ${preset.name}` : `▸ ${style}`;
+        }
 
         // Lazy-load + re-render
         if (this._ensureWangStyleLoaded) {
