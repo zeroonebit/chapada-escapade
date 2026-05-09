@@ -974,17 +974,27 @@ class Jogo extends Phaser.Scene {
                 const idx = nw + ne*2 + se*4 + sw*8;   // cr31
                 this._wangIndices[y][x] = idx;
                 const t = tileT[idx];
-                // Custom remap (color-sampling) ainda tem precedência se existir
                 const srcIdx = remap ? remap[idx] : t.srcIdx;
                 const f = String(srcIdx).padStart(2, '0');
                 const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                 ensureFilter(key);
-                // 2px overlap + transforms (rotation + flip)
+                // Random orientation pra tiles uniformes (cr31 0 e 15) —
+                // 4 cantos iguais permitem rot/flip sem quebrar cr31 contract.
+                // Hash determinístico por (x,y) → pattern grid quebra mas
+                // re-render produz mesmo resultado (consistente).
+                let extraRot = 0, extraFH = false, extraFV = false;
+                if (idx === 0 || idx === 15) {
+                    const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+                    extraRot = (h & 3) * 90;       // 0/90/180/270
+                    extraFH = !!(h & 4);
+                    extraFV = !!(h & 8);
+                }
                 const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                     .setDisplaySize(CELL + 2, CELL + 2).setDepth(0);
-                if (t.rot)   img.setAngle(t.rot);
-                if (t.flipH) img.setFlipX(true);
-                if (t.flipV) img.setFlipY(true);
+                const finalRot = (t.rot + extraRot) % 360;
+                if (finalRot)        img.setAngle(finalRot);
+                if (t.flipH !== extraFH) img.setFlipX(true);
+                if (t.flipV !== extraFV) img.setFlipY(true);
                 this._wangTileImages.push(img);
             }
         }

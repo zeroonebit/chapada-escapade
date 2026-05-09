@@ -163,11 +163,20 @@ Object.assign(Jogo.prototype, {
                     const srcIdx = remap ? remap[idx] : t.srcIdx;
                     const f = String(srcIdx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+                    // Random orientation pra tiles uniformes (cr31 0/15)
+                    let extraRot = 0, extraFH = false, extraFV = false;
+                    if (idx === 0 || idx === 15) {
+                        const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+                        extraRot = (h & 3) * 90;
+                        extraFH = !!(h & 4);
+                        extraFV = !!(h & 8);
+                    }
                     const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
-                    if (t.rot)   img.setAngle(t.rot);
-                    if (t.flipH) img.setFlipX(true);
-                    if (t.flipV) img.setFlipY(true);
+                    const finalRot = (t.rot + extraRot) % 360;
+                    if (finalRot) img.setAngle(finalRot);
+                    if (t.flipH !== extraFH) img.setFlipX(true);
+                    if (t.flipV !== extraFV) img.setFlipY(true);
                 }
             }
             // Re-render overlay caso ja estivesse on antes do scenery
