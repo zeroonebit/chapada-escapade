@@ -395,18 +395,43 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - Plan completo: `~/.claude/plans/ready-swirling-moler.md`
 - Status: aguarda user instalar Rust toolchain (rustup-init.exe) pra `cargo run`. README com troubleshooting
 
+### ✅ Pronto (cont. — sessão 2026-05-09 · WANG_DEBUG mode + PixaPro tiles port + tudo live)
+- **WANG_DEBUG mode** (`?debug=wang` URL flag) — minimal scene isolada (sem splash/UFO/NPCs/HUD/FX/atmosphere), só terrain + camera + debug menu. WASD/arrows scroll, `[/]` zoom, R regen, ESC menu
+- **WANG_PRESETS catalog** importado do PixaPro (`js/wang_presets.js`) — 11 tilesets com metadata completa (id UUID PixelLab, biome, season, name, tileSize, info, cr31Native flag), `WANG_BIOME_COLORS`, `CR31_TO_PIXELLAB` permutation hardcoded
+- **Tile transforms data layer** — `resolveTileTransform/setTileTransform/resetTileTransforms` persistido em `localStorage[chapEscapadeWangTransforms]`. Resolução: override > CR31_TO_PIXELLAB > identidade
+- **Aba TILES dedicada no CONFIGS** — Compare All grid (3-col cards com biome chip), filter chips, INFO panel (name/meta/desc/UUID), CELL EDITOR (REF cr31 ground truth + PRESET side-by-side), AUTO-SORT button, RESET TRANSFORMS, PROCEDURAL sliders
+- **Cell editor handlers** — Click rotate · Shift flipH · Alt flipV · Right-click cycle srcIdx · Double-click reset · drag-drop swap entre cells
+- **Auto-sort algorithm** portado do PixaPro — 3×3 region sampling (era single-pixel), 8% margin, single getImageData per tile (50× faster), variance-based fallback, conflict detection
+- **Tudo live no CONFIGS** — botão APPLY+RESTART removido. Scales resize entities existentes, enabled spawn/despawn dinâmico, counts reconcile diff, proc → scene.restart com debounce 250ms
+- **pixelArt:true global** no Phaser config (engine-level antialias=false + roundPixels) — fix definitivo do bleeding entre tiles wang
+- **Random orientation em tiles uniformes** (cr31 0/15) — hash determinístico por (x,y) → rot 0/90/180/270 + flipH/V. Quebra "grid feel" sem violar cr31 contracts
+- **Eager-load tilesets** ao abrir TILES tab — paralelo, idempotente, popula thumbnails Compare All conforme cada termina
+- **Banner WANG_DEBUG** full-width via DOM overlay (`position: fixed`) — robusto vs Phaser Rectangle que reportava `scale.width` errado
+- **Menu landscape mode** — max-width min(1400, 95vw), 3-col default + 4-col em ≥1280px, TILES com layout custom 1.4fr·1fr·1fr (Compare à esquerda, Info+Cell+Proc à direita)
+- **MAP tab dedupe** — WANG TILES + PROCEDURAL movidos pra TILES (estavam duplicados)
+- **REF cr31 grid** dentro do Cell Editor — mostra os 16 tiles do test palette (ground truth) numerados, render via canvas+toDataURL (era blob URL bugado)
+
+### 🛠 Pipeline tiles wang (novo nesta sessão)
+- `js/wang_presets.js` — fonte de verdade do catalog. Adicionar tileset: nova entrada no array `WANG_PRESETS` + slice PNGs em `assets/terrain/<styleKey>/wang_NN.png`
+- `setTileTransform(styleKey, cr31Idx, {srcIdx, rot, flipH, flipV})` ou `null` pra resetar — persistido em localStorage
+- `_autoSortWangTiles(style)` em `js/04_scenery.js` — color sampling robusto, retorna `remap[cr31Bits] = srcIdx`. Cacheado em `this._wangRemap[style]`
+- Botão AUTO-SORT no TILES tab roda + aplica como transforms
+- Drag-drop no Cell Editor: arrasta cr31 A pra cr31 B = swap dos transforms
+
 ### 🚧 Em andamento
-- **Bevy 3D edition** — code pronto, user precisa instalar Rust pra rodar `cargo run` (build inicial ~5-15min)
-- **Audit live testing PixaPro** — Audit panel Pages fallback pushed; falta user validar painel popula + walk through one-by-one (P/D/R/C hotkeys)
+- **Bevy 3D edition** — code pronto em `H:/Projects/Bevy/ChapadaEscapade/`, user precisa instalar Rust pra rodar `cargo run`
+- **Audit element-by-element** continuação — terrain isolado robusto agora (TILES tab completo); próximo: adicionar UFO, beam, cow AI etc um por vez via toggles em CONFIGS
+- **Audit live testing PixaPro** — Audit panel Pages fallback pushed; falta user validar painel popula + walk through one-by-one
 - **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
 - **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
 ### 🔜 Próximos passos
-1. **Atlas extras (opcional)** — atlas pra 4 HUDs gigantes 1536x1024 (combined_empty/full + combustivel_full + graviton_full) requer bin-packing real. Cortaria mais ~300kb
-2. **Performance pass** — FPS no Pages cai pra 11 com 126 entities + barrel pipeline. Object pooling, layer culling, ou reduzir DBG_DEFAULTS counts pra Pages mode
-3. **Tutorial 09/10 completion logic** — contadores em `_updateBody` + flag em `_destroyShooter`
-4. **Map presets reais** (5-6 variados) wirar pro splash escolher, dar variedade visual
-5. **Bevy 3D Phase 1 verificação** — quando user instalar Rust, rodar `cargo run` e validar checklist Phase 1 do plan
+1. **Slice 3 tilesets BASE/SHARED faltantes** — `mapa1_dirt_grass`, `mapa2_dirt_grass`, `shared_ocean_sand_16`. Existem na origem (PixelLab API) mas não sliced localmente. Tool `tools/slice_tilesets.py` precisa update pra cr31 mapping
+2. **Atlas extras (opcional)** — atlas pra 4 HUDs gigantes 1536x1024 requer bin-packing real. Cortaria mais ~300kb
+3. **Performance pass** — FPS no Pages cai pra 11 com 126 entities + barrel pipeline. Object pooling, layer culling, ou reduzir DBG_DEFAULTS counts
+4. **Tutorial 09/10 completion logic** — contadores em `_updateBody` + flag em `_destroyShooter`
+5. **Map presets reais** (5-6 variados) wirar pro splash escolher, dar variedade visual
+6. **Bevy 3D Phase 1 verificação** — quando user instalar Rust, rodar `cargo run` e validar checklist Phase 1 do plan
 
 ### 🛠 Ferramentas criadas
 - `tools/project_server.py` (era `gallery_server.py`) — server local porta 8090 com API REST consumida pelo PixaPro standalone (8 endpoints: maps, scan_assets, apply_renames, check_refs, etc)
