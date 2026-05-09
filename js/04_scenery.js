@@ -142,6 +142,11 @@ Object.assign(Jogo.prototype, {
             const remap = (useStyle && this.dbg?.proc?.autoSortTiles)
                 ? this._autoSortWangTiles(style)
                 : null;
+            // CR31 ↔ PixelLab permutation (PixaPro ground truth).
+            // PixelLab tiles vêm em convenção CCW-shifted vs cr31.
+            // Aplica a todos os styles exceto 'test' (palette local cr31-native).
+            const CR31_TO_PIXELLAB = [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
+            const isPixelLabStyle = useStyle && style !== 'test';
             // Salva tile indices pra _renderWangDebug usar (toggle live)
             this._wangIndices = [];
             for (let y = 0; y < ROWS; y++) {
@@ -152,8 +157,14 @@ Object.assign(Jogo.prototype, {
                     // cr31 convention (PixaPro): NW=1, NE=2, SE=4, SW=8
                     const idx = nw + ne*2 + se*4 + sw*8;
                     this._wangIndices[y][x] = idx;
-                    // Se ha remap (auto-sort), substitui idx pelo srcIdx correto
-                    const srcIdx = remap ? remap[idx] : idx;
+                    // Resolução do srcIdx (prioridade):
+                    //   1. remap (color-sampling auto-sort, opcional via toggle)
+                    //   2. CR31_TO_PIXELLAB hardcoded (styles PixelLab)
+                    //   3. identidade (test palette ou unrecognized)
+                    let srcIdx;
+                    if (remap) srcIdx = remap[idx];
+                    else if (isPixelLabStyle) srcIdx = CR31_TO_PIXELLAB[idx];
+                    else srcIdx = idx;
                     const f = String(srcIdx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                     this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)

@@ -939,6 +939,13 @@ class Jogo extends Phaser.Scene {
             filterAppliedKeys.add(key);
         };
 
+        // CR31 ↔ PixelLab permutation (descoberto via Ground Truth no PixaPro).
+        // PixelLab gera tiles em convenção CCW-shifted vs cr31 (NW=1 NE=2 SE=4 SW=8).
+        // Mapping: CR31_TO_PIXELLAB[cr31Idx] = pixellabSrcIdx.
+        // Aplica a TODOS os styles exceto 'test' (que é palette local cr31-native).
+        const CR31_TO_PIXELLAB = [0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15];
+        const isPixelLabStyle = useStyle && style !== 'test';
+
         this._wangIndices = [];
         for (let y = 0; y < ROWS; y++) {
             this._wangIndices[y] = [];
@@ -947,7 +954,12 @@ class Jogo extends Phaser.Scene {
                 const sw = corners[y+1][x],   se = corners[y+1][x+1];
                 const idx = nw + ne*2 + se*4 + sw*8;   // cr31
                 this._wangIndices[y][x] = idx;
-                const srcIdx = remap ? remap[idx] : idx;
+                // PixelLab styles: aplica permutation hardcoded (PixaPro ground truth).
+                // Custom remap (color-sampling) tem precedência se existir.
+                let srcIdx;
+                if (remap) srcIdx = remap[idx];
+                else if (isPixelLabStyle) srcIdx = CR31_TO_PIXELLAB[idx];
+                else srcIdx = idx;
                 const f = String(srcIdx).padStart(2, '0');
                 const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                 ensureFilter(key);
