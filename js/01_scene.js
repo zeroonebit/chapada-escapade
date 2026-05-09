@@ -714,7 +714,7 @@ class Jogo extends Phaser.Scene {
         });
 
         console.log('[WANG_DEBUG] Pure terrain mode active. Use ESC pra menu.');
-    },
+    }
 
     _renderWangOnly(W, H) {
         // Remove tiles antigos se for regen
@@ -789,7 +789,7 @@ class Jogo extends Phaser.Scene {
         }
         // Re-render overlay se debug nº dos tiles tava on
         if (this.dbg?.fx?.wangDebug && this._renderWangDebug) this._renderWangDebug();
-    },
+    }
 
     _setupWangDebugCamera() {
         const SPEED = 600;   // px/sec
@@ -822,7 +822,7 @@ class Jogo extends Phaser.Scene {
         this.input.keyboard.on('keydown-OPEN_BRACKET', () => {
             this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom / ZOOM_STEP, 0.1, 3));
         });
-    },
+    }
 
     // ─────────────────────────────────────────────────────────────
     // Atlas frame aliasing — extrai static dirs (cow_S, ox_E etc) e legacy
