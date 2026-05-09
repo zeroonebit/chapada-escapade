@@ -691,6 +691,10 @@ class Jogo extends Phaser.Scene {
         // Camera no centro do mapa, zoom inicial confortável (vê ~25% do mapa)
         this.cameras.main.centerOn(W/2, H/2);
         this.cameras.main.setZoom(0.4);
+        // roundPixels: evita rendering em subpixels (causa bleeding nas bordas
+        // dos tiles em zoom != 1.0). Combinado com NEAREST filter no texture
+        // (em _renderWangOnly), elimina o "grid" que aparecia entre tiles.
+        this.cameras.main.setRoundPixels(true);
 
         // Camera controls: WASD/arrows pra scroll + [/] pra zoom
         this._setupWangDebugCamera();
@@ -771,6 +775,17 @@ class Jogo extends Phaser.Scene {
         const remap = (useStyle && this.dbg?.proc?.autoSortTiles && this._autoSortWangTiles)
             ? this._autoSortWangTiles(style) : null;
 
+        // Pre-aplica NEAREST filter em todas as wang textures usadas (one-shot
+        // por texture, idempotente) — elimina sampling linear que mistura
+        // pixels da borda do tile com transparente/vizinho = "bleeding"
+        const filterAppliedKeys = new Set();
+        const ensureFilter = (key) => {
+            if (filterAppliedKeys.has(key)) return;
+            const tex = this.textures.get(key);
+            if (tex && tex.setFilter) tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+            filterAppliedKeys.add(key);
+        };
+
         this._wangIndices = [];
         for (let y = 0; y < ROWS; y++) {
             this._wangIndices[y] = [];
@@ -782,8 +797,12 @@ class Jogo extends Phaser.Scene {
                 const srcIdx = remap ? remap[idx] : idx;
                 const f = String(srcIdx).padStart(2, '0');
                 const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+                ensureFilter(key);
+                // 1px overlap (CELL+1) cobre micro-gaps entre tiles em zooms
+                // que produzem positions fractional. NEAREST filter previne
+                // sampling de pixels-vizinhos, e overlap fecha o gap residual.
                 const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
-                    .setDisplaySize(CELL, CELL).setDepth(0);
+                    .setDisplaySize(CELL + 1, CELL + 1).setDepth(0);
                 this._wangTileImages.push(img);
             }
         }
