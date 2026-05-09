@@ -371,17 +371,42 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Plano debug PixaPro tab-by-tab** definido: ordem Browse → Naming → Map → Tiles → Gallery → Manager (Audit) → Editor → Detail. Iniciado pela Audit
 - **PAT GitHub salvo** em `H:/Projects/.pat_pixapro` (plain-text — rotacionar após uso)
 
+### ✅ Pronto (cont. — sessão 2026-05-08 · Golden path audit + Boot perf rework Fix D)
+- **Boot 200s → 30s no Pages** (-85%): 7 sprite atlases (cow/ox/farmer/ufo/hud/nature/items) via `tools/pack_atlas.py` + pngquant + oxipng. ~660 requests → ~30, ~5MB → ~1MB
+- **Tools instalados:** pngquant 2.17.0 + oxipng 10.1.1 via scoop. `tools/pack_atlas.py` empacota frames PNG em atlases Phaser-compatíveis (JSONHash format) com modo `char` (8-dir + anims) e `flat` (lista files OU groups por subdir)
+- **`_registerAtlasFrameTextures()` em 01_scene.js** — extrai static dirs + legacy aliases via canvas, mantém todos `setTexture('cow_S')` etc funcionando sem rewrite. Anim creation usa frames in-atlas: `{key:'cow_atlas', frame:'cow_walk_S_0'}`
+- **`_refreshMapList` silencioso em production** — skip fetch quando hostname != localhost (evita CORS/refused warn no Pages). `console.warn` → `console.debug`
+- **WASD tap responsiveness** — `Phaser.Input.Keyboard.JustDown` aplica velocity kick (1.8 unit/sec × sensitivity) em just-pressed. Antes: tap rápido = 1 frame força = movimento imperceptível
+- **Bug #2 fix tween leak (HIGH severity):** rain/snow `fall()` recursive agora early-returns se weather off. `_applyFXVisibility` detecta off→on transition e re-kickstart drops; on→off chama `killTweensOf`. Antes: 250 rain tweens + 100 snow vazavam em loop infinito quando weather mudava → 361 tweens, FPS 1.6
+- **Bug #1 fix corral slot sentinel (MED severity):** `time.delayedCall(3000, processSlot)` podia falhar; novo `_sweepStuckSlots()` em `_checkDelivery` força transição se slot loading > 5s. Caminho primário intocado, sentinela é safety net + console.warn
+- **Bug #3 verificado falso positivo** — quips i18n já lia `dbg.behavior.lang` corretamente
+- **Cleanup HUD aliases** — `hud_combustivel_v2`, `hud_graviton_v2` removidos do alias map (audit confirmou só `hud_combined_empty/full` são usados)
+
+### 🛠 Pipeline atlas (novo)
+- `tools/pack_atlas.py` — empacota frames PNG em atlases. Comandos:
+  - `python tools/pack_atlas.py` — regenera todos
+  - `python tools/pack_atlas.py cow` — só um
+  - `python tools/pack_atlas.py --no-compress` — skip pngquant pra dev rápido
+- Adicionar PixelLab assets novos: salva PNG → adiciona entrada no dict `ATLASES` em `pack_atlas.py` → roda. `02_preload.js` já tem `load.atlas()`, registrar alias em `_registerAtlasFrameTextures` se for static frame referenciado por `setTexture()` em call sites
+
+### 🌽 Bevy 3D edition (paralelo)
+- Repo novo: `H:/Projects/Bevy/ChapadaEscapade/` — reescrita em Rust+Bevy 3D top-down (fora do escopo Phaser, código independente)
+- Phase 0+1 skeleton compilável: main + prelude + world + camera (top-down ortho follow) + ufo (WASD+tilt) + cow (state machine) + beam (cone+abdução+energia) + fence (procedural ECS estilo Houdini SOP: resample polyline → scatter posts → connect rails) + corral (hex)
+- Plan completo: `~/.claude/plans/ready-swirling-moler.md`
+- Status: aguarda user instalar Rust toolchain (rustup-init.exe) pra `cargo run`. README com troubleshooting
+
 ### 🚧 Em andamento
-- **Audit live testing** — fallback Pages pushed, falta user validar painel popula + walk through one-by-one (P/D/R/C hotkeys)
-- **Apply renames** — sistema validado end-to-end com bug-fix; pode ser usado livremente agora
+- **Bevy 3D edition** — code pronto, user precisa instalar Rust pra rodar `cargo run` (build inicial ~5-15min)
+- **Audit live testing PixaPro** — Audit panel Pages fallback pushed; falta user validar painel popula + walk through one-by-one (P/D/R/C hotkeys)
 - **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
 - **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
 ### 🔜 Próximos passos
-1. **Voltar pro jogo** (foco original): map presets reais (5-6 variados), wirar pro splash escolher, dar variedade visual
-2. **Apply renames real** — clicar `✨ Apply + Update JS` no PixaPro Naming, validar end-to-end
+1. **Atlas extras (opcional)** — atlas pra 4 HUDs gigantes 1536x1024 (combined_empty/full + combustivel_full + graviton_full) requer bin-packing real. Cortaria mais ~300kb
+2. **Performance pass** — FPS no Pages cai pra 11 com 126 entities + barrel pipeline. Object pooling, layer culling, ou reduzir DBG_DEFAULTS counts pra Pages mode
 3. **Tutorial 09/10 completion logic** — contadores em `_updateBody` + flag em `_destroyShooter`
-4. **PixaPro polish bonus** (opcional): Browse aba Stats agregadas, Naming rename history, etc
+4. **Map presets reais** (5-6 variados) wirar pro splash escolher, dar variedade visual
+5. **Bevy 3D Phase 1 verificação** — quando user instalar Rust, rodar `cargo run` e validar checklist Phase 1 do plan
 
 ### 🛠 Ferramentas criadas
 - `tools/project_server.py` (era `gallery_server.py`) — server local porta 8090 com API REST consumida pelo PixaPro standalone (8 endpoints: maps, scan_assets, apply_renames, check_refs, etc)

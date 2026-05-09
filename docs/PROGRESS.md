@@ -4,6 +4,59 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-05-08 — Golden path audit + Boot perf rework (Fix D atlases) + 3 bugs
+
+**Tema:** Audit element-by-element em Pages live. Cair tempo de boot de 200s → 30s via sprite atlases. Corrigir tween leak + corral slot timer.
+
+### Boot perf — Fix D (sprite atlases)
+- `tools/pack_atlas.py` novo: empacota frames PNG em sprite atlases Phaser-compatíveis (JSONHash format) + pngquant (lossy 80-95) + oxipng (lossless final)
+- 7 atlases gerados em `assets/atlases/` (cow/ox/farmer/ufo/hud/nature/items): 480 PNGs individuais → 7 atlas PNG (-95% requests). Compressão pngquant: -68 a -79% bytes
+- `js/02_preload.js` substitui ~140 `load.image()` por 7 `load.atlas()`. 4 HUDs gigantes 1536x1024 ficam soltas (atlas com elas desperdiçaria 90% espaço)
+- `js/01_scene.js` `_registerAtlasFrameTextures()` extrai static dirs (cow_S, farmer_NE etc) + legacy aliases (nave, farmer, cow_frente) como texturas individuais via canvas — keep all `setTexture()` call sites working sem rewrite
+- Anim creation usa frames in-atlas: `{key:'cow_atlas', frame:'cow_walk_S_0'}`
+- **Resultado validado live: boot 200s → 30s no Pages (-85%)**, ~660 → ~30 requests, ~5MB → ~1MB
+
+### Fixes A+B+C pós-audit (golden path)
+- **A.** `_refreshMapList` silencioso em production: skip fetch quando hostname != localhost (evitar CORS/refused warn no Pages); `console.warn` → `console.debug`
+- **B.** Cleanup aliases HUD não-usados: `hud_combustivel_v2` e `hud_graviton_v2` removidos do `_registerAtlasFrameTextures` (audit confirmou só `hud_combined_empty/full` são usados pelas barras)
+- **C.** WASD tap responsiveness: `JustDown` aplica velocity kick (1.8 unit/sec, scaled by sensitivity) quando tecla é just-pressed. Antes tap rápido = 1 frame de força = movimento imperceptível
+
+### Bug #2 — Tween leak rain/snow (HIGH severity)
+- Audit live revelou 361 active tweens após ~30s de jogo, FPS caindo pra 1.6
+- Root cause: `_startRainDrop().fall` recursivo nunca checava se rain ainda estava ativo. Quando weather mudava de rain→clear, fxRain ficava invisível mas as 250 gotas continuavam tweening em loop infinito (cada `onComplete` agendava novo tween)
+- Mesma issue em `_startSnowFlake().fall` — 100 flakes vazando
+- **Fix:** `fall()` early-return se `cfg.rain` (ou `cfg.snow`) for falsy; `_applyFXVisibility` detecta off→on transition e re-kickstart; on→off chama `killTweensOf` pra drenar queue
+- Validado: 0 tweens ativos pós toggle (PENDING_REMOVE persistem mas são no-op)
+
+### Bug #1 — Corral slot loading→ready timer (MED severity)
+- Audit live: `time.delayedCall(3000, processSlot)` pode falhar em condições raras (slot ficou 8s+ em loading state)
+- **Fix defensivo:** slot grava `loadStartT = this.time.now`; novo `_sweepStuckSlots` chamado todo frame em `_checkDelivery` força transição se loading > 5s (3s expected + 2s tolerance) + `console.warn` deixa trace. Caminho primário (delayedCall) intocado
+
+### Bug #3 — i18n quips → falso positivo
+- Code review confirmou `_showQuip` lê `dbg.behavior.lang` corretamente. Pools `en` e `pt` ambos completos. Misclick na splash test live
+
+### Audit live findings (todos elements OK)
+- Boot/preload ✅ 30s · Splash ✅ 3 stages · UFO ✅ force-based · Beam ✅ mutex 5cows OR 1farmer · Cow AI ✅ 8-dir state machine · Corral ✅ V2 sprites + slots · Burger ✅ score+fuel · Game over ✅ cinematic + restart · HUD ✅ counters/bars/radar · Atmosphere ✅
+- Performance baseline: FPS 11-35 no Pages com 100 cows + 20 farmers + 6 shooters + barrel pipeline. Tween leak não era o limiter — rendering complexity é. Local desktop deve render 60fps tranquilo
+
+### Bevy 3D project bootstrap (paralelo)
+- Repo novo em `H:/Projects/Bevy/ChapadaEscapade/` (renomeado de `Bevy/Chapada/`)
+- Cargo.toml + 8 module skeletons compiláveis: main + prelude + world (ground+lighting) + camera (top-down ortho follow) + ufo (WASD+tilt) + cow (state machine 4 estados) + beam (cone+abdução+energia) + fence (procedural ECS Houdini-style: resample polyline → scatter posts → connect rails) + corral (hex)
+- Plan completo em `~/.claude/plans/ready-swirling-moler.md` (Phase 0 bootstrap + Phase 1 spike + Phase 2 roadmap pra paridade)
+- README com instruções de instalação Rust (rustup-init.exe), troubleshooting, expected boot output
+- **Status:** code pronto, user precisa instalar Rust toolchain pra `cargo run`
+
+### Commits da sessão (ChapadaEscapade)
+1. `1f54e5d` perf(boot): lazy-load Wang styles + defer rare anims (Fix A+B+C v1)
+2. `3214aca` chore: bump asset version
+3. `14c2edf` perf(boot): sprite atlases iter 1 (chars)
+4. `0390aa8` (atlas2): hud + nature + items atlases iter 2-4
+5. `8b06cc0` fix: console-cleanup + WASD tap responsiveness
+6. `bdd0976` perf(fx): stop rain/snow tween chains when weather off (Bug #2)
+7. `a4a8913` fix(corral): defensive sentinel for stuck slot loading state (Bug #1)
+
+---
+
 ## Sessão 2026-05-02 (continuação · tarde) — Apply renames bug-fix + Audit Pages fallback
 
 **Tema:** Caçar e corrigir bug do Apply renames (PixaPro live) que quebrou jogo em produção. Iniciar plano de debug PixaPro tab-by-tab.
