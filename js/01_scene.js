@@ -717,7 +717,146 @@ class Jogo extends Phaser.Scene {
             this._renderWangOnly(W, H);
         });
 
+        // Tile preview gallery (DOM panel bottom-right) com seleção
+        this._buildWangTilePreview();
+
         console.log('[WANG_DEBUG] Pure terrain mode active. Use ESC pra menu.');
+    }
+
+    // Painel DOM bottom-right com os 16 wang tiles. Click pra highlight +
+    // dim não-matching no canvas. Click de novo pra deselecionar.
+    _buildWangTilePreview() {
+        if (this._wangPreviewPanel) {
+            this._wangPreviewPanel.remove();
+            this._wangPreviewPanel = null;
+        }
+        const panel = document.createElement('div');
+        panel.id = 'wang-tile-preview';
+        panel.style.cssText = `
+            position: fixed; bottom: 12px; right: 12px;
+            background: rgba(8,16,12,0.92);
+            border: 1.5px solid #224433;
+            border-radius: 6px;
+            padding: 8px;
+            display: grid; grid-template-columns: repeat(4, 56px); gap: 4px;
+            z-index: 9999;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        `;
+        const header = document.createElement('div');
+        header.style.cssText = 'grid-column: 1/-1; font-size:10px; color:#aaffcc; letter-spacing:2px; margin-bottom:2px; text-align:center;';
+        header.textContent = 'WANG TILES';
+        panel.appendChild(header);
+
+        const style = this.dbg?.fx?.tileStyle;
+        const useStyle = (style && style !== 'test' && this.textures.exists(`wang_${style}_00`));
+
+        this._wangPreviewSelected = null;  // null = nenhum selecionado, todos visíveis
+        this._wangPreviewCells = [];
+
+        for (let i = 0; i < 16; i++) {
+            const cell = document.createElement('div');
+            const f = String(i).padStart(2, '0');
+            const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
+            // Extrai o canvas da textura (cada wang_NN é um PNG carregado como canvas)
+            const tex = this.textures.get(key);
+            const src = tex?.getSourceImage?.();
+            const dataUrl = (src && src.toDataURL) ? src.toDataURL() :
+                            (src && src.src) ? src.src : null;
+            cell.style.cssText = `
+                width: 56px; height: 56px;
+                background: ${dataUrl ? `url(${dataUrl}) center/contain no-repeat #000` : '#222'};
+                image-rendering: pixelated;
+                border: 2px solid #224433;
+                border-radius: 4px;
+                cursor: pointer;
+                position: relative;
+                transition: border-color 0.15s, transform 0.1s;
+            `;
+            // Label numérico no canto
+            const label = document.createElement('div');
+            label.textContent = i.toString();
+            label.style.cssText = `
+                position: absolute; top: 1px; left: 3px;
+                font-size: 9px; color: #aaffcc;
+                text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+                pointer-events: none;
+            `;
+            cell.appendChild(label);
+
+            cell.addEventListener('mouseenter', () => {
+                if (this._wangPreviewSelected !== i) cell.style.borderColor = '#88ddaa';
+            });
+            cell.addEventListener('mouseleave', () => {
+                if (this._wangPreviewSelected !== i) cell.style.borderColor = '#224433';
+            });
+            cell.addEventListener('click', () => {
+                this._wangPreviewSelectTile(i);
+            });
+
+            this._wangPreviewCells.push(cell);
+            panel.appendChild(cell);
+        }
+
+        // Botão "Limpar seleção"
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'CLEAR';
+        clearBtn.style.cssText = `
+            grid-column: 1/-1; margin-top: 4px;
+            background: #001a08; color: #aaffcc;
+            border: 1px solid #224433; border-radius: 3px;
+            padding: 4px; font-family: inherit; font-size: 10px;
+            letter-spacing: 1px; cursor: pointer;
+        `;
+        clearBtn.addEventListener('click', () => this._wangPreviewSelectTile(null));
+        panel.appendChild(clearBtn);
+
+        document.body.appendChild(panel);
+        this._wangPreviewPanel = panel;
+    }
+
+    _wangPreviewSelectTile(idx) {
+        // Toggle: clicar no mesmo deseleciona
+        if (this._wangPreviewSelected === idx) idx = null;
+        this._wangPreviewSelected = idx;
+
+        // Atualiza bordas no painel (aro amarelo no selecionado)
+        if (this._wangPreviewCells) {
+            this._wangPreviewCells.forEach((cell, i) => {
+                if (i === idx) {
+                    cell.style.borderColor = '#ffcc00';
+                    cell.style.transform = 'scale(1.1)';
+                    cell.style.boxShadow = '0 0 8px rgba(255,204,0,0.6)';
+                } else {
+                    cell.style.borderColor = '#224433';
+                    cell.style.transform = 'scale(1)';
+                    cell.style.boxShadow = 'none';
+                }
+            });
+        }
+
+        // No canvas: dim não-matching, highlight matching
+        if (this._wangTileImages && this._wangIndices) {
+            const ROWS = this._wangIndices.length;
+            const COLS = this._wangIndices[0]?.length || 0;
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const flatIdx = y * COLS + x;
+                    const img = this._wangTileImages[flatIdx];
+                    if (!img || !img.scene) continue;
+                    const tileIdx = this._wangIndices[y][x];
+                    if (idx === null) {
+                        img.setAlpha(1).clearTint();
+                    } else if (tileIdx === idx) {
+                        img.setAlpha(1);
+                        img.setTint(0xffeeaa);   // dourado sutil
+                    } else {
+                        img.setAlpha(0.25);
+                        img.clearTint();
+                    }
+                }
+            }
+        }
     }
 
     _renderWangOnly(W, H) {
@@ -798,16 +937,34 @@ class Jogo extends Phaser.Scene {
                 const f = String(srcIdx).padStart(2, '0');
                 const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
                 ensureFilter(key);
-                // 1px overlap (CELL+1) cobre micro-gaps entre tiles em zooms
-                // que produzem positions fractional. NEAREST filter previne
-                // sampling de pixels-vizinhos, e overlap fecha o gap residual.
+                // 2px overlap cobre micro-gaps em zooms patológicos. Com
+                // pixelArt:true global + NEAREST filter + roundPixels camera,
+                // o overlap só serve pra fechar o último resíduo.
                 const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
-                    .setDisplaySize(CELL + 1, CELL + 1).setDepth(0);
+                    .setDisplaySize(CELL + 2, CELL + 2).setDepth(0);
                 this._wangTileImages.push(img);
             }
         }
         // Re-render overlay se debug nº dos tiles tava on
         if (this.dbg?.fx?.wangDebug && this._renderWangDebug) this._renderWangDebug();
+
+        // Reset preview seleção: tiles novos não têm tint, então só zerar state
+        // e re-build painel se style mudou (thumbnails refletem o style atual)
+        if (this._wangPreviewPanel) {
+            const currentStyle = this.dbg?.fx?.tileStyle;
+            if (this._wangPreviewLastStyle !== currentStyle) {
+                this._wangPreviewLastStyle = currentStyle;
+                this._buildWangTilePreview();
+            }
+            this._wangPreviewSelected = null;
+            if (this._wangPreviewCells) {
+                this._wangPreviewCells.forEach(c => {
+                    c.style.borderColor = '#224433';
+                    c.style.transform = 'scale(1)';
+                    c.style.boxShadow = 'none';
+                });
+            }
+        }
     }
 
     _setupWangDebugCamera() {

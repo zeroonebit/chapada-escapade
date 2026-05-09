@@ -4,6 +4,9 @@
 const config = {
     type: Phaser.WEBGL,  // WEBGL necessário pro shader procedural de terreno (13_terrain_shader.js)
     parent: 'game-host',
+    pixelArt: true,    // antialias=false + roundPixels=true global. Todos assets do
+                       // projeto são pixel art (PixelLab + splash). Elimina bleeding
+                       // entre tiles wang sem afetar visual dos sprites.
     scale: {
         mode: Phaser.Scale.RESIZE,
         width: '100%',
