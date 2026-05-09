@@ -711,27 +711,31 @@ class Jogo extends Phaser.Scene {
         // Pause handler (ESC abre menu)
         this._setupPause();
 
-        // Banner topo full-width — 5× maior e ancorado no topo da tela
-        const W_screen = this.scale.width;
-        const BANNER_H = 80;
-        const bannerBg = this.add.rectangle(W_screen / 2, 0, W_screen, BANNER_H, 0x0a0a0a, 0.94)
-            .setOrigin(0.5, 0).setScrollFactor(0).setDepth(9999)
-            .setStrokeStyle(2, 0xffcc44, 0.6);
-        const banner = this.add.text(W_screen / 2, BANNER_H / 2,
-            '🧪 WANG_DEBUG   ·   WASD/Arrows: scroll   ·   [ / ]: zoom   ·   R: regen   ·   ESC: configs', {
-            fontFamily: '"Courier New", monospace',
-            fontSize: '32px',
-            fill: '#ffcc44',
-            fontStyle: 'bold',
-            stroke: '#000000', strokeThickness: 5,
-        }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(10000);
-        // Resize handler: adapta width quando tela muda
-        this.scale.on('resize', () => {
-            const w = this.scale.width;
-            bannerBg.setSize(w, BANNER_H);
-            bannerBg.setPosition(w / 2, 0);
-            banner.setPosition(w / 2, BANNER_H / 2);
-        });
+        // Banner topo full-width via DOM overlay (mais robusto que Phaser
+        // Rectangle — `position: fixed; right: 0` cobre viewport sempre,
+        // sem depender de scale.width que pode reportar tamanho errado
+        // antes do primeiro resize event).
+        if (this._wangBanner) this._wangBanner.remove();
+        const banner = document.createElement('div');
+        banner.id = 'wang-debug-banner';
+        banner.innerHTML = '🧪 WANG_DEBUG &nbsp;·&nbsp; WASD/Arrows: scroll &nbsp;·&nbsp; [ / ]: zoom &nbsp;·&nbsp; R: regen &nbsp;·&nbsp; ESC: configs';
+        banner.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 56px;
+            background: rgba(10,10,10,0.94);
+            border-bottom: 2px solid rgba(255,204,68,0.6);
+            color: #ffcc44;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+            pointer-events: none;
+            letter-spacing: 1px;
+        `;
+        document.body.appendChild(banner);
+        this._wangBanner = banner;
 
         // Atalho R: regenera o terrain (re-roll do CA + invalida sort cache)
         this.input.keyboard.on('keydown-R', () => {
