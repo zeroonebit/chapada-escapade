@@ -1234,7 +1234,46 @@ class Jogo extends Phaser.Scene {
         // Initial render
         this._renderCompareGrid();
         this._refreshActivePresetInfo();
+        this._buildRefGrid();
         this._refreshCellEditor();
+    }
+
+    // Ground truth reference grid (test palette, cr31-native).
+    // Mostra os 16 tiles de referência com seus cr31 idx, pra comparar
+    // visualmente com o preset ativo. Sempre usa wang_NN (test palette).
+    _buildRefGrid() {
+        const grid = document.getElementById('tiles-ref-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const f = String(i).padStart(2, '0');
+            const key = `wang_${f}`;
+            const cell = document.createElement('div');
+            cell.style.cssText = `
+                position: relative;
+                background: #001a08;
+                border: 1px solid #335544;
+                border-radius: 2px;
+                image-rendering: pixelated;
+            `;
+            const tex = this.textures.get(key);
+            const src = tex?.getSourceImage?.();
+            if (src && (src.toDataURL || src.src)) {
+                const url = src.toDataURL ? src.toDataURL() : src.src;
+                cell.style.background = `#001a08 url(${url}) center/contain no-repeat`;
+            }
+            const lbl = document.createElement('div');
+            lbl.textContent = i;
+            lbl.style.cssText = `
+                position: absolute; top: 0; left: 1px;
+                font-size: 7px; color: #aaffcc;
+                text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+                pointer-events: none; line-height: 1;
+            `;
+            cell.appendChild(lbl);
+            cell.title = `cr31 ${i} (ground truth)`;
+            grid.appendChild(cell);
+        }
     }
 
     _renderCompareGrid() {
@@ -1372,8 +1411,45 @@ class Jogo extends Phaser.Scene {
                 this._cellEditorRightClick(i);
             });
             cell.addEventListener('dblclick', () => this._cellEditorReset(i));
+            // Drag-drop: arrasta cell A pra cell B = swap srcIdx + transforms
+            cell.draggable = true;
+            cell.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', String(i));
+                e.dataTransfer.effectAllowed = 'move';
+                cell.classList.add('dragging');
+            });
+            cell.addEventListener('dragend', () => cell.classList.remove('dragging'));
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                cell.classList.add('drag-over');
+                e.dataTransfer.dropEffect = 'move';
+            });
+            cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('drag-over');
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                if (isNaN(fromIdx) || fromIdx === i) return;
+                this._cellEditorSwap(fromIdx, i);
+            });
             grid.appendChild(cell);
         }
+    }
+
+    // Swap transforms entre 2 cr31 idx (drag-drop). Cada cell tem
+    // {srcIdx, rot, flipH, flipV} resolvido via resolveTileTransform;
+    // depois do swap, a referida posição cr31 mostra o que a outra mostrava.
+    _cellEditorSwap(fromCr31, toCr31) {
+        const style = this.dbg?.fx?.tileStyle;
+        if (!style || typeof setTileTransform !== 'function') return;
+        const a = resolveTileTransform(style, fromCr31);
+        const b = resolveTileTransform(style, toCr31);
+        // Set cada um pro outro (preservando srcIdx + transforms)
+        setTileTransform(style, fromCr31, { ...b });
+        setTileTransform(style, toCr31, { ...a });
+        this._refreshCellEditor();
+        if (this.WANG_DEBUG) this._scheduleWangLiveRender();
+        else if (this._scheduleSceneryRebuild) this._scheduleSceneryRebuild();
     }
 
     _cellEditorClick(cr31Idx, e) {

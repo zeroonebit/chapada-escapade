@@ -231,6 +231,11 @@ Object.assign(Jogo.prototype, {
             /* Cell editor: cells fixos 28px (4 cols compactas) */
             #debug-menu #tiles-cell-grid { display:grid; grid-template-columns:repeat(4, 28px); gap:2px; margin-top:3px; justify-content:start; }
             #debug-menu #tiles-cell-grid > div { width:28px !important; height:28px !important; }
+            #debug-menu #tiles-cell-grid > div.drag-over { border-color:#ffcc44 !important; box-shadow:0 0 6px #ffcc44; }
+            #debug-menu #tiles-cell-grid > div.dragging { opacity:0.4; }
+            /* Ref grid (ground truth): mesmo layout, cells un-clickable */
+            #debug-menu #tiles-ref-grid { display:grid; grid-template-columns:repeat(4, 22px); gap:2px; }
+            #debug-menu #tiles-ref-grid > div { width:22px; height:22px; }
             #debug-menu #tab-tiles fieldset { padding:4px 8px; margin:0; }
             #debug-menu #tab-tiles legend { font-size:9px; padding:0 4px; }
             #debug-menu #tab-tiles label { font-size:10px; margin:1px 0; }
@@ -472,9 +477,18 @@ Object.assign(Jogo.prototype, {
 
                     <fieldset class="t-cell">
                         <legend>CELL EDITOR</legend>
-                        <div class="note" style="font-size:9px;margin:0 0 3px 0;">Click rot · Shift flipH · Alt flipV · Right cycle src · Dbl reset</div>
-                        <div id="tiles-cell-grid"></div>
-                        <button id="tiles-auto-sort" style="margin-top:4px;width:100%;background:#003311;color:#aaffcc;border:1px solid #00aa44;padding:4px;font-family:inherit;font-size:10px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔍 AUTO-SORT (color sample)</button>
+                        <div class="note" style="font-size:9px;margin:0 0 3px 0;">Drag swap · Click rot · Shift flipH · Alt flipV · Right cycle src · Dbl reset</div>
+                        <div style="display:flex;gap:8px;align-items:flex-start;">
+                            <div>
+                                <div style="font-size:8px;color:#aaffcc;margin-bottom:2px;letter-spacing:1px;">REF cr31</div>
+                                <div id="tiles-ref-grid"></div>
+                            </div>
+                            <div>
+                                <div style="font-size:8px;color:#ffcc44;margin-bottom:2px;letter-spacing:1px;">PRESET</div>
+                                <div id="tiles-cell-grid"></div>
+                            </div>
+                        </div>
+                        <button id="tiles-auto-sort" style="margin-top:4px;width:100%;background:#003311;color:#aaffcc;border:1px solid #00aa44;padding:4px;font-family:inherit;font-size:10px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔍 AUTO-SORT</button>
                         <button id="tiles-reset-transforms" class="secondary" style="margin-top:4px;width:100%;background:#332211;color:#ffaa44;border:1px solid #553311;padding:3px;font-family:inherit;font-size:9px;cursor:pointer;">RESET TRANSFORMS</button>
                     </fieldset>
 
