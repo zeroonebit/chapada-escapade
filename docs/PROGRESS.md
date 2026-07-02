@@ -4,6 +4,31 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-02 — Wang tilesets finais + plano de migração Bevy 3D + Fase 0
+
+**Tema:** Fechamento dos 3 tilesets wang faltantes no Phaser. Planejamento completo da migração pra Bevy 3D (port 1:1, billboards, 8 fases). Início da Fase 0: Rust instalado, skeleton corrigido pra Bevy 0.15.
+
+### Phaser — wang tilesets completos
+- `tools/slice_pixellab_tileset.py` novo — baixa tilesheet da API PixelLab (`api.pixellab.ai/mcp/tilesets/{id}/image`) e sliceia grid 4×4 em 16 PNGs `wang_NN.png`
+- 3 tilesets sliced: `mapa1_dirt_grass` (267836d8), `mapa2_dirt_grass` (5398c10b — REFS dizia 404 mas baixou ok), `shared_ocean_sand_16` (2640e1f9)
+- `js/wang_presets.js`: 3 presets novos adicionados (14 total agora), comentário "não sliced" removido
+- Commit `6d143df` merged em main + Pages
+
+### Bevy 3D — plano de migração aprovado
+- **Decisões:** port 1:1 da gameplay · sprites PixelLab billboarded (quads face-camera, `AlphaMode::Mask`) · feature parity completa como meta · terrain vira mesh procedural 3D nativa (CA + vertex colors + altura por tipo — wang tiles NÃO portam) · Bevy 0.15 pinned
+- **Plano:** 8 fases (0=toolchain, 1=billboards, 2=core loop, 3=terrain, 4=enemies, 5=HUD+flow+debug, 6=FX+atmosphere, 7=tutorial+i18n+WASM), ~27-42 sessões, ~4400 linhas Rust estimadas
+- Salvo em `C:/Users/thiag/.claude/plans/quero-planejar-a-migra-ao-binary-horizon.md` (substitui `ready-swirling-moler.md` que se perdeu)
+- Crates: bevy_asset_loader (F1), bevy_egui+serde (F5), bevy_hanabi (F6, risco WASM — fallback CPU particles)
+
+### Bevy 3D — Fase 0 (em andamento)
+- **Rust instalado:** rustup 1.29.0 via scoop, stable 1.96.1 MSVC (`rustup default stable` necessário — settings.toml pré-existente no persist do scoop impedia default automático)
+- **VS 2022 Community** com C++ tools confirmado via vswhere (linker ok)
+- **Fix API Bevy 0.15:** `delta_seconds()` → `delta_secs()` (9× em ufo/cow/camera/beam) — rename breaking da 0.15; skeleton nunca tinha compilado
+- **README do Bevy atualizado:** decisões novas (port 1:1, billboards, tabela de fases, link pro plano novo)
+- Primeira `cargo build` disparada (~300 crates)
+
+---
+
 ## Sessão 2026-05-09 — WANG_DEBUG mode + PixaPro tiles port + tudo live
 
 **Tema:** Auditoria element-by-element começando pelo terreno. Modo isolado `?debug=wang` que strippa tudo. Port completo do sistema de tiles do PixaPro (catalog, transforms, cell editor, auto-sort robusto). Live config — botão APPLY+RESTART morreu.
