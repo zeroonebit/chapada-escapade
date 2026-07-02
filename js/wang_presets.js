@@ -1,5 +1,5 @@
 // js/wang_presets.js — Catálogo de Wang tilesets (importado do PixaPro)
-// 14 presets: 1 ground truth + 2 game-actives 32px + 5 mapa1 verde + 5 mapa2 seco + 1 shared.
+// 14 presets: 1 ground truth + 2 game-actives 32px + 5 mapa1 verde + 5 mapa2 seco + 1 shared 16px.
 // Ground truth pra cr31: docs.cr31.co.uk/stagecast/wang/2corn.html
 //
 // Carregado via <script src="js/wang_presets.js"> antes de 15_debug_menu.js.
@@ -150,14 +150,44 @@ const WANG_PRESETS = [
         info: 'Conecta sand ↔ cerrado_grass_v2.',
     },
 
-];
+    // ════════════════════════════════════════════════════════════
+    // BASE TILESETS (16×16) — dirt↔grass por mapa + ocean↔sand shared
+    // ════════════════════════════════════════════════════════════
+    {
+        id: '267836d8-f211-4260-8917-938216d7e0f1',
+        biome: 'cerrado-verde', season: 'chuva',
+        name: '[MAPA 1] dirt ↔ grass cerrado',
+        meta: 'PixelLab · 16×16 · BASE tileset',
+        sliced: true,
+        styleKey: 'mapa1_dirt_grass',
+        sliceFn: (i) => `assets/terrain/mapa1_dirt_grass/wang_${String(i).padStart(2,'0')}.png`,
+        tileSize: 16,
+        info: 'BASE dirt↔grass pra mapa1 (cerrado verde).',
+    },
+    {
+        id: '5398c10b-52b2-45b3-b6ab-dac141249b1f',
+        biome: 'cerrado-seco', season: 'seca',
+        name: '[MAPA 2] dirt ↔ grass cerrado v2',
+        meta: 'PixelLab · 16×16 · BASE tileset',
+        sliced: true,
+        styleKey: 'mapa2_dirt_grass',
+        sliceFn: (i) => `assets/terrain/mapa2_dirt_grass/wang_${String(i).padStart(2,'0')}.png`,
+        tileSize: 16,
+        info: 'BASE dirt↔grass pra mapa2 (cerrado seco).',
+    },
+    {
+        id: '2640e1f9-1e20-464d-b4ca-f700357733ee',
+        biome: 'costa', season: 'universal',
+        name: '[SHARED 16px] ocean ↔ sand',
+        meta: 'PixelLab · 16×16 · shared cross-mapas',
+        sliced: true,
+        styleKey: 'shared_ocean_sand_16',
+        sliceFn: (i) => `assets/terrain/shared_ocean_sand_16/wang_${String(i).padStart(2,'0')}.png`,
+        tileSize: 16,
+        info: 'Versão 16px do ocean↔sand (shared entre mapa1 e mapa2).',
+    },
 
-// Notas: 3 tilesets PixelLab existem na fonte mas ainda não foram sliced
-// localmente em assets/terrain/. Adicionar via tools/slice_tilesets.py se
-// quiser usar:
-//   - mapa1_dirt_grass (BASE id 267836d8-f211-4260-8917-938216d7e0f1)
-//   - mapa2_dirt_grass (BASE id 5398c10b-52b2-45b3-b6ab-dac141249b1f)
-//   - shared_ocean_sand_16 (id 2640e1f9-1e20-464d-b4ca-f700357733ee)
+];
 
 // Cores por bioma pra UI cards (matches PixaPro)
 const WANG_BIOME_COLORS = {
