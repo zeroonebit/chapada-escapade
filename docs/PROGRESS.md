@@ -20,12 +20,14 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - Salvo em `C:/Users/thiag/.claude/plans/quero-planejar-a-migra-ao-binary-horizon.md` (substitui `ready-swirling-moler.md` que se perdeu)
 - Crates: bevy_asset_loader (F1), bevy_egui+serde (F5), bevy_hanabi (F6, risco WASM — fallback CPU particles)
 
-### Bevy 3D — Fase 0 (em andamento)
-- **Rust instalado:** rustup 1.29.0 via scoop, stable 1.96.1 MSVC (`rustup default stable` necessário — settings.toml pré-existente no persist do scoop impedia default automático)
-- **VS 2022 Community** com C++ tools confirmado via vswhere (linker ok)
-- **Fix API Bevy 0.15:** `delta_seconds()` → `delta_secs()` (9× em ufo/cow/camera/beam) — rename breaking da 0.15; skeleton nunca tinha compilado
-- **README do Bevy atualizado:** decisões novas (port 1:1, billboards, tabela de fases, link pro plano novo)
-- Primeira `cargo build` disparada (~300 crates)
+### Bevy 3D — Fases 0-4 numa sessão (modo "todas as fases, polish depois")
+- **Fase 0 ✅:** rustup 1.29.0 via scoop + stable 1.96.1 MSVC; fix `delta_seconds`→`delta_secs` (9×); migração bundles deprecated → required components (Mesh3d/MeshMaterial3d/Camera3d/DirectionalLight — 13 erros de tipo resolvidos); janela validada na RTX 5090 Vulkan
+- **Fase 1 ✅:** billboards PixelLab — 280 PNGs copiados (cow 240 + ufo 40), `billboard.rs` (Direction8 atan2 quantize, AnimatedSprite timer+material swap, BillboardRoll pro tilt, AlphaMode::Mask), `loading.rs` (GameState Loading→Playing, 232 handles, spawns em OnEnter). Validado 1h07 runtime
+- **Fase 1.5 ✅ (fora do plano, pedido do user):** mouse follow — 1ª versão cinemática ficou "não responsiva como o Phaser"; port fiel do modelo força+inércia do Matter (frictionAir 0.04/mass 5/força 0.0035 → accel 28 u/s², drag exp 2.4/s, deadzone 2.0). Menu CONFIGS egui adiantado da Fase 5: 10 sliders live (nave/beam/vacas), persist `debug_config.json`
+- **Fase 2 ✅:** core loop — cargo real (vacas penduradas em anel sob a nave, cap 5, penalty -10%/vaca), release com queda, 3 currais billboard (5 variantes), slots classic/cheese/double com processing 3s, burger entidade atraível, coleta = pontos+fuel, fuel drain por movimento + soft death, bois via CowKind (ox 7-dir idle fallback), seta indicadora egui, HUD provisório egui
+- **Fase 3 ✅:** terrain procedural — CA 50×50 (weights 10/18/40/32, majority vote 3 passes) → mesh única com vertex colors (altura por tipo + jitter, cor = média das 4 células vizinhas, normais suaves manuais). Wang tiles NÃO portados (decisão: 3D nativo). Scenery scatter ~90 objs água-aware (3 rocks, 8 vegetações, church/windmill/truck, dry_turf, barris)
+- **Fase 4 🚧:** farmers 8-dir (wander/flee/abduct com mutex 1 farmer XOR 5 vacas) + 6 torres (cooldown 2-3.5s, bullets cap 100, dano 13 fuel) + slam mechanic (soltar farmer na torre destrói, 250pts, 6/6 = vitória). Código completo, build pendente (classificador de shell instável)
+- Commits Bevy: `8430184` (F0) → `57903b1` (F1) → mouse → menu → F2 → F3 (6 commits)
 
 ---
 
