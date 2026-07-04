@@ -26,8 +26,27 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - **Fase 1.5 ✅ (fora do plano, pedido do user):** mouse follow — 1ª versão cinemática ficou "não responsiva como o Phaser"; port fiel do modelo força+inércia do Matter (frictionAir 0.04/mass 5/força 0.0035 → accel 28 u/s², drag exp 2.4/s, deadzone 2.0). Menu CONFIGS egui adiantado da Fase 5: 10 sliders live (nave/beam/vacas), persist `debug_config.json`
 - **Fase 2 ✅:** core loop — cargo real (vacas penduradas em anel sob a nave, cap 5, penalty -10%/vaca), release com queda, 3 currais billboard (5 variantes), slots classic/cheese/double com processing 3s, burger entidade atraível, coleta = pontos+fuel, fuel drain por movimento + soft death, bois via CowKind (ox 7-dir idle fallback), seta indicadora egui, HUD provisório egui
 - **Fase 3 ✅:** terrain procedural — CA 50×50 (weights 10/18/40/32, majority vote 3 passes) → mesh única com vertex colors (altura por tipo + jitter, cor = média das 4 células vizinhas, normais suaves manuais). Wang tiles NÃO portados (decisão: 3D nativo). Scenery scatter ~90 objs água-aware (3 rocks, 8 vegetações, church/windmill/truck, dry_turf, barris)
-- **Fase 4 🚧:** farmers 8-dir (wander/flee/abduct com mutex 1 farmer XOR 5 vacas) + 6 torres (cooldown 2-3.5s, bullets cap 100, dano 13 fuel) + slam mechanic (soltar farmer na torre destrói, 250pts, 6/6 = vitória). Código completo, build pendente (classificador de shell instável)
-- Commits Bevy: `8430184` (F0) → `57903b1` (F1) → mouse → menu → F2 → F3 (6 commits)
+- **Fase 4 ✅:** farmers 8-dir (wander/flee/abduct com mutex 1 farmer XOR 5 vacas) + 6 torres (bullets cap 100, dano fuel) + slam mechanic (soltar farmer na torre destrói, 250pts, 6/6 = vitória)
+- **Fase 5 ✅:** game flow states (Splash→Playing⇄Paused, GameOver/Victory) + restart via RestartEvent + F3 overlay. Bug B0002 (Res+ResMut do mesmo resource) e OnEnter re-disparando no unpause (mundo duplicava!) corrigidos com guards
+- **Fase 6 ✅:** TOD 6 presets + 5 weathers (rain/fog/storm+relâmpago/snow) + shuffle no restart + explosões/quips/vento
+- **Fase 7 parcial ✅:** tutorial 7 etapas (inclui farmer mutex + pedrada na torre), splash com splashv4
+
+### Bevy 3D — polish guiado por playtests (2026-07-03/04, ~15 rodadas de feedback)
+- **Feel da nave calibrado por PROBE no Phaser live** (preview_eval + applyForce sintético): tilt satura 23° (não 4.6°!), vel 40-55% tela/s, sens do user = 1.54 → accel 60, drag 2.4, tilt K 0.40
+- **Abdução consertada (bug raiz da Fase 2):** gravidade do cow_move (-9.8) vencia o pull do beam (+6) — vaca nunca subia. Fix: marker BeamGrip desliga gravidade durante o pull (cow + farmer)
+- **Beam:** histerese anti-pisca (zera→trava até regen 20), raio 6.5, cone desinvertido + Add unlit (não escurece mais o que atravessa)
+- **Tamanhos baked do tuning do user:** disco 8.0 / vaca 3.0 / boi 4.8 / farmer 2.5 + sliders de escala live
+- **Mapa 500×500** (CA 100×100), 30 vacas/8 bois/20 farmers/4 currais
+- **Wang tiles:** auto-sort por color sampling com upper_hint por par; decisão do user: UM tileset por partida (5 estilos selecionáveis na aba TILES + REGENERAR TERRENO)
+- **TOD via overlay uniforme** (bug: sprites lit escureciam, tiles unlit não — agora tudo unlit + véu de cor, port do 18_atmosphere)
+- **HUD PixelLab:** 5 counter boxes topo, barras FUEL/GRAVITON centralizadas com labels nas caixas pretas, score na base do radar, radar com sweep 0.22rev/s + rastro + blip decay rápido
+- **Menu CONFIGS 6 abas** (CONTROLES/JOGO/TAMANHOS/VFX/TILES/DEBUG) + bevy-inspector-egui (F4)
+- **Exhaust em cone:** difusão lateral acelerada, nasce 0.45× e infla 5× com fade — sem bolinhas coloridas
+- **Scatter por bioma:** pedras só em dirt, plantas/turf só em grass
+- **Rochas interativas** (farmer explode +100, vaca HP 3-5), blob shadows Multiply, game over cinematográfico (espiral+fumaça), quips de proximidade nos landmarks
+- **Sombras-bloco eliminadas** (NotShadowCaster em todos os billboards — shadow map projetava o quad inteiro)
+- **Próximo épico (memória + README):** pipeline Houdini→glTF extras→Bevy (Houdini como level editor)
+- ~30 commits no repo Bevy; jogo desktop completo e jogável
 
 ---
 
