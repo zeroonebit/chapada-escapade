@@ -4,6 +4,42 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-05 — Bevy: terreno HÍBRIDO tiles+procedural, gameplay feel, investigação ao vivo
+
+**Tema:** Maratona de 12 commits. Investigação empírica com computer-use (burst de frames + screenshots do jogo rodando), pacotão de gameplay/feel e a arquitetura de terreno híbrido que casa pixel-art tiles com blend procedural.
+
+### Investigação empírica (computer-use na máquina do user)
+- Capturei bursts de 30-40 frames da janela do jogo + análise por Python (luminância por região) pra caçar o "flash das sombras"
+- **Descobertas:** a "elipse gigante" era LAGO do mesh procedural (e a vinheta do game over); o config do user estava em `terrain_mode: procedural`; o flash real = **shadow maps da DirectionalLight** shimmerando no mesh lit (`shadows_enabled: false` resolveu — blob shadows são o grounding)
+- Bugs achados de brinde: `spawn_scenery` SEM guard (cenário duplicava a cada unpause/restart!), mapa nunca re-rolava no restart, `.exe` direto morre sem DLLs (`dynamic_linking` → sempre `cargo run`)
+
+### Gameplay/feel (pedidos do user)
+- **Inércia Matter-style:** cargo segue a nave por MOLA sub-crítica (k=26, damp=5) — balança nas arrancadas, overshoot nas freadas; soltar ARREMESSA (momentum da mola + ½ velocidade da nave); AI não sobrescreve velocidade de quem tá no ar
+- **Água NO-FLY** (wall-slide + quicada) pra nave, vacas e farmers; spawns em terra seca (busca espiral); **bordas do mapa = água** com costa ondulada → mapa é ILHA
+- **Canyons (TerrainType::Rock)** — 2º no-go: cristas por random walk, paredão 2.4 no procedural, contornar como água; sprites de pedra scattered em cima vendem a formação
+- **Quintais de curral:** manchas de dirt pintadas na geração com o curral EXATAMENTE em cima (grid.corral_spots); pedras banidas num raio de 18u
+- **Gramados metaball:** campo de 3-6 bolas (Σr²/d² > 1), lâminas-TRIÂNGULO estilo bruno-simon (gradiente por vértice, opacas, 4 tons, ~6500), física de mola com vento/rajadas + empurrão de vacas + redemoinho do beam; vacas FOGEM PRO MATO e agacham escondidas (beam não pega, tint escuro); cargo sobre gramado engorda e cai (~0.9s)
+- **Sombras v3:** textura radial 128px gerada em código num quad Blend preto único (3 tentativas: Multiply único → 3 camadas com anéis → textura gradiente ✓)
+- **Beam denso:** core 0.45 quase opaco + halo sutil (halo forte lavava a tela e "piscava" tudo no toggle)
+- **Burger fantasma piscando** no Loading do slot; mascote do curral em escala de jogo
+- **Billboards seguem a câmera VIVA com slerp 4/s** (nominal fixa fazia os assets "girarem" no giro da câmera)
+
+### Terreno HÍBRIDO (arquitetura da sessão — ideia do user)
+- **Wang DUAL-LAYER:** células water/sand usam tileset ocean↔sand, células grass/dirt/rock usam dirt↔grass — cada família com auto-sort e vertex grid próprios; 2 dropdowns (3 sets de terra × 2 de água = 6 combos)
+- **Overlay procedural com ALPHA POR VÉRTICE sobre os tiles:** miolo alpha~0 (pixel art puro), costuras dentro da família (véu warped fino), BANDA DE FAMÍLIA larga (kernel 5 taps ~2.5 células, alpha 0.8) na troca grama|areia onde não existe tile de transição, rocha 0.72 (grão do tile fantasma = textura)
+- **Paleta AMOSTRADA da arte:** média RGB dos tiles sólidos (cr31 15/0) de cada set ativo — costura com o matiz exato do tile por baixo (sugestão do user)
+- **Gerador coerente:** areia SÓ como praia (banda por elevação criava manchas bege inland), água SÓ no verde (zona árida não tem lago)
+- **Anti-repetição:** rotação por hash REVERTIDA (tiles PixelLab não são rotation-safe — xadrez de emendas); respiro de véu 8-28% nos miolos
+- **OCEANO INFINITO:** avental 7× o mapa com o tile de água em sampler REPEAT — ilha de verdade, void eliminado
+- Mesh base v4: SUB=3 (301² verts), cor bilinear com domain warp, mottle 2 escalas (manchas + grão)
+- **Low-poly gen engavetado** (user decidiu manter sprites): `tools/gen_lowpoly.py` + rock/corral/cactus.glb ficam no repo pra fase 3D
+
+### Estado / próximo
+- User validou a direção ("está bem melhor") — refinos pendentes na próxima sessão
+- Commits do dia (repo Bevy): `ca1a286` → `73ee452` (12)
+
+---
+
 ## Sessão 2026-07-04 (continuação) — Bevy: terreno PROCEDURAL + polish HUD/VFX
 
 **Tema:** Segunda leva de polish pós-checkpoint + primeiro épico de terreno procedural nativo (a promessa original da Fase 3 do plano, agora de verdade).
