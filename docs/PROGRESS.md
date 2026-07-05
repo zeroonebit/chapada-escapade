@@ -4,6 +4,32 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-04 (continuação) — Bevy: terreno PROCEDURAL + polish HUD/VFX
+
+**Tema:** Segunda leva de polish pós-checkpoint + primeiro épico de terreno procedural nativo (a promessa original da Fase 3 do plano, agora de verdade).
+
+### Terreno procedural (modo novo, aba TILES)
+- **Seletor TILES (wang) × PROCEDURAL** — em procedural a wang layer não spawna; o mesh vertex-color assume com relevo. Troca aplica no REGENERAR
+- **Seed por noise fBm** (value noise hash determinístico, 4 octaves, sem crate) substitui o random uniforme nos DOIS modos: campo de elevação decide água/areia, campo de umidade decide grass/dirt → continentes e lagos orgânicos em vez de sal-e-pimenta. CA vira só passe de limpeza
+- **Distance field BFS da água** no `TerrainGrid.dist_water`: praia garantida (anel 2 células de sand em toda costa), gradiente de cor nas margens (terra molhada escurece 16%), base pronta pros rios (item 5, próxima leva)
+- **Relevo modo procedural:** rampa subindo da costa + colinas fBm, clamp em 0.38 (abaixo das blob shadows 0.40) → topos planos = chapadas literais
+- **4 sliders novos:** escala das ilhas, nível da água, aridez, relevo
+- Decisão do user: rios ficam pra depois da validação visual (1-4 primeiro)
+
+### Polish HUD/VFX (feedback por screenshot)
+- **Radar semi-esfera:** anéis de latitude (r=R·cos, comprimem na borda) + highlight central = domo visto de cima (anel interno único lia como círculo deslocado)
+- **Fog vinheta contínua:** egui Mesh com vertex colors (3 anéis, GPU interpola alpha) — os 14 strokes concêntricos deixavam bandas visíveis
+- **Fog abaixo do HUD:** layers egui livres na mesma Order pintam em ordem arbitrária (hash do id) — agora atmosfera+HUD dividem `screen_layer()` única, ordem visual = ordem dos systems (`.chain().before(draw_hud)`)
+- **Flicker cone/sombras eliminado com `depth_bias`:** ordem de transparência FIXA (sombras -60 sempre primeiro, fumaça/chuva 0, cone +30 sempre por cima) — ordem por distância flipava por frame
+- **Blob shadows z-fight:** todas viviam em y=0.46 e coplanares z-fightavam empilhadas sob a nave (abduzidos piscando) → y único por entidade (0.40-0.49 via entity index)
+- **FUEL label centrado por MEDIÇÃO:** pixel-scan do PNG achou a caixa preta em y 491-539/1024 → fração 0.503 (era chute 0.488)
+- **Ping de sonar no radar** (da leva anterior, validado): blip pulsa 1.6× + flash branco na passada da sweep, fade em 22% da volta
+
+### Commits (repo Bevy)
+`9ba39c3` beam gruda no cone + radar ping + FUEL → `a9fb92c` radar domo + fog mesh + blob y → fog layer stack → `feat(terrain)` modo procedural → `fix(vfx+hud)` depth_bias + FUEL 0.503
+
+---
+
 ## Sessão 2026-07-02 — Wang tilesets finais + plano de migração Bevy 3D + Fase 0
 
 **Tema:** Fechamento dos 3 tilesets wang faltantes no Phaser. Planejamento completo da migração pra Bevy 3D (port 1:1, billboards, 8 fases). Início da Fase 0: Rust instalado, skeleton corrigido pra Bevy 0.15.
