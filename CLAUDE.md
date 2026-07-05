@@ -389,11 +389,14 @@ Executar **todos** os passos abaixo, sem pular nenhum:
   - `python tools/pack_atlas.py --no-compress` — skip pngquant pra dev rápido
 - Adicionar PixelLab assets novos: salva PNG → adiciona entrada no dict `ATLASES` em `pack_atlas.py` → roda. `02_preload.js` já tem `load.atlas()`, registrar alias em `_registerAtlasFrameTextures` se for static frame referenciado por `setTexture()` em call sites
 
-### 🌽 Bevy 3D edition (paralelo)
-- Repo novo: `H:/Projects/Bevy/ChapadaEscapade/` — reescrita em Rust+Bevy 3D top-down (fora do escopo Phaser, código independente)
-- Phase 0+1 skeleton compilável: main + prelude + world + camera (top-down ortho follow) + ufo (WASD+tilt) + cow (state machine) + beam (cone+abdução+energia) + fence (procedural ECS estilo Houdini SOP: resample polyline → scatter posts → connect rails) + corral (hex)
-- Plan completo: `~/.claude/plans/ready-swirling-moler.md`
-- Status: aguarda user instalar Rust toolchain (rustup-init.exe) pra `cargo run`. README com troubleshooting
+### 🌽 Bevy 3D edition (paralelo) — JOGÁVEL, fases 0-7 percorridas (2026-07-02/04)
+- Repo: `H:/Projects/Bevy/ChapadaEscapade/` — port 1:1 do Phaser em Rust+Bevy 0.15, ~30 commits, jogo desktop completo
+- **Rust instalado** (scoop, stable 1.96 MSVC). Rodar: `cargo run`. Em bash do Claude: `export PATH="$HOME/scoop/persist/rustup/.cargo/bin:$PATH"` antes
+- **Implementado:** billboards PixelLab 8-dir (~330 PNGs) · mouse follow força+inércia (probe no Phaser live: accel 60/drag 2.4/tilt 23°/sens 1.54 embutida) · core loop (cargo anel cap 5, 4 currais slots, burgers, score, fuel) · terrain CA 100×100 em 500×500u + wang layer ESTILO ÚNICO por partida (5 estilos, auto-sort com upper_hint, aba TILES com REGENERAR) · enemies (farmers mutex, 6 torres, slam, rochas com HP) · game flow completo (splash art, pause+RECOMEÇAR, game over espiral, vitória) · 5 weathers + TOD overlay uniforme (tudo unlit) + shuffle · HUD PixelLab + radar sonar (ping/rastro/decay) · CONFIGS 6 abas · F3/F4 (inspector) · tutorial 7 etapas · exhaust cone · blob shadows Multiply
+- **Fixes memoráveis:** abdução travada por gravidade × pull (BeamGrip) · mundo duplicando no unpause (guards nos OnEnter) · B0002 Res+ResMut · egui try_ctx_mut race · sombras-bloco (NotShadowCaster)
+- **Plano 8 fases:** `~/.claude/plans/quero-planejar-a-migra-ao-binary-horizon.md`
+- **Próximo épico (confirmado):** pipeline Houdini→glTF extras→Bevy (Houdini como level editor) — ver memória + README do repo
+- **Backlog:** i18n EN · mobile/WASM · hanabi · barrel · grass verlet · sons (adiado pelo user)
 
 ### ✅ Pronto (cont. — sessão 2026-05-09 · WANG_DEBUG mode + PixaPro tiles port + tudo live)
 - **WANG_DEBUG mode** (`?debug=wang` URL flag) — minimal scene isolada (sem splash/UFO/NPCs/HUD/FX/atmosphere), só terrain + camera + debug menu. WASD/arrows scroll, `[/]` zoom, R regen, ESC menu
@@ -419,7 +422,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - Drag-drop no Cell Editor: arrasta cr31 A pra cr31 B = swap dos transforms
 
 ### 🚧 Em andamento
-- **Bevy 3D edition** — code pronto em `H:/Projects/Bevy/ChapadaEscapade/`, user precisa instalar Rust pra rodar `cargo run`
+- **Bevy 3D edition** — JOGÁVEL (ver seção 🌽 acima); polish contínuo guiado por playtests do user; próximo épico: Houdini→glTF→Bevy
 - **Audit element-by-element** continuação — terrain isolado robusto agora (TILES tab completo); próximo: adicionar UFO, beam, cow AI etc um por vez via toggles em CONFIGS
 - **Audit live testing PixaPro** — Audit panel Pages fallback pushed; falta user validar painel popula + walk through one-by-one
 - **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
