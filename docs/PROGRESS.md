@@ -4,6 +4,51 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-05/06 — Bevy: 2 shaders WGSL, tilesets painterly, vento por clima
+
+**Tema:** Os dois primeiros shaders WGSL do projeto (marco da meta "aprender shaders"), tileset painterly gerado por código (sessão Cowork do user, adaptado), e o clima virando UM sistema que dirige grama+swirls+chuva+neve. 4 commits no repo Bevy (`fee652c`→`0514a0b`).
+
+### Shader #1 — wang_tiles.wgsl (texture array)
+- 10.000 entidades de quad (uma por célula) → **2 meshes + 2 draw calls**: 16 tiles empilhados num `texture_2d_array` na ordem cr31, atributo custom `TILE_INDEX` por vértice, `@interpolate(flat)`, tonemap por fragment (senão destoava do StandardMaterial)
+- Regen de terreno instantâneo; sampler nearest p/ pixel art, linear p/ ≥64px
+- Origem da ideia: research de shader-based Wang tiling que o user trouxe (avaliado: texture array = pepita; splat/SDF = redundante com nossos tiles; doc tinha 2 alucinações flagradas — "Bevy 0.11 Tilemap" e crate "PlumeSplat")
+
+### Shader #2 — terrain_proc.wgsl (procedural por pixel)
+- Queixa do user: costa areia↔água "sem resolução" (cor era interpolação de vértice a cada 1.7u)
+- Campo ASSINADO da costa por vértice (`dist_water − dist_land`, BFS novo generalizado) → fragment decide POR PIXEL: costa nítida ondulada por noise, água com profundidade (escurece pro fundo), 2 camadas de ondas deslizantes, espuma que "respira" como maré, faixa de areia molhada, grão por pixel na terra
+- Noise em WGSL = espelho 1:1 do hash do terrain.rs (mesmas constantes) — material de estudo Rust→WGSL
+- Lambert manual (2 linhas) no lugar do PBR; sliders ondas/espuma LIVE (uniform vec4, sem regen); oceano infinito das bordas animado (quad com shore=-25)
+
+### Tilesets painterly (do zip da sessão Cowork do user)
+- `tools/newtiles` (v1, cantos retos) + `newtiles_v2` (SDF de círculos, redondos) — módulos do user intocados*, geradores adaptadores novos: `gen_wang_painterly.py` + `_round.py`
+- 3 incompatibilidades resolvidas: 14 formas → 16 cr31 (2 diagonais via `max()` de máscaras), seed POR TILE quebrava emendas (agora UMA textura+wobble por set, toroidal casa tudo), ordem de colunas ≠ cr31
+- ***Bugfix real na v2:** `"E" in "INNER_SW"` pegava o E de "INNER" — os 4 inner corners mordiam NE (self-test de cantos flagrou); e radius forçado 0.60→**0.5** senão arco não cruza a borda no meio e não encaixa com tiles retos
+- 4 estilos novos nos dropdowns: `paint_dirt_grass/ocean_sand` + `paint_round_*` (128px)
+
+### Mundo/nave
+- **Lagos internos sobrevoáveis** (flood-fill separa oceano-de-borda de lago interno); canyons também — nave **segue o relevo** (`grid.heights` = alturas reais da malha, bilinear) com lerp suave + `AltitudeLift` (sprite cresce ~+22% no topo de mesa) + sombra assenta no relevo
+- Vacas/farmers continuam bloqueados por água+rocha (obstáculo tático permanece)
+
+### Vento = clima (pedido explícito: "tudo relacionado ao clima")
+- `wind_strength(weather)`: fog 0.35 · snow 0.9 · clear 1.0 · rain 1.4 · storm 2.2
+- `WIND_WAVE_K/GUST_K` no prelude = fonte única: grama dobra, swirl viaja, chuva/neve escorrem TODOS pro mesmo sudeste; rajada compartilhada (swirl acelera onde a grama deita)
+- Grama: onda espacial VIAJANTE (rajada varre o campo — antes cada lâmina balançava sozinha) + downdraft da nave sempre ativo
+- Swirls cartoon refeitos (visual final do Phaser): fita S, taper bilateral sin(π·t) em alpha+largura, espessura por streak; quantidade escala com o vento (fog 2 → storm 14)
+
+### Fixes
+- `.exe` standalone: `dynamic_linking` virou feature `fast-dev` + AssetPlugin path absoluto (`CARGO_MANIFEST_DIR`) — acabou o "dll not found" no clique duplo
+- Curral DEITADO no chão (era Billboard: girava com a câmera e tampava a vaca mascote — bug reportado com screenshot)
+- Sombras: quad 1.7× (2.6× dava sombra 1.6× maior que o sprite, medido em zoom), platô alpha 215 + bias -75 (véu do TOD roubava contraste à noite), `try_insert` no HasBlobShadow (B0003 crash no JOGAR)
+- Auto-sort com hint POR ESTILO (genérico invertia grama↔terra no dirt_grass_32 vívido); default land vira `dirt_grass_32` (mapa1/2 são oliva apesar do nome)
+- FPS counter mini permanente (semáforo) + F3 expande pro overlay completo
+- AO fake por vertex color (concavidade 2 raios + slider) — 1º item da lista de melhorias do procedural
+
+### Workflow
+- **Regra nova (memória):** computer-use SÓ com permissão explícita a cada uso — user revogou o controle contínuo
+- Verificação agora: eu compilo + smoke test por log; USER roda e manda screenshot
+
+---
+
 ## Sessão 2026-07-05 — Bevy: terreno HÍBRIDO tiles+procedural, gameplay feel, investigação ao vivo
 
 **Tema:** Maratona de 12 commits. Investigação empírica com computer-use (burst de frames + screenshots do jogo rodando), pacotão de gameplay/feel e a arquitetura de terreno híbrido que casa pixel-art tiles com blend procedural.
