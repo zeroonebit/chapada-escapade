@@ -426,7 +426,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - Drag-drop no Cell Editor: arrasta cr31 A pra cr31 B = swap dos transforms
 
 ### ✅ Pronto (cont. — sessão 2026-07-06 · quips tech-art + jogo vira protótipo do portfolio)
-- **Quips reescritos com tema TECH ART** (`js/20_quips.js`) — QUIP_POOLS PT+EN completos (humor de rig/LOD/UV/shader/instancing/wang tiles) mantendo categorias, moods e cooldowns; MOBILE_QUIPS idem, preservando a mensagem "só PC". Estrutura/código intocados, só conteúdo dos pools
+- **Quips reescritos com tema TECH ART e expandidos pra 110 por idioma** (`js/20_quips.js`) — QUIP_POOLS PT+EN (farmer 10 · ufo 20 · cow 12 · dairy 8 · fence 8 · burger 10 · church 8 · cactus 8 · generic 26). Temas: rig/LOD/UV/shader/instancing/wang tiles + Houdini (cook, HDA, VEX, Copy to Points, FLIP), gaussian splats, zoeira com Blender user (donut, modifiers, Cycles), ML/IA (dataset, overfitting, epoch), dados sintéticos, digital twins, scanner 3D/fotogrametria, impressora 3D (slicer, PLA, resina) e astrofoto (Bortle, stacking, polar alignment). Categorias, moods e cooldowns preservados; MOBILE_QUIPS mantém a mensagem "só PC". Commits `b966740` + `89af292`, deploy Pages verificado
 - **Contexto:** o jogo agora é o **protótipo em destaque do portfolio ZerO-OneBit** — landing em `H:\Projects\ZerO-OneBit` embeda o jogo do Pages via click-to-play (iframe)
 
 ### 🚧 Em andamento
