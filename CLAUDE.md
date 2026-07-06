@@ -425,6 +425,10 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - Botão AUTO-SORT no TILES tab roda + aplica como transforms
 - Drag-drop no Cell Editor: arrasta cr31 A pra cr31 B = swap dos transforms
 
+### ✅ Pronto (cont. — sessão 2026-07-06 · quips tech-art + jogo vira protótipo do portfolio)
+- **Quips reescritos com tema TECH ART** (`js/20_quips.js`) — QUIP_POOLS PT+EN completos (humor de rig/LOD/UV/shader/instancing/wang tiles) mantendo categorias, moods e cooldowns; MOBILE_QUIPS idem, preservando a mensagem "só PC". Estrutura/código intocados, só conteúdo dos pools
+- **Contexto:** o jogo agora é o **protótipo em destaque do portfolio ZerO-OneBit** — landing em `H:\Projects\ZerO-OneBit` embeda o jogo do Pages via click-to-play (iframe)
+
 ### 🚧 Em andamento
 - **Bevy 3D edition** — JOGÁVEL (ver seção 🌽 acima); polish contínuo guiado por playtests do user; próximo épico: Houdini→glTF→Bevy
 - **Audit element-by-element** continuação — terrain isolado robusto agora (TILES tab completo); próximo: adicionar UFO, beam, cow AI etc um por vez via toggles em CONFIGS
