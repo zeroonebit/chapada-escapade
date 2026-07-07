@@ -4,6 +4,36 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-06 (tarde) — Quips tech-art 500 + jogo vira protótipo do portfolio + análise port Bevy→web
+
+**Tema:** O Chapada Escapade foi habilitado como **projeto-protótipo do portfolio ZerO-OneBit** e ganhou identidade de tech art nos quips. Sessão em 3 atos: landing do portfolio, 500 quips novos, e reconhecimento do que o Bevy tem pra portar de volta.
+
+### Portfolio ZerO-OneBit (repo `H:\Projects\ZerO-OneBit`, fora deste git)
+- Dungeon Three.js v0.1 removido a pedido (backup em `_backup_dungeon_v01.zip`; projeto sem git)
+- Landing estática nova (HTML+CSS+TS mínimo, Vite, zero deps de runtime): hero + seção "Protótipo em destaque — Chapada Escapade" com **embed click-to-play do jogo direto do Pages** (iframe só carrega no clique, por causa do boot ~30s) + seções Projetos/Curso/YouTube/Sobre/Contato. TODOs de links pendentes
+
+### Quips tech-art — 500 no total (`js/20_quips.js`, commits `b966740`→`462aa77`)
+- Reescrita completa com tema tech art + expansão em 2 levas: 54 → 110 → **250 por idioma** (PT+EN simétricos, zero duplicatas, validado com script Node antes de cada push)
+- Distribuição: farmer 25 · ufo 45 · cow 30 · dairy 16 · fence 16 · burger 22 · church 18 · cactus 18 · generic 60
+- Temas: tech art geral (rig/LOD/UV/bake/instancing), Houdini (cook, HDA, VEX, Copy to Points, FLIP, VDB, vellum, pyro, RBD, PDG, USD/Solaris, chramp, $F), gaussian splats (COLMAP, radiance field, 30k iterations), zoeira com Blender user (donut, Suzanne, geometry nodes, Eevee/Cycles), ML/IA (dataset, overfitting, epoch, loss, tensor, alucinação), dados sintéticos, digital twins, scanner 3D/LiDAR/fotogrametria, impressora 3D (slicer, PLA, resina/IPA, infill, stringing, benchy, nozzle) e astrofoto (Bortle, stacking, dark/flat frames, Bahtinov, guiding, dithering, polar)
+- Estrutura intocada: categorias contextuais, moods (r/g/y/b), cooldowns e MOBILE_QUIPS (mantêm mensagem "só PC") preservados
+- Easter egg: "Primeira camada da invasão: aderiu bem" (generic PT)
+- Deploys Pages verificados por watcher (curl até o conteúdo novo aparecer)
+
+### Análise: o que portar do Bevy pra cá (SÓ ANÁLISE — nada implementado)
+Reconhecimento do `Bevy/ChapadaEscapade/src/terrain.rs` (83KB). A maioria dos sistemas Bevy são ports DO Phaser; o original de lá é o **pipeline de terreno fBm** (2026-07-04), escrito sem crates — port pra JS quase mecânico. Candidatos em ordem de valor:
+1. **Terreno fBm** — hash2/valueNoise/fbm (~40 linhas JS); elevação decide água/terra, umidade (escala 2.6×) decide grass/dirt, "água só no verde"; CA majoritário vira passe de limpeza (já existe no web)
+2. **Ilha circular** — moldura d'água com raio ondulado por fBm; casa com o radar-disco existente
+3. **Distance fields BFS** (dist_water/dist_land, ~30 linhas) — praia garantida (anel 4 células sand), margens escuras, base pra rios. Web JÁ TEM os tilesets wang ocean↔sand/sand↔grass/sand↔dirt sliced e nunca gera água/areia pra usá-los
+4. **Oceano × lago** (flood fill da borda) — mar = no-fly natural da nave; lagos sobrevoáveis
+5. **Quintais de curral** — dirt com borda noise pintado na geração, currais spawnam neles (`corral_spots`)
+6. **Canyons de rocha** — random walk com inércia, 2-3 cristas, longe de currais/spawn
+7. Miúdos: estilo wang único sorteado por partida; `upper_hint` no auto-sort
+- NÃO porta (3D-specific): chapadas flat-top (clamp 0.38), height_at, domain warp na mesh, shader d'água, rim light
+- Sugestão de 1ª fatia quando for a hora: itens 1+2+3 atrás de toggle na aba TILES, visual primeiro, no-fly/spawns depois. **User: "ainda não"** — fica registrado pra próxima
+
+---
+
 ## Sessão 2026-07-06 — Bevy: água geométrica + foam cartoon, vento GPU, radar-minimapa, parity Phaser
 
 **Tema:** Maratona de 39 commits no repo Bevy (`d7ec2cc`→`4b2ce11`), guiada por playtests com screenshots do user. Port dos 5 gaps vs Phaser, água em mesh separado com shader #3 iterado até o foam cartoon final, clima/TOD com crossfade, vento em 3 camadas, radar virou minimapa e o mapa virou ilha circular.

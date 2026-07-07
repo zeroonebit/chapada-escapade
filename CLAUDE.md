@@ -438,6 +438,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
 ### 🔜 Próximos passos
+0. **Port do terreno fBm do Bevy pra cá** (analisado 2026-07-06, user disse "ainda não" — aguardando ordem). Fonte: `H:/Projects/Bevy/ChapadaEscapade/src/terrain.rs` (sem crates, port JS quase mecânico). 1ª fatia sugerida: hash2/valueNoise/fbm + seed por elevação/umidade + ilha circular + distance fields BFS com praia garantida, atrás de toggle na aba TILES. Depois: oceano×lago (no-fly), quintais de curral (`corral_spots`), canyons random-walk, estilo wang único por partida. Detalhes na entrada 2026-07-06 (tarde) do PROGRESS.md
 1. **Slice 3 tilesets BASE/SHARED faltantes** — `mapa1_dirt_grass`, `mapa2_dirt_grass`, `shared_ocean_sand_16`. Existem na origem (PixelLab API) mas não sliced localmente. Tool `tools/slice_tilesets.py` precisa update pra cr31 mapping
 2. **Atlas extras (opcional)** — atlas pra 4 HUDs gigantes 1536x1024 requer bin-packing real. Cortaria mais ~300kb
 3. **Performance pass** — FPS no Pages cai pra 11 com 126 entities + barrel pipeline. Object pooling, layer culling, ou reduzir DBG_DEFAULTS counts
