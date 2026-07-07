@@ -18,6 +18,15 @@
         "tools/project_server.py"
       ],
       "port": 8090
+    },
+    {
+      "name": "PixaPro UI",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "H:/Projects/PixaPro/server.py",
+        "8089"
+      ],
+      "port": 8089
     }
   ]
 }
