@@ -405,9 +405,11 @@ class Handler(SimpleHTTPRequestHandler):
         if base.exists():
             for p in base.rglob("*.png"):
                 rel = p.relative_to(ROOT).as_posix()
-                # path web-friendly relativo a /tools/asset_gallery.html
-                webpath = "../" + rel
-                result["filesystem"].append({"path": webpath, "abs": rel})
+                # path LIMPO relativo à raiz servida. O "../" era herança
+                # da UI embedded em /tools/ (deletada no audit 2026-05-02);
+                # o PixaPro standalone resolve via assetUrl() — que engole
+                # "../" legacy por compat com servers antigos
+                result["filesystem"].append({"path": rel, "abs": rel})
         msg = json.dumps(result)
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
