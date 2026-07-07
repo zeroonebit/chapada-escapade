@@ -4,6 +4,61 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-06 — Bevy: água geométrica + foam cartoon, vento GPU, radar-minimapa, parity Phaser
+
+**Tema:** Maratona de 39 commits no repo Bevy (`d7ec2cc`→`4b2ce11`), guiada por playtests com screenshots do user. Port dos 5 gaps vs Phaser, água em mesh separado com shader #3 iterado até o foam cartoon final, clima/TOD com crossfade, vento em 3 camadas, radar virou minimapa e o mapa virou ilha circular.
+
+### Parity Phaser (review comparativo pedido pelo user)
+- Fazendeiros ATIRAM (range 17u, cooldown 2.2–3.8s, bala laranja + muzzle flash)
+- Anéis concêntricos de captura na abdução (3 torus sobem do alvo até a nave, ease cubic)
+- Laser pointer no cursor (4 círculos concêntricos)
+- Game flow UI do Phaser: fonte VT323 embedded (OFL, aprovada pelo user), transição de restart com logo CHAPADA ESCAPADE vermelho→verde + loading bar, game over gigante scale-grow, vitória com splash esverdeado, botões PLAY/TUTORIAL no splash
+- Trovoada double-strike no storm (flash 0.75 + eco 0.55 após 280ms, a cada 5–15s)
+
+### Água: mesh separado + shader #3 (`water_proc.wgsl`)
+- Plano d'água em y=-0.32 cruzando o heightfield — costa = interseção GEOMÉTRICA ("não estimar onde está": profundidade exata na borda por construção; UV carrega altura do terreno + dist euclidiana da costa; UV1 = tamanho do corpo via flood fill)
+- Foam iterado com 3 refs do user (gamedeveloper.com semi-procedural + halisavakis stylized water + desenho à mão): final = 3 elementos legíveis — cristas finas viajando MAR→COSTA em SEGMENTOS (wave-id = `floor(phase+0.5)` + máscara noise por crista — o "carve" do Houdini feito certo), rastro de dispersão atrás, colar pulsante na linha; depois suavizado (opacidade 0.95→0.62, falloffs largos)
+- Gradiente de profundidade 3 níveis; lagos menores que um curral (<12 células) SEM ondas (flood fill em 2 escalas: body_size no shader + `small_water` no grid)
+- 3 sliders live no CONFIGS: opacidade / espaçamento / frequência das ondas
+- Lição de shader: campo nearest-coast-point é DESCONTÍNUO no eixo medial (artefato "raios" na água) — noise por posição de mundo resolve (distance field é contínuo)
+- Areia molhada DINÂMICA sincronizada com as cristas (mesma fase/hash/sliders no terrain_proc): swash sobe a praia rápido, marca escura seca com lag; alcance reduzido após feedback
+
+### Terreno
+- Chapadas (1-2 blobs de rocha topo plano) + vales (não só "cordilheira") — pedido explícito
+- Ilha CIRCULAR (borda por raio + fBm) — o mapa cabe exato no radar
+- Transições de bioma POR PIXEL: grid de células virou textura + domain warp fBm no fragment (fim do "jagged" de vértice); praia 4 células + box blur r3
+
+### Vento em 3 camadas (todas da MESMA fonte: WindDir ±X sorteado por partida × força do clima com crossfade)
+- Grama PENTEADA downwind: viés direcional dominante (1.5 vs ±0.95 de oscilação) — clear ~12°, storm ~27° deitada
+- Fitas cartoon agora ONDULAM (y sin 1.9Hz + deriva perpendicular + roll) — antes deslizavam retas
+- GPU streaks via **bevy_hanabi 0.14 (crate NOVO)**: quads esticados pela VELOCIDADE, curl-fake senoidal com fase própria por partícula (Attribute::F32_0; razão lateral:avanço 1:2.5 senão lê reto), textura core-no-halo gerada em código ("os finos dentro do grosso"), rate 26 discreto, fog desliga o spawner (`EffectInitializers::set_active`)
+
+### Clima/TOD suaves
+- Slider de duração do TOD + transição contínua entre presets (era switch); `WeatherMix{from,target,t,hold}` com auto-cycle + sliders hold/fade
+- Neve v2 por ALTITUDE: snowline desce conforme neva (touca branca nas chapadas + geada global sutil), cap random 20–33% por nevasca, queda mais densa "mini nevasca" (v1 manchas de noise rejeitada: "muito poluído")
+- Sombras dinâmicas por hora: meio-dia dura/escura, sol fraco lavada/espalhada (TOD_SHADOW por preset)
+
+### Beam + física de abdução (feel do Phaser)
+- Beam = 5 discos concêntricos em volta do alvo (não cone), camera shake + flash cyan no disparo
+- Abduzidos SOLTOS: spring+jitter no pull (fim do lerp travado), cargo em mola k14, pêndulo BillboardRoll no ar, gravidade+bounce integrados no solo
+- **CAUSA RAIZ do "rasto" das sombras:** systems de follow em Update = ordem não-determinística vs movimento → regra nova: vai pra **PostUpdate `.before(TransformPropagate)`** (memorizada); achada por bisseção com toggles de diagnóstico no CONFIGS
+- Escada depth_bias COMPLETA: -80 overlay < -75 sombras < 0 fumaça < +20 swirls < +30 beam < +32 anéis < +50 chuva < +52 neve
+
+### Radar = minimapa
+- O disco do radar mostra o MAPA inteiro (fan mesh 48 segmentos texturizado com o grid de terreno, rebuild em grid change), blips em coordenadas absolutas, nave = blip verde
+- Fade do blip morre em MEIA volta do sweep e fica invisível até o próximo ping (pedido exato do user)
+
+### Quips balão cartoon
+- Pools PT do Phaser portados + gatilhos (captura/ambiente com cooldowns por categoria)
+- Balão branco arredondado + rabinho + stroke na cor do mood + texto bold 19px double-draw; TTL proporcional ao texto (3.2–6s); pop-in + rise 40px
+
+### Workflow
+- **Lição cara (memória salva):** `taskkill //IM` derrubou a sessão de teste do user — matar SÓ pelo próprio PID
+- API do hanabi verificada no source local (`~/.cargo/registry`) antes de codar — `EffectInitializers` é o Component runtime, não `EffectSpawner`
+- Pendente de validação do user (rebuild): hanabi em runtime (pipeline só valida rodando), neve v2, balões, grama penteada, sombras TOD, radar-minimapa (ilha circular pede RECOMEÇAR)
+
+---
+
 ## Sessão 2026-07-05/06 — Bevy: 2 shaders WGSL, tilesets painterly, vento por clima
 
 **Tema:** Os dois primeiros shaders WGSL do projeto (marco da meta "aprender shaders"), tileset painterly gerado por código (sessão Cowork do user, adaptado), e o clima virando UM sistema que dirige grama+swirls+chuva+neve. 4 commits no repo Bevy (`fee652c`→`0514a0b`).
