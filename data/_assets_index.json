@@ -1,11 +1,11 @@
 {
-  "total": 934,
+  "total": 927,
   "classified": 757,
-  "unclassified": 177,
+  "unclassified": 170,
   "in_game": 236,
-  "orphan": 698,
+  "orphan": 691,
   "by_category": {
-    "unclassified": 177,
+    "unclassified": 170,
     "fx": 1,
     "item": 3,
     "hud": 14,
@@ -6512,21 +6512,7 @@
       "inGame": false
     },
     {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_td_ancient.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_side_alien.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_td_fresh.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
@@ -6589,13 +6575,6 @@
       "inGame": false
     },
     {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_topdown_ancient.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_side_fresh.png",
       "category": "unclassified",
       "tags": {},
@@ -6625,13 +6604,6 @@
     },
     {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/gas_can_red.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_blue.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
@@ -6778,13 +6750,6 @@
       "inGame": false
     },
     {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_td_brass.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/milk_bucket_empty.png",
       "category": "unclassified",
       "tags": {},
@@ -6814,13 +6779,6 @@
     },
     {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/palm_licuri_tall.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_td_dark.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
@@ -6905,13 +6863,6 @@
     },
     {
       "path": "assets/pixel_labs/chars/nature/v2/inbox/alien_artifact_glowing.png",
-      "category": "unclassified",
-      "tags": {},
-      "confidence": 0.0,
-      "inGame": false
-    },
-    {
-      "path": "assets/pixel_labs/chars/nature/v2/inbox/scarecrow_droid_td_worn.png",
       "category": "unclassified",
       "tags": {},
       "confidence": 0.0,
@@ -9758,5 +9709,5 @@
       "inGame": false
     }
   ],
-  "_baked_at": "2026-07-02T09:55:20.885997"
+  "_baked_at": "2026-07-08T01:45:57.633850"
 }
