@@ -4,6 +4,28 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-08 — i18n ENG/PTBR (default EN) + codebase Bevy 100% traduzido pra inglês
+
+**Tema:** Fechamento do dia focado em legibilidade pra equipe de porting futura. Toggle de idioma no CONFIGS com default inglês, todos os textos de jogo bilingues, e — o grosso — comentários e strings de dev de TODO o repo Bevy traduzidos pra inglês. 16 commits (`921d69a`→`80ea4ef`), todos no repo Bevy (local-only).
+
+### i18n ENG/PTBR
+- Toggle **LANGUAGE ENG/PTBR** no CONFIGS → CONTROLS, **default mudado pra EN** (`DebugConfig.lang`, helper `cfg.tr(en, pt)` + `cfg.is_pt()`)
+- Textos de jogo bilingues: tutorial, game over/vitória, pause, diálogo de banir (tecla B), label FUEL do HUD
+- Quips traduzidos 1:1 dos pools EN do Phaser (`quips.rs` com `pool(pt)` — ~50 linhas por idioma, mood colors mantidos)
+
+### Tradução completa do código (equipe de porting)
+- **26 arquivos `.rs` + 2 shaders WGSL** (`terrain_proc`, `water_proc`) com comentários e strings de dev em inglês; identificadores mantidos (já eram EN)
+- **15 batches commitados** um a um (`3eaf24b`→`80ea4ef`), cada um com `cargo check` limpo antes do commit
+- Metodologia: scripts Python de substituição (old→new multi-linha exato) no scratchpad + re-scan com grep estrito de palavras PT (não só acento — pegou "acima do", "terra FIRME" etc.) até zerar
+- Verificação final: grep de palavras PT vazio + `cargo check` Finished
+
+### Pendências / decisões
+- **"Migração pra pasta certa":** verificado — o repo Bevy JÁ mora em `H:/Projects/Bevy/ChapadaEscapade` (a pasta referenciada), cópia única, git root confirmado. Nada a mover
+- **Publicação:** repo Bevy é local-only (sem remote, por design). Criar remote no GitHub + push fica aguardando decisão do user (torna o código público)
+- Validação por playtest do user segue pendente pra i18n + tradução (além do backlog de 07-06/07-07)
+
+---
+
 ## Sessão 2026-07-07 — PixaPro vira EDITOR do Bevy (Fases 1-3) + repair total + placement audit + wang morto
 
 **Tema:** O dia em que o PixaPro virou editor in-game de verdade. 13 commits no repo Bevy + 5 no PixaPro (pushed). Assessment de placement corrigiu jogo invencível, o motor wang foi arrancado do código, e dois bugs de classe (aspect ratio global, follower em Update) caíram.
