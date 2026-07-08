@@ -4,33 +4,47 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
-## Sessão 2026-07-06 (tarde) — Quips tech-art 500 + jogo vira protótipo do portfolio + análise port Bevy→web
+## Sessão 2026-07-07 — PixaPro vira EDITOR do Bevy (Fases 1-3) + repair total + placement audit + wang morto
 
-**Tema:** O Chapada Escapade foi habilitado como **projeto-protótipo do portfolio ZerO-OneBit** e ganhou identidade de tech art nos quips. Sessão em 3 atos: landing do portfolio, 500 quips novos, e reconhecimento do que o Bevy tem pra portar de volta.
+**Tema:** O dia em que o PixaPro virou editor in-game de verdade. 13 commits no repo Bevy + 5 no PixaPro (pushed). Assessment de placement corrigiu jogo invencível, o motor wang foi arrancado do código, e dois bugs de classe (aspect ratio global, follower em Update) caíram.
 
-### Portfolio ZerO-OneBit (repo `H:\Projects\ZerO-OneBit`, fora deste git)
-- Dungeon Three.js v0.1 removido a pedido (backup em `_backup_dungeon_v01.zip`; projeto sem git)
-- Landing estática nova (HTML+CSS+TS mínimo, Vite, zero deps de runtime): hero + seção "Protótipo em destaque — Chapada Escapade" com **embed click-to-play do jogo direto do Pages** (iframe só carrega no clique, por causa do boot ~30s) + seções Projetos/Curso/YouTube/Sobre/Contato. TODOs de links pendentes
+### PixaPro = editor do Bevy (Fases 1+2+3 completas)
+- **Fase 1:** `assets/manifest/scatter.json` (bootstrap automático dos defaults) + `manifest_watch` polla mtime 2s → **re-scatter LIVE sem recompilar**; loading escaneia `env/**` (qualquer PNG vira sprite por stem, órfão habilitável)
+- **Fase 2:** `tools/editor_server.py` porta **8091** (GET/POST /manifest com validação + backup, /sprite_map, static CORS+PNA) + aba **🎮 Bevy** no PixaPro (thumbs, toggle/size/count, remove→órfão, órfãos com +add, dirty tracking, hover-zoom 220px)
+- **Fase 3:** `telemetry.rs` escreve `runtime_state.json` a cada 5s (estado, fps, counts, scatter POR SPRITE, sprites sem PNG) → **painel LIVE** na aba Bevy (polling 4s, 🟢/⚫ por idade) · **tecla B** = curador in-game (cursor perto do objeto → janela BANIR → desliga no manifest + re-scattera)
+- **Aba ASSETS no CONFIGS** (ex-TILES): editor do MESMO manifest dentro do jogo — categorias colapsáveis, ícone 22px + hover preview 150px (AR real), órfãos com combo, debounce ManifestDirty 0.8s salva+re-scattera; sincronizado com o PixaPro pelo watcher (sem loop)
 
-### Quips tech-art — 500 no total (`js/20_quips.js`, commits `b966740`→`462aa77`)
-- Reescrita completa com tema tech art + expansão em 2 levas: 54 → 110 → **250 por idioma** (PT+EN simétricos, zero duplicatas, validado com script Node antes de cada push)
-- Distribuição: farmer 25 · ufo 45 · cow 30 · dairy 16 · fence 16 · burger 22 · church 18 · cactus 18 · generic 60
-- Temas: tech art geral (rig/LOD/UV/bake/instancing), Houdini (cook, HDA, VEX, Copy to Points, FLIP, VDB, vellum, pyro, RBD, PDG, USD/Solaris, chramp, $F), gaussian splats (COLMAP, radiance field, 30k iterations), zoeira com Blender user (donut, Suzanne, geometry nodes, Eevee/Cycles), ML/IA (dataset, overfitting, epoch, loss, tensor, alucinação), dados sintéticos, digital twins, scanner 3D/LiDAR/fotogrametria, impressora 3D (slicer, PLA, resina/IPA, infill, stringing, benchy, nozzle) e astrofoto (Bortle, stacking, dark/flat frames, Bahtinov, guiding, dithering, polar)
-- Estrutura intocada: categorias contextuais, moods (r/g/y/b), cooldowns e MOBILE_QUIPS (mantêm mensagem "só PC") preservados
-- Easter egg: "Primeira camada da invasão: aderiu bem" (generic PT)
-- Deploys Pages verificados por watcher (curl até o conteúdo novo aparecer)
+### PixaPro repair total (os thumbs quebrados)
+- **Causa raiz:** herança do spinoff — era same-origin no 8090 (`/tools/`), no standalone 8089 os fetches ganharam API_BASE mas os `img.src` ficaram crus → 404 em massa. Fix: `assetUrl()` global aplicado em 9 pontos (thumb.js ×3, Gallery, Audit, Editor ×4, classify popup) + `/list_assets` sem `../`
+- **Cache-Control: no-cache** no server.py (Chrome cacheava js por heurística — era o "não tá funcionando" recorrente) + `directory=ROOT` (rodar de outro cwd servia os arquivos do outro projeto)
+- **🏝 Ilha Bevy na aba Map:** gerador do terrain.rs portado pra JS (mesmo hash u32, fBm elevação+umidade, rim circular, praia 2 células, chapadas, oceano×lago flood fill, paleta oficial) + render **minimapa redondo estilo radar**; sliders água/aridez live; presets salvam
+- tab-naming.js: byte NUL literal → escape unicode (arquivo lia como binário)
+- Walkthrough validado no preview: Gallery 7/7 · Audit 139/146 · Editor 8/8 · Browse 934 assets
+- Cleanup: 7 scarecrow stubs deletados (JSON de erro do CDN salvos como .png, 100 bytes) — os 5 reais ficaram
 
-### Análise: o que portar do Bevy pra cá (SÓ ANÁLISE — nada implementado)
-Reconhecimento do `Bevy/ChapadaEscapade/src/terrain.rs` (83KB). A maioria dos sistemas Bevy são ports DO Phaser; o original de lá é o **pipeline de terreno fBm** (2026-07-04), escrito sem crates — port pra JS quase mecânico. Candidatos em ordem de valor:
-1. **Terreno fBm** — hash2/valueNoise/fbm (~40 linhas JS); elevação decide água/terra, umidade (escala 2.6×) decide grass/dirt, "água só no verde"; CA majoritário vira passe de limpeza (já existe no web)
-2. **Ilha circular** — moldura d'água com raio ondulado por fBm; casa com o radar-disco existente
-3. **Distance fields BFS** (dist_water/dist_land, ~30 linhas) — praia garantida (anel 4 células sand), margens escuras, base pra rios. Web JÁ TEM os tilesets wang ocean↔sand/sand↔grass/sand↔dirt sliced e nunca gera água/areia pra usá-los
-4. **Oceano × lago** (flood fill da borda) — mar = no-fly natural da nave; lagos sobrevoáveis
-5. **Quintais de curral** — dirt com borda noise pintado na geração, currais spawnam neles (`corral_spots`)
-6. **Canyons de rocha** — random walk com inércia, 2-3 cristas, longe de currais/spawn
-7. Miúdos: estilo wang único sorteado por partida; `upper_hint` no auto-sort
-- NÃO porta (3D-specific): chapadas flat-top (clamp 0.38), height_at, domain warp na mesh, shader d'água, rim light
-- Sugestão de 1ª fatia quando for a hora: itens 1+2+3 atrás de toggle na aba TILES, visual primeiro, no-fly/spawns depois. **User: "ainda não"** — fica registrado pra próxima
+### Placement assessment (bugs reportados: "pedras dentro de gramas", "farmers andando na água")
+- **TORRES NO OCEANO (achado crítico):** TOWER_POS fixo (±175) caía FORA do rim da ilha circular = 4 torres na água = **vitória impossível**. Fix: sampling no grid (terra firme + margem, longe de quintais/gramados/entre si, y=relevo) + REGENERAR reposiciona sobreviventes
+- **Resgate de náufragos:** `rescue_dir` no TerrainGrid (anéis de células) — NPC solto do beam sobre lago/canyon caminha pro chão livre em vez de travar no wall-slide pra sempre
+- **Scatter ciente do VISUAL:** margem de fronteira (ponto + anel de 8 amostras a 6u) compensa o domain warp ±8u do shader — fim da "pedra no verde"; pedras fora de gramados + auto-espaçamento; landmarks fora de praia/quintal/gramado
+- **Relevo em tudo:** scenery/decals/lâminas/torres assentam no `height_at` (pedra de canyon sobe pro topo da mesa)
+
+### Bugs de classe corrigidos
+- **Beam flicker andando (reincidência da regra do rasto):** `beam_visual_sync` em Update funcionava POR SORTE; systems novos rebaralharam a ordem ambígua → PostUpdate before TransformPropagate (+ anéis + sparkles). Memória reforçada: *follower novo já nasce em PostUpdate*
+- **Aspect ratio GLOBAL do cenário:** quad quadrado esticava todo PNG não-quadrado (canvas 64×39 → domo virava "pedra-ovo" 1.64× mais alta; caminhão 1.5×, cactos 1.23×). Fix: quad = size × (h/w do canvas), grounding pela altura real. In-game agora bate 1:1 com os thumbs do PixaPro
+- **Pixel art borrado:** nunca setamos `ImagePlugin::default_nearest()` (o `pixelArt:true` do Phaser nunca foi portado!) — billboards renderizavam bilinear. Aplicado + sampler linear explícito nos gradientes de código (sombra radial faltava)
+
+### Motor wang ARRANCADO (-850 linhas, -176 texturas no boot)
+- spawn das camadas, auto-sort, texture array, overlay-sobre-tiles, apron REPEAT, catálogo de 11 estilos, `wang_material.rs` + `wang_tiles.wgsl` deletados; campos de config removidos (serde ignora keys velhas); boot 603→~430 texturas. **PNGs dos tilesets ficam no disco** (arte preservada)
+- Sparkles do graviton (port `_emitBeamSparkle`): ponto verde acelera pro centro da nave (easeIn cúbico), segue a nave viva; toggle de diagnóstico na VFX
+
+### Research (pedidos do user)
+- **Artigo heyfebin (Impatient Programmer ch2, WFC):** abaixo do nosso nível (é técnica de tiles, que aposentamos) — pepita real foi o `default_nearest` (aplicado). Sinal: ecossistema no Bevy 0.18/0.19, nós no 0.15
+- **Tiny Glade talk (GPC Breda):** truque das copas de árvore (quad faces viram billboards individuais no vertex shader) → referência pro épico Houdini; validação da rota painterly small-world sobre Bevy ECS
+- **bevy_voxel_world — decisão: NÃO trocar o terreno.** Voxel cúbico mata os shaders #2/#3 e a direção de arte; gameplay inteiro bebe do TerrainGrid. Engavetado: "crateras por deformação de heightfield" (beam cava editando grid.heights + rebuild local)
+
+### Workflow
+- ⚠️ Reincidência: matei processo do jogo achado POR NOME (wmic where name = taskkill //IM disfarçado) — memória ganhou regra dura: **link falhou com Access denied no exe = user rodando → PARAR e avisar, nunca matar**
+- Smoke test seguro estabelecido: PowerShell Start-Process + filho por ParentProcessId (atenção: scoop shim = jogo é NETO)
 
 ---
 
