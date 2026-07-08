@@ -4,6 +4,50 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-07 — PixaPro vira EDITOR do Bevy (Fases 1-3) + repair total + placement audit + wang morto
+
+**Tema:** O dia em que o PixaPro virou editor in-game de verdade. 13 commits no repo Bevy + 5 no PixaPro (pushed). Assessment de placement corrigiu jogo invencível, o motor wang foi arrancado do código, e dois bugs de classe (aspect ratio global, follower em Update) caíram.
+
+### PixaPro = editor do Bevy (Fases 1+2+3 completas)
+- **Fase 1:** `assets/manifest/scatter.json` (bootstrap automático dos defaults) + `manifest_watch` polla mtime 2s → **re-scatter LIVE sem recompilar**; loading escaneia `env/**` (qualquer PNG vira sprite por stem, órfão habilitável)
+- **Fase 2:** `tools/editor_server.py` porta **8091** (GET/POST /manifest com validação + backup, /sprite_map, static CORS+PNA) + aba **🎮 Bevy** no PixaPro (thumbs, toggle/size/count, remove→órfão, órfãos com +add, dirty tracking, hover-zoom 220px)
+- **Fase 3:** `telemetry.rs` escreve `runtime_state.json` a cada 5s (estado, fps, counts, scatter POR SPRITE, sprites sem PNG) → **painel LIVE** na aba Bevy (polling 4s, 🟢/⚫ por idade) · **tecla B** = curador in-game (cursor perto do objeto → janela BANIR → desliga no manifest + re-scattera)
+- **Aba ASSETS no CONFIGS** (ex-TILES): editor do MESMO manifest dentro do jogo — categorias colapsáveis, ícone 22px + hover preview 150px (AR real), órfãos com combo, debounce ManifestDirty 0.8s salva+re-scattera; sincronizado com o PixaPro pelo watcher (sem loop)
+
+### PixaPro repair total (os thumbs quebrados)
+- **Causa raiz:** herança do spinoff — era same-origin no 8090 (`/tools/`), no standalone 8089 os fetches ganharam API_BASE mas os `img.src` ficaram crus → 404 em massa. Fix: `assetUrl()` global aplicado em 9 pontos (thumb.js ×3, Gallery, Audit, Editor ×4, classify popup) + `/list_assets` sem `../`
+- **Cache-Control: no-cache** no server.py (Chrome cacheava js por heurística — era o "não tá funcionando" recorrente) + `directory=ROOT` (rodar de outro cwd servia os arquivos do outro projeto)
+- **🏝 Ilha Bevy na aba Map:** gerador do terrain.rs portado pra JS (mesmo hash u32, fBm elevação+umidade, rim circular, praia 2 células, chapadas, oceano×lago flood fill, paleta oficial) + render **minimapa redondo estilo radar**; sliders água/aridez live; presets salvam
+- tab-naming.js: byte NUL literal → escape unicode (arquivo lia como binário)
+- Walkthrough validado no preview: Gallery 7/7 · Audit 139/146 · Editor 8/8 · Browse 934 assets
+- Cleanup: 7 scarecrow stubs deletados (JSON de erro do CDN salvos como .png, 100 bytes) — os 5 reais ficaram
+
+### Placement assessment (bugs reportados: "pedras dentro de gramas", "farmers andando na água")
+- **TORRES NO OCEANO (achado crítico):** TOWER_POS fixo (±175) caía FORA do rim da ilha circular = 4 torres na água = **vitória impossível**. Fix: sampling no grid (terra firme + margem, longe de quintais/gramados/entre si, y=relevo) + REGENERAR reposiciona sobreviventes
+- **Resgate de náufragos:** `rescue_dir` no TerrainGrid (anéis de células) — NPC solto do beam sobre lago/canyon caminha pro chão livre em vez de travar no wall-slide pra sempre
+- **Scatter ciente do VISUAL:** margem de fronteira (ponto + anel de 8 amostras a 6u) compensa o domain warp ±8u do shader — fim da "pedra no verde"; pedras fora de gramados + auto-espaçamento; landmarks fora de praia/quintal/gramado
+- **Relevo em tudo:** scenery/decals/lâminas/torres assentam no `height_at` (pedra de canyon sobe pro topo da mesa)
+
+### Bugs de classe corrigidos
+- **Beam flicker andando (reincidência da regra do rasto):** `beam_visual_sync` em Update funcionava POR SORTE; systems novos rebaralharam a ordem ambígua → PostUpdate before TransformPropagate (+ anéis + sparkles). Memória reforçada: *follower novo já nasce em PostUpdate*
+- **Aspect ratio GLOBAL do cenário:** quad quadrado esticava todo PNG não-quadrado (canvas 64×39 → domo virava "pedra-ovo" 1.64× mais alta; caminhão 1.5×, cactos 1.23×). Fix: quad = size × (h/w do canvas), grounding pela altura real. In-game agora bate 1:1 com os thumbs do PixaPro
+- **Pixel art borrado:** nunca setamos `ImagePlugin::default_nearest()` (o `pixelArt:true` do Phaser nunca foi portado!) — billboards renderizavam bilinear. Aplicado + sampler linear explícito nos gradientes de código (sombra radial faltava)
+
+### Motor wang ARRANCADO (-850 linhas, -176 texturas no boot)
+- spawn das camadas, auto-sort, texture array, overlay-sobre-tiles, apron REPEAT, catálogo de 11 estilos, `wang_material.rs` + `wang_tiles.wgsl` deletados; campos de config removidos (serde ignora keys velhas); boot 603→~430 texturas. **PNGs dos tilesets ficam no disco** (arte preservada)
+- Sparkles do graviton (port `_emitBeamSparkle`): ponto verde acelera pro centro da nave (easeIn cúbico), segue a nave viva; toggle de diagnóstico na VFX
+
+### Research (pedidos do user)
+- **Artigo heyfebin (Impatient Programmer ch2, WFC):** abaixo do nosso nível (é técnica de tiles, que aposentamos) — pepita real foi o `default_nearest` (aplicado). Sinal: ecossistema no Bevy 0.18/0.19, nós no 0.15
+- **Tiny Glade talk (GPC Breda):** truque das copas de árvore (quad faces viram billboards individuais no vertex shader) → referência pro épico Houdini; validação da rota painterly small-world sobre Bevy ECS
+- **bevy_voxel_world — decisão: NÃO trocar o terreno.** Voxel cúbico mata os shaders #2/#3 e a direção de arte; gameplay inteiro bebe do TerrainGrid. Engavetado: "crateras por deformação de heightfield" (beam cava editando grid.heights + rebuild local)
+
+### Workflow
+- ⚠️ Reincidência: matei processo do jogo achado POR NOME (wmic where name = taskkill //IM disfarçado) — memória ganhou regra dura: **link falhou com Access denied no exe = user rodando → PARAR e avisar, nunca matar**
+- Smoke test seguro estabelecido: PowerShell Start-Process + filho por ParentProcessId (atenção: scoop shim = jogo é NETO)
+
+---
+
 ## Sessão 2026-07-06 — Bevy: água geométrica + foam cartoon, vento GPU, radar-minimapa, parity Phaser
 
 **Tema:** Maratona de 39 commits no repo Bevy (`d7ec2cc`→`4b2ce11`), guiada por playtests com screenshots do user. Port dos 5 gaps vs Phaser, água em mesh separado com shader #3 iterado até o foam cartoon final, clima/TOD com crossfade, vento em 3 camadas, radar virou minimapa e o mapa virou ilha circular.
