@@ -4,6 +4,25 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-12 — Bevy: mega-sessão pré-alpha (~30 commits) — core loop novo + progressão + shore-life + scatter 2.0
+
+**Tema:** review de design → alpha. Commits locais `14e9005`→`73f55e4`.
+
+- **Core loop (ALPHA_REVIEW P1+P2):** vitória por QUOTA de 30 burgers (check antigo era stale: 6 torres vs TOWER_COUNT=10); escalada por entrega (torres +80% cadência, farmers +50%); torres viram objetivo lateral pago (clear-all +500 + quip)
+- **COMBO (ideia do user):** curral cheio absorve +2 vacas de gorjeta → fornada vira combo com bebida+batata (filhos do billboard), 1.5× pontos, 1.75× refuel, popup "+X COMBO!"
+- **Progressão:** save.json (lifetime counters, writer debounced) + 50 achievements com tabela GERADA de docs/design/ACHIEVEMENTS.md + tracker wave-1 (~15 triggers) + toasts top-right com ícone/tier — comprovado em jogo (unplanned_flight/dry_tank no log da sessão do user)
+- **Água (3 rodadas até acertar):** EDT euclidiano Felzenszwalb (BFS 4-conn dava costa octogonal Manhattan) → domain warp ±1.8 células no sample de altura do mesh (platôs eram fronteira de célula) → rios em spline Catmull-Rom (walker mira-alvo aposentado) + lagoas metaball 2-3 lobos + ondas DIRECIONAIS a favor do vento com dobra pra costa só na chegada (fase dist-à-costa pura = anéis concêntricos "caleidoscópio" em lago redondo)
+- **Shore-life:** sapo (hop=jump do template cat), pato (waddle v3), égua (walk+eat, crina creme) — spawn 1-4 células d'água via `water_cells_at`; lições PixelLab: jobs falham SILENCIOSO (zip fecha sem a direção), grupos vêm com hash no nome (`jumping-a13a938f`), 502 enfileira em dobro, servidor ficou sem disco (3 retries na arte do combo)
+- **Scatter 2.0:** seção `clusters` âncora→satélites no scatter.json (14 sets: trucks+ferro-velho, tratores+feno, farmhouse, celeiro, fogueira, crash site, galinheiro, estábulo, caixa d'água) — generaliza a regra do galão-perto-do-truck do Phaser que o port perdeu; `Occupancy` spatial-hash global (veg só desviava de landmark = pilha de arbusto); trim -30% counts (7.099→5.425 peças); 4 pickups variantes de cor
+- **HUD (rodada grande):** dashboard 46% da tela; caixa do score CURVADA no contorno do radar com quinas pill (placa baked apagada por espelho vertical do anel); células off geradas DA PRÓPRIA ARTE (UV crop pixel-perfect, adeus retângulo translúcido); fuel espelhada (consome margem→centro como a graviton); labels FUEL âmbar/GRAVITON violeta sem %; SCORE verde forte; dial 0.5×/0.75×/1× maior; nomes dos chars +27%; tema A/B CLASSIC/KIT no CONFIGS (CLASSIC venceu); aba AUDIO dedicada (player de música estava ENTERRADO no meio da CONTROLS)
+- **Tooling:** checkbox ⚖ no MAP ASSETS → lineup do SIZES com px/u; `tools/scale_audit.py` (bbox de conteúdo vs escala in-game, --apply-category preserva semântica); presets world 1×/3×/5× (20× aposentado)
+- **Arte nova (~250 gens, saldo ~810):** 50 ícones de achievements em 1 call (25 gens!), 8 itens raros+2 moedas, hangar backdrop, combo drink/fries + 3 gags bônus (ray gun, leite, pizza alien), 4 pickups, cockpit v2 candidato (`create-ui-asset` com pieces — doc lida antes, esqueleto geométrico garantido) em assets/refs/
+- **Fixes:** touro com 3 frames rosa no idle SE (vizinhos bons, 0 gens); noite ilegível (véus TOD 0.45/0.60→0.32/0.42 + luz ambiente); chuva quase deitada (RAIN_WIND 7→3.8); redemoinhos "bifurcando" (rajada sincronizada amontoava fitas — envelope suavizado + fase por fita); torres→ESPANTALHOS em todo texto de player (+ números stale 6→10 em 2 achievements e no tutorial)
+- **docs/design/ALPHA_REVIEW.md:** review profundo — 3 problemas estruturais (vitória dissonante, curva plana, meio-loop raso), +15 achievements e +7 quests propostos, tutorial revisto pra 10 passos (Hazards+Radar+skip), checklist alpha 1 (bloqueador crítico: AssetPlugin path absoluto quebra em outra máquina) + protocolo de teste
+- **Workflow novo (memória):** ao fechar mudanças → compilar + ABRIR o jogo + self-test via telemetria, automático; vigias de exe/anims em background; sino de vaca procedural (fuga/abdução, gate anti-orquestra)
+
+---
+
 ## Sessão 2026-07-11 (noite) — Bevy: ÁUDIO completo (SFX + música dinâmica) + polish radar/chuva (10 commits)
 
 **Tema:** continuação da mesma sessão pós-checkpoint (`0cf0e1d`→`fab507f`). O jogo ganhou som do zero (bevy_audio built-in, features wav+mp3) e mais uma rodada de polish guiada por screenshots.
