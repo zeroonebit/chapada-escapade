@@ -4,6 +4,58 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-11 — Bevy: CRT + heat-haze + buraco negro + terraços + radar vivo (26 commits)
+
+**Tema:** Maratona de polish guiada por playtests com screenshots do user, tudo no repo Bevy (`6853bca`→`4f165b4`). O jogo ganhou look de TV de tubo, o beam virou campo gravitacional de shader, o terreno ganhou identidade (terraços, pico nevado, buracos negros, baixadas) e o radar virou instrumento de verdade.
+
+### 📺 CRT / old-TV post-process (primeiro post-process do projeto)
+- `crt.wgsl` + `crt.rs`: ViewNode no Core3d (Tonemapping→EndMainPassPostProcessing) — barrel esférico (termo quártico), scanlines finas, vignette, aberração cromática, grão
+- Bordas SEM preto: UV clampada + blur 9-tap que sobe só na curva (slider edge blur)
+- HUD indentado seguindo a curvatura (`crt_warp` no egui); menu fica reto (interativo)
+- Toggle + 6 sliders na VFX; ligado sutil por padrão
+
+### 🌀 Beam = heat-haze field (HDR + Bloom)
+- Câmera HDR + Bloom; CRT adaptado pro formato Rgba16Float
+- `beam_field.wgsl/rs`: post-process entre EndMainPass e Bloom — REFRATA o fundo na elipse projetada do beam (noise subindo = gravidade dobrando o espaço) + núcleo HDR que floresce no bloom
+- Discos mesh REMOVIDOS (beam_material/beam.wgsl deletados); máscara da nave só no haze (glow flui em volta — zerar glow abria um anel escuro)
+- Sliders heat haze + glow + bloom intensity na VFX
+
+### 🎨 UI look Phaser completo
+- VT323 fonte default do egui inteiro + tema com a palette EXATA do menu DOM (`#00ff55/#aaffcc/#001a08/#00aa44`)
+- PAUSED verde centralizado; PLAY AGAIN centralizado em VT323; SCOREs em VT323 maior
+- HUD boxes com nome + X/Y (BULLS 0/20 etc, burgers contador simples); label SCORE no placar do radar
+- "+100" flutuante sobre o disco na coleta + FUEL bar flash pulsando na recarga
+- Slider altura do disco (ufo_height); CONFIGS na proporção 86%×72% como standard
+- Ícone do jogo (icon.png do Phaser) no .exe (build.rs+winresource) e na janela/taskbar (winit)
+
+### 🏔 Terreno com identidade
+- TERRAÇOS de bioma: praia 0.0 < grama 0.30 < terra 0.62; clamp do relevo relativo ao degrau (chapadas cavalgam o terraço); âncoras corrigidas (curral/mascote/burger/NPCs no height_at)
+- BAIXADAS orgânicas (ex-crateras): raio 16-30u, contorno fBm ±30%, fundo ondulado, profundidade 1.6-2.5 (piso -2.2); nave mergulha e disco encolhe (AltitudeLift negativo)
+- PICO nevado intransponível: cone ~12u, neve permanente por altitude no shader, anel de nuvens na meia-encosta, nave contorna (no-fly no footprint)
+- BURACOS NEGROS (1-3/seed): poço de gravidade quadrático (escapável na franja), horizonte de eventos → queda espiral no CENTRO DE MASSA encolhendo até sumir → game over; névoa fria própria sobre cada um
+- NPCs com MEDO DO VAZIO: spawn rejeita < 2.2× raio + steering de repulsão (beam grip ignora o medo)
+- Avental de oceano virou ANEL (o quad 7× passava por baixo da ilha — as baixadas "alagavam"); skip de água por CÉLULA nos lobos do abismo
+- Causa raiz das crateras invisíveis: piso -0.26 engolia a profundidade
+
+### 🌫 Névoa viva
+- Vinheta radial → CAMPO DE NUVENS baixas: noise 2 oitavas ancorado no MUNDO, grade 57×33 (sem facetas)
+- Drift INTEGRADO por frame (CloudDrift) — fix do teleporte quando o clima mudava a força do vento; mais lenta, segue o WindDir
+- Sliders: density/coverage/bank size/drift speed + peak cloud ring
+
+### 📡 Radar virou instrumento
+- Minimapa 400×400: bilinear + domain warp (mesmo do shader) + hillshade do heightfield real + blend largo só na terra (costa nítida) — transições fiéis ao in-game
+- Marcadores: pico = touca branca por altura, abismo = poço preto, baixadas = tigelas sombreadas
+- Zoom dial de contorno no topo do anel: 0.5 (mapa inteiro) / 0.75 / 1.0 (segue a nave) — vencedor do A/B
+- Blips = MINI SPRITES (nave 15px sempre visível, vaca/touro/fazendeiro/curral pulsando com o ping; torre = dot)
+- Névoa DESENHADA no radar na janela do zoom (aproximou = "desembaça")
+
+### ⚠️ Notas de workflow
+- Commit do ícone foi engolido pelo `87f6cec` (git add falhou no Cargo.lock ignorado, stage vazou pro commit seguinte) — conteúdo intacto, mensagem errada
+- draw_hud bateu no cap de 16 params de system do Bevy 2× — resolvido com tuple-params
+- Validação user pendente: terraços + medo do vazio + radar sprites/névoa/dial final + queda centrada (o resto foi playtestado ao vivo na sessão)
+
+---
+
 ## Sessão 2026-07-08 — i18n ENG/PTBR (default EN) + codebase Bevy 100% traduzido pra inglês
 
 **Tema:** Fechamento do dia focado em legibilidade pra equipe de porting futura. Toggle de idioma no CONFIGS com default inglês, todos os textos de jogo bilingues, e — o grosso — comentários e strings de dev de TODO o repo Bevy traduzidos pra inglês. 16 commits (`921d69a`→`80ea4ef`), todos no repo Bevy (local-only).
