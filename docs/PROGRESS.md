@@ -4,6 +4,39 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-11 (noite) — Bevy: ÁUDIO completo (SFX + música dinâmica) + polish radar/chuva (10 commits)
+
+**Tema:** continuação da mesma sessão pós-checkpoint (`0cf0e1d`→`fab507f`). O jogo ganhou som do zero (bevy_audio built-in, features wav+mp3) e mais uma rodada de polish guiada por screenshots.
+
+### 🔊 Áudio do zero
+- `src/audio.rs` NOVO — SfxPlugin: 12 one-shots (Grab/Drop/Deliver/BurgerReady/Collect/Shot/Hit/Explosion/Thunder/Fall/GameOver/Victory) pegando carona nos eventos existentes (zero edits de gameplay) + loops beam/chuva/vento com volume lerp
+- `tools/gen_sfx.py` NOVO — 15 WAVs procedurais em Python stdlib puro (osciladores, sweeps exp, envelopes AD, crossfade de loop, seed 1991)
+- **Música dinâmica**: 4 MP3s AI do user em `assets/audio/` (Aliens_in_the_Cornfield, Last_Call_at_the_Three_Moons, The_Midnight_Corral, Barnyard_UFO) — crossfade por estado: menu no splash, dia/noite por TOD (idx 3|4); pasta escaneada em runtime (faixa nova = só salvar o mp3)
+- **Music player no CONFIGS AUDIO**: ⏮/⏭ + combo AUTO/manual + sliders separados music/sfx volume
+- Bug pego: IA renomeou a faixa noturna ("The_Midnight_Corral", não "Moonlight_Rustlers") — const errada deixaria a noite MUDA
+- Prompts entregues no chat: música ("Moonlight Rustlers" style) + **28 SFX cartoon** (estilo Looney Tunes/Mario Kart, tabela de filenames) — user gerando os arquivos
+- Estratégia híbrida acordada: trocar os SFX procedurais fraquinhos por Kenney CC0 depois do playtest
+
+### 📡 Radar/HUD polish
+- Blips do radar: sprites → **pontinhos coloridos** de volta (ficavam enormes); só o DISCO fica sprite (20px); tamanhos na metade (4.5/6.0)
+- **Círculo-legenda** nas caixas do topo com a cor do minimapa: BULLS marrom, COWS branco, FARMERS amarelo, TOWERS vermelho, BURGERS roxo
+- Burgers prontos = blip ROXO no minimapa (query em tuple com towers — cap 16 params de novo)
+- Score box do radar -22% + fonte do valor menor (interface melhor vem depois — user)
+- Roda do mouse dá zoom no radar; splash PLAY/TUTORIAL em VT323 explícita (28/26px)
+
+### 🌧 Chuva forte, acesa e molhada
+- 420 gotas (era 300), mais grossas (0.075×1.15), mais claras (Add 0.55/0.72/0.95 @ 0.75 — brilha de noite), mais rápidas (22-30 u/s)
+- Gotas aterrissam no RELEVO REAL (`height_at` — antes reciclavam em y<0 e afundavam nas chapadas); na água respingam na superfície
+- **Respingos**: pool de 90 anéis deitados (textura de anel gerada em código, sampler linear), expand+fade 0.38s, round-robin no landing, depth_bias -55 (acima das sombras, abaixo da fumaça)
+
+### ⚠️ Pendente / próxima sessão
+- **HUD.png novo** (1981×794) salvo pelo user em `assets/` — dashboard completo (fuel células laranja + radar central + graviton células roxas + placas de label + ícones vaca/fazendeiro/espantalho/celeiro). Análise iniciada: RGB **sem alpha** (fundo preto baked — precisa tratar). Próximo: mapear regiões → propor encaixe → CONFIRMAR com user antes de implementar
+- 28 SFX cartoon chegando → wire dos 6 hooks novos (ufo_hover_loop, moos por estado, bull_snort, farmer_hey, low_fuel, birds/crickets por TOD, ui_click) + pitch/volume random nos one-shots
+- 5ª faixa de música esperada (player escala sozinho)
+- Interface nova pro placar de score (user vai puxar referência)
+
+---
+
 ## Sessão 2026-07-11 — Bevy: CRT + heat-haze + buraco negro + terraços + radar vivo (26 commits)
 
 **Tema:** Maratona de polish guiada por playtests com screenshots do user, tudo no repo Bevy (`6853bca`→`4f165b4`). O jogo ganhou look de TV de tubo, o beam virou campo gravitacional de shader, o terreno ganhou identidade (terraços, pico nevado, buracos negros, baixadas) e o radar virou instrumento de verdade.
