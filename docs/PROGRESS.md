@@ -4,6 +4,23 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-13 (tarde, interativa) — Bevy: escala rel/abs + orientação por simetria + aba ASSETS (animals/enemies) + friendly-fire
+
+- **Joystick live só a bola** (`a79f49a`): `joystick_top.png` regerado = círculo feathered 106×106 só do knob (era crop 140×140 c/ haste); curso ±14/±11 px arte (~3-5px tela); fade-in ao voar mantido
+- **Baldes de leite em escala** (`c0bbb54`): tb_milk_bucket 2.6→1.5 (era do tamanho da vaca); satélites do curral r_min≥8.5 (CORRAL_QUAD=14 → balde sentava NA cerca, mancha vazava por cima)
+- **Família escala-humana calibrada pela vaca** (`75db0c6`): lawn_chair 3.0→2.1 (era maior que a vaca), picnic_table 2.4→3.0, milk_bottle_crate 2.6→1.6, beer_cooler 3.0→2.0, arch_small 2.4→3.4; aplicado nos soltos E nos cluster satellites
+- **`tools/scale_density_audit.py`** (`82244f2`): separa 3 escalas — RELATIVA (size=quad), ABSOLUTA (densidade texels/unidade: farmer 62 px/u vs toybox ~21 vs landmarks ~14) e EFETIVA (fração do canvas; margem transparente faz o size mentir). Fixes: SCARECROW_QUAD 7.0→5.0 (pixel 7× mais gordo que o farmer do lado), stable 8.9→12.0, fence_segment 1.1→2.0, trucks 7.8→8.8
+- **Decals casam cor da base com o terreno** (`9f5be96`): `decal_terrain_class()` classifica a família de chão do PNG pela média RGB (verde→Grass, quente escuro→Dirt, claro→Sand, neutro→livre) — milho/trigo/arado vão na TERRA, não na grama (user); campos `tb_field_*` sempre upright (sem rotação aleatória)
+- **Torre = espantalho clássico** (`2bcc503`, madrugada): tb_scarecrow do Toy Box substitui o mech steampunk; torpedos mantidos; avançado = tint vermelho; scarecrow_face vira sway-only
+- **HUD sombra 3px** (`04da476`): silhueta do dash preta (alpha 140) deslocada 3px down-right embaixo da arte → a bordinha branca lê como relevo
+- **Classificador de orientação por simetria** (`04da476`): `tools/orientation_audit.py` mede simetria H/V + centro de massa, CONSCIENTE DE CATEGORIA (billboard em pé nunca rola, decal plano rola se simétrico, MIRROR_H tomba só pros lados — o balde do user cai esq/dir não cima/baixo). → `orientation.json` (132 mirror/7 roll/12 upright), scenery.rs aplica via UV-flip (escala -1 back-face culla)
+- **Master toggle "todos" por categoria** (`4c55e98`) na aba ASSETS + tb_milk_spill/marcadores upright
+- **BUG jogo não esvaziava** (`53388de`): cluster satellites spawnavam direto da regra ignorando `enabled` (anchor sintético "corral" sempre existe → decoração do curral aparecia com tudo off); agora satélite só spawna se o sprite estiver enabled
+- **Categoria ANIMALS na aba ASSETS** (`53388de`): critters não vivem no manifest → `cfg.critters_off` + checkbox por espécie + master; respawn AO VIVO via `critters_retoggle`
+- **Leite confuso resolvido** (`0eab074`): todos os 5 currais já bakeiam props (balde/feno/coxo/caveira) → cluster do curral parou de espalhar leite redundante; só casinha de cachorro + outdoor + caveira ocasional
+- **Thumbs dos animais + categoria ENEMIES + ambos no topo** (`c437612`): animais/farmer mostram o frame sul estático (char_thumbs + char_thumb); enemies (farmer + scarecrow tower) togglando enabled_farmers/shooters com respawn ao vivo (farmers_retoggle/towers_retoggle); animals+enemies movidos pro topo da lista
+- **Friendly-fire nos torpedos** (`8171bfd`): guie o torpedo teleguiado até um farmer (<2.2u) ou outra torre (<2.8u) e mata + score igual (farmer +100, torre +TOWER_POINTS); `Bullet.age` arma o FF só após 0.35s (senão explode a torre que atirou)
+
 ## Sessão 2026-07-13 (madrugada, autônoma) — Bevy: ASSET TOUR QA + clusters semânticos + critters visíveis
 
 - **Asset tour harness** (`src/asset_tour.rs`, env `CHAPADA_TOUR=1`): teleporta o disco a 1 instância de cada sprite de scenery/critter/curral/torre/rare, condições de estúdio (dia/clear/CRT off, WeatherMix forçado por frame), screenshot nativo por alvo → `tools/saves/tour/` + `TOUR_DONE`
