@@ -4,6 +4,17 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-13 (madrugada, autônoma) — Bevy: ASSET TOUR QA + clusters semânticos + critters visíveis
+
+- **Asset tour harness** (`src/asset_tour.rs`, env `CHAPADA_TOUR=1`): teleporta o disco a 1 instância de cada sprite de scenery/critter/curral/torre/rare, condições de estúdio (dia/clear/CRT off, WeatherMix forçado por frame), screenshot nativo por alvo → `tools/saves/tour/` + `TOUR_DONE`
+- **3 corridas**: v1 morreu em GameOver (queda da borda da ilha não guardada — fix `!tour.active` no rim), v2 saiu toda com chuva (cfg.weather não limpa o crossfade — fix WeatherMix+SnowCover todo frame), v3 = 150 shots limpos analisados em 13 contact sheets (`tools/tour_montage.py`), v4 = 146 shots verificando os fixes
+- **Clusters semânticos no scatter.json** (26 rules, 68 satellites): sentinel `"corral"` (código em scenery.rs injeta corral_spots como âncora) → ossada+baldes de leite+feno+coxo+mancha de leite+casinha de cachorro+outdoor de burger nos currais; cemitério +ossadas; silo trigo+ração; mina tábuas+barris; placa UFO parking + marcador no chão; fogueira sempre c/ cooler (vinheta do user); pato de borracha na lagoa da cachoeira; sino→farmhouse; postes→igrejas
+- **Escalas corrigidas** (verificadas no v4): tratores 2.3/2.5→4.0, burger billboard 2.8→4.4, boulder_red_cluster 3.1→4.0, rock_pillar_tall 4.3→5.4, windmill 8.3→11.5, old_truck 11.9→9.5, water_well 3.2, bird_house 3.4
+- **Semântica**: pontes DESABILITADAS (spawnavam em terra seca; voltam quando placement for water-aware), props soltos reduzidos quando o cluster já garante (cooler/dog_house/washing_line/farm_bell/rubber_duck 1, mailbox/lamp_post 2)
+- **Critters em dívida entregues**: goat 4→8, dog 3→7, cat 3→7, mare 2→5 (scaled_count ×0.6 no mundo 1× deixava 1-2 de cada — user nunca viu). Tour fotografou as 10 espécies nos habitats certos (cabra highlands, cão/gato/galinha/galo farmyard, sapo/pato beira d'água, égua/cavalo open range) — 0 gens PixelLab gastas
+- **Mistérios resolvidos na análise**: "caixote gigante" = curral_05_abandonado flat (by design), "sombreiro" = farmer visto de cima (chapéu domina o sprite no top-down), lettuce/cassava/cupinzeiro corretos no disco
+- Commits Bevy (local-only): `df0c7be` harness, `4e8a232` clusters+critters+rim guard, `94fcea9` pass 2 verificado. Jogo relançado normal (splash, 54 FPS, sem panic) pro user voltar jogando
+
 ## Sessão 2026-07-13 — Bevy: alpha §7.2-7.3 + cockpit FinalHud v4 + mundo 1× travado
 
 **Tema:** roadmap alpha (tutorial + progressão jogável) e o HUD definitivo com a arte "Final" do user. Commits locais `bfaebae`→`5844473` (~20).
