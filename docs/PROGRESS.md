@@ -4,6 +4,26 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-13 — Bevy: alpha §7.2-7.3 + cockpit FinalHud v4 + mundo 1× travado
+
+**Tema:** roadmap alpha (tutorial + progressão jogável) e o HUD definitivo com a arte "Final" do user. Commits locais `bfaebae`→`5844473` (~20).
+
+- **Scale normalization aplicada:** `scale_audit --apply-category` — 151 sizes no scatter.json normalizados pela mediana da própria categoria (rocks 11.1 / vegetation 18.6 / landmarks 9.9 / extras 20.7 / decals 10.2); fim do barrel_rusty +241%
+- **Tutorial 10 passos (§7.2):** +RADAR (leitura da legenda) e +HAZARDS (borda + buracos negros, `CamPeek` aponta a câmera 1.4s pro abismo mais próximo) entre Collect e Farmer; Collect ensina burger = pontos E fuel; KillTower reescrito como escolha tática; botão SKIP na caixa desde o passo 1 (hold-ESC conflitava com pause); `save.tutorial_done` + splash só pulsa "FIRST TIME? START HERE" em first-run real
+- **Quests + achievements screen (§7.3):** aba AWARDS no CONFIGS (grid dos 50 com ícone PixelLab, Hidden = "???", header X/50 + moedas, quadro FinalPanelH com grid DENTRO do vidro via allocate_new_ui); `quests.rs` novo — pool de 5 contratos (Milk Run/Beef Baron/Gold Rush/Archaeologist/Demolition Day), roll 3/partida, coins no save, Contract Sweep +50%; rare items (golden_burger/alien_artifact) spawnam longe, beam coleta, `save.rare_items`
+- **Cockpit FinalHud (4 versões do user na mesma sessão):** pipeline de unbake (alpha por silhueta fechada + sombra em ramp — o xadrez de transparência vinha BAKED); v3 teve slots mascarados pixel-perfect (fill geométrico rounded-rect preservando gradiente) antes da v4 limpa chegar. Final: cockpit 2056×541 com counters baked (só ícone sprite 1.4× + número grande, LEDs de legenda na arte), 12 células/barra com off-strips regeneradas, radar-bússola, score na placa do troféu, PROPULSION REACTOR FUEL / TRACTOR BEAM PULSE, dash 44% da tela + sombra baked, **joystick VIVO** (crop feathered da bola+manche desloca na direção do voo)
+- **Painéis FinalPanelH dos dois lados:** MAP MISSIONS (contratos) à esquerda + SHIP LOG (score/moedas/lifetime) à direita, sombras baked; clique esconde, Q/M alterna, checkbox na aba UI nova (player-visible); FinalPanelV engavetado
+- **Radar:** blips CLUSTERIZADOS (bins 12px em espaço de radar, raio ∝ √count, zoom re-clusteriza) + LENTE fisheye ("esferificar como lupa": r^1.45 em 7 anéis de textura, blips no inverso, slider RADAR LENS) + cores dos blips sampleadas dos LEDs da arte (vaca amarela/touro lima/caipira âmbar; rare = estrela branca)
+- **Mundo 1× TRAVADO:** 3×/5× aposentados (atomic boota em 10, config cura); minimapa mostra a ilha inteira sempre (zoom/dial/roda removidos; passo RADAR do tutorial virou leitura cronometrada senão travava)
+- **Torpedos perseguidores:** `Bullet.homing` (5-7s normais; espantalho VERMELHO = avançado, 2 torpedos em pinça ±0.30 rad por 10s), turn rate 2.4 rad/s (esquivável), fizzle com puff; buff final 18 u/s + cooldown 1.4-2.6s
+- **Habitats + buffer de água:** FARMYARD (galinha/galo/porco/cão/gato em anel 7-26u dos currais — cão/gato/cabra JÁ EXISTIAM do Toy Box, zero gens, só não tinham casa), HIGHLANDS (cabra nas mesas), SHORE (sapo/pato), OPEN RANGE (cavalo/égua); coleira por habitat; vacas/fazendeiros spawnam 3+ células da costa + push gradiente pra terra em <2.5 células
+- **Beam-bússola (substitui a seta):** com cargo, o glow do graviton vira gradiente vermelho→laranja→amarelo→cyan pela distância do curral mais próximo, direção errada esquenta (uniform `tint` novo no beam_field.wgsl); seta do indicator aposentada
+- **Remix de áudio:** chuva 0.45/0.60→0.20/0.28 (loop chiado, placeholder), trovão 0.80→1.0, hum da abdução 0.55→0.85
+- **PixelLab:** saldo 884 gens intacto — dog/cat/goat/pig/rooster/chicken/horse todos já existiam completos do Toy Box
+- **Lições:** hold-ESC pra skip colide com pause-on-press · `Local<'static,…>` em tuple-param quebra o SystemParam (elidir!) · "transparência" xadrez baked em RGB = pipeline de silhueta + flood fill (3 iterações: o branco do metal engana o flood) · counters legíveis = ícone é o label
+
+---
+
 ## Sessão 2026-07-12 — Bevy: mega-sessão pré-alpha (~30 commits) — core loop novo + progressão + shore-life + scatter 2.0
 
 **Tema:** review de design → alpha. Commits locais `14e9005`→`73f55e4`.
