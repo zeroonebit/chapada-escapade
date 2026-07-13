@@ -4,6 +4,23 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-13 (noite, interativa) — Bevy: radar plano + abismo vazio-infinito (véu no CRT) + quips TOD/clima + tutorial no painel + HUD polish
+
+- **Radar minimapa PLANO** (`706e113`): removida a lente esférica/fisheye (`radar_lens`) — anéis de terreno, névoa e blips voltam a mapear linear 1:1 (distorção do tamanho/borda confundia mais que ajudava); anéis do "domo" viraram grade equidistante; config + slider removidos
+- **Glow da HUD recalibrado** (`706e113`): `focus` smoothstep 55..190u pra ilha de 500u — longe = feixe apontando pro objetivo escorregando na borda, cada vez mais perto = a borda TODA acende (bloom 80→95)
+- **Abismo backdrop preto** (`56c495c`): plano UNLIT preto gigante a y=-45 sob o void cliff -38 → mata a `ClearColor` (azul-céu) que vazava pelos buracos do mesh além da borda; `near_abyss` ±1→±2 células corta a franja de água costeira (baixadas) que lambia o void ring
+- **VOID FURA O VÉU DO TOD** (`911bf5e`, `87661d4`): o véu do TOD saiu do overlay egui e virou termo do **shader do CRT** (que agora SEMPRE roda — efeitos CRT vão a 0 quando off, véu fica). No shader o véu PULA pixels quase-pretos (backdrop da borda é preto puro unlit) → void = nada infinito nas bordas, mundo iluminado recebe o tom da hora. `atmosphere::tod_veil` expõe a cor. Fix do **jagged**: máscara binária → luminância amostrada num cross de 5 taps + `smoothstep(0.006, 0.085)` = fade suave na borda void→mundo (razão: o CRT roda ANTES do egui, então o véu tinha que sair do egui pro shader pra o void sobrepor)
+- **Slider do espantalho + ⚖ compare pula pra SIZES** (`8a5afcc`): `scale_scarecrow` no config + slider na aba WORLD; `apply_scales` rescala as torres mantendo a base no chão (`Tower.ground_h`); clicar no ⚖ na aba ASSETS troca automático pra aba SIZES com o asset já no lineup
+- **Quips de hora do dia** (`0a4e153`): a nave solta frase cômica a cada troca de TOD ("meio-dia hora do rango", "ih já é de noite?", "eita amanheceu já?") — pool EN/PT por preset, mood Funny, sobre o disco
+- **Quips de clima** (`0cf6475`): idem a cada troca de tempo (chuva "minha lataria vai enferrujar", neblina "cadê as vacas?", storm "raio + graviton = não", neve "vaca no freezer = burger premium", clear "céu limpou")
+- **Quips simultâneos EMPILHAM** (`bbd0fde`): quips no mesmo ponto (as frases da nave) agora empilham por tamanho — o menor no topo e some primeiro (ttl cresce com o texto), deixando as linhas longas embaixo com tempo de leitura
+- **Joystick +10%** (`bbd0fde`): knob 117 vs 106u (crescido do centro) pra a base baked nunca aparecer por baixo ao inclinar
+- **Label GRAVITON** (`bbd0fde`): TRACTOR BEAM PULSE → TRACTOR GRAVITON BEAM PULSE (fonte 42→37 pra caber; é texto egui, não baked)
+- **Play/pause no player de música** (`9607faf`): botão ▶/⏸ antes do ⏮/⏭ na aba AUDIO; `music_paused` manda o `music_ctl` cross-fadar o volume alvo pra 0 (silêncio suave), despausar volta
+- **Tutorial no painel lateral esquerdo** (`733e38d`): a caixa central virou um painel na moldura `hud_panel_h` (mesma arte do MAP MISSIONS), no canto inferior-esquerdo, com título TUTORIAL + texto do passo + skip; auto-contido (aparece independente das quests/toggle); `board_res` via tuple pra respeitar o cap de 16 params
+- **Lições**: alinhamento de uniform (`Vec4` no fim do `CrtSettings`, encase = WGSL); cap de 16 params de system (tuple pra agrupar `Res`+`Local`); exe standalone abre sem recompilar (`target/debug/chapada_escapade.exe`, `dynamic_linking` OFF por padrão → acha assets via `game_root` fallback)
+- Commits Bevy LOCAL-ONLY (nunca push): `706e113`→`87661d4` (10 commits). Jogo relançado (splash, 59 FPS, sem panic/erro de shader) pro user validar
+
 ## Sessão 2026-07-13 (tarde, interativa) — Bevy: escala rel/abs + orientação por simetria + aba ASSETS (animals/enemies) + friendly-fire
 
 - **Joystick live só a bola** (`a79f49a`): `joystick_top.png` regerado = círculo feathered 106×106 só do knob (era crop 140×140 c/ haste); curso ±14/±11 px arte (~3-5px tela); fade-in ao voar mantido
