@@ -4,7 +4,7 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
-## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 (compila, boota, roda 60fps)
+## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 JOGÁVEL (1ª vitória) + polish (máscaras, pause, fazendeiros agressivos)
 
 - **Upgrade completo da engine em 4 releases** (2 commits LOCAL-ONLY `f336764`+`aff4949`) — compila (0 erros), boota, roda **60fps, 0 erros de render/panics/warnings**. Deps: bevy 0.19 · bevy_rapier3d 0.35 · bevy_hanabi 0.19 · bevy_egui 0.41 · bevy-inspector-egui 0.37
 - **Event→Message** (0.17): `EventWriter/Reader`→`MessageWriter/Reader`, `.send()`→`.write()`, `derive(Event)`→`Message`, `add_event`→`add_message` (65 renames)
@@ -15,7 +15,11 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - **hanabi 0.14→0.19**: `SpawnerSettings`, `EffectSpawner`, `ParticleEffect` componente
 - **Material shaders `@group(2)`→`@group(3)`**: a 0.16+ com GPU-driven rendering pôs o mesh no grupo 2; o material foi pro 3 (o mismatch storage×uniform crashava o render)
 - **Trajetória de erros**: 119 → 33 → 4 → 125 → 87 → 35 → 0 (resolver os imports de render destravava ondas escondidas de erros no crate inteiro). Depois 3 bloqueadores de boot em sequência: `set_window_icon` (NonSend timing) → egui fonts (schedule) → material @group
-- **Pendente**: validação visual do estado PLAYING (verifiquei boot+Splash+60fps+0 erros; PLAYING precisa do olho do user). Deprecações zeradas (`.or`→`.or_else`, `TEXTURE_FORMAT_HDR`→`Rgba16Float`); 14 warnings restantes são dead-code pré-existente. Memória: [[project_bevy_0_19_migration]]
+- Deprecações zeradas (`.or`→`.or_else`, `TEXTURE_FORMAT_HDR`→`Rgba16Float`); 14 warnings restantes são dead-code pré-existente. Memória: [[project_bevy_0_19_migration]]
+- **CRASH do PLAY resolvido** (`a1638d5`): entrar em Playing crashava — a fita do swirl de vento (`swirl_ribbon`, 18 malhas) tinha vértice NaN (`sin(π)` em f32 = negativo minúsculo → `.powf(0.8)` de base negativa = NaN); a 0.15 tolerava malha com bounds NaN, a 0.19 dá panic no `compute_aabb`. Fix `.max(0.0)` no taper. Diagnóstico: sistema temporário logando malhas não-finitas + auto-Playing (gotcha na memória)
+- **JOGÁVEL VALIDADO**: o user jogou uma partida inteira até **VITÓRIA (4270 pts)** na 0.19 — boot→splash→playing→win, loop completo, tela de vitória redonda. O "pendente PLAYING" virou provado
+- **UI/gameplay polish** (`5027cf4`, LOCAL-ONLY): ícones do cockpit croppados pela silhueta/bbox (tamanho uniforme, sem o hack do 1.4×) · **menu de pause UNIFICADO** numa caixa centralizada (PAUSED + RESUME/RESTART + player de música), controles centralizados via `allocate_ui_with_layout`+`with_main_align` (o `ui.horizontal` do egui esquerda-alinha dentro do `vertical_centered`) · **SIZES** ganhou linha "scarecrow variants" (blue/red/green carregados no char thumb cache) — 1º slice dos pedidos 2-4 do editor · **FAZENDEIROS AGRESSIVOS**: flee→CHASE (novo `FarmerState::Chasing`; caçam a partir de 28u carregando PRA nave a 6.6 × escalada, atirando; era fugir a <10u)
+- **Pendente do editor (2-4)**: torpedos (`fx/missiles/missile_01..16` carregados pelo shooter, não pela library) no SIZES · sz/n pra enemies/animais (item 2) · ⚖ compare pra não-scatter (item 4) — o editor é scatter-manifest-based, os não-scatter precisam de UI+config nova
 
 ## Sessão 2026-07-13 (noite, interativa) — Bevy: radar plano + abismo vazio-infinito (véu no CRT) + quips TOD/clima + tutorial no painel + HUD polish
 
