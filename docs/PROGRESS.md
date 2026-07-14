@@ -4,6 +4,19 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 (compila, boota, roda 60fps)
+
+- **Upgrade completo da engine em 4 releases** (2 commits LOCAL-ONLY `f336764`+`aff4949`) — compila (0 erros), boota, roda **60fps, 0 erros de render/panics/warnings**. Deps: bevy 0.19 · bevy_rapier3d 0.35 · bevy_hanabi 0.19 · bevy_egui 0.41 · bevy-inspector-egui 0.37
+- **Event→Message** (0.17): `EventWriter/Reader`→`MessageWriter/Reader`, `.send()`→`.write()`, `derive(Event)`→`Message`, `add_event`→`add_message` (65 renames)
+- **Reorg de crates** (0.17): `NotShadowCaster`→`bevy::light`, `Bloom`→`bevy::post_process`, `ShaderRef`→`bevy::shader`, `RenderAssetUsages`→`bevy::asset`, `HashMap`→`bevy::platform::collections`
+- **Render graph → sistemas na schedule** (0.17, o pedaço mais pesado): CRT + heat-haze do beam reescritos de `ViewNode`/`add_render_graph_node` pra `add_systems(Core3d, …in_set(Core3dSystems::PostProcess/EarlyPostProcess))` com `ViewQuery`+`RenderContext` como params; `RenderPipelineDescriptor` novo (`BindGroupLayoutDescriptor`, `entry_point: Some`, `FullscreenShader` resource, sem `push_constant_ranges`)
+- **egui 0.32→0.41**: os **21 sistemas de UI** movidos pra `EguiPrimaryContextPass` (fontes indisponíveis no `Update` = panic "No fonts"), dividindo as tuplas gameplay+egui; `ctx_mut`, `content_rect`, `EguiTextureHandle::Strong`, `painter.rect`+`StrokeKind`, painéis Ui-based (splash com Ui-raiz), `Frame::NONE`
+- **Componentes** (0.16): `Camera.hdr`→`Hdr`, `AmbientLight`/`DirectionalLight` per-camera, `despawn_recursive`→`despawn`, `Timer.finished`→`is_finished`, `Volume::Linear`, `AudioSink::set_volume &mut`, ícone da janela no `Update`
+- **hanabi 0.14→0.19**: `SpawnerSettings`, `EffectSpawner`, `ParticleEffect` componente
+- **Material shaders `@group(2)`→`@group(3)`**: a 0.16+ com GPU-driven rendering pôs o mesh no grupo 2; o material foi pro 3 (o mismatch storage×uniform crashava o render)
+- **Trajetória de erros**: 119 → 33 → 4 → 125 → 87 → 35 → 0 (resolver os imports de render destravava ondas escondidas de erros no crate inteiro). Depois 3 bloqueadores de boot em sequência: `set_window_icon` (NonSend timing) → egui fonts (schedule) → material @group
+- **Pendente**: validação visual do estado PLAYING (verifiquei boot+Splash+60fps+0 erros; PLAYING precisa do olho do user). Deprecações zeradas (`.or`→`.or_else`, `TEXTURE_FORMAT_HDR`→`Rgba16Float`); 14 warnings restantes são dead-code pré-existente. Memória: [[project_bevy_0_19_migration]]
+
 ## Sessão 2026-07-13 (noite, interativa) — Bevy: radar plano + abismo vazio-infinito (véu no CRT) + quips TOD/clima + tutorial no painel + HUD polish
 
 - **Radar minimapa PLANO** (`706e113`): removida a lente esférica/fisheye (`radar_lens`) — anéis de terreno, névoa e blips voltam a mapear linear 1:1 (distorção do tamanho/borda confundia mais que ajudava); anéis do "domo" viraram grade equidistante; config + slider removidos
