@@ -14,7 +14,7 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - `bd6dbd8` trilha por CALOR COM DELAY (não plow instantâneo — "achei forte"): campo de heat 0..1, esfria devagar (o lag É o delay), derrete só passado `MELT_DELAY`, raio menor
 - `131f8d5` FALLOFF no centro (peso `1-smoothstep` ao quadrado, não platô) → derrete um SULCO/tigela, não cilindro de fundo chato ("no meio derrete mais pois recebe calor direto")
 - `b4236fc` visibilidade ("não senti derreter"): raio 0.75×→1.1× (era ~1 célula no grid 2.5u), tira o quadrado do falloff, `MELT_DELAY` 0.30→0.25 + `BEAM_MELT` 0.22→0.40 pro centro chegar no CHÃO PELADO (afundamento parcial vira floco de novo no shader)
-- Aposentado: `build_snow_rank_image`, `snow_px_live`, picker snow_px. Rungs 2 (deriva por vento) e 3 (props como colisão) PENDENTES — user escolheu "sonho completo" via AskUserQuestion
+- Aposentado: `build_snow_rank_image`, `snow_px_live`, picker snow_px. **Rungs 2+3 FEITOS depois** (ver "sonho completo" no fim da entrada) — user escolheu via AskUserQuestion
 
 **HUD:**
 - `ba8f372` botão do emissor DINÂMICO (acende só com o feixe ativo; lente OFF via `tools/make_beam_off.py`, glifo vira ardósia gravada por intensidade cyan, bezel intocado), contadores na COR DO LED (amarra contador→LED→blip), blips do radar pararam de LAVAR (flash f²→f⁸, alpha linear→pow(0.6), halo escuro por baixo, saturação ×1.45 longe da luminância)
@@ -37,7 +37,12 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 **Ferramentas:** `tools/make_beam_off.py` (lente do emissor apagada, PREMULTIPLICADA pra cobrir e não somar). Recolor do LED do farmer inline (âmbar→azul por intensidade). Kills por PID (nunca `//IM`) mantidos.
 
-**Decisões abertas (aguardando user):** porco AMBIENTE "que não pega" coexistindo com os do rebanho (2 tipos = pega/não pega)? · azul do farmer vs azul do curral no radar (separar?) · `scatter.json` segue 151/151 OFF desde 13/07 (ilha sem props, user optou deixar) · [RESOLVIDO] escalar o HUD → feito (`d185871`, hud_scale)
+**Lotes finais (user disse "tudo" — 3 commits `e614c95`/`6ea0a0c`/`21f6605`):**
+- `e614c95` **porcos ambientes de volta** (entidade `Critter` no SPECIES de novo — o feixe só pega `Cow`/`Farmer`, então naturalmente não abduzível; coexiste com os 10% do rebanho `CowKind::Pig` que pegam. Mesmo sprite, a "pegabilidade" é o tipo da entidade) + **radar: curral CIANO** (0,224,208) — era azul-céu quase igual ao farmer novo; ciano casa com a bússola do beam
+- `6ea0a0c` **NEVE RUNG 2 (deriva por vento)**: advecção downwind por tick (`WIND_ADVECT × wind_strength_mix`, split x/z pelo vetor `WIND_WAVE_K × WindDir` — X puro hoje = leste/oeste), neve soprada pra água drena; com relaxação+relevo afina barlavento e engrossa sotavento
+- `21f6605` **NEVE RUNG 3 (props como colisão)**: campo `blocker` novo, `snow_stamp_blockers` carimba disco-parede em mechas+currais (canyons/pico já eram parede via terrain_h; pedras de cenário entram quando o scatter religar). O tick lê blocker nos 3 passos: depósito PULA a pegada do prop, relaxação trata como parede (neve escorrega, não flui pra lá), advecção mantém a neve soprada AQUI (empilha no barlavento). Fecha o **"sonho completo"** (rung 1 acúmulo vivo + rung 2 vento + rung 3 colisão)
+
+**Decisões abertas:** nenhuma pendente. [RESOLVIDAS nesta sessão] escalar o HUD (`d185871`) · porco ambiente que-não-pega (`e614c95`, os dois tipos coexistem) · azul farmer vs curral no radar (`e614c95`, curral→ciano). Segue anotado: `scatter.json` 151/151 OFF desde 13/07 (ilha sem props, user optou deixar — quando religar, as pedras entram no blocker da neve automático)
 
 ## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 JOGÁVEL (1ª vitória) + editor de assets + MECHA + beam-ovo + bacon
 
