@@ -32,11 +32,12 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 - `4e91a20` comparação = LINEUP ÚNICO alinhado pela BASE (cast + pins juntos, uma escala honesta tallest→200px, imagem = último elemento da célula = pés na mesma linha) + marcar ⚖ NÃO pula mais pra SIZES (fixa um grupo — cães+gatos, cavalo+boi+vaca — antes de comparar)
 - `83a4174` AUTO-SAVE por mudança de valor (debounce 0.6s no `save_on_close`, compara cfg serializado — change-detection do Bevy é ruído porque o egui pega `&mut cfg` todo frame) + comparação em GRID (`with_main_wrap`) + campo de SEARCH 🔍 na ASSETS (filtra animals/scatter/props por substring)
 - `7bd42dd` porco ganha `scale_pig` PRÓPRIO + entra na comparação e no thumb cache (era carona no slider da vaca); `PIG_CHANCE` FIXO em 10%, sem slider de chance (user)
-- `cf5405c` janela CONFIGS redimensionável (scroll acompanha `ui.available_height`) + botão ⛶ MAXIMIZAR (`fixed_rect` fullscreen) / ❐ restaurar + slider "tamanho da interface" (`ui_scale`→`ctx.set_zoom_factor`, escala menus/F3; o HUD é screen-proportional e não muda — noted na legenda)
+- `cf5405c` janela CONFIGS redimensionável (scroll acompanha `ui.available_height`) + botão ⛶ MAXIMIZAR (`fixed_rect` fullscreen) / ❐ restaurar + slider "tamanho da interface" (`ui_scale`→`ctx.set_zoom_factor`, escala menus/F3; o HUD é screen-proportional e não muda)
+- `d185871` slider "tamanho do HUD" (`hud_scale`) — o user confirmou "era o HUD mesmo": multiplica as frações de tela do cockpit (o `dash_scale` clássico governa contadores/fuel/graviton/radar/joystick/beacon = um multiplicador só; + radar do kit + os 2 painéis laterais hud.rs/quests.rs), tudo edge-anchored. UI tab agora com 2 sliders: "tamanho do HUD" (0.6–1.6) e "tamanho dos menus" (ui_scale renomeado, 0.6–2.0)
 
 **Ferramentas:** `tools/make_beam_off.py` (lente do emissor apagada, PREMULTIPLICADA pra cobrir e não somar). Recolor do LED do farmer inline (âmbar→azul por intensidade). Kills por PID (nunca `//IM`) mantidos.
 
-**Decisões abertas (aguardando user):** porco AMBIENTE "que não pega" coexistindo com os do rebanho (2 tipos = pega/não pega)? · o slider "tamanho da interface" escala os MENUS — quer escalar o HUD do jogo também (multiplicador no `dash_scale` do `hud.rs`)? · azul do farmer vs azul do curral no radar (separar?) · `scatter.json` segue 151/151 OFF desde 13/07 (ilha sem props, user optou deixar)
+**Decisões abertas (aguardando user):** porco AMBIENTE "que não pega" coexistindo com os do rebanho (2 tipos = pega/não pega)? · azul do farmer vs azul do curral no radar (separar?) · `scatter.json` segue 151/151 OFF desde 13/07 (ilha sem props, user optou deixar) · [RESOLVIDO] escalar o HUD → feito (`d185871`, hud_scale)
 
 ## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 JOGÁVEL (1ª vitória) + editor de assets + MECHA + beam-ovo + bacon
 
