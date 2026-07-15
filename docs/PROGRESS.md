@@ -4,6 +4,40 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-15 (madrugada) — Bevy: neve falling-sand + feixe derrete trilha + HUD (beam/contadores/blips/farmer azul) + mechas 8-dir + CONFIGS UX (19 commits LOCAL-ONLY `016361d`→`cf5405c`)
+
+**Neve falling-sand (ref kandabi/Pixel-Physics-Simulation — o user apontou o repo):**
+- `016361d` acúmulo vira MAPA DE RANK de pixels duros (altitude 50% + tempestade fBm + inclinação + dither, quantil equalizado = a cobertura É o sorteio 20-33%), sampler NEAREST — a snowline v2 morria em terreno TERRACEADO (world_y constante no platô → degenerava no vnoise, manchas moles com terracota vazando)
+- `1cd695d` acumula no TAMANHO DO FLOCO (`FLAKE_SIZE=0.22u`, era 1.0u ≈ 5× = ladrilho); malha grossa 1u pros termos suaves (altitude/tempestade/inclinação) bilerp + grão por texel (2273²≈5.2M texels sem 25M `height_at`)
+- `89af87d` **RUNG 1 falling-sand**: arranca o rank estático, poe CAMPO DE PROFUNDIDADE vivo (`src/snow_sim.rs` novo, ~200² a ~7Hz) — depósito + relaxação por ângulo de repouso (= erosão térmica, o grain solver do Houdini) + derretimento por altitude; a costura de pixel é gerada no shader por quadrado-de-floco (sem re-assar textura); side-view→top-down: a regra do grão vira erosão térmica num heightfield
+- `0c90175` feixe ABRE TRILHA (cápsula contínua da pos anterior→atual, não disco por tick); a relaxação fecha o rastro sozinha (cura emergente = o motivo de ser campo vivo)
+- `bd6dbd8` trilha por CALOR COM DELAY (não plow instantâneo — "achei forte"): campo de heat 0..1, esfria devagar (o lag É o delay), derrete só passado `MELT_DELAY`, raio menor
+- `131f8d5` FALLOFF no centro (peso `1-smoothstep` ao quadrado, não platô) → derrete um SULCO/tigela, não cilindro de fundo chato ("no meio derrete mais pois recebe calor direto")
+- `b4236fc` visibilidade ("não senti derreter"): raio 0.75×→1.1× (era ~1 célula no grid 2.5u), tira o quadrado do falloff, `MELT_DELAY` 0.30→0.25 + `BEAM_MELT` 0.22→0.40 pro centro chegar no CHÃO PELADO (afundamento parcial vira floco de novo no shader)
+- Aposentado: `build_snow_rank_image`, `snow_px_live`, picker snow_px. Rungs 2 (deriva por vento) e 3 (props como colisão) PENDENTES — user escolheu "sonho completo" via AskUserQuestion
+
+**HUD:**
+- `ba8f372` botão do emissor DINÂMICO (acende só com o feixe ativo; lente OFF via `tools/make_beam_off.py`, glifo vira ardósia gravada por intensidade cyan, bezel intocado), contadores na COR DO LED (amarra contador→LED→blip), blips do radar pararam de LAVAR (flash f²→f⁸, alpha linear→pow(0.6), halo escuro por baixo, saturação ×1.45 longe da luminância)
+- `bee59a9` FARMERS AZUL — fonte + LED recolorido no `dash_final.png` (âmbar→azul por intensidade, mantém brilho/bezel, inline python) + blip; nota: fica perto do azul-céu do curral no radar (aberto)
+
+**Currais:** `5f1b9e2` longe da BORDA — guarda inland via `dist_water` (a banda quadrada de células não diz nada em ilha CIRCULAR; grama começa em dist_water=5, colada na costa), mira WANT 16 células (80u) e cede até MIN 9 (45u) conforme as tentativas acabam; o buraco REAL era o top-up sampler do `corral.rs` sorteando quadrado sem checar costa
+
+**Mechas (8-dir, os PixaPro):**
+- `051a66f` viram pra ENCARAR a nave (vetor XZ→nave no mesmo picker `Direction8::from_velocity` da vaca, troca textura só na mudança de octante); cada `Tower` guarda a cor resolvida (nunca "mix")
+- `32dc1f2` DORMEM virados pro sul, ACORDAM ao entrar no alcance (WAKE `TOWER_RANGE+6` / SLEEP `+11`, campo `awake` com histerese anti-flicker na borda) — "lê como noticed me"
+
+**CONFIGS UX (6 commits):**
+- `a865f54` pinned ⚖ finalmente APARECE na SIZES + ganha slider de tamanho (eram DOIS bugs: sem ScrollArea o bloco caía fora da janela + `continue` silencioso quando o thumb não resolvia; slider grava no store REAL: scatter→manifest+re-scatter, critter→`critter_size`, cast/mecha→`scale_*`; torpedo/prop solto = slider disabled)
+- `3774aa6` SCROLL global em TODAS as abas (a janela egui não cresce além da tela → o fundo era inalcançável; barra de abas + SAVE/RESET fixos, só o meio rola)
+- `4e91a20` comparação = LINEUP ÚNICO alinhado pela BASE (cast + pins juntos, uma escala honesta tallest→200px, imagem = último elemento da célula = pés na mesma linha) + marcar ⚖ NÃO pula mais pra SIZES (fixa um grupo — cães+gatos, cavalo+boi+vaca — antes de comparar)
+- `83a4174` AUTO-SAVE por mudança de valor (debounce 0.6s no `save_on_close`, compara cfg serializado — change-detection do Bevy é ruído porque o egui pega `&mut cfg` todo frame) + comparação em GRID (`with_main_wrap`) + campo de SEARCH 🔍 na ASSETS (filtra animals/scatter/props por substring)
+- `7bd42dd` porco ganha `scale_pig` PRÓPRIO + entra na comparação e no thumb cache (era carona no slider da vaca); `PIG_CHANCE` FIXO em 10%, sem slider de chance (user)
+- `cf5405c` janela CONFIGS redimensionável (scroll acompanha `ui.available_height`) + botão ⛶ MAXIMIZAR (`fixed_rect` fullscreen) / ❐ restaurar + slider "tamanho da interface" (`ui_scale`→`ctx.set_zoom_factor`, escala menus/F3; o HUD é screen-proportional e não muda — noted na legenda)
+
+**Ferramentas:** `tools/make_beam_off.py` (lente do emissor apagada, PREMULTIPLICADA pra cobrir e não somar). Recolor do LED do farmer inline (âmbar→azul por intensidade). Kills por PID (nunca `//IM`) mantidos.
+
+**Decisões abertas (aguardando user):** porco AMBIENTE "que não pega" coexistindo com os do rebanho (2 tipos = pega/não pega)? · o slider "tamanho da interface" escala os MENUS — quer escalar o HUD do jogo também (multiplicador no `dash_scale` do `hud.rs`)? · azul do farmer vs azul do curral no radar (separar?) · `scatter.json` segue 151/151 OFF desde 13/07 (ilha sem props, user optou deixar)
+
 ## Sessão 2026-07-14 — Bevy: migração 0.15 → 0.19 JOGÁVEL (1ª vitória) + editor de assets + MECHA + beam-ovo + bacon
 
 - **Upgrade completo da engine em 4 releases** (2 commits LOCAL-ONLY `f336764`+`aff4949`) — compila (0 erros), boota, roda **60fps, 0 erros de render/panics/warnings**. Deps: bevy 0.19 · bevy_rapier3d 0.35 · bevy_hanabi 0.19 · bevy_egui 0.41 · bevy-inspector-egui 0.37
