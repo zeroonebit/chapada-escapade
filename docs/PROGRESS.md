@@ -4,6 +4,20 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-07-16/18 — Bevy: code review pós-neve → 2 fixes CRÍTICOS validados em jogo + handoff queue limpa (2 commits LOCAL-ONLY `0781946`+`3dd182b` · docs `7cb380f`)
+
+**`/code-review` no diff de 07-15 (`016361d^..21f6605`, 16 arquivos):** 2 críticos confirmados + 2 menores.
+
+- **CRÍTICO #1 (`0781946`) — a neve tava CONGELADA:** a textura viva do campo de neve era `RENDER_WORLD`-only → Bevy descarrega a cópia CPU após o 1º prepare → `images.get_mut` devolve None → o upload do R8 a cada tick virava **no-op silencioso** → acúmulo, sulco do feixe e deriva de vento nunca chegavam à GPU. **Causa raiz do "não senti derreter" de 07-15** — o `b4236fc` afinou constantes em cima de um upload morto. Fix: `RenderAssetUsages::default()` (MAIN_WORLD | RENDER_WORLD), o mesmo padrão que `wind_gpu.rs`/`hud.rs` já usavam. Confirmado na doc da crate instalada (`bevy_asset-0.19.0/src/render_asset.rs`)
+- **CRÍTICO #2 (`3dd182b`) — `insert(BeamGrip)` paniqueia** quando a entidade despawna no MESMO frame (0.19 aborta; a 0.15 tolerava): entrega no curral (porco despawna na hora), farmer explodindo em pedra. Batia com os 2 panics do `crash.log`. Fix: `try_insert` (padrão que `collision.rs` já documentava). **Lição paga: o 1º patch cobriu só `beam.rs` — sem grep, o `farmer_beam` (`farmer.rs:386`) ficou de fora e crashou AO VIVO no teste do user.** Da fonte do bevy_ecs: `remove()` enfileira via `queue_handled(warn)` = seguro por design (por isso `try_remove` nem existe)
+- **PIPESTATUS mordeu de novo:** `cargo run | tail -40` engoliu o exit 101 → reportei "saída limpa" com panic no log. Regra do repo re-validada na pele: pipe de cargo sem `PIPESTATUS` = mentira
+- **Validação em jogo (user, ~2 dias de janela, 2 mapas):** 0 panics, `crash.log` parado em 21 linhas, **12 entregas em curral** (a janela exata da corrida) = fix #2 validado no caminho da vaca; **2 fases de neve + print do user com o acúmulo pixelado em tela** = fix #1 validado. Caminho do farmer sem rastro no log (mesmo fix de 1 linha, não provado em jogo). Sulco do feixe sem confirmação explícita ainda
+- **Menores anotados (sem fix, backlog):** `save_on_close` serializa o cfg inteiro TODO frame mesmo com menu fechado (gatear atrás de `open.0`) · advecção de vento reparte pelo vetor normalizado (norma L1 > 1 na diagonal — dormente enquanto o vento é X puro)
+- **Handoff queue Phaser LIMPA (`7cb380f`):** 3 items marcados done retroativamente — `pixapro-spinoff` (feito 2026-05-02), `tilesets-16px` (feito 2026-04-30), `currais-v2` (superado 2026-05-02, burgers ao norte). Sobram **5 abertos** (grass blades blocked · scarecrow turrets Phaser · geometric textures cleanup · 626 PNGs sem decisão · tutorial 7-9). Mirror MD reescrito com tabelas abertos/fechados
+- **Asset ID em jogo:** o "colchão" ao lado do windmill = `tb_truck_teal` (caminhão top-down, lona branca nervurada + cabine teal). Telemetria: 7 scenery em cena (4 trucks coloridos + windmill + water_tower + old_truck) — obs: o manifest local tem esses ligados apesar do "151/151 off". Dica: cursor no asset + tecla **B** mostra o nome
+
+---
+
 ## Sessão 2026-07-15 (madrugada) — Bevy: neve falling-sand + feixe derrete trilha + HUD (beam/contadores/blips/farmer azul) + mechas 8-dir + CONFIGS UX (19 commits LOCAL-ONLY `016361d`→`cf5405c`)
 
 **Neve falling-sand (ref kandabi/Pixel-Physics-Simulation — o user apontou o repo):**
