@@ -73,7 +73,7 @@
       "id": "tilesets-16px-slice-and-group",
       "title": "Slice + agrupar 8 tilesets 16px em WANG_PRESETS (Mapa 1 vs Mapa 2)",
       "type": "in-game-integration",
-      "status": "blocked",
+      "status": "done",
       "priority": "high",
       "created_at": "2026-04-30T11:00:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
@@ -112,13 +112,13 @@
         "tools/slice_tilesets.py — pode precisar update se usar"
       ],
       "verification": "Abrir PixaPro Tiles tab, ver headers Mapa 1 / Mapa 2 com 6 presets cada, test render funciona",
-      "verified": false
+      "verified": true
     },
     {
       "id": "currais-v2-test-and-tune",
       "title": "Testar currais V2 in-game + ajustar slotOffsetY se desalinhar",
       "type": "test",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "created_at": "2026-04-30T11:00:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
@@ -137,13 +137,13 @@
         "js/04_scenery.js (VARIANTS array)"
       ],
       "verification": "Burgers aparecem visualmente alinhados com gate de cada curral",
-      "verified": false
+      "verified": true
     },
     {
       "id": "pixapro-spinoff-standalone",
       "title": "Migrar PixaPro pra repo standalone próprio",
       "type": "refactor",
-      "status": "in-progress",
+      "status": "done",
       "priority": "low",
       "created_at": "2026-04-30T11:00:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
@@ -168,7 +168,7 @@
         "tools/gallery_server.py → server.py (ajusta ROOT)"
       ],
       "verification": "PixaPro funciona standalone em ~/Projects/PixaPro/ apontando pro asset_root do Chapada Escapade",
-      "verified": false,
+      "verified": true,
       "claimed_at": "2026-05-01T00:00:00-03:00",
       "claimed_by": "asset-gen-session-2026-05-01 (fase 1 done, fase 2 pra próxima sessão)"
     },
@@ -328,6 +328,17 @@
       "id": "pixapro-spinoff-standalone",
       "by": "asset-gen-session-2026-05-01",
       "note": "Files copied to H:/Projects/PixaPro/. Next session entry: HANDOFF.md"
+    },
+    {
+      "ts": "2026-07-16T10:15:00-03:00",
+      "action": "done",
+      "by": "review-session-2026-07-16",
+      "ids": [
+        "pixapro-spinoff-standalone",
+        "tilesets-16px-slice-and-group",
+        "currais-v2-test-and-tune"
+      ],
+      "note": "Limpeza retroativa — os 3 já estavam feitos há meses sem marcar: pixapro-spinoff concluído 2026-05-02 (repo standalone H:/Projects/PixaPro + UI live em zeroonebit.github.io/pixapro, tools/pixapro/ deletado do Chapada); tilesets-16px concluído 2026-04-30 noite (8 tilesets baixados via api.pixellab.ai sem auth, sliced cr31 em assets/terrain/{mapa1,mapa2}_*, WANG_STYLES 3→11 + dropdown CONFIGS; catálogo migrou pra js/wang_presets.js em 2026-05-09 — o path tools/pixapro/js/constants.js do spec deixou de existir com o spinoff); currais-v2 superado em 2026-05-02 (burgers reposicionados ao NORTE do curral + 3 slots fixos + mascote — slotOffsetY aposentado como questão) e validado em meses de playtests."
     }
   ]
 }
