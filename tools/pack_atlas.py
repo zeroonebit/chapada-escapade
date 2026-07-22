@@ -61,6 +61,19 @@ ATLASES = {
             ("lie_down",        "cow_angry",  8,  None),
         ],
     },
+    # Pig (parity Bevy CowKind::Pig): 10% do rebanho, entrega = tanque cheio.
+    # Arte copiada de Bevy/assets/textures/chars/pig — só eat + walk (sem
+    # lie_down: abduzido também toca eat, igual ao Bevy).
+    "pig": {
+        "char_dir": "pig",
+        "dirs8": ["S","E","N","W","SE","NE","NW","SW"],
+        "static_pattern": "{dir_long}.png",
+        "static_keys": "pig_{D}",
+        "anims": [
+            ("walk", "pig_walk", 4,  None),
+            ("eat",  "pig_eat",  11, None),
+        ],
+    },
     "ox": {
         "char_dir": "ox",
         "dirs8": ["S","E","N","W","SE","NE","NW","SW"],

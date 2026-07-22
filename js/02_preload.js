@@ -49,6 +49,7 @@ Object.assign(Jogo.prototype, {
         // - nature: rocks + veg + fences + misc + objects (~55 frames)
         // - items: 3 burger variantes
         this.load.atlas('cow_atlas',    'assets/atlases/cow.png',    'assets/atlases/cow.json');
+        this.load.atlas('pig_atlas',    'assets/atlases/pig.png',    'assets/atlases/pig.json');
         this.load.atlas('ox_atlas',     'assets/atlases/ox.png',     'assets/atlases/ox.json');
         this.load.atlas('farmer_atlas', 'assets/atlases/farmer.png', 'assets/atlases/farmer.json');
         this.load.atlas('ufo_atlas',    'assets/atlases/ufo.png',    'assets/atlases/ufo.json');

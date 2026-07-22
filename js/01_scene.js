@@ -85,6 +85,8 @@ class Jogo extends Phaser.Scene {
             { atlas: 'cow_atlas',    prefix: 'cow_walk',   frames: 4,  fps: 6  },
             { atlas: 'cow_atlas',    prefix: 'cow_eat',    frames: 11, fps: 4  },
             { atlas: 'cow_atlas',    prefix: 'cow_angry',  frames: 8,  fps: 8  },
+            { atlas: 'pig_atlas',    prefix: 'pig_walk',   frames: 4,  fps: 6  },
+            { atlas: 'pig_atlas',    prefix: 'pig_eat',    frames: 11, fps: 4  },
             { atlas: 'farmer_atlas', prefix: 'farmer_run', frames: 4,  fps: 10 },
             { atlas: 'ox_atlas',     prefix: 'ox_walk',    frames: 4,  fps: 6  },
             { atlas: 'ufo_atlas',    prefix: 'ufo_hover',  frames: 4,  fps: 8  },
@@ -106,6 +108,13 @@ class Jogo extends Phaser.Scene {
                 const fr = [];
                 for (let i = 0; i < 4; i++) fr.push({ key: 'cow_atlas', frame: `cow_walk_${d}_${i}` });
                 this.anims.create({ key: runKey, frames: fr, frameRate: 12, repeat: -1 });
+            }
+            // pig_run idem (parity Bevy: run = walk acelerado)
+            const pigRunKey = `pig_run_${d}`;
+            if (!this.anims.exists(pigRunKey)) {
+                const fr = [];
+                for (let i = 0; i < 4; i++) fr.push({ key: 'pig_atlas', frame: `pig_walk_${d}_${i}` });
+                this.anims.create({ key: pigRunKey, frames: fr, frameRate: 12, repeat: -1 });
             }
         });
 
@@ -1582,6 +1591,7 @@ class Jogo extends Phaser.Scene {
         // Char static dirs (cow_S, ox_E, farmer_NW, ufo_SE etc)
         const ATLAS_STATIC_KEYS = [
             ['cow_atlas',    ['cow_S','cow_E','cow_N','cow_W','cow_SE','cow_NE','cow_NW','cow_SW']],
+            ['pig_atlas',    ['pig_S','pig_E','pig_N','pig_W','pig_SE','pig_NE','pig_NW','pig_SW']],
             ['ox_atlas',     ['ox_S','ox_E','ox_N','ox_W','ox_SE','ox_NE','ox_NW','ox_SW']],
             ['farmer_atlas', ['farmer_S','farmer_E','farmer_N','farmer_W','farmer_SE','farmer_NE','farmer_NW','farmer_SW']],
             ['ufo_atlas',    ['ufo_S','ufo_E','ufo_N','ufo_W','ufo_SE','ufo_NE','ufo_NW','ufo_SW']],

@@ -2,13 +2,15 @@
 Object.assign(Jogo.prototype, {
 
     _createCow(x, y, tipo = 'holstein') {
+        // Pig (parity Bevy): label 'cow' de propósito — colisões/beam tratam igual
         const label = tipo === 'bull' ? 'ox' : 'cow';
-        const tex   = tipo === 'bull' ? 'ox_S' : 'cow_S';
+        const tex   = tipo === 'bull' ? 'ox_S' : (tipo === 'pig' ? 'pig_S' : 'cow_S');
         // matter.add.SPRITE (not image) — sprite supports .anims, image does not
         let v = this.matter.add.sprite(x, y, tex);
         v.setFixedRotation();  // without this, collision with beam/shooter deita o bicho de lado
         // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
-        const baseSize = tipo === 'bull' ? 78 : 68;
+        // pig 59 = 68 × (2.6/3.0) — proporção quad Bevy pig/cow
+        const baseSize = tipo === 'bull' ? 78 : (tipo === 'pig' ? 59 : 68);
         const sizeScale = tipo === 'bull' ? ((this.dbg?.scale?.bull) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
         v.setDisplaySize(size, size);
@@ -23,7 +25,8 @@ Object.assign(Jogo.prototype, {
         v.tipo = tipo;
         v.valorBurger = 100;
         v.tempoAbducao = tipo === 'bull' ? 4500 : 3000;
-        v.burgerYield = tipo === 'bull' ? (Math.random() < 0.5 ? 2 : 3) : 1;
+        v.burgerYield = tipo === 'bull' ? (Math.random() < 0.5 ? 2 : 3)
+                       : (tipo === 'pig' ? 0 : 1);  // pig nunca vira burger — vale o tanque
         v.wanderAngle = Math.random() * Math.PI * 2;
         v._wandering = true;
         // Sistema de saúde colisional: 3-5 hits before de explodir
@@ -83,10 +86,14 @@ Object.assign(Jogo.prototype, {
             let tipo;
             if (okVaca && okBoi) {
                 const r = Math.random();
-                if (r < 0.20) tipo = 'ox';
-                else          tipo = 'holstein';
-            } else if (okVaca) tipo = 'holstein';
-            else if (okBoi)    tipo = 'ox';
+                // BUG antigo: aqui saía tipo='ox', mas TODO o resto checa
+                // tipo==='bull' — os "bois" do boot nasciam vacas disfarçadas
+                // (cow_S, 68px, yield 1). Corrigido junto com o pig.
+                if      (r < 0.10) tipo = 'pig';      // PIG_CHANCE fixo (parity Bevy)
+                else if (r < 0.30) tipo = 'bull';
+                else               tipo = 'holstein';
+            } else if (okVaca) tipo = Math.random() < 0.10 ? 'pig' : 'holstein';
+            else if (okBoi)    tipo = 'bull';
             else return;
             this._createCow(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
         }
@@ -216,8 +223,20 @@ Object.assign(Jogo.prototype, {
             v.setAngularVelocity((Math.random() - 0.5) * 0.4);
             if (v.walkTimer) v.walkTimer.paused = true;
             if (this._spawnCaptureRings) this._spawnCaptureRings(v);
-            // Quip random ao abduzir (cow ou farmer pool conforme tipo)
-            if (this._showQuip) this._showQuip(v, v.isEnemy ? 'farmer' : 'cow');
+            // Quip ao abduzir: pig ganha a fala própria (parity Bevy), o resto
+            // usa os pools (cow/farmer conforme tipo)
+            if (v.tipo === 'pig') {
+                const langP = this.dbg?.behavior?.lang || 'en';
+                const tq = this.add.text(v.x, v.y - 40,
+                    langP === 'pt' ? 'oba, BACON!' : 'yesss, BACON!', {
+                    fontSize: '15px', fill: '#66ff88', fontStyle: 'bold',
+                    stroke: '#000000', strokeThickness: 4
+                }).setOrigin(0.5).setDepth(50);
+                this.tweens.add({ targets: tq, y: tq.y - 44, alpha: 0,
+                    duration: 1100, onComplete: () => tq.destroy() });
+            } else if (this._showQuip) {
+                this._showQuip(v, v.isEnemy ? 'farmer' : 'cow');
+            }
         };
         this.cows.forEach(tryAbduct);
         this.farmers.forEach(tryAbduct);
@@ -336,6 +355,20 @@ Object.assign(Jogo.prototype, {
                     const key = `ox_${dir8}`;
                     if (v.texture.key !== key) v.setTexture(key);
                 }
+            }
+            return;
+        }
+
+        // Pig (parity Bevy): só eat + walk — abduzido também toca eat
+        if (v.tipo === 'pig') {
+            let st;
+            if (this.abductedCows.includes(v)) st = 'eat';
+            else if (v._fleeing)               st = 'run';
+            else if (v._eating)                st = 'eat';
+            else                               st = 'walk';
+            const pigKey = `pig_${st}_${dir8}`;
+            if (v.anims.currentAnim?.key !== pigKey && this.anims.exists(pigKey)) {
+                v.play(pigKey, true);
             }
             return;
         }

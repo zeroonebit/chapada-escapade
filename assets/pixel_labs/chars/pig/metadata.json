@@ -1,0 +1,193 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "c0a20a2e-de7f-4a04-b983-f2d675a061c6",
+        "name": "Pig",
+        "prompt": "chubby pink pig with curly tail and mud spots, cartoon farm style",
+        "size": {
+          "width": 80,
+          "height": 80
+        },
+        "template_id": "bear",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-07-12T03:55:03.178901+00:00"
+      },
+      "folder": "Pig",
+      "frames": {
+        "rotations": {
+          "south": "Pig/rotations/south.png",
+          "south-east": "Pig/rotations/south-east.png",
+          "east": "Pig/rotations/east.png",
+          "north-east": "Pig/rotations/north-east.png",
+          "north": "Pig/rotations/north.png",
+          "north-west": "Pig/rotations/north-west.png",
+          "west": "Pig/rotations/west.png",
+          "south-west": "Pig/rotations/south-west.png"
+        },
+        "animations": {
+          "running": {
+            "south-east": [
+              "Pig/animations/running/south-east/frame_000.png",
+              "Pig/animations/running/south-east/frame_001.png",
+              "Pig/animations/running/south-east/frame_002.png",
+              "Pig/animations/running/south-east/frame_003.png"
+            ],
+            "north-east": [
+              "Pig/animations/running/north-east/frame_000.png",
+              "Pig/animations/running/north-east/frame_001.png",
+              "Pig/animations/running/north-east/frame_002.png",
+              "Pig/animations/running/north-east/frame_003.png"
+            ],
+            "north-west": [
+              "Pig/animations/running/north-west/frame_000.png",
+              "Pig/animations/running/north-west/frame_001.png",
+              "Pig/animations/running/north-west/frame_002.png",
+              "Pig/animations/running/north-west/frame_003.png"
+            ],
+            "south-west": [
+              "Pig/animations/running/south-west/frame_000.png",
+              "Pig/animations/running/south-west/frame_001.png",
+              "Pig/animations/running/south-west/frame_002.png",
+              "Pig/animations/running/south-west/frame_003.png"
+            ],
+            "east": [
+              "Pig/animations/running/east/frame_000.png",
+              "Pig/animations/running/east/frame_001.png",
+              "Pig/animations/running/east/frame_002.png",
+              "Pig/animations/running/east/frame_003.png"
+            ],
+            "south": [
+              "Pig/animations/running/south/frame_000.png",
+              "Pig/animations/running/south/frame_001.png",
+              "Pig/animations/running/south/frame_002.png",
+              "Pig/animations/running/south/frame_003.png"
+            ],
+            "west": [
+              "Pig/animations/running/west/frame_000.png",
+              "Pig/animations/running/west/frame_001.png",
+              "Pig/animations/running/west/frame_002.png",
+              "Pig/animations/running/west/frame_003.png"
+            ],
+            "north": [
+              "Pig/animations/running/north/frame_000.png",
+              "Pig/animations/running/north/frame_001.png",
+              "Pig/animations/running/north/frame_002.png",
+              "Pig/animations/running/north/frame_003.png"
+            ]
+          },
+          "eating": {
+            "south-east": [
+              "Pig/animations/eating/south-east/frame_000.png",
+              "Pig/animations/eating/south-east/frame_001.png",
+              "Pig/animations/eating/south-east/frame_002.png",
+              "Pig/animations/eating/south-east/frame_003.png",
+              "Pig/animations/eating/south-east/frame_004.png",
+              "Pig/animations/eating/south-east/frame_005.png",
+              "Pig/animations/eating/south-east/frame_006.png",
+              "Pig/animations/eating/south-east/frame_007.png",
+              "Pig/animations/eating/south-east/frame_008.png",
+              "Pig/animations/eating/south-east/frame_009.png",
+              "Pig/animations/eating/south-east/frame_010.png"
+            ],
+            "south-west": [
+              "Pig/animations/eating/south-west/frame_000.png",
+              "Pig/animations/eating/south-west/frame_001.png",
+              "Pig/animations/eating/south-west/frame_002.png",
+              "Pig/animations/eating/south-west/frame_003.png",
+              "Pig/animations/eating/south-west/frame_004.png",
+              "Pig/animations/eating/south-west/frame_005.png",
+              "Pig/animations/eating/south-west/frame_006.png",
+              "Pig/animations/eating/south-west/frame_007.png",
+              "Pig/animations/eating/south-west/frame_008.png",
+              "Pig/animations/eating/south-west/frame_009.png",
+              "Pig/animations/eating/south-west/frame_010.png"
+            ],
+            "north-west": [
+              "Pig/animations/eating/north-west/frame_000.png",
+              "Pig/animations/eating/north-west/frame_001.png",
+              "Pig/animations/eating/north-west/frame_002.png",
+              "Pig/animations/eating/north-west/frame_003.png",
+              "Pig/animations/eating/north-west/frame_004.png",
+              "Pig/animations/eating/north-west/frame_005.png",
+              "Pig/animations/eating/north-west/frame_006.png",
+              "Pig/animations/eating/north-west/frame_007.png",
+              "Pig/animations/eating/north-west/frame_008.png",
+              "Pig/animations/eating/north-west/frame_009.png",
+              "Pig/animations/eating/north-west/frame_010.png"
+            ],
+            "west": [
+              "Pig/animations/eating/west/frame_000.png",
+              "Pig/animations/eating/west/frame_001.png",
+              "Pig/animations/eating/west/frame_002.png",
+              "Pig/animations/eating/west/frame_003.png",
+              "Pig/animations/eating/west/frame_004.png",
+              "Pig/animations/eating/west/frame_005.png",
+              "Pig/animations/eating/west/frame_006.png",
+              "Pig/animations/eating/west/frame_007.png",
+              "Pig/animations/eating/west/frame_008.png",
+              "Pig/animations/eating/west/frame_009.png",
+              "Pig/animations/eating/west/frame_010.png"
+            ],
+            "north": [
+              "Pig/animations/eating/north/frame_000.png",
+              "Pig/animations/eating/north/frame_001.png",
+              "Pig/animations/eating/north/frame_002.png",
+              "Pig/animations/eating/north/frame_003.png",
+              "Pig/animations/eating/north/frame_004.png",
+              "Pig/animations/eating/north/frame_005.png",
+              "Pig/animations/eating/north/frame_006.png",
+              "Pig/animations/eating/north/frame_007.png",
+              "Pig/animations/eating/north/frame_008.png",
+              "Pig/animations/eating/north/frame_009.png",
+              "Pig/animations/eating/north/frame_010.png"
+            ],
+            "south": [
+              "Pig/animations/eating/south/frame_000.png",
+              "Pig/animations/eating/south/frame_001.png",
+              "Pig/animations/eating/south/frame_002.png",
+              "Pig/animations/eating/south/frame_003.png",
+              "Pig/animations/eating/south/frame_004.png",
+              "Pig/animations/eating/south/frame_005.png",
+              "Pig/animations/eating/south/frame_006.png",
+              "Pig/animations/eating/south/frame_007.png",
+              "Pig/animations/eating/south/frame_008.png",
+              "Pig/animations/eating/south/frame_009.png",
+              "Pig/animations/eating/south/frame_010.png"
+            ],
+            "north-east": [
+              "Pig/animations/eating/north-east/frame_000.png",
+              "Pig/animations/eating/north-east/frame_001.png",
+              "Pig/animations/eating/north-east/frame_002.png",
+              "Pig/animations/eating/north-east/frame_003.png",
+              "Pig/animations/eating/north-east/frame_004.png",
+              "Pig/animations/eating/north-east/frame_005.png",
+              "Pig/animations/eating/north-east/frame_006.png",
+              "Pig/animations/eating/north-east/frame_007.png",
+              "Pig/animations/eating/north-east/frame_008.png",
+              "Pig/animations/eating/north-east/frame_009.png",
+              "Pig/animations/eating/north-east/frame_010.png"
+            ],
+            "east": [
+              "Pig/animations/eating/east/frame_000.png",
+              "Pig/animations/eating/east/frame_001.png",
+              "Pig/animations/eating/east/frame_002.png",
+              "Pig/animations/eating/east/frame_003.png",
+              "Pig/animations/eating/east/frame_004.png",
+              "Pig/animations/eating/east/frame_005.png",
+              "Pig/animations/eating/east/frame_006.png",
+              "Pig/animations/eating/east/frame_007.png",
+              "Pig/animations/eating/east/frame_008.png",
+              "Pig/animations/eating/east/frame_009.png",
+              "Pig/animations/eating/east/frame_010.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-07-12T09:59:10.170287"
+}

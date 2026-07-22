@@ -107,8 +107,18 @@ Object.assign(Jogo.prototype, {
 
     _dropCowsAtCorral(curral) {
         this._ensureSlots(curral);
-        const candidates = this.abductedCows.filter(v => !v.isBurger && !v.isEnemy);
-        if (candidates.length === 0) return;
+        const all = this.abductedCows.filter(v => !v.isBurger && !v.isEnemy);
+        if (all.length === 0) return;
+
+        // BACON (parity Bevy): porco entregue = TANQUE CHEIO na hora, não
+        // ocupa slot (nunca trava a linha)
+        const pigs = all.filter(v => v.tipo === 'pig');
+        for (const p of pigs) this._deliverPig(curral, p);
+        const candidates = all.filter(v => v.tipo !== 'pig');
+        if (candidates.length === 0) {
+            if (pigs.length) this.cameras.main.flash(150, 100, 200, 100);
+            return;
+        }
 
         const free = this._freeSlots(curral);
         if (free === 0) {
@@ -174,6 +184,26 @@ Object.assign(Jogo.prototype, {
             this.time.delayedCall(3000, () => this._processSlot(curral, slotIdx));
         }
         this.cameras.main.flash(150, 100, 200, 100);
+    },
+
+    // BACON (parity Bevy corral.rs): porco = tanque cheio, sem slot, sem
+    // contador de vaca — despawna direto no curral
+    _deliverPig(curral, p) {
+        if (!p || !p.scene) return;
+        this.abductedCows = this.abductedCows.filter(x => x !== p);
+        if (this._updateBeamCounters) this._updateBeamCounters();
+        this.cows = this.cows.filter(x => x !== p);
+        this._destroyCow(p);
+        this.fuelCurrent = this.fuelMax;
+        this.cameras.main.flash(160, 255, 200, 80);
+        const lang = this.dbg?.behavior?.lang || 'en';
+        const msg = lang === 'pt' ? 'BACON! tanque cheio' : 'BACON! full tank';
+        const t = this.add.text(curral.x, curral.y - 60, msg, {
+            fontSize: '17px', fill: '#ffcc66', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 4
+        }).setOrigin(0.5).setDepth(50);
+        this.tweens.add({ targets: t, y: t.y - 50, alpha: 0, duration: 1300,
+            onComplete: () => t.destroy() });
     },
 
     // ── COMBO (parity Bevy corral.rs) ────────────────────────────────
