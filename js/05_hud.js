@@ -106,9 +106,183 @@ Object.assign(Jogo.prototype, {
 
         // Applies i18n initial nos labels (FUEL/GRAVITON em EN, fuel/GRAVITON em PT)
         if (this._applyHudI18n) this._applyHudI18n();
+
+        // ── COCKPIT FinalHud (fidelidade Bevy) — desktop only ──
+        if (!this.isMobile && this.textures.exists('hud_dash_final')) {
+            this._createCockpit();
+        }
+    },
+
+    // ── COCKPIT FinalHud (port de Bevy hud.rs, coordenadas da arte) ──
+    // dash_final 2056×541 vira o HUD: contadores nos 5 slots, células de
+    // fuel/graviton via off-strips, radar DENTRO do scope, score na placa,
+    // joystick vivo e lente do emissor dinâmica. O HUD legado some.
+    _createCockpit() {
+        this._cockpit = true;
+        const D = 200;
+        this.hud.ckDash = this.add.image(0, 0, 'hud_dash_final')
+            .setOrigin(0.5, 1).setScrollFactor(0).setDepth(D + 0.05);
+        // Ícones dos 5 slots (ordem Bevy: BULLS COWS FARMERS MECHA BURGERS)
+        const ICONS = [['ox_S', null], ['cow_S', null], ['farmer_S', null],
+                       ['mecha_atlas', 'mecha_blue_S'], ['burger_classic', null]];
+        this.hud.ckIcons = ICONS.map(([k, f]) => {
+            const img = f ? this.add.image(0, 0, k, f) : this.add.image(0, 0, k);
+            return img.setScrollFactor(0).setDepth(D + 0.9);
+        });
+        this.hud.ckOffFuel = this.add.image(0, 0, 'hud_cells_off_fuel')
+            .setOrigin(0, 0).setScrollFactor(0).setDepth(D + 0.2);
+        this.hud.ckOffGrav = this.add.image(0, 0, 'hud_cells_off_grav')
+            .setOrigin(0, 0).setScrollFactor(0).setDepth(D + 0.2);
+        this.hud.ckBeamOff = this.add.image(0, 0, 'hud_dash_beam_off')
+            .setOrigin(0, 0).setScrollFactor(0).setDepth(D + 0.2);
+        this.hud.ckKnob = this.add.image(0, 0, 'hud_joystick_top')
+            .setScrollFactor(0).setDepth(D + 0.2).setVisible(false);
+        const mkT = (t, color) => this.add.text(0, 0, t, {
+            fontFamily: '"VT323", "Courier New", monospace',
+            fontSize: '16px', fill: color,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 0.9);
+        this.hud.ckFuelLbl  = mkT('PROPULSION REACTOR FUEL', '#ffaa40');
+        this.hud.ckGravLbl  = mkT('TRACTOR GRAVITON BEAM PULSE', '#a280ff');
+        this.hud.ckScoreLbl = mkT('SCORE', '#00ff55').setOrigin(1, 0.5);
+        this._positionCockpit();
+        // O _positionHUD legado roda DEPOIS (create e resize) e devolve os
+        // textos reutilizados pra row antiga. Como o listener de resize do
+        // legado é registrado DEPOIS deste, adiamos 1 tick — o cockpit fala
+        // por último nos dois caminhos (boot e resize).
+        const ckLate = () => this.time.delayedCall(0, () => {
+            if (this._cockpit) this._positionCockpit();
+        });
+        ckLate();
+        this.scale.on('resize', ckLate);
+    },
+
+    _positionCockpit() {
+        const w = this.scale.width, h = this.scale.height;
+        const s = (w * 0.44) / 2056;   // dash_scale do Bevy
+        const minX = w / 2 - (2056 * s) / 2, minY = h - 541 * s;
+        this._ckScale = s; this._ckMin = { x: minX, y: minY };
+        const dpx = (x, y) => ({ x: minX + x * s, y: minY + y * s });
+
+        this.hud.ckDash.setPosition(w / 2, h).setDisplaySize(2056 * s, 541 * s);
+
+        // Contadores REUTILIZADOS nos slots da arte (cores F4 já aplicadas)
+        const SLOTS = [[457, 672], [692, 901], [921, 1134], [1155, 1360], [1381, 1592]];
+        const texts = [this.hud.bullsText, this.hud.cowsText, this.hud.farmersText,
+                       this.hud.shootersText, this.hud.burgersText];
+        SLOTS.forEach(([x0, x1], i) => {
+            const p = dpx((x0 + 86 + x1 - 40) / 2, 72);
+            texts[i].setPosition(p.x, p.y)
+                .setFontFamily('"VT323", "Courier New", monospace')
+                .setFontSize(Math.max(12, Math.round(58 * s))).setDepth(201);
+            const q = dpx(x0 + 44, 72);
+            this.hud.ckIcons[i].setPosition(q.x, q.y).setDisplaySize(66 * s, 66 * s);
+        });
+
+        // Off-strips (rects da arte: fuel 268-725, grav 1277-1731, y 316-379)
+        const of = dpx(268, 316), og = dpx(1277, 316);
+        this.hud.ckOffFuel.setPosition(of.x, of.y)
+            .setDisplaySize((725 - 268) * s, (379 - 316) * s);
+        this.hud.ckOffGrav.setPosition(og.x, og.y)
+            .setDisplaySize((1731 - 1277) * s, (379 - 316) * s);
+
+        const bl = dpx(1824, 196);
+        this.hud.ckBeamOff.setPosition(bl.x, bl.y).setDisplaySize(176 * s, 176 * s);
+
+        const fl = dpx(512, 226), gl = dpx(1527, 226);
+        this.hud.ckFuelLbl.setPosition(fl.x, fl.y).setFontSize(Math.max(9, Math.round(42 * s)));
+        this.hud.ckGravLbl.setPosition(gl.x, gl.y).setFontSize(Math.max(8, Math.round(37 * s)));
+
+        // SCORE na placa da arte (zona 1035,476 — Bevy)
+        const sc = dpx(1028, 476);
+        this.hud.ckScoreLbl.setPosition(sc.x, sc.y).setFontSize(Math.max(10, Math.round(34 * s)));
+        if (this.scoreText) {
+            this.scoreText.setPosition(dpx(1042, 476).x, sc.y).setOrigin(0, 0.5)
+                .setFontFamily('"VT323", "Courier New", monospace')
+                .setFontSize(Math.max(10, Math.round(34 * s)))
+                .setColor('#00ff55').setDepth(201);
+        }
+
+        // Radar DENTRO do scope da arte (centro 1020,278 · disco vivo 133 art px)
+        const rc = dpx(1020, 278);
+        this._mini = { cx: rc.x, cy: rc.y, rx: 133 * s, ry: 133 * s,
+                       maskCx: rc.x, maskCy: rc.y, maskRx: 133 * s, maskRy: 133 * s };
+        if (this.hud.radarTerrainImg?.scene) {
+            this.hud.radarTerrainImg.setDepth(D_CK_RADAR_TERRAIN)
+                .setDisplaySize(266 * s, 266 * s);
+        }
+        if (this.hud.miniGfx) this.hud.miniGfx.setDepth(D_CK_RADAR_GFX);
+
+        // Esconde o HUD legado (boxes/barras/frame do radar antigo)
+        const hide = ['bullsBox','bullsLabel','cowsBox','cowsLabel','farmersBox','farmersLabel',
+                      'shootersBox','shootersLabel','burgersBox','burgersLabel','scoreBg','scoreLabel',
+                      'combinedBg','combFillImg','eneFillImg','combLabel','eneLabel','miniBg','radarTint'];
+        for (const k of hide) if (this.hud[k]) this.hud[k].setVisible(false);
+        if (this.hud.radarFrameGfx) this.hud.radarFrameGfx.clear();
+    },
+
+    // Por frame: células discretas + lente do emissor + joystick vivo
+    _updateCockpit() {
+        if (!this._cockpit) return;
+        const w = this.scale.width, h = this.scale.height;
+        if (this._ckW !== w || this._ckH !== h) {
+            this._ckW = w; this._ckH = h;
+            this._positionCockpit();
+        }
+        const s = this._ckScale || 0.3;
+
+        // Células: a arte assa as 12 ACESAS; as apagadas vêm do off-strip
+        // via crop. FUEL acende da DIREITA (arte espelhada — Bevy), GRAVITON
+        // da esquerda.
+        const FUEL = [276,314,351,388,425,461,498,535,572,608,645,682];
+        const GRAV = [1285,1321,1358,1395,1432,1469,1505,1542,1578,1614,1651,1688];
+        const fLit = Math.round(Phaser.Math.Clamp((this.fuelCurrent || 0) / 100, 0, 1) * 12);
+        const gLit = Math.round(Phaser.Math.Clamp((this.energiaLed || 0) / 100, 0, 1) * 12);
+        const oF = this.hud.ckOffFuel, oG = this.hud.ckOffGrav;
+        if (fLit >= 12) oF.setVisible(false);
+        else {
+            oF.setVisible(true);
+            const bx = fLit <= 0 ? 725 : FUEL[12 - fLit];
+            oF.setCrop(0, 0, oF.width * ((bx - 268) / (725 - 268)), oF.height);
+        }
+        if (gLit >= 12) oG.setVisible(false);
+        else {
+            oG.setVisible(true);
+            const bx = gLit <= 0 ? 1277 : GRAV[gLit];
+            const fx = (bx - 1277) / (1731 - 1277);
+            oG.setCrop(oG.width * fx, 0, oG.width * (1 - fx), oG.height);
+        }
+
+        // Lente do emissor: apagada quando o graviton tá idle
+        const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 &&
+            (this.isMobile ? !!this._beamHeld : this.input?.activePointer?.isDown);
+        this.hud.ckBeamOff.setVisible(!beamOn);
+
+        // Joystick VIVO: só a bola, desloca com a velocidade da nave; no
+        // repouso some (a bola baked da arte assume — truque do Bevy)
+        const bv = this.ufo?.body?.velocity || { x: 0, y: 0 };
+        const dx = Phaser.Math.Clamp(bv.x * 1.2, -14, 14);
+        const dy = Phaser.Math.Clamp(bv.y * 1.2, -11, 11);
+        const mag = Math.hypot(dx, dy);
+        const knob = this.hud.ckKnob;
+        if (mag > 0.6) {
+            knob.setVisible(true)
+                .setAlpha(Phaser.Math.Clamp((mag - 0.6) / 2.4, 0, 1))
+                .setPosition(this._ckMin.x + (137 + dx) * s, this._ckMin.y + (229 + dy) * s)
+                .setDisplaySize(106 * 1.45 * s, 106 * 1.45 * s);
+        } else {
+            knob.setVisible(false);
+        }
+
+        // Barras antigas re-escondidas (algum caminho legado pode reexibir)
+        if (this.hud.combFillImg?.visible) this.hud.combFillImg.setVisible(false);
+        if (this.hud.eneFillImg?.visible)  this.hud.eneFillImg.setVisible(false);
     },
 
     _positionHUD() {
+        // COCKPIT on: o layout legado NÃO mexe em nada — o cockpit é dono
+        // dos textos reutilizados, do score e do _mini (fim da briga de
+        // ordem de listeners no boot/resize)
+        if (this._cockpit) { this._positionCockpit(); return; }
         const w = this.scale.width, h = this.scale.height;
 
         // Boxes V2: header (top) + body (icon+value)
@@ -408,9 +582,10 @@ Object.assign(Jogo.prototype, {
             this._buildRadarTerrainTexture();
             if (this.hud.radarTerrainImg?.scene) this.hud.radarTerrainImg.destroy();
             this.hud.radarTerrainImg = this.add.image(cx, cy, 'radar_terrain')
-                .setScrollFactor(0).setDepth(199.05)
+                .setScrollFactor(0).setDepth(this._cockpit ? D_CK_RADAR_TERRAIN : 199.05)
                 .setDisplaySize(rx * 2, ry * 2).setAlpha(0.92);
-            this.hud.miniGfx.setDepth(199.5);  // sweep/blips por cima do terreno
+            // sweep/blips por cima do terreno (e do dash, no cockpit)
+            this.hud.miniGfx.setDepth(this._cockpit ? D_CK_RADAR_GFX : 199.5);
             this._radarTerrainBuilt = true;
         }
         if (this.hud.radarTerrainImg?.scene) this.hud.radarTerrainImg.setPosition(cx, cy);

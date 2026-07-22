@@ -60,6 +60,11 @@ const OWN_GOAL_POINTS      = 100;    // torpedo mata farmer
 const SPEED_THRESHOLD_MOVING  = 0.5;
 const SPEED_THRESHOLD_STATIC  = 0.05;
 
+// ── COCKPIT (FinalHud) depths — dash 200.05 < off/lente 200.2 <
+// radar terreno 200.1 < radar blips 200.3 < ícones/labels 200.9 < textos 201
+const D_CK_RADAR_TERRAIN = 200.1;
+const D_CK_RADAR_GFX     = 200.3;
+
 // ── HUD DEPTHS ────────────────────────────────────────────────────
 // above do atmosphere overlay (195) e storm flash (196)
 const HUD_DEPTH_BG       = 200;
