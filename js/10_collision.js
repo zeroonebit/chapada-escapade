@@ -69,14 +69,14 @@ Object.assign(Jogo.prototype, {
         if (this.cows.length >= cap) return;
         let n = Math.min(4, (window.__MOBILE_MODE ? 5 : 40) - this.cows.length);
         for (let i=0; i<n; i++) {
-            let e = Math.floor(Math.random()*4);
-            let x, y;
-            if (e===0) { x=Phaser.Math.Between(200, W-200); y=200; }
-            else if (e===1) { x=Phaser.Math.Between(200, W-200); y=H-200; }
-            else if (e===2) { x=200; y=Phaser.Math.Between(200, H-200); }
-            else { x=W-200; y=Phaser.Math.Between(200, H-200); }
-            const tipo = Math.random() < 0.20 ? 'ox' : 'holstein';
-            this._createCow(x, y, tipo);
+            // F3: bordas do mundo viraram OCEANO — repopula em TERRA. E o
+            // mesmo bug do tipo='ox' (código checa 'bull') morava aqui;
+            // régua do rebanho igual ao spawn: 10% pig / 20% bull / 70% cow
+            const p = this._randLandPos ? this._randLandPos()
+                : { x: Phaser.Math.Between(200, W-200), y: Phaser.Math.Between(200, H-200) };
+            const r = Math.random();
+            const tipo = r < 0.10 ? 'pig' : (r < 0.30 ? 'bull' : 'holstein');
+            this._createCow(p.x, p.y, tipo);
         }
     }
 
