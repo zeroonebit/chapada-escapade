@@ -690,6 +690,10 @@ Object.assign(Jogo.prototype, {
         if (this.shooters) for (const at of this.shooters) {
             dot(at, at.x, at.y, 0xfb2617, 4);
         }
+        // Itens RAROS (F6): estrela branca (Bevy: white 5.5)
+        if (this._rareItems) for (const it of this._rareItems) {
+            if (it.sprite?.scene) dot(it, it.sprite.x, it.sprite.y, 0xffffff, 5);
+        }
 
         // Nave — ponto verde ABSOLUTO no mapa + pulso (sempre visível)
         const sx = wx(this.ufo.x), sy = wy(this.ufo.y);

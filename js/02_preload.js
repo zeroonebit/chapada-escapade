@@ -79,6 +79,10 @@ Object.assign(Jogo.prototype, {
         this.load.image('combo_drink', 'assets/pixel_labs/items/combo_drink.png');
         this.load.image('combo_fries', 'assets/pixel_labs/items/combo_fries.png');
 
+        // ── RAROS (F6): itens de contrato coletáveis via beam ──
+        this.load.image('rare_golden_burger',  'assets/pixel_labs/items/golden_burger.png');
+        this.load.image('rare_alien_artifact', 'assets/pixel_labs/items/alien_artifact.png');
+
         // ── ÁUDIO (F5): SFX WAVs pequenos (~1.6MB) no boot; os MP3s de
         // música (~10MB) são lazy em 21_audio._setupAudio (fora do boot)
         const SFX_KEYS = ['grab', 'drop', 'deliver', 'burger_ready', 'collect',

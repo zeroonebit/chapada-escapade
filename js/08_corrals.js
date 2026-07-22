@@ -153,6 +153,7 @@ Object.assign(Jogo.prototype, {
                 this.cowsTotal = (this.cowsTotal || 0) + 1;
                 if (this.hud?.cowsText) this.hud.cowsText.setText(this.cowsTotal);
             }
+            if (this._metaOnDeliver) this._metaOnDeliver(v.tipo);   // F6: quests
             this._updateMascoteVisibilidade(curral);
             this.tweens.add({
                 targets: curral.mascotCountTxt, scale: { from: 1.6, to: 1 },
@@ -238,6 +239,7 @@ Object.assign(Jogo.prototype, {
         });
         this.cows = this.cows.filter(x => x !== v);
         this._destroyCow(v);
+        if (this._metaOnDeliver) this._metaOnDeliver(v.tipo);   // F6: quests
 
         if (curral.comboCredit >= COMBO_CREDIT_MAX) {
             curral.combo = true;
@@ -400,6 +402,7 @@ Object.assign(Jogo.prototype, {
                 // se algo travar between o stop manual above e o complete callback)
                 this._cleanSlot(curral, slotIdx);
                 if (this._sfx) this._sfx('collect');
+                if (this._metaOnBurger) this._metaOnBurger(slotIdx);   // F6
                 // Quota (parity Bevy): burger coletado alimenta a vitória
                 this.burgersCollected = (this.burgersCollected || 0) + 1;
                 this._checkVictory();
