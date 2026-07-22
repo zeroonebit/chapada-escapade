@@ -111,7 +111,12 @@ Object.assign(Jogo.prototype, {
         if (candidates.length === 0) return;
 
         const free = this._freeSlots(curral);
-        if (free === 0) return;  // corral full — cows continuam abduzidas
+        if (free === 0) {
+            // Parity Bevy: curral cheio ABSORVE até 2 excedentes como gorjeta —
+            // no 2º o lote vira COMBO (bebida+batata, pontos ×1.5, fuel ×1.75)
+            this._absorbComboCredit(curral, candidates);
+            return;
+        }
 
         const accepted = candidates.slice(0, free);
         // Removes only as accepted das abduzidas; restantes continuam no beam
@@ -169,6 +174,76 @@ Object.assign(Jogo.prototype, {
             this.time.delayedCall(3000, () => this._processSlot(curral, slotIdx));
         }
         this.cameras.main.flash(150, 100, 200, 100);
+    },
+
+    // ── COMBO (parity Bevy corral.rs) ────────────────────────────────
+    // Curral cheio absorve até COMBO_CREDIT_MAX animais excedentes. No 2º,
+    // o lote inteiro vira COMBO: bebida+batata na bancada e cada burger
+    // coletado paga ×1.5 pontos / ×1.75 fuel (_collectSlot).
+    _absorbComboCredit(curral, candidates) {
+        if (curral.combo || (curral.comboCredit || 0) >= COMBO_CREDIT_MAX) return;
+        const v = candidates[0];
+        if (!v || !v.scene || !v.body) return;
+        curral.comboCredit = (curral.comboCredit || 0) + 1;
+
+        // Sai do beam e entra no curral (mesma contabilidade do drop normal)
+        this.abductedCows = this.abductedCows.filter(x => x !== v);
+        if (this._updateBeamCounters) this._updateBeamCounters();
+        if (v.tipo === 'bull') {
+            this.bullsTotal = (this.bullsTotal || 0) + 1;
+            if (this.hud?.bullsText) this.hud.bullsText.setText(this.bullsTotal);
+        } else {
+            this.cowsTotal = (this.cowsTotal || 0) + 1;
+            if (this.hud?.cowsText) this.hud.cowsText.setText(this.cowsTotal);
+        }
+        this._ensureCowMascot(curral);
+        curral.mascotCount += 1;
+        curral.mascotCountTxt.setText('x' + curral.mascotCount);
+        this._updateMascoteVisibilidade(curral);
+        this.tweens.add({
+            targets: curral.mascotCountTxt, scale: { from: 1.6, to: 1 },
+            duration: 320, ease: 'Back.easeOut'
+        });
+        this.cows = this.cows.filter(x => x !== v);
+        this._destroyCow(v);
+
+        if (curral.comboCredit >= COMBO_CREDIT_MAX) {
+            curral.combo = true;
+            this._comboDecor(curral);
+            this.cameras.main.flash(150, 255, 220, 100);
+            const lang = this.dbg?.behavior?.lang || 'en';
+            const msg = lang === 'pt' ? 'COMBO! bebida e batata na faixa!'
+                                      : 'COMBO! drink & fries on the house!';
+            const t = this.add.text(curral.x, curral.y - 70, msg, {
+                fontSize: '16px', fill: '#66ff88', fontStyle: 'bold',
+                stroke: '#000000', strokeThickness: 4
+            }).setOrigin(0.5).setDepth(50);
+            this.tweens.add({ targets: t, y: t.y - 50, alpha: 0, duration: 1400,
+                onComplete: () => t.destroy() });
+        }
+    },
+
+    // Bebida + batata na bancada enquanto o lote é COMBO
+    _comboDecor(curral) {
+        if (curral.comboDecor?.length) return;
+        const base = this._slotPos(curral, 0);
+        const mk = (key, dx) => {
+            if (!this.textures.exists(key)) return null;
+            const img = this.add.image(base.x + dx, base.y, key)
+                .setDepth(40).setDisplaySize(34, 34);
+            this.tweens.add({ targets: img, y: img.y - 3, duration: 700,
+                yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+            return img;
+        };
+        curral.comboDecor = [mk('combo_drink', -48), mk('combo_fries', -84)].filter(Boolean);
+    },
+
+    _clearComboDecor(curral) {
+        for (const d of (curral.comboDecor || [])) {
+            this.tweens.killTweensOf(d);
+            if (d.scene) d.destroy();
+        }
+        curral.comboDecor = [];
     },
 
     // Sentinela: detecta slots travados em 'loading' por mais de 5s
@@ -255,8 +330,10 @@ Object.assign(Jogo.prototype, {
         if (!slot || slot._sendoColetado) return;
         slot._sendoColetado = true;
         const icon = slot.icon;
-        const points = SLOT_VALOR[slotIdx] || 100;
-        const fuel   = SLOT_FUEL[slotIdx] || 28;
+        // COMBO (parity Bevy): lote com gorjeta de 2 paga ×1.5 pts / ×1.75 fuel
+        const combo  = !!curral.combo;
+        const points = Math.round((SLOT_VALOR[slotIdx] || 100) * (combo ? COMBO_PTS_MUL : 1));
+        const fuel   = (SLOT_FUEL[slotIdx] || 28) * (combo ? COMBO_FUEL_MUL : 1);
         if (slot.bounce) slot.bounce.stop();
         this.tweens.killTweensOf(icon);
         // Tween de atração to ship (efeito beam)
@@ -278,7 +355,7 @@ Object.assign(Jogo.prototype, {
                 this.scoreText.setText(this.score);
                 this.fuelCurrent = Math.min(this.fuelMax, this.fuelCurrent + fuel);
                 this.cameras.main.flash(140, 255, 220, 0);
-                const lbl = `+${points}`;
+                const lbl = combo ? `+${points} COMBO!` : `+${points}`;
                 const popup = this.add.text(this.ufo.x, this.ufo.y - 50, lbl, {
                     fontSize: '18px', fill: '#ffcc00', fontStyle: 'bold'
                 }).setDepth(50).setOrigin(0.5);
@@ -289,6 +366,15 @@ Object.assign(Jogo.prototype, {
                 // M3: libera slot via _cleanSlot (null-safe + para tweens órfãos
                 // se algo travar between o stop manual above e o complete callback)
                 this._cleanSlot(curral, slotIdx);
+                // Quota (parity Bevy): burger coletado alimenta a vitória
+                this.burgersCollected = (this.burgersCollected || 0) + 1;
+                this._checkVictory();
+                // Lote inteiro coletado → combo encerra e a bancada limpa
+                if (curral.combo && curral.slots.every(s => s === null)) {
+                    curral.combo = false;
+                    curral.comboCredit = 0;
+                    this._clearComboDecor(curral);
+                }
                 // Quip ao entregar burger
                 if (this._showQuip) this._showQuip({ x: this.ufo.x, y: this.ufo.y }, 'burger');
             }

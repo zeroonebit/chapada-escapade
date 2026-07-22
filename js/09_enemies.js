@@ -20,6 +20,22 @@ Object.assign(Jogo.prototype, {
         // HUD counter: shooter destruido
         this.shootersTotal = (this.shootersTotal || 0) + 1;
         if (this.hud?.shootersText) this.hud.shootersText.setText(this.shootersTotal);
+        // Parity Bevy: torre é objetivo lateral PAGO — +250, e +500 de bônus
+        // ao limpar TODAS ("airspace liberated")
+        this.score += TOWER_POINTS;
+        let lblPts = '+' + TOWER_POINTS;
+        if (this.shooters.filter(s => s !== at).length === 0) {
+            this.score += AIRSPACE_BONUS;
+            const langT = this.dbg?.behavior?.lang || 'en';
+            lblPts += '\n+' + AIRSPACE_BONUS + (langT === 'pt' ? ' CÉU LIVRE!' : ' AIRSPACE FREE!');
+        }
+        if (this.scoreText) this.scoreText.setText(this.score);
+        const ptsPopup = this.add.text(at.x, at.y - 44, lblPts, {
+            fontSize: '18px', fill: '#ffcc00', fontStyle: 'bold', align: 'center',
+            stroke: '#000000', strokeThickness: 4
+        }).setDepth(50).setOrigin(0.5);
+        this.tweens.add({ targets: ptsPopup, y: ptsPopup.y - 70, alpha: 0,
+            duration: 900, onComplete: () => ptsPopup.destroy() });
         const flash = this.add.circle(at.x, at.y, 30, 0xff8800, 0.9).setDepth(50);
         this.tweens.add({ targets: flash, scale: 2.6, alpha: 0, duration: 420, onComplete: () => flash.destroy() });
         this.tweens.add({
@@ -41,12 +57,15 @@ Object.assign(Jogo.prototype, {
         const DANO = 13 * danoMul;
         const MAX_DIST = 580;
 
+        // Escalada pela quota (Bevy shooter.rs): +80% de cadência com 30/30
+        const escT = 1 + this._escalation() * 0.8;
+
         for (const at of this.shooters) {
             const dx = this.ufo.x - at.x, dy = this.ufo.y - at.y;
             const emRange = (dx*dx + dy*dy) <= RANGE_SQ;
 
             at.sprite.setTint(emRange ? 0xff4400 : 0xffffff);
-            at.cooldown -= delta;
+            at.cooldown -= delta * escT;
             if (!emRange || at.cooldown > 0) continue;
 
             at.cooldown = Phaser.Math.Between(2000, 3500);
@@ -148,7 +167,9 @@ Object.assign(Jogo.prototype, {
     _updateFarmers(delta) {
         const velMul = this.dbg?.behavior?.farmerSpeed ?? 1.0;
         const danoMul = this.dbg?.behavior?.shooterDamage ?? 1.0;
-        const IDLE_F   = 0.0008 * velMul; // same ritmo do idle das cows brancas
+        // Escalada pela quota (Bevy farmer.rs): +50% de velocidade com 30/30
+        const escF     = 1 + this._escalation() * 0.5;
+        const IDLE_F   = 0.0008 * velMul * escF; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
 

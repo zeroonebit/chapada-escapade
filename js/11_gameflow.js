@@ -199,9 +199,17 @@ Object.assign(Jogo.prototype, {
     // ── VITÓRIA ───────────────────────────────────────────────────────────
     _checkVictory() {
         if (this.gameOver) return;
-        if (this.farmers.length === 0 && this.shooters.length === 0) {
+        // Parity Bevy: vitória por QUOTA de burgers coletados. Torres e
+        // farmers viraram objetivo lateral PAGO (ver _destroyShooter).
+        if ((this.burgersCollected || 0) >= BURGER_QUOTA) {
             this._victory();
         }
+    },
+
+    // Escalada 0..1 pela quota (Bevy score.rs): torres +80% de cadência e
+    // farmers +50% de velocidade consomem isso em 09_enemies.js
+    _escalation() {
+        return Math.min(1, (this.burgersCollected || 0) / BURGER_QUOTA);
     },
 
     _victory() {
@@ -229,7 +237,10 @@ Object.assign(Jogo.prototype, {
             stroke: '#003311', strokeThickness: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        this.add.text(w/2, h/2 - 42, 'Cerrado limpo, alien feliz', {
+        const _langV = this.dbg?.behavior?.lang || 'en';
+        this.add.text(w/2, h/2 - 42, _langV === 'pt'
+            ? 'Quota batida: 30 burgers! Cerrado servido.'
+            : '30-burger quota filled! Cerrado served.', {
             fontSize: '13px', fill: '#5acc88'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 

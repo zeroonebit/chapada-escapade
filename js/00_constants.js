@@ -32,6 +32,14 @@ const SLOT_FUEL          = [22,  28,  36 ];   // fuel restaurado by tipo
 const BURGER_TEXTURES    = ['burger_classic', 'burger_cheese', 'burger_double'];
 const PROCESS_TIME_MS    = 3000;              // cow → burger
 
+// ── QUOTA / ESCALADA / COMBO (parity Bevy) ────────────────────────
+const BURGER_QUOTA     = 30;    // burgers COLETADOS pra vitória (11_gameflow)
+const TOWER_POINTS     = 250;   // torre destruída = objetivo lateral pago
+const AIRSPACE_BONUS   = 500;   // bônus ao limpar TODAS as torres
+const COMBO_CREDIT_MAX = 2;     // excedentes absorvidos no curral cheio até virar combo
+const COMBO_PTS_MUL    = 1.5;   // pontos do lote combo
+const COMBO_FUEL_MUL   = 1.75;  // fuel do lote combo
+
 // ── SPEEDS ────────────────────────────────────────────────────────
 // Threshold de "is se movendo" to anim picker
 const SPEED_THRESHOLD_MOVING  = 0.5;

@@ -65,6 +65,10 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
 
+        // COMBO (parity Bevy): bebida + batata decoram a bancada do lote combo
+        this.load.image('combo_drink', 'assets/pixel_labs/items/combo_drink.png');
+        this.load.image('combo_fries', 'assets/pixel_labs/items/combo_fries.png');
+
         // ── EXPÕE keys de nature pra outros módulos consumirem ────────
         // (mantém API legacy: _natureRocksKeys, _natureVegKeys etc são consumidos
         //  por 04_scenery.js — apontam pros mesmos texture keys, agora aliases

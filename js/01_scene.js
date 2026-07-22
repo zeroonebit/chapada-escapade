@@ -174,6 +174,7 @@ class Jogo extends Phaser.Scene {
 
         // ── ESTADO ───────────────────────────────────────────────────
         this.burgerCount = 0;
+        this.burgersCollected = 0;  // quota (parity Bevy): só coleta via beam conta
         this.score = 0;
         this.fuelMax   = 100;
         this.fuelCurrent = 100;
@@ -449,7 +450,7 @@ class Jogo extends Phaser.Scene {
         // COWS counter: usa _cowsInBeamCount mantido by _updateBeamCounters
         // (was for-loop by frame before — H5 do audit)
         this.hud.cowsText.setText(this._cowsInBeamCount || 0);
-        this.hud.burgersText.setText(this.burgerCount);
+        this.hud.burgersText.setText((this.burgersCollected || 0) + '/' + BURGER_QUOTA);
 
         const cam = this.cameras.main;
         let cursor;
@@ -666,7 +667,7 @@ class Jogo extends Phaser.Scene {
         this.cows = []; this.abductedCows = []; this.farmers = []; this.bullets = [];
         this.shooters = []; this.corrals = []; this.grassPatches = [];
         this.terrainGrid = null; this._wangIndices = null;
-        this.score = 0; this.burgerCount = 0;
+        this.score = 0; this.burgerCount = 0; this.burgersCollected = 0;
         this.fuelMax = 100; this.fuelCurrent = 100;
         this.energiaMax = 100; this.energiaLed = 100;
         this.bullsTotal = this.cowsTotal = this.farmersTotal = this.shootersTotal = 0;
