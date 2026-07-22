@@ -68,6 +68,13 @@ Object.assign(Jogo.prototype, {
         this.load.image('hud_combustivel_full',  'assets/pixel_labs/hud/combustivel_full.png');
         this.load.image('hud_graviton_full',     'assets/pixel_labs/hud/graviton_full.png');
 
+        // ── COCKPIT FinalHud (fidelidade Bevy): a arte do painel do user ──
+        this.load.image('hud_dash_final',     'assets/pixel_labs/hud/dash_final.png');
+        this.load.image('hud_joystick_top',   'assets/pixel_labs/hud/joystick_top.png');
+        this.load.image('hud_dash_beam_off',  'assets/pixel_labs/hud/dash_beam_off.png');
+        this.load.image('hud_cells_off_fuel', 'assets/pixel_labs/hud/cells_off_fuel_final.png');
+        this.load.image('hud_cells_off_grav', 'assets/pixel_labs/hud/cells_off_grav_final.png');
+
         // COMBO (parity Bevy): bebida + batata decoram a bancada do lote combo
         this.load.image('combo_drink', 'assets/pixel_labs/items/combo_drink.png');
         this.load.image('combo_fries', 'assets/pixel_labs/items/combo_fries.png');

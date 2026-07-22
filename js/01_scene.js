@@ -597,6 +597,7 @@ class Jogo extends Phaser.Scene {
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
         if (this._updateActiveQuips) this._updateActiveQuips();
         if (this._updateAudio) this._updateAudio(delta);   // F5: loops + música
+        if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
