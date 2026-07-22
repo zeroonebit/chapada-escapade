@@ -1,15 +1,15 @@
 {
-  "total": 1059,
-  "classified": 887,
+  "total": 1064,
+  "classified": 892,
   "unclassified": 172,
-  "in_game": 240,
+  "in_game": 245,
   "orphan": 819,
   "by_category": {
     "unclassified": 172,
     "fx": 1,
     "wang_tile": 224,
     "wang_meta": 11,
-    "hud": 14,
+    "hud": 19,
     "item": 5,
     "char_static": 40,
     "char_anim_frame": 592
@@ -2923,6 +2923,15 @@
       "inGame": true
     },
     {
+      "path": "assets/pixel_labs/hud/dash_beam_off.png",
+      "category": "hud",
+      "tags": {
+        "name": "dash_beam_off"
+      },
+      "confidence": 1.0,
+      "inGame": true
+    },
+    {
       "path": "assets/pixel_labs/hud/farmers_v2.png",
       "category": "hud",
       "tags": {
@@ -2930,6 +2939,15 @@
       },
       "confidence": 1.0,
       "inGame": false
+    },
+    {
+      "path": "assets/pixel_labs/hud/joystick_top.png",
+      "category": "hud",
+      "tags": {
+        "name": "joystick_top"
+      },
+      "confidence": 1.0,
+      "inGame": true
     },
     {
       "path": "assets/pixel_labs/hud/shooters_v2.png",
@@ -2968,6 +2986,15 @@
       "inGame": true
     },
     {
+      "path": "assets/pixel_labs/hud/dash_final.png",
+      "category": "hud",
+      "tags": {
+        "name": "dash_final"
+      },
+      "confidence": 1.0,
+      "inGame": true
+    },
+    {
       "path": "assets/pixel_labs/hud/burgers_v2.png",
       "category": "hud",
       "tags": {
@@ -2981,6 +3008,15 @@
       "category": "hud",
       "tags": {
         "name": "combustivel_full"
+      },
+      "confidence": 1.0,
+      "inGame": true
+    },
+    {
+      "path": "assets/pixel_labs/hud/cells_off_grav_final.png",
+      "category": "hud",
+      "tags": {
+        "name": "cells_off_grav_final"
       },
       "confidence": 1.0,
       "inGame": true
@@ -3038,6 +3074,15 @@
       },
       "confidence": 1.0,
       "inGame": false
+    },
+    {
+      "path": "assets/pixel_labs/hud/cells_off_fuel_final.png",
+      "category": "hud",
+      "tags": {
+        "name": "cells_off_fuel_final"
+      },
+      "confidence": 1.0,
+      "inGame": true
     },
     {
       "path": "assets/pixel_labs/items/combo_fries.png",
@@ -11261,5 +11306,5 @@
       "inGame": false
     }
   ],
-  "_baked_at": "2026-07-22T21:55:47.548513"
+  "_baked_at": "2026-07-22T22:16:01.219509"
 }
