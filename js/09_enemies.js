@@ -59,6 +59,7 @@ Object.assign(Jogo.prototype, {
             this.cameras.main.shake(180, 0.012);
         }
         if (this._sfx) this._sfx('explosion');
+        if (this._metaOnShooterDown) this._metaOnShooterDown(hitter);   // F6
         // HUD counter: shooter destruido
         this.shootersTotal = (this.shootersTotal || 0) + 1;
         if (this.hud?.shootersText) this.hud.shootersText.setText(this.shootersTotal);

@@ -227,6 +227,7 @@ Object.assign(Jogo.prototype, {
                 this._sfx('grab');
                 if (!v.isEnemy && v.tipo !== 'pig' && this._cowbell) this._cowbell();
             }
+            if (this._metaOnAbduct) this._metaOnAbduct(v);   // F6: conquistas
             v.setFrictionAir(0.015).setDepth(3);
             v.setAngularVelocity((Math.random() - 0.5) * 0.4);
             if (v.walkTimer) v.walkTimer.paused = true;

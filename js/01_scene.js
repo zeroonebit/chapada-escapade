@@ -77,6 +77,8 @@ class Jogo extends Phaser.Scene {
         // (extração via canvas — ~40 texturas pequenas, ~5MB GPU adicional, ok)
         this._registerAtlasFrameTextures();
         if (this._setupAudio) this._setupAudio();   // F5: SFX + música lazy
+        // F6: meta (save/quests/raros) — delayed 0 = roda com o mundo pronto
+        this.time.delayedCall(0, () => { if (this._metaSetup) this._metaSetup(); });
 
         // ── REGISTRA ANIMS 8-DIR usando frames do atlas ─────────────
         // Antes: cada frame era texture separada, anim.frames[i].key = 'cow_walk_S_0'.
@@ -598,6 +600,7 @@ class Jogo extends Phaser.Scene {
         if (this._updateActiveQuips) this._updateActiveQuips();
         if (this._updateAudio) this._updateAudio(delta);   // F5: loops + música
         if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
+        if (this._metaUpdate) this._metaUpdate();          // F6: raros + quest log
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld
