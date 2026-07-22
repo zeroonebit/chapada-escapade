@@ -95,7 +95,10 @@ Object.assign(Jogo.prototype, {
             } else if (okVaca) tipo = Math.random() < 0.10 ? 'pig' : 'holstein';
             else if (okBoi)    tipo = 'bull';
             else return;
-            this._createCow(Phaser.Math.Between(300,W-300), Phaser.Math.Between(300,H-300), tipo);
+            // Spawn em TERRA (F3 ilha): grama/terra — nada de gado no oceano
+            const p = this._randLandPos ? this._randLandPos()
+                : { x: Phaser.Math.Between(300, W-300), y: Phaser.Math.Between(300, H-300) };
+            this._createCow(p.x, p.y, tipo);
         }
     },
 
@@ -410,6 +413,15 @@ Object.assign(Jogo.prototype, {
             if (v._returnSouthUntil && now >= v._returnSouthUntil && v.body) {
                 v.setFrictionAir(0.08);
                 v._returnSouthUntil = 0;
+            }
+
+            // ÁGUA é no-go (F3): caiu n'água (arremesso/solto do beam) →
+            // nada de volta pro centro da ilha até pisar em terra
+            if (this._isWaterAt && this._isWaterAt(v.x, v.y)) {
+                const angW = Math.atan2(3000 - v.y, 4000 - v.x);
+                v.applyForce({ x: Math.cos(angW) * 0.004, y: Math.sin(angW) * 0.004 });
+                this._directionalTexture(v);
+                continue;
             }
 
             const dx = v.x - this.ufo.x, dy = v.y - this.ufo.y;

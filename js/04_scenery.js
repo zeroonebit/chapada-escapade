@@ -3,6 +3,163 @@
 // polígonos orgânicos oversize. Cells adjacentes do same nível fundem visualmente.
 Object.assign(Jogo.prototype, {
 
+    // ── ILHA PROCEDURAL (F3 backport — port mecânico de Bevy terrain.rs) ──
+    // hash2 → valueNoise → fBm 4 octaves, determinístico por seed u32.
+    _terrHash2(x, y, seed) {
+        let h = (seed ^ Math.imul(x, 374761393) ^ Math.imul(y, 668265263)) >>> 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+        return ((h ^ (h >>> 16)) & 0xffff) / 65536;
+    },
+    _terrNoise(x, y, seed) {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const fx = x - xi, fy = y - yi;
+        const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+        const a = this._terrHash2(xi, yi, seed),     b = this._terrHash2(xi + 1, yi, seed);
+        const c = this._terrHash2(xi, yi + 1, seed), d = this._terrHash2(xi + 1, yi + 1, seed);
+        return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+    },
+    _terrFbm(x, y, seed) {
+        let amp = 0.5, freq = 1, sum = 0, norm = 0;
+        for (let o = 0; o < 4; o++) {
+            sum += this._terrNoise(x * freq, y * freq, (seed + o * 7919) >>> 0) * amp;
+            norm += amp; amp *= 0.5; freq *= 2;
+        }
+        return sum / norm;
+    },
+
+    // Seed por ELEVAÇÃO/UMIDADE (Bevy seed_grid_noise): elevação decide
+    // água×terra (água SÓ em zona verde — no árido a depressão vira terra),
+    // umidade decide grass×dirt. O CA vira só o passe de limpeza.
+    _seedIslandGrid(COLS, ROWS, proc, mapCfg) {
+        const seed = (Math.random() * 0xffffffff) >>> 0;
+        this._islandSeed = seed;
+        const scale  = mapCfg.noiseScale ?? proc.noiseScale ?? 13;
+        const tWater = mapCfg.waterLevel ?? proc.waterLevel ?? 0.30;
+        const tMoist = mapCfg.moisture   ?? proc.moisture   ?? 0.47;
+        const moistSeed = (seed + 0x9E3779B9) >>> 0;
+        const grid = [];
+        for (let y = 0; y < ROWS; y++) {
+            grid[y] = [];
+            for (let x = 0; x < COLS; x++) {
+                const e = this._terrFbm(x / scale, y / scale, seed);
+                const m = this._terrFbm(x / (scale * 2.6), y / (scale * 2.6), moistSeed);
+                const arid = m < tMoist;
+                if (e < tWater) grid[y][x] = arid ? 3 : 0;
+                else            grid[y][x] = arid ? 3 : 2;
+            }
+        }
+        return grid;
+    },
+
+    // Pós-CA (ordem do Bevy): recorte ELÍPTICO da ilha com rim ondulado por
+    // fBm → dist_water (BFS multi-fonte) → praia GARANTIDA (anel 4 células
+    // de areia) → máscara oceano×lago (flood fill das bordas). Lagos internos
+    // são sobrevoáveis; o OCEANO é a barreira da nave (o "void" do Bevy em 2D).
+    _applyIslandPost(grid, COLS, ROWS) {
+        const borderSeed = ((this._islandSeed || 1) ^ 0xB07D) >>> 0;
+        const halfC = COLS / 2, halfR = ROWS / 2;
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                const nx = (x + 0.5 - halfC) / (halfC - 1);
+                const ny = (y + 0.5 - halfR) / (halfR - 1);
+                const d = Math.sqrt(nx * nx + ny * ny);
+                // wobble de ~3 células (4 comia ilha demais no grid retangular)
+                const rim = 1 - this._terrFbm(x / 7, y / 7, borderSeed) * (3 / Math.min(halfC, halfR));
+                if (d > rim) grid[y][x] = 0;
+            }
+        }
+
+        // dist_water: BFS 4-conn a partir de TODA célula de água
+        const INF = 0xffff;
+        const dist = [], queue = [];
+        for (let y = 0; y < ROWS; y++) {
+            dist[y] = [];
+            for (let x = 0; x < COLS; x++) {
+                if (grid[y][x] === 0) { dist[y][x] = 0; queue.push([y, x]); }
+                else dist[y][x] = INF;
+            }
+        }
+        let qi = 0;
+        while (qi < queue.length) {
+            const [y, x] = queue[qi++];
+            const d0 = dist[y][x];
+            if (y > 0        && dist[y-1][x] > d0 + 1) { dist[y-1][x] = d0 + 1; queue.push([y-1, x]); }
+            if (y < ROWS - 1 && dist[y+1][x] > d0 + 1) { dist[y+1][x] = d0 + 1; queue.push([y+1, x]); }
+            if (x > 0        && dist[y][x-1] > d0 + 1) { dist[y][x-1] = d0 + 1; queue.push([y, x-1]); }
+            if (x < COLS - 1 && dist[y][x+1] > d0 + 1) { dist[y][x+1] = d0 + 1; queue.push([y, x+1]); }
+        }
+        this._distWater = dist;
+
+        // Praia garantida: anel de 4 células de AREIA na costa toda
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (dist[y][x] >= 1 && dist[y][x] <= 4) grid[y][x] = 1;
+            }
+        }
+
+        // Oceano × lago: flood fill de água partindo das bordas do grid
+        const ocean = [];
+        for (let y = 0; y < ROWS; y++) ocean[y] = new Array(COLS).fill(false);
+        const q2 = [];
+        for (let x = 0; x < COLS; x++) {
+            if (grid[0][x] === 0)      { ocean[0][x] = true;      q2.push([0, x]); }
+            if (grid[ROWS-1][x] === 0) { ocean[ROWS-1][x] = true; q2.push([ROWS-1, x]); }
+        }
+        for (let y = 0; y < ROWS; y++) {
+            if (grid[y][0] === 0)      { ocean[y][0] = true;      q2.push([y, 0]); }
+            if (grid[y][COLS-1] === 0) { ocean[y][COLS-1] = true; q2.push([y, COLS-1]); }
+        }
+        qi = 0;
+        while (qi < q2.length) {
+            const [y, x] = q2[qi++];
+            if (y > 0        && !ocean[y-1][x] && grid[y-1][x] === 0) { ocean[y-1][x] = true; q2.push([y-1, x]); }
+            if (y < ROWS - 1 && !ocean[y+1][x] && grid[y+1][x] === 0) { ocean[y+1][x] = true; q2.push([y+1, x]); }
+            if (x > 0        && !ocean[y][x-1] && grid[y][x-1] === 0) { ocean[y][x-1] = true; q2.push([y, x-1]); }
+            if (x < COLS - 1 && !ocean[y][x+1] && grid[y][x+1] === 0) { ocean[y][x+1] = true; q2.push([y, x+1]); }
+        }
+        this._oceanMask = ocean;
+        console.log('[ISLAND] seed', this._islandSeed, '— rim elíptico + praia 4 células + masks ok');
+    },
+
+    // ── Helpers de consulta (spawns, IA, barreira da nave) ──────────
+    _cellIdxAt(px, py) {
+        const CELL = this.terrainCell || 80;
+        return { cx: Math.floor(px / CELL), cy: Math.floor(py / CELL) };
+    },
+    _isWaterAt(px, py) {
+        const g = this.terrainGrid;
+        if (!g) return false;
+        const { cx, cy } = this._cellIdxAt(px, py);
+        if (cy < 0 || cy >= g.length || cx < 0 || cx >= g[0].length) return true;
+        return g[cy][cx] === 0;
+    },
+    _isOceanAt(px, py) {
+        const m = this._oceanMask;
+        if (!m) return false;
+        const { cx, cy } = this._cellIdxAt(px, py);
+        if (cy < 0 || cy >= m.length || cx < 0 || cx >= m[0].length) return true;
+        return m[cy][cx];
+    },
+    // Sorteia posição em TERRA (grama/terra; areia se allowSand) — spawns
+    _randLandPos(allowSand = false) {
+        const g = this.terrainGrid;
+        const CELL = this.terrainCell || 80;
+        if (!g) return { x: Phaser.Math.Between(300, 7700), y: Phaser.Math.Between(300, 5700) };
+        const ROWS = g.length, COLS = g[0].length;
+        for (let i = 0; i < 80; i++) {
+            const cy = Phaser.Math.Between(1, ROWS - 2);
+            const cx = Phaser.Math.Between(1, COLS - 2);
+            const t = g[cy][cx];
+            if (t >= 2 || (allowSand && t === 1)) {
+                return {
+                    x: cx * CELL + CELL / 2 + Phaser.Math.Between(-28, 28),
+                    y: cy * CELL + CELL / 2 + Phaser.Math.Between(-28, 28),
+                };
+            }
+        }
+        return { x: 4000, y: 3000 };
+    },
+
     _setupScenery(W, H) {
         const CELL = 80;
         const COLS = Math.ceil(W / CELL);
@@ -31,17 +188,26 @@ Object.assign(Jogo.prototype, {
         const SEED_GRASS = mapCfg.seedGrass ?? proc.seedGrass ?? 0.40;
         const CA_PASSES  = mapCfg.caPasses  ?? proc.caPasses  ?? 3;
 
-        // ── 1. SEED RANDOM com pesos balanceados (todos os 4 tipos visiveis)
-        // Valores defaults: 10% water + 18% sand + 40% grass + 32% dirt
+        // ── 1. SEED ──────────────────────────────────────────────────
+        // ILHA fBm (parity Bevy terrain.rs, DEFAULT) ou salt-and-pepper
+        // legado (proc.island = false no CONFIGS → mapa retangular antigo)
+        const useIsland = mapCfg.island ?? proc.island ?? true;
+        this._distWater = null; this._oceanMask = null; this._islandSeed = null;
         let grid = [];
-        for (let y = 0; y < ROWS; y++) {
-            grid[y] = [];
-            for (let x = 0; x < COLS; x++) {
-                const r = Math.random();
-                if (r < SEED_WATER)                          grid[y][x] = 0;  // water
-                else if (r < SEED_WATER + SEED_SAND)         grid[y][x] = 1;  // sand
-                else if (r < SEED_WATER + SEED_SAND + SEED_GRASS) grid[y][x] = 2;  // grass
-                else                                          grid[y][x] = 3;  // dirt
+        if (useIsland) {
+            grid = this._seedIslandGrid(COLS, ROWS, proc, mapCfg);
+        } else {
+            // SEED RANDOM legado com pesos balanceados
+            // Valores defaults: 10% water + 18% sand + 40% grass + 32% dirt
+            for (let y = 0; y < ROWS; y++) {
+                grid[y] = [];
+                for (let x = 0; x < COLS; x++) {
+                    const r = Math.random();
+                    if (r < SEED_WATER)                          grid[y][x] = 0;  // water
+                    else if (r < SEED_WATER + SEED_SAND)         grid[y][x] = 1;  // sand
+                    else if (r < SEED_WATER + SEED_SAND + SEED_GRASS) grid[y][x] = 2;  // grass
+                    else                                          grid[y][x] = 3;  // dirt
+                }
             }
         }
 
@@ -71,6 +237,9 @@ Object.assign(Jogo.prototype, {
             }
             grid = next;
         }
+
+        // Pós-CA da ilha (ordem do Bevy: seed → CA → rim/praia/masks)
+        if (useIsland) this._applyIslandPost(grid, COLS, ROWS);
 
         // Saves grid to detecção de grass nas cows
         this.terrainGrid = grid;
@@ -399,25 +568,32 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 6. corrals (em dirt firme)
+        // ── 6. corrals — INLAND na ilha (parity Bevy corral_spots): só em
+        // GRAMA, longe da costa (dist_water 9→5 células conforme as
+        // tentativas queimam) e com separação 1300→600px (WANT→MIN easing)
         this.corrals = [];
         this.driveThrus = this.corrals;
-        // Corrals — qualquer position válida (dirt ou grass), far das bordas
-        // e with distance mínima between si to não sobrepor
         const corralPositions = [];
-        const MIN_DIST = 800;
         for (let i = 0; i < 5; i++) {
-            for (let tries = 0; tries < 50; tries++) {
-                const cx = Phaser.Math.Between(600, W-600);
-                const cy = Phaser.Math.Between(600, H-600);
+            for (let tries = 0; tries < 300; tries++) {
+                const ease = Math.min(1, tries / 150);
+                const minCoast = this._distWater ? Math.round(9 - 4 * ease) : 0;
+                const minDist  = 1300 - 700 * ease;
+                const gy = Phaser.Math.Between(2, ROWS - 3);
+                const gx = Phaser.Math.Between(2, COLS - 3);
+                if (grid[gy][gx] !== 2) continue;  // só grama
+                if (this._distWater && this._distWater[gy][gx] < minCoast) continue;
+                const px = gx * CELL + CELL / 2, py = gy * CELL + CELL / 2;
                 const tooClose = corralPositions.some(p =>
-                    Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < MIN_DIST
-                );
+                    Phaser.Math.Distance.Between(px, py, p.x, p.y) < minDist);
                 if (tooClose) continue;
-                corralPositions.push({x: cx, y: cy});
-                this._buildCorral(cx, cy);
+                corralPositions.push({ x: px, y: py });
+                this._buildCorral(px, py);
                 break;
             }
+        }
+        if (corralPositions.length < 5) {
+            console.warn('[CORRAL] só', corralPositions.length, 'de 5 currais couberam inland');
         }
     },
 

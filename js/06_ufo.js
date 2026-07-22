@@ -79,6 +79,19 @@ Object.assign(Jogo.prototype, {
 
     _moveShip(c) {
         if (this._tutFreezeNave) return;
+        // BARREIRA DO OCEANO (F3, parity Bevy rim): a ilha é o mundo — entrar
+        // no MAR ABERTO empurra a nave de volta (wall-slide). Lagos internos
+        // continuam sobrevoáveis (só a máscara de OCEANO barra).
+        if (this._isOceanAt && this._isOceanAt(this.ufo.x, this.ufo.y)) {
+            const angC = Math.atan2(3000 - this.ufo.y, 4000 - this.ufo.x);
+            this.ufo.applyForce({ x: Math.cos(angC) * 0.006, y: Math.sin(angC) * 0.006 });
+            // mata só a componente de velocidade que aponta PRA FORA
+            const bv = this.ufo.body.velocity;
+            const out = -(bv.x * Math.cos(angC) + bv.y * Math.sin(angC));
+            if (out > 0) {
+                this.ufo.setVelocity(bv.x + Math.cos(angC) * out, bv.y + Math.sin(angC) * out);
+            }
+        }
         // MOBILE_MODE teaser: applies forca somente com dedo segurado.
         // Solta -> ship continua com inercia (frictionAir baixo) e bounce
         // nas bordas (setBounce 1.0).

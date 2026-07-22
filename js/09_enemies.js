@@ -7,10 +7,29 @@ Object.assign(Jogo.prototype, {
         // (wake/sleep com histerese em _updateShooters).
         this.bullets = [];
         this.shooters = [];
-        const POSTS = [[480,480],[2720,480],[480,1920],[2720,1920],[1600,280],[1600,2120]];
+        // Posições por SAMPLING (parity Bevy tower_spot): terra firme, fora
+        // da praia, ≥1100px entre si (afrouxa até 600) e ≥380px de curral —
+        // as POSTS fixas antigas caíam no OCEANO da ilha
+        const spots = [];
+        for (let s = 0; s < 6; s++) {
+            for (let tries = 0; tries < 200; tries++) {
+                const ease = Math.min(1, tries / 100);
+                const minT = 1100 - 500 * ease;
+                const p = this._randLandPos ? this._randLandPos()
+                    : { x: Phaser.Math.Between(500, 7500), y: Phaser.Math.Between(500, 5500) };
+                if (this._distWater) {
+                    const { cx, cy } = this._cellIdxAt(p.x, p.y);
+                    if ((this._distWater[cy]?.[cx] ?? 99) < 3) continue;  // fora da praia
+                }
+                if (spots.some(q => Phaser.Math.Distance.Between(p.x, p.y, q.x, q.y) < minT)) continue;
+                if ((this.corrals || []).some(c => Phaser.Math.Distance.Between(p.x, p.y, c.x, c.y) < 380)) continue;
+                spots.push(p);
+                break;
+            }
+        }
         const SKINS = ['blue', 'red', 'green'];
         let i = 0;
-        for (const [ax,ay] of POSTS) {
+        for (const { x: ax, y: ay } of spots) {
             const skin = SKINS[i % SKINS.length]; i++;
             const spr = this.add.image(ax, ay, 'mecha_atlas', `mecha_${skin}_S`).setDepth(2);
             spr.setScale(150 / spr.height);  // ~150px de altura, AR preservado
@@ -242,8 +261,10 @@ Object.assign(Jogo.prototype, {
     _spawnFarmers(n) {
         const W = 8000, H = 6000;
         for (let i = 0; i < n; i++) {
-            const x = Phaser.Math.Between(400, W-400);
-            const y = Phaser.Math.Between(400, H-400);
+            // Spawn em TERRA (F3 ilha) — farmer não nasce boiando
+            const p = this._randLandPos ? this._randLandPos()
+                : { x: Phaser.Math.Between(400, W-400), y: Phaser.Math.Between(400, H-400) };
+            const x = p.x, y = p.y;
             // matter.add.SPRITE (not image) — sprite suporta .anims to running
             const farmerScale = (this.dbg?.scale?.farmer) ?? 2.0;
             const farmerSize  = 81 * farmerScale;
@@ -342,6 +363,13 @@ Object.assign(Jogo.prototype, {
                 }
             }
             if (isAbducted) continue;
+
+            // ÁGUA no-go (F3): farmer jogado n'água nada de volta pra ilha
+            if (this._isWaterAt && this._isWaterAt(f.x, f.y)) {
+                const angW = Math.atan2(3000 - f.y, 4000 - f.x);
+                f.applyForce({ x: Math.cos(angW) * 0.004, y: Math.sin(angW) * 0.004 });
+                continue;
+            }
 
             // Disparo when ship is perto (mas with distance mínima de engajamento)
             const dx = this.ufo.x - f.x, dy = this.ufo.y - f.y;

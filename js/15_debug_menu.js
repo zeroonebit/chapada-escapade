@@ -136,6 +136,7 @@ const DBG_DEFAULTS = {
         vertThreshold:  0.50,  // 0..1 prob de upper no white noise inicial
         vertCaPasses:   4,     // smoothing iterations (0=raw noise, 6+=convergencia)
         autoSortTiles:  true,  // runtime auto-sort por color sampling (cr31)
+        island:         true,  // F3: ilha fBm (parity Bevy) — off = mapa retangular legado
         activeMap:      '',    // nome do map preset salvo no PixaPro (vazio = procedural live)
     },
 };
@@ -500,6 +501,7 @@ Object.assign(Jogo.prototype, {
                             <input type="range" data-cfg="proc.vertCaPasses" min="0" max="8" step="1">
                             <input type="number" class="val" data-show="proc.vertCaPasses" /></label>
                         <label><span>Auto-sort</span><input type="checkbox" data-cfg="proc.autoSortTiles"></label>
+                        <label><span>Ilha fBm</span><input type="checkbox" data-cfg="proc.island"></label>
                         <label><span>Wang ativo</span><input type="checkbox" data-cfg="fx.wangtiles"></label>
                         <label><span>Mostrar nº</span><input type="checkbox" data-cfg="fx.wangDebug"></label>
                     </fieldset>
