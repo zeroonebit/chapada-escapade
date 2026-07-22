@@ -254,41 +254,23 @@ Object.assign(Jogo.prototype, {
             // do cell grid via "majoria de grass" -- com CA convergindo tudo pra
             // grass, todos os cantos viravam 1 e todo tile = 15.
             //
-            // Agora: gera um VERTEX GRID binario direto (lower=0, upper=1) via
-            // white noise + CA opcional (mesma logica do PixaPro generateTerrainGrid).
+            // FIDELIDADE (pós-F3): o vertex grid agora DERIVA do terrainGrid —
+            // antes era white noise PRÓPRIO, desconectado do mapa lógico (a
+            // ilha existia nos spawns/barreira/radar mas NÃO NA TELA). Cada
+            // vértice olha as até 4 células vizinhas: grama = upper (1),
+            // resto = lower (0). Água/areia nem recebem tile (rects abaixo).
             const CW = COLS + 1, CH = ROWS + 1;
-            const VERT_THRESHOLD = mapCfg.vertThreshold ?? proc.vertThreshold ?? 0.50;
-            const VERT_CA_PASSES = mapCfg.vertCaPasses ?? proc.vertCaPasses ?? 4;
             const corners = [];
             for (let y = 0; y < CH; y++) {
                 corners[y] = [];
                 for (let x = 0; x < CW; x++) {
-                    corners[y][x] = Math.random() < VERT_THRESHOLD ? 1 : 0;
+                    let g = 0, n = 0;
+                    if (y > 0    && x > 0)    { n++; if (grid[y-1][x-1] === 2) g++; }
+                    if (y > 0    && x < COLS) { n++; if (grid[y-1][x]   === 2) g++; }
+                    if (y < ROWS && x > 0)    { n++; if (grid[y][x-1]   === 2) g++; }
+                    if (y < ROWS && x < COLS) { n++; if (grid[y][x]     === 2) g++; }
+                    corners[y][x] = (n > 0 && g * 2 >= n) ? 1 : 0;
                 }
-            }
-            // CA majoritario no vertex grid (preserva blobs naturais)
-            for (let pass = 0; pass < VERT_CA_PASSES; pass++) {
-                const next = [];
-                for (let y = 0; y < CH; y++) {
-                    next[y] = [];
-                    for (let x = 0; x < CW; x++) {
-                        let count = 0, total = 0;
-                        for (let dy = -1; dy <= 1; dy++) {
-                            for (let dx = -1; dx <= 1; dx++) {
-                                const ny = y+dy, nx = x+dx;
-                                if (ny<0 || ny>=CH || nx<0 || nx>=CW) {
-                                    // borda: conta como 1 (upper) -- evita ilhas de
-                                    // lower nas bordas. PixaPro faz igual.
-                                    count++; total++; continue;
-                                }
-                                count += corners[ny][nx];
-                                total++;
-                            }
-                        }
-                        next[y][x] = count >= Math.ceil(total/2) ? 1 : 0;
-                    }
-                }
-                for (let y = 0; y < CH; y++) corners[y] = next[y];
             }
             // Cell (x,y) reads seus 4 cantos:
             //   NW = corners[y][x],  NE = corners[y][x+1]
@@ -319,6 +301,25 @@ Object.assign(Jogo.prototype, {
                 : (i) => ({ srcIdx: i, rot: 0, flipH: false, flipV: false });
             const tileT = [];
             for (let i = 0; i < 16; i++) tileT.push(resolveT(i));
+            // CAMADA BASE: água e areia pintadas por célula (1 Graphics só) —
+            // é aqui que a ILHA finalmente aparece. Oceano mais escuro que
+            // lago, praia em faixa clara. Terra recebe wang tile por cima.
+            const baseGfx = this.add.graphics().setDepth(-0.5);
+            const OCEAN_COL = 0x1d4260, LAKE_COL = 0x2f6a8f, SAND_COL = 0xd8c084;
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const t0 = grid[y][x];
+                    if (t0 === 0) {
+                        const isOcean = this._oceanMask ? this._oceanMask[y][x] : true;
+                        baseGfx.fillStyle(isOcean ? OCEAN_COL : LAKE_COL, 1);
+                        baseGfx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                    } else if (t0 === 1) {
+                        baseGfx.fillStyle(SAND_COL, 1);
+                        baseGfx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                    }
+                }
+            }
+
             // Salva tile indices pra _renderWangDebug usar (toggle live)
             this._wangIndices = [];
             for (let y = 0; y < ROWS; y++) {
@@ -328,6 +329,8 @@ Object.assign(Jogo.prototype, {
                     const sw = corners[y+1][x],   se = corners[y+1][x+1];
                     const idx = nw + ne*2 + se*4 + sw*8;   // cr31
                     this._wangIndices[y][x] = idx;
+                    // Água/areia: só a camada base (tile aqui tapava a ilha)
+                    if (grid[y][x] < 2) continue;
                     const t = tileT[idx];
                     const srcIdx = remap ? remap[idx] : t.srcIdx;
                     const f = String(srcIdx).padStart(2, '0');
@@ -351,15 +354,19 @@ Object.assign(Jogo.prototype, {
             // Re-render overlay caso ja estivesse on antes do scenery
             if (this.dbg?.fx?.wangDebug) this._renderWangDebug();
         } else {
-            // Fallback: solid color verde + manchas de dirt
-            this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(0);
-            const terraGfx = this.add.graphics().setDepth(0.1);
-            terraGfx.fillStyle(0xa06848, 1);
+            // Fallback sem wang: pinta o grid COMPLETO por célula (a ilha
+            // aparece igual — água/areia/grama/terra)
+            this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(-0.6);
+            const terraGfx = this.add.graphics().setDepth(-0.5);
+            const PAL4 = { 0: 0x1d4260, 1: 0xd8c084, 3: 0xa06848 };
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x] === 3) {
-                        terraGfx.fillCircle(x*CELL + CELL/2, y*CELL + CELL/2, CELL*0.55);
-                    }
+                    const t0 = grid[y][x];
+                    if (t0 === 2) continue;  // grama = o verde de fundo
+                    let col = PAL4[t0];
+                    if (t0 === 0 && this._oceanMask && !this._oceanMask[y][x]) col = 0x2f6a8f;
+                    terraGfx.fillStyle(col, 1);
+                    terraGfx.fillRect(x * CELL, y * CELL, CELL, CELL);
                 }
             }
         }
