@@ -76,6 +76,7 @@ class Jogo extends Phaser.Scene {
         // call sites em 6 arquivos, registra cada frame como texture indep.
         // (extração via canvas — ~40 texturas pequenas, ~5MB GPU adicional, ok)
         this._registerAtlasFrameTextures();
+        if (this._setupAudio) this._setupAudio();   // F5: SFX + música lazy
 
         // ── REGISTRA ANIMS 8-DIR usando frames do atlas ─────────────
         // Antes: cada frame era texture separada, anim.frames[i].key = 'cow_walk_S_0'.
@@ -595,6 +596,7 @@ class Jogo extends Phaser.Scene {
         if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
         if (this._updateActiveQuips) this._updateActiveQuips();
+        if (this._updateAudio) this._updateAudio(delta);   // F5: loops + música
 
         const wantBeam = (inputMode === 'wasd' || this.isMobile)
             ? !!this._beamHeld

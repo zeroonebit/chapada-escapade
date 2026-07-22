@@ -151,6 +151,7 @@ Object.assign(Jogo.prototype, {
         f.fillStyle(0xffffff, 0.75);
         f.fillRect(0, 0, w, h);
         f.setVisible(true).setAlpha(0.75);
+        if (this._sfx) this._sfx('thunder');
         this.tweens.add({
             targets: f, alpha: 0,
             duration: 220, ease: 'Cubic.easeIn',

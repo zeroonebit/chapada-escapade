@@ -183,6 +183,7 @@ Object.assign(Jogo.prototype, {
             // cobre casos onde este timer não dispara (Phaser race conditions).
             this.time.delayedCall(3000, () => this._processSlot(curral, slotIdx));
         }
+        if (accepted.length && this._sfx) this._sfx('deliver');
         this.cameras.main.flash(150, 100, 200, 100);
     },
 
@@ -195,6 +196,7 @@ Object.assign(Jogo.prototype, {
         this.cows = this.cows.filter(x => x !== p);
         this._destroyCow(p);
         this.fuelCurrent = this.fuelMax;
+        if (this._sfx) { this._sfx('deliver'); this._sfx('collect'); }  // Bevy: Deliver+Collect
         this.cameras.main.flash(160, 255, 200, 80);
         const lang = this.dbg?.behavior?.lang || 'en';
         const msg = lang === 'pt' ? 'BACON! tanque cheio' : 'BACON! full tank';
@@ -335,6 +337,7 @@ Object.assign(Jogo.prototype, {
             duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
         });
         slot.state = 'ready';
+        if (this._sfx) this._sfx('burger_ready');
     },
 
     // Atrai burgers ready em direction à ship when o beam is ativo e burger no coneRadius
@@ -396,6 +399,7 @@ Object.assign(Jogo.prototype, {
                 // M3: libera slot via _cleanSlot (null-safe + para tweens órfãos
                 // se algo travar between o stop manual above e o complete callback)
                 this._cleanSlot(curral, slotIdx);
+                if (this._sfx) this._sfx('collect');
                 // Quota (parity Bevy): burger coletado alimenta a vitória
                 this.burgersCollected = (this.burgersCollected || 0) + 1;
                 this._checkVictory();

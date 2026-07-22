@@ -72,6 +72,13 @@ Object.assign(Jogo.prototype, {
         this.load.image('combo_drink', 'assets/pixel_labs/items/combo_drink.png');
         this.load.image('combo_fries', 'assets/pixel_labs/items/combo_fries.png');
 
+        // ── ÁUDIO (F5): SFX WAVs pequenos (~1.6MB) no boot; os MP3s de
+        // música (~10MB) são lazy em 21_audio._setupAudio (fora do boot)
+        const SFX_KEYS = ['grab', 'drop', 'deliver', 'burger_ready', 'collect',
+                          'shot', 'hit', 'explosion', 'thunder', 'gameover',
+                          'victory', 'cowbell', 'beam_loop', 'rain_loop', 'wind_loop'];
+        for (const k of SFX_KEYS) this.load.audio(k, `assets/audio/${k}.wav`);
+
         // ── EXPÕE keys de nature pra outros módulos consumirem ────────
         // (mantém API legacy: _natureRocksKeys, _natureVegKeys etc são consumidos
         //  por 04_scenery.js — apontam pros mesmos texture keys, agora aliases
