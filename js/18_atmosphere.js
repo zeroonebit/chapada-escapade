@@ -53,6 +53,8 @@ Object.assign(Jogo.prototype, {
         const presetKey = this.tutorialMode ? 'day' : (this.dbg?.fx?.timeOfDay ?? 'day');
         const p = TOD_PRESETS[presetKey] || TOD_PRESETS.day;
         this._drawAtmoGradient(p);
+        // F4: a nave comenta a virada do dia (falas portadas do Bevy)
+        if (this._atmoCurrent !== presetKey && this._quipTOD) this._quipTOD(presetKey);
         this._atmoCurrent = presetKey;
         this._applyWeatherPreset();
     },
@@ -61,6 +63,12 @@ Object.assign(Jogo.prototype, {
         const cfg = this.dbg?.fx;
         if (!cfg) return;
         const weather = this.tutorialMode ? 'clear' : (cfg.weather ?? 'clear');
+        // F4: comenta a troca de clima (uma vez por mudança, falas do Bevy)
+        if (this._lastWeatherQuipKey !== undefined && this._lastWeatherQuipKey !== weather
+            && this._quipWeather) {
+            this._quipWeather(['rain', 'fog', 'storm', 'snow'].includes(weather) ? weather : 'clear');
+        }
+        this._lastWeatherQuipKey = weather;
         switch (weather) {
             case 'clear':
                 cfg.rain = false;
