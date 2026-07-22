@@ -43,6 +43,14 @@ Object.assign(Jogo.prototype, {
         this.hud.burgersText  = this.add.text(0, 0, '0', VAL_STYLE).setOrigin(0.5).setScrollFactor(0).setDepth(D2);
         this.counterText   = this.hud.burgersText;  // alias mantido pra _turnIntoBurger
 
+        // Cores de IDENTIDADE (F4, parity Bevy): uma cor amarra contador ↔
+        // blip do radar — a linha fica legível sem decodificar o ícone
+        this.hud.bullsText.setColor('#9ee62c');     // lime
+        this.hud.cowsText.setColor('#ede914');      // amarelo
+        this.hud.farmersText.setColor('#609cff');   // azul
+        this.hud.shootersText.setColor('#fb2617');  // vermelho (mecha)
+        this.hud.burgersText.setColor('#b02df8');   // roxo
+
         // ── Barras combinadas (PNG unico fuel+graviton, nameless) ───────
         // _empty_nameless = mascara preta + _full-nameless = barras coloridas.
         // Dois fillImg apontam pro mesmo _full, cada um com crop region propria
@@ -390,10 +398,22 @@ Object.assign(Jogo.prototype, {
         const rx = m.maskRx ?? m.rx;
         const ry = m.maskRy ?? m.ry;
         const W = 8000, H = 6000;
-        const RANGE = Math.max(W, H) * 0.6;
-        // Mapa world -> elipse da cavidade
-        const wx = (vx) => cx + (vx - this.ufo.x) / RANGE * rx;
-        const wy = (vy) => cy + (vy - this.ufo.y) / RANGE * ry;
+        // RADAR-MINIMAPA (F4, parity Bevy): o disco mostra a ILHA INTEIRA —
+        // terreno desenhado + blips em posição ABSOLUTA (a nave se move no mapa)
+        const wx = (vx) => cx + (vx / W - 0.5) * 2 * rx;
+        const wy = (vy) => cy + (vy / H - 0.5) * 2 * ry;
+
+        // Fundo de terreno: 1 canvas por mapa, recorte elíptico no próprio alpha
+        if (!this._radarTerrainBuilt && this.terrainGrid) {
+            this._buildRadarTerrainTexture();
+            if (this.hud.radarTerrainImg?.scene) this.hud.radarTerrainImg.destroy();
+            this.hud.radarTerrainImg = this.add.image(cx, cy, 'radar_terrain')
+                .setScrollFactor(0).setDepth(199.05)
+                .setDisplaySize(rx * 2, ry * 2).setAlpha(0.92);
+            this.hud.miniGfx.setDepth(199.5);  // sweep/blips por cima do terreno
+            this._radarTerrainBuilt = true;
+        }
+        if (this.hud.radarTerrainImg?.scene) this.hud.radarTerrainImg.setPosition(cx, cy);
         const inRadar = (x, y) => {
             const u = (x - cx) / rx, v = (y - cy) / ry;
             return u*u + v*v <= 1;
@@ -446,75 +466,89 @@ Object.assign(Jogo.prototype, {
             return b >= prev || b <= curr;
         };
 
-        // Pool de mini sprites holograficos: hide tudo, after ativa os
-        // necessarios (sprite recycle pattern).
-        const pool = this._radarHoloPool || [];
-        for (const s of pool) s.setVisible(false);
-        let poolIdx = 0;
+        // Pool antigo de holo-sprites aposentado (F4: blips = PONTINHOS
+        // coloridos, decisão final do Bevy) — mantém escondido
+        for (const s of (this._radarHoloPool || [])) s.setVisible(false);
 
-        // Projecao plana — elipse cozida no frame perspectivo.
-        const renderHolo = (entity, texKey, tint, baseScale) => {
-            if (poolIdx >= pool.length) return;
-            const bx = wx(entity.x), by = wy(entity.y);
+        // Blip = ponto colorido com assento escuro, flash f⁸ no instante do
+        // sweep e alpha pow(0.6) que segura opaco e cai no fim (Bevy hud.rs)
+        const dot = (ent, exWorld, eyWorld, color, size) => {
+            const bx = wx(exWorld), by = wy(eyWorld);
             if (!inRadar(bx, by)) return;
             const ang = Math.atan2(by - cy, bx - cx);
-            if (sweptThis(ang)) fades.set(entity, now);
-            const last = fades.get(entity);
+            if (sweptThis(ang)) fades.set(ent, now);
+            const last = fades.get(ent);
             if (last == null) return;
             const age = now - last;
-            if (age > FADE_MS) { fades.delete(entity); return; }
-            const alpha = 1 - (age / FADE_MS);
-
-            const s = pool[poolIdx++];
-            if (!s.scene) return;
-            s.setVisible(true);
-            s.setPosition(bx, by);
-            if (s.texture.key !== texKey && this.textures.exists(texKey)) {
-                s.setTexture(texKey);
-            }
-            s.setDisplaySize(baseScale, baseScale);
-            s.setTint(tint);
-            s.setAlpha(alpha * 0.85);
+            if (age > FADE_MS) { fades.delete(ent); return; }
+            const f = 1 - age / FADE_MS;
+            const alpha = Math.pow(f, 0.6);
+            const flash = Math.pow(f, 8) * 0.7;
+            const mix = (ch) => Math.round(ch + (255 - ch) * flash);
+            const r = (color >> 16) & 255, gg = (color >> 8) & 255, b = color & 255;
+            const c2 = (mix(r) << 16) | (mix(gg) << 8) | mix(b);
+            g.fillStyle(0x000000, alpha * 0.45);
+            g.fillCircle(bx, by, size * 1.55);
+            g.fillStyle(c2, alpha);
+            g.fillCircle(bx, by, size * (1 + f * 0.3));
         };
 
-        // corral: square cyan via Graphics, projecao plana
-        if (this.corrals) {
-            for (const c of this.corrals) {
-                const bx = wx(c.x), by = wy(c.y);
-                if (!inRadar(bx, by)) continue;
-                const ang = Math.atan2(by - cy, bx - cx);
-                if (sweptThis(ang)) fades.set(c, now);
-                const last = fades.get(c);
-                if (last == null) continue;
-                const age = now - last;
-                if (age > FADE_MS) { fades.delete(c); continue; }
-                const alpha = 1 - (age / FADE_MS);
-                g.fillStyle(0x4499ff, alpha);
-                g.fillRect(bx - 2.5, by - 2.5, 5, 5);
+        // Cores de identidade (Bevy): cow amarelo · bull lime · farmer azul ·
+        // curral CIANO · mecha vermelho · burger pronto ROXO
+        if (this.corrals) for (const c of this.corrals) {
+            dot(c, c.x, c.y, 0x00e0d0, 5);
+            if (c.slots) for (const slot of c.slots) {
+                if (slot && slot.state === 'ready' && !slot._sendoColetado && slot.icon?.scene) {
+                    dot(slot, slot.icon.x, slot.icon.y, 0xb02df8, 4);
+                }
             }
         }
-
-        // Cows + oxen + farmers usam pool de mini sprites holograficos
         if (this.cows) for (const v of this.cows) {
             if (!v.scene || v._destroyed || v.isBurger) continue;
-            const isOx = v.tipo === 'bull';
-            renderHolo(v,
-                isOx ? 'ox_S' : 'cow_S',
-                isOx ? 0xddccaa : 0xaaffee,    // ox marrom-clarinho cyan / cow cyan
-                18                              // display size em px
-            );
+            const col = v.tipo === 'bull' ? 0x9ee62c : 0xede914;
+            dot(v, v.x, v.y, col, 3);
         }
         if (this.farmers) for (const f of this.farmers) {
             if (!f.scene || f._destroyed || f._dying) continue;
-            renderHolo(f, 'farmer_S', 0xffee99, 18);
+            dot(f, f.x, f.y, 0x609cff, 3);
+        }
+        if (this.shooters) for (const at of this.shooters) {
+            dot(at, at.x, at.y, 0xfb2617, 4);
         }
 
-        // Ship — ponto verde central fixo + pulso (always visível)
+        // Nave — ponto verde ABSOLUTO no mapa + pulso (sempre visível)
+        const sx = wx(this.ufo.x), sy = wy(this.ufo.y);
         g.fillStyle(0xaaffcc, 1);
-        g.fillCircle(cx, cy, 3.5);
+        g.fillCircle(sx, sy, 3.5);
         const pulse = 0.5 + 0.5 * Math.sin(this._radarAngle * 4);
         g.lineStyle(1.2, 0xaaffcc, 0.5 * pulse);
-        g.strokeCircle(cx, cy, 6 + pulse * 3);
+        g.strokeCircle(sx, sy, 6 + pulse * 3);
+    },
+
+    // Canvas 1:1 com o grid do terreno (100×75), paleta apagada de radar,
+    // cantos fora da elipse transparentes (o disco recorta a si mesmo)
+    _buildRadarTerrainTexture() {
+        const grd = this.terrainGrid;
+        if (!grd) return;
+        const ROWS = grd.length, COLS = grd[0].length;
+        const cv = document.createElement('canvas');
+        cv.width = COLS; cv.height = ROWS;
+        const ctx = cv.getContext('2d');
+        const img = ctx.createImageData(COLS, ROWS);
+        const PAL = [[14, 40, 62], [118, 100, 62], [46, 88, 48], [104, 70, 44]];
+        const hC = COLS / 2, hR = ROWS / 2;
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                const i = (y * COLS + x) * 4;
+                const p = PAL[grd[y][x]] || PAL[3];
+                const u = (x + 0.5 - hC) / hC, v = (y + 0.5 - hR) / hR;
+                img.data[i] = p[0]; img.data[i+1] = p[1]; img.data[i+2] = p[2];
+                img.data[i+3] = (u*u + v*v <= 1) ? 235 : 0;
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+        if (this.textures.exists('radar_terrain')) this.textures.remove('radar_terrain');
+        this.textures.addCanvas('radar_terrain', cv);
     },
 
     // Cleanup do map de blip fades when entidades morrem (avoids leak)

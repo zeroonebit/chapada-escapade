@@ -605,8 +605,12 @@ Object.assign(Jogo.prototype, {
     _registerQuip(txt, target, baseOffsetY, floatDist, duration) {
         if (!this._activeQuips) this._activeQuips = [];
         const startT = this.time?.now ?? 0;
+        // isGO: alvo era um GameObject VIVO no registro. Âncoras {x,y} puras
+        // (church/cactus/TOD) têm scene undefined DESDE SEMPRE — o check de
+        // "alvo morto" matava esses quips no frame 1 (bug antigo, fix F4).
+        const isGO = !!(target && target.scene) || target === this.ufo;
         this._activeQuips.push({
-            txt, target, baseOffsetY, floatDist, duration, startT,
+            txt, target, baseOffsetY, floatDist, duration, startT, isGO,
         });
     },
 
@@ -622,7 +626,9 @@ Object.assign(Jogo.prototype, {
             const t = elapsed / q.duration;
             // Target sumiu (entidade morta) -> destroi quip junto
             if (!q.txt || !q.txt.scene) { list.splice(i, 1); continue; }
-            if (!q.target || (q.target.scene === undefined && q.target !== this.ufo)) {
+            // Só destrói se o alvo era GameObject e MORREU — âncora {x,y}
+            // pura fica parada no lugar (fix F4 do bug do frame 1)
+            if (!q.target || (q.isGO && !q.target.scene && q.target !== this.ufo)) {
                 q.txt.destroy(); list.splice(i, 1); continue;
             }
             if (t >= 1) { q.txt.destroy(); list.splice(i, 1); continue; }
@@ -683,21 +689,59 @@ Object.assign(Jogo.prototype, {
         const x = target?.x ?? this.ufo?.x ?? 0;
         const y = (target?.y ?? this.ufo?.y ?? 0) - 40;
 
-        const txt = this.add.text(x, y, entry.t, {
-            fontSize: '26px',
-            fill: color,
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 5,
-            shadow: { color: '#000', fill: true, blur: 6 },
-        }).setOrigin(0.5).setDepth(60);
+        // BALÃO cartoon (F4, parity Bevy quips.rs): fundo creme, stroke na
+        // cor do mood, rabinho apontando pro dono, texto escuro bold
+        const balloon = this._makeQuipBalloon(entry.t, color);
+        balloon.setPosition(x, y).setDepth(60);
 
-        // Segue o target: baseOffset -40, sobe +80 ao longo de 4800ms
-        this._registerQuip(txt, target, -40, 80, 4800);
+        // TTL por comprimento (Bevy): 2.6s + 55ms/char, clamp 3.2–6s
+        const ttl = Phaser.Math.Clamp(2600 + entry.t.length * 55, 3200, 6000);
+        this._registerQuip(balloon, target, -40, 80, ttl);
 
         this._lastQuipT = now;
         return true;
     },
+
+    // Constrói o balão (container: Graphics arredondado + rabinho + texto).
+    // Pop de entrada 0.6→1 (Back.easeOut), igual ao Bevy.
+    _makeQuipBalloon(text, moodHex) {
+        const t = this.add.text(0, 0, text, {
+            fontSize: '20px', fill: '#261e1a', fontStyle: 'bold',
+            fontFamily: '"VT323", "Courier New", monospace',
+        }).setOrigin(0.5);
+        const w = t.width + 22, h = t.height + 12;
+        const strokeCol = Phaser.Display.Color.HexStringToColor(moodHex).color;
+        const g = this.add.graphics();
+        g.fillStyle(0xfcf9ee, 0.96);
+        g.lineStyle(2.4, strokeCol, 1);
+        g.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+        g.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+        g.fillTriangle(-6, h / 2 - 1, 6, h / 2 - 1, 0, h / 2 + 10);
+        g.lineBetween(-6, h / 2 - 1, 0, h / 2 + 10);
+        g.lineBetween(6, h / 2 - 1, 0, h / 2 + 10);
+        const c = this.add.container(0, 0, [g, t]);
+        c.setScale(0.6);
+        this.tweens.add({ targets: c, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        return c;
+    },
+
+    // Fala ambiente na virada de TOD/clima (F4) — balão preso na nave.
+    // Pools portados 1:1 do Bevy atmosphere.rs (TOD_QUIPS/weather_quip_pool).
+    _ambientQuip(map, key) {
+        if (window.__MOBILE_MODE) return;
+        if (!this.dbg?.fx?.quips || !this.ufo?.scene) return;
+        if (!this.gameStarted || this.gameOver) return;
+        const lang = this.dbg?.behavior?.lang || 'en';
+        const pool = (map[lang] || map.en)[key];
+        if (!pool || !pool.length) return;
+        const text = pool[Math.floor(Math.random() * pool.length)];
+        const balloon = this._makeQuipBalloon(text, TONE_COLORS.g);
+        balloon.setPosition(this.ufo.x, this.ufo.y - 60).setDepth(60);
+        const ttl = Phaser.Math.Clamp(2600 + text.length * 55, 3200, 6000);
+        this._registerQuip(balloon, this.ufo, -60, 80, ttl);
+    },
+    _quipTOD(key)     { this._ambientQuip(TOD_QUIPS_AMBIENT, key); },
+    _quipWeather(key) { this._ambientQuip(WEATHER_QUIPS_AMBIENT, key); },
 
     // Proximity check (chamado do _updateBody throttled a 500ms).
     // Dispara quips de church/cactus when player passa perto.
@@ -731,3 +775,39 @@ Object.assign(Jogo.prototype, {
         }
     },
 });
+
+// ── FALAS DE TOD/CLIMA (F4) — port 1:1 de Bevy atmosphere.rs ─────────
+const TOD_QUIPS_AMBIENT = {
+    en: {
+        day:      ["high noon — burger o'clock!", "lunchtime... where's my burger?"],
+        dusk:     ["getting late already?", "the day's winding down..."],
+        sunset:   ["what a Cerrado sunset!", "golden hour, huh"],
+        night:    ["wait, night already?", "that got dark fast"],
+        midnight: ["midnight — prime abducting hours", "everyone asleep... cow-snatch time"],
+        dawn:     ["whoa, dawn already?", "sun's coming up..."],
+    },
+    pt: {
+        day:      ["meio-dia, hora do rango!", "hora do almoço, cadê meu hambúrguer?"],
+        dusk:     ["nossa, tá ficando tarde?", "o dia tá caindo..."],
+        sunset:   ["que pôr do sol no Cerrado!", "hora dourada, hein"],
+        night:    ["ih, já é de noite?", "escureceu rápido, hein?"],
+        midnight: ["meia-noite, hora das abduções", "todo mundo dormindo, bora roubar vaca"],
+        dawn:     ["eita, amanheceu já?", "raiando o dia..."],
+    },
+};
+const WEATHER_QUIPS_AMBIENT = {
+    en: {
+        rain:  ["rain! my hull's gonna rust", "who turned on the sky shower?"],
+        fog:   ["fog... where'd the cows go?", "can't see a hoof out here"],
+        storm: ["storm! lightning + beam = no thanks", "thunder? rough night to abduct"],
+        snow:  ["snow in the Cerrado? weird", "cows on ice — premium burger"],
+        clear: ["sky's clear, nice", "sun's back, phew"],
+    },
+    pt: {
+        rain:  ["chuva! minha lataria vai enferrujar", "quem ligou o chuveiro do céu?"],
+        fog:   ["neblina... cadê as vacas?", "não enxergo um palmo!"],
+        storm: ["tempestade! raio + graviton = não", "trovão? péssima noite pra roubar vaca"],
+        snow:  ["neve no Cerrado? tá esquisito", "vaca no freezer, hambúrguer premium"],
+        clear: ["céu limpou, que beleza", "sol de volta, ufa"],
+    },
+};

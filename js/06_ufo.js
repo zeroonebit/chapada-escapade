@@ -12,12 +12,51 @@ Object.assign(Jogo.prototype, {
 
     _desenharCone(r) {
         this.lightCone.clear();
-        // Camadas concêntricas, alpha crescente do exterior pro center — gera halo suave
-        this.lightCone.fillStyle(0x66ff99, 0.05); this.lightCone.fillCircle(0, 0, r * 1.10);
-        this.lightCone.fillStyle(0x66ff99, 0.08); this.lightCone.fillCircle(0, 0, r * 0.92);
-        this.lightCone.fillStyle(0x88ffaa, 0.12); this.lightCone.fillCircle(0, 0, r * 0.72);
-        this.lightCone.fillStyle(0xaaffcc, 0.16); this.lightCone.fillCircle(0, 0, r * 0.50);
-        this.lightCone.fillStyle(0xddffee, 0.22); this.lightCone.fillCircle(0, 0, r * 0.28);
+        // BEAM-BÚSSOLA (F4, parity Bevy beam_field): com CARGA o beam vira
+        // gradiente de calor pro curral mais perto — VERMELHO longe/rumo
+        // errado → âmbar → CIANO chegando — e os anéis internos INCLINAM
+        // pro curral (o "ovo" 2D). Sem carga: família verde clássica.
+        let col = [0x66ff99, 0x88ffaa, 0xaaffcc, 0xddffee];
+        let lean = null;
+        if ((this._cowsInBeamCount || 0) > 0 && this.corrals?.length) {
+            let best = null, bd = Infinity;
+            for (const c of this.corrals) {
+                const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
+                if (d < bd) { bd = d; best = c; }
+            }
+            if (best) {
+                const dirX = (best.x - this.ufo.x) / (bd || 1);
+                const dirY = (best.y - this.ufo.y) / (bd || 1);
+                // Alinhamento velocidade×rumo esfria o gradiente (Bevy:
+                // eff = d × (1.35 − 0.55 × align) — voar errado "esquenta")
+                const bv = this.ufo.body?.velocity || { x: 0, y: 0 };
+                const sp = Math.hypot(bv.x, bv.y);
+                const align = sp > 0.3 ? Math.max(0, (bv.x * dirX + bv.y * dirY) / sp) : 0;
+                const eff = bd * (1.35 - 0.55 * align);
+                const h = Phaser.Math.Clamp(eff / 2800, 0, 1);   // 2800 = 0.35×W (Bevy)
+                const lerp3 = (t) => {
+                    const A = { r: 0x59, g: 0xbf, b: 0xff };   // ciano (chegando)
+                    const M = { r: 0xff, g: 0xd4, b: 0x44 };   // âmbar
+                    const B = { r: 0xff, g: 0x29, b: 0x1a };   // vermelho (longe)
+                    const [c0, c1, k] = t < 0.5 ? [A, M, t * 2] : [M, B, (t - 0.5) * 2];
+                    return ((Math.round(c0.r + (c1.r - c0.r) * k) << 16) |
+                            (Math.round(c0.g + (c1.g - c0.g) * k) << 8) |
+                             Math.round(c0.b + (c1.b - c0.b) * k));
+                };
+                col = [lerp3(h), lerp3(Math.max(0, h - 0.12)),
+                       lerp3(Math.max(0, h - 0.24)), lerp3(Math.max(0, h - 0.36))];
+                lean = { x: dirX, y: dirY };
+            }
+        }
+        const off = (k) => lean
+            ? { x: lean.x * r * 0.18 * k, y: lean.y * r * 0.18 * k }
+            : { x: 0, y: 0 };
+        const o1 = off(0.35), o2 = off(0.6), o3 = off(0.85), o4 = off(1);
+        this.lightCone.fillStyle(col[0], 0.05); this.lightCone.fillCircle(0, 0, r * 1.10);
+        this.lightCone.fillStyle(col[0], 0.08); this.lightCone.fillCircle(o1.x, o1.y, r * 0.92);
+        this.lightCone.fillStyle(col[1], 0.12); this.lightCone.fillCircle(o2.x, o2.y, r * 0.72);
+        this.lightCone.fillStyle(col[2], 0.16); this.lightCone.fillCircle(o3.x, o3.y, r * 0.50);
+        this.lightCone.fillStyle(col[3], 0.22); this.lightCone.fillCircle(o4.x, o4.y, r * 0.28);
     },
 
     _updateLEDs(delta) {
@@ -122,10 +161,9 @@ Object.assign(Jogo.prototype, {
 
         let alvo = null, dMin = Infinity, cor = 0xffcc00;
         if (cowsInBeam > 0) {
-            for (const c of this.corrals) {
-                const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
-                if (d < dMin) { dMin = d; alvo = c; }
-            }
+            // F4: com carga, o BEAM-BÚSSOLA assumiu (o cone pinta o caminho
+            // vermelho→ciano) — a seta amarela aposentou (parity Bevy)
+            return;
         } else if (this._anyCorralReady && this._anyCorralReady()) {
             cor = 0xff8800;
             for (const c of this.corrals) {
