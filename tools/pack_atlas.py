@@ -134,6 +134,18 @@ ATLASES = {
             ("env/objects",     "nat_obj"),
         ],
     },
+    # ── Mecha atlas — scarecrow droids 3 cores × 8-dir + torpedo 8 frames.
+    # Sliced desde 2026-04-30 (handoff), wired no F2 do backport Bevy.
+    # Framenames: mecha_blue_S, mecha_red_NE… + missile_frame_00..07
+    "mecha": {
+        "type": "flat",
+        "groups": [
+            ("pixel_labs/chars/scarecrow_droid/blue",         "mecha_blue"),
+            ("pixel_labs/chars/scarecrow_droid/red",          "mecha_red"),
+            ("pixel_labs/chars/scarecrow_droid/green",        "mecha_green"),
+            ("pixel_labs/chars/scarecrow_droid/missile_anim", "missile"),
+        ],
+    },
     # ── Items atlas — 3 variantes de burger.
     "items": {
         "type": "flat",

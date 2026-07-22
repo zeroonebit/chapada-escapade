@@ -365,10 +365,10 @@ Object.assign(Jogo.prototype, {
         const labels = {
             en: { fuel:'FUEL', graviton:'GRAVITON', score:'SCORE',
                   bulls:'BULLS', cows:'COWS', farmers:'FARMERS',
-                  shooters:'SHOOTERS', burgers:'BURGERS' },
+                  shooters:'MECHAS', burgers:'BURGERS' },
             pt: { fuel:'COMBUSTÍVEL', graviton:'GRAVITON', score:'PONTOS',
                   bulls:'BOIS', cows:'VACAS', farmers:'FAZENDEIROS',
-                  shooters:'ESPANTALHOS', burgers:'HAMBURGUERES' },
+                  shooters:'MECHAS', burgers:'HAMBURGUERES' },
         };
         const L = labels[lang] || labels.en;
         if (this.hud.combLabel)     this.hud.combLabel.setText(L.fuel);

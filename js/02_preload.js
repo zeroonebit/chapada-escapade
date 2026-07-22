@@ -56,6 +56,8 @@ Object.assign(Jogo.prototype, {
         this.load.atlas('hud_atlas',    'assets/atlases/hud.png',    'assets/atlases/hud.json');
         this.load.atlas('nature_atlas', 'assets/atlases/nature.png', 'assets/atlases/nature.json');
         this.load.atlas('items_atlas',  'assets/atlases/items.png',  'assets/atlases/items.json');
+        // Mechas (scarecrow droids 3 cores × 8-dir) + torpedo 8 frames — F2 backport
+        this.load.atlas('mecha_atlas',  'assets/atlases/mecha.png',  'assets/atlases/mecha.json');
 
         // Beam halo (single PNG fora de atlas — usado em FX layer separada)
         this.load.image('beam_halo', 'assets/fx/beam.png');

@@ -40,6 +40,21 @@ const COMBO_CREDIT_MAX = 2;     // excedentes absorvidos no curral cheio até vi
 const COMBO_PTS_MUL    = 1.5;   // pontos do lote combo
 const COMBO_FUEL_MUL   = 1.75;  // fuel do lote combo
 
+// ── MECHAS / TORPEDOS (parity Bevy shooter.rs; px ≈ u × 24.7, do range 420px↔17u) ──
+const MECHA_WAKE_DIST      = 568;    // acorda te vendo chegar (range +6u no Bevy)
+const MECHA_SLEEP_DIST     = 692;    // volta a dormir bem além (histerese, +11u)
+const TORPEDO_SPEED        = 6.2;    // px/frame ≈ 15 u/s — a nave é mais rápida
+const TORPEDO_TURN         = 1.8;    // rad/s de guinada (homing)
+const TORPEDO_BOOST        = 1.30;   // 30% mais rápido saindo do tubo…
+const TORPEDO_BOOST_MS     = 1500;   // …por 1.5s
+const TORPEDO_GUIDE_MIN    = 3000;   // guidance 3.0–4.5s, depois fizzle (puff)
+const TORPEDO_GUIDE_MAX    = 4500;
+const TORPEDO_ARM_MS       = 350;    // friendly-fire arma após 0.35s
+const TORPEDO_HIT_SHIP     = 40;     // raios de impacto (px)
+const TORPEDO_HIT_FARMER   = 50;     // own goal
+const TORPEDO_HIT_MECHA    = 64;     // friendly fire
+const OWN_GOAL_POINTS      = 100;    // torpedo mata farmer
+
 // ── SPEEDS ────────────────────────────────────────────────────────
 // Threshold de "is se movendo" to anim picker
 const SPEED_THRESHOLD_MOVING  = 0.5;
