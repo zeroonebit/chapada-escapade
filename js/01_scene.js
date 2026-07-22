@@ -118,6 +118,16 @@ class Jogo extends Phaser.Scene {
             }
         });
 
+        // Torpedo do mecha (F2): fly = frames 0-3 loop · explode = 4-7 uma vez
+        if (!this.anims.exists('missile_fly')) {
+            this.anims.create({ key: 'missile_fly',
+                frames: [0,1,2,3].map(i => ({ key: 'mecha_atlas', frame: `missile_frame_0${i}` })),
+                frameRate: 10, repeat: -1 });
+            this.anims.create({ key: 'missile_explode',
+                frames: [4,5,6,7].map(i => ({ key: 'mecha_atlas', frame: `missile_frame_0${i}` })),
+                frameRate: 14, repeat: 0 });
+        }
+
         if (this.EXPERIMENT_MODE) {
             // Fundo neutro escuro + nada de obstáculos/NPCs
             this.add.rectangle(W/2, H/2, W, H, 0x1a1a1a).setDepth(0);

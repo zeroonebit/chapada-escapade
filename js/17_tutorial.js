@@ -91,16 +91,16 @@ const TUT_STEPS = [
         key: 'DODGE_TORPEDOS',
         shortLabel: 'ESQUIVA DE TORPEDOS',
         title: '09. ESQUIVA DE TORPEDOS',
-        text: 'Espantalhos disparam torpedos! Voa em zigue-zague pra desviar.',
-        note: 'Esquiva de 5 tiros.',
+        text: 'MECHAS disparam torpedos perseguidores! Eles perdem o rastro em uns segundos — voa em curva pra despistar.',
+        note: 'Esquiva de 5 torpedos.',
         highlight: ['atirador'],
     },
     {
         key: 'KILL_SHOOTER',
-        shortLabel: 'ABATER ESPANTALHO',
-        title: '10. ABATER ESPANTALHO',
-        text: 'Pega um fazendeiro no feixe e arremessa contra o espantalho.',
-        note: 'Derrota 1 espantalho.',
+        shortLabel: 'ABATER MECHA',
+        title: '10. ABATER MECHA',
+        text: 'Pega um fazendeiro no feixe e arremessa contra o MECHA. Ou guia um torpedo até ele — fogo amigo vale ponto!',
+        note: 'Derrota 1 mecha.',
         highlight: ['atirador'],
     },
 ];
@@ -328,6 +328,45 @@ Object.assign(Jogo.prototype, {
                     this._tutAdvance();
                 } else if (this._tutFarmerAbducted && (!this.farmers || this.farmers.length === 0)) {
                     this._tutSpawnFazendeiro();
+                }
+                break;
+            }
+
+            case 'DODGE_TORPEDOS': {
+                // Baseline na entrada do step (contador global de esquivas —
+                // torpedo que morre sem acertar a nave incrementa em 09_enemies)
+                if (this._tutStepInit !== 'DODGE_TORPEDOS') {
+                    this._tutStepInit = 'DODGE_TORPEDOS';
+                    this._tutDodgeBase = this._torpedoesDodged || 0;
+                }
+                // Seta pro mecha mais perto — o step pede pra ir provocar
+                let best = null, bd = Infinity;
+                for (const at of (this.shooters || [])) {
+                    const d = distSq(at.x, at.y, this.ufo.x, this.ufo.y);
+                    if (d < bd) { bd = d; best = at; }
+                }
+                if (best) this._tutDrawArrow(best.x, best.y);
+                const dodged = (this._torpedoesDodged || 0) - (this._tutDodgeBase || 0);
+                if (canAdvance && dodged >= 5) this._tutAdvance();
+                break;
+            }
+
+            case 'KILL_SHOOTER': {
+                if (this._tutStepInit !== 'KILL_SHOOTER') {
+                    this._tutStepInit = 'KILL_SHOOTER';
+                    this._tutShooterBase = this.shootersTotal || 0;
+                }
+                // Garante farmer vivo pra arremessar + seta pro mecha mais perto
+                const vivos = (this.farmers || []).filter(f => f.scene && !f._dying);
+                if (vivos.length === 0) this._tutSpawnFazendeiro();
+                let bestS = null, bsd = Infinity;
+                for (const at of (this.shooters || [])) {
+                    const d = distSq(at.x, at.y, this.ufo.x, this.ufo.y);
+                    if (d < bsd) { bsd = d; bestS = at; }
+                }
+                if (bestS) this._tutDrawArrow(bestS.x, bestS.y);
+                if (canAdvance && (this.shootersTotal || 0) > (this._tutShooterBase || 0)) {
+                    this._tutAdvance();
                 }
                 break;
             }
