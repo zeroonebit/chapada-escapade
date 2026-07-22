@@ -58,6 +58,7 @@ Object.assign(Jogo.prototype, {
         if (this.cameras.main.worldView.contains(at.x, at.y)) {
             this.cameras.main.shake(180, 0.012);
         }
+        if (this._sfx) this._sfx('explosion');
         // HUD counter: shooter destruido
         this.shootersTotal = (this.shootersTotal || 0) + 1;
         if (this.hud?.shootersText) this.hud.shootersText.setText(this.shootersTotal);
@@ -146,6 +147,7 @@ Object.assign(Jogo.prototype, {
 
             const flash = this.add.circle(at.x, at.y - 50, 14, 0xffcc00, 0.9).setDepth(9);
             this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
+            if (this._sfx) this._sfx('shot');
         }
 
         // Limites do world + margem to detectar saída de screen
@@ -173,6 +175,7 @@ Object.assign(Jogo.prototype, {
                 const dxT = b.sprite.x - this.ufo.x, dyT = b.sprite.y - this.ufo.y;
                 if (dxT*dxT + dyT*dyT < TORPEDO_HIT_SHIP * TORPEDO_HIT_SHIP) {
                     this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
+                    if (this._sfx) this._sfx('hit');
                     this.cameras.main.shake(200, 0.013);
                     this.cameras.main.flash(160, 255, 80, 0);
                     this._torpedoExplode(b);
@@ -231,6 +234,7 @@ Object.assign(Jogo.prototype, {
             // bullet "armada" only após 25px — avoids hit instantâneo se shooter estiver colado
             if (b.dist >= 25 && dx*dx + dy*dy < 22*22) {
                 this.fuelCurrent = Math.max(0, this.fuelCurrent - DANO);
+                if (this._sfx) this._sfx('hit');
                 this.cameras.main.shake(200, 0.013);
                 this.cameras.main.flash(160, 255, 80, 0);
                 b.sprite.destroy();
@@ -397,6 +401,7 @@ Object.assign(Jogo.prototype, {
                 this.bullets.push({ sprite: bSprite, vx: Math.cos(ang)*VEL, vy: Math.sin(ang)*VEL, dist: 0 });
                 const flash = this.add.circle(f.x, f.y, 11, 0xffcc00, 0.85).setDepth(9);
                 this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 160, onComplete: () => flash.destroy() });
+                if (this._sfx) this._sfx('shot');
                 // Puff de fumaça do disparo (3 nuvenzinhas with offset aleatório)
                 const muzzleX = f.x + Math.cos(ang) * 18;
                 const muzzleY = f.y + Math.sin(ang) * 18;

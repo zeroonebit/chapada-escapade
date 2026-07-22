@@ -137,6 +137,7 @@ Object.assign(Jogo.prototype, {
         }
         if (entity.body) entity.setStatic(true);
         entity.setTint(color);
+        if (this._sfx) this._sfx('explosion');
         if (this.cameras.main.worldView.contains(entity.x, entity.y)) {
             this.cameras.main.shake(120, 0.007);
         }
@@ -222,6 +223,10 @@ Object.assign(Jogo.prototype, {
                 }
             }
             this.abductedCows.push(v);
+            if (this._sfx) {
+                this._sfx('grab');
+                if (!v.isEnemy && v.tipo !== 'pig' && this._cowbell) this._cowbell();
+            }
             v.setFrictionAir(0.015).setDepth(3);
             v.setAngularVelocity((Math.random() - 0.5) * 0.4);
             if (v.walkTimer) v.walkTimer.paused = true;
@@ -501,6 +506,10 @@ Object.assign(Jogo.prototype, {
     },
 
     _releaseAll() {
+        // F5: soltar com carga faz barulho (Bevy Drop); mudo em fim de jogo
+        if (this._sfx && this.abductedCows.length && this.gameStarted && !this.gameOver) {
+            this._sfx('drop');
+        }
         this.abductedCows.forEach(v => {
             this._releaseCow(v);
             if (v.walkTimer) v.walkTimer.paused = false;

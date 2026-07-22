@@ -213,6 +213,7 @@ Object.assign(Jogo.prototype, {
     },
 
     _victory() {
+        if (this._sfx && !this.gameOver) this._sfx('victory');
         this.gameOver = true;
         this._releaseAll();
 
@@ -356,6 +357,7 @@ Object.assign(Jogo.prototype, {
 
     // ── GAME OVER ─────────────────────────────────────────────────────────
     _gameOver() {
+        if (this._sfx && !this.gameOver) this._sfx('gameover');
         if (this.gameOver) return;
         this.gameOver = true;
         console.log('[GAME OVER] triggered. fuelCurrent=', this.fuelCurrent);
