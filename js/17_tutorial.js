@@ -774,6 +774,7 @@ Object.assign(Jogo.prototype, {
 
     _tutConcluir() {
         this._tutStepIdx = null;
+        window.__cepTutResume = null;  // tutorial fechado — restart não retoma mais
         if (this._tutBox) {
             this._tutBox.forEach(o => { if (o && o.scene) o.destroy(); });
             this._tutBox = null;
@@ -792,7 +793,8 @@ Object.assign(Jogo.prototype, {
         const txt = this.add.text(w/2, h/2 - 26, (this.dbg?.behavior?.lang === 'pt' ? '✓ TUTORIAL CONCLUÍDO!' : '✓ TUTORIAL COMPLETE!'), {
             fontSize: '20px', fill: '#00ff55', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(510);
-        const sub = this.add.text(w/2, h/2 + 8, 'Agora você está pronto para jogar.', {
+        const sub = this.add.text(w/2, h/2 + 8,
+            (this.dbg?.behavior?.lang === 'pt' ? 'Agora você está pronto para jogar.' : 'Now you are ready to play.'), {
             fontSize: '12px', fill: '#aaffcc'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(510);
 

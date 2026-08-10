@@ -25,8 +25,32 @@ Object.assign(Jogo.prototype, {
         // por ele -- o jogo ja sabe a preferencia.
         if (window.__cepPlayedOnce) {
             this.gameStarted = true;
-            this.tutorialMode = false;
             this.matter.world.enabled = true;
+            // Morreu NO TUTORIAL → retoma da etapa que falhou (não do 01).
+            // delayedCall(0): _setupSplash roda no meio do create, o
+            // _setupTutorial precisa das entidades prontas (ufo/corrals).
+            const resume = window.__cepTutResume;
+            if (resume != null) {
+                this.tutorialMode = true;
+                this.time.delayedCall(0, () => {
+                    if (!this.tutorialMode || !this._setupTutorial) return;
+                    this._setupTutorial();
+                    // _tutAdvance aplica flags/side-effects de cada etapa no
+                    // caminho (spawns re-armados) e marca anteriores como ●
+                    let guard = 0;
+                    while (this._tutStepIdx < resume && guard++ < TUT_STEPS.length) {
+                        this._tutAdvance();
+                    }
+                    // O caminho passa pela entrada do BURGER, que seta fuel
+                    // em 15% (side effect da lição) — sem repor, quem retoma
+                    // um passo tardio nasce seco e morre de novo (death loop)
+                    if (TUT_STEPS[this._tutStepIdx]?.key !== 'BURGER') {
+                        this.fuelCurrent = this.fuelMax;
+                    }
+                });
+            } else {
+                this.tutorialMode = false;
+            }
             return;
         }
 
@@ -365,6 +389,11 @@ Object.assign(Jogo.prototype, {
         if (this._metaOnGameOver && !this.gameOver) this._metaOnGameOver();
         if (this.gameOver) return;
         this.gameOver = true;
+        // Morreu no tutorial: guarda a etapa pro restart RETOMAR dela (não
+        // recomeçar do 01). In-memory como __cepPlayedOnce — F5 limpa.
+        if (this.tutorialMode && this._tutStepIdx != null) {
+            window.__cepTutResume = this._tutStepIdx;
+        }
         console.log('[GAME OVER] triggered. fuelCurrent=', this.fuelCurrent);
         try { this._releaseAll(); } catch (e) { console.warn('[GO] _releaseAll fail', e); }
 
