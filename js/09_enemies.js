@@ -263,49 +263,56 @@ Object.assign(Jogo.prototype, {
         });
     },
 
+    // Cria 1 farmer em POSIÇÃO explícita — usado pelo _spawnFarmers e pelo
+    // tutorial (_tutSpawnFazendeiro*, que chamava um _createFarmer que tinha
+    // sumido no rework F2 = passo 06 travava sem farmer nascer)
+    _createFarmer(x, y) {
+        // matter.add.SPRITE (not image) — sprite suporta .anims to running
+        // FARMER_QUAD 2.5u × scale 2.5 (config live do user) × 16px/u = 100px
+        const farmerScale = (this.dbg?.scale?.farmer) ?? 1.0;
+        const farmerSize  = 100 * farmerScale;
+        const f = this.matter.add.sprite(x, y, 'farmer_S');
+        // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
+        // versões do Phaser, deixando body do size da textura (180×180 = bug)
+        f.setBody({type:'circle', radius:16});
+        f.setDisplaySize(farmerSize, farmerSize);
+        // Lock rotação física: without this, collisions with cows (que vêm pelo beam)
+        // viravam o sprite de lado e ele aparecia "deitado" as humano de perfil
+        f.setFixedRotation();
+        f.setFrictionAir(0.1).setMass(2).setDepth(6)
+         .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
+        f.body.label = 'farmer';
+        f.isEnemy = true;
+        // HP=1: farmer only morre em pedra with impacto high
+        f._hp = 1;
+        f.setBounce(0.45);  // bounce more visível ao bater em cow/ox/cacto
+        f.wanderAngle = Math.random() * Math.PI * 2;
+        f._wandering = true;
+        f._cooldown = Phaser.Math.Between(1000, 3500);
+        f._timer = this.time.addEvent({
+            delay: Phaser.Math.Between(1400, 3000),
+            loop: true,
+            callback: () => {
+                if (!f.scene || !f.body) return;
+                if (Math.random() < 0.2) { f._wandering = false; return; }
+                f.wanderAngle = Math.random() * Math.PI * 2;
+                f._wandering = true;
+            }
+        });
+        // shadow blur below do farmer
+        this._attachSombra(f, { rx: 15, ry: 5.5, alpha: 0.45, offY: 11, offX: 3 });
+
+        this.farmers.push(f);
+        return f;
+    },
+
     _spawnFarmers(n) {
         const W = 8000, H = 6000;
         for (let i = 0; i < n; i++) {
             // Spawn em TERRA (F3 ilha) — farmer não nasce boiando
             const p = this._randLandPos ? this._randLandPos()
                 : { x: Phaser.Math.Between(400, W-400), y: Phaser.Math.Between(400, H-400) };
-            const x = p.x, y = p.y;
-            // matter.add.SPRITE (not image) — sprite suporta .anims to running
-            // FARMER_QUAD 2.5u × scale 2.5 (config live do user) × 16px/u = 100px
-            const farmerScale = (this.dbg?.scale?.farmer) ?? 1.0;
-            const farmerSize  = 100 * farmerScale;
-            const f = this.matter.add.sprite(x, y, 'farmer_S');
-            // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
-            // versões do Phaser, deixando body do size da textura (180×180 = bug)
-            f.setBody({type:'circle', radius:16});
-            f.setDisplaySize(farmerSize, farmerSize);
-            // Lock rotação física: without this, collisions with cows (que vêm pelo beam)
-            // viravam o sprite de lado e ele aparecia "deitado" as humano de perfil
-            f.setFixedRotation();
-            f.setFrictionAir(0.1).setMass(2).setDepth(6)
-             .setCollisionCategory(8).setCollidesWith([1, 2, 8]);
-            f.body.label = 'farmer';
-            f.isEnemy = true;
-            // HP=1: farmer only morre em pedra with impacto high
-            f._hp = 1;
-            f.setBounce(0.45);  // bounce more visível ao bater em cow/ox/cacto
-            f.wanderAngle = Math.random() * Math.PI * 2;
-            f._wandering = true;
-            f._cooldown = Phaser.Math.Between(1000, 3500);
-            f._timer = this.time.addEvent({
-                delay: Phaser.Math.Between(1400, 3000),
-                loop: true,
-                callback: () => {
-                    if (!f.scene || !f.body) return;
-                    if (Math.random() < 0.2) { f._wandering = false; return; }
-                    f.wanderAngle = Math.random() * Math.PI * 2;
-                    f._wandering = true;
-                }
-            });
-            // shadow blur below do farmer
-            this._attachSombra(f, { rx: 15, ry: 5.5, alpha: 0.45, offY: 11, offX: 3 });
-
-            this.farmers.push(f);
+            this._createFarmer(p.x, p.y);
         }
     },
 
@@ -383,15 +390,17 @@ Object.assign(Jogo.prototype, {
 
             // AGRESSIVO (parity Bevy FarmerState::Chasing): dentro de ~690px o
             // farmer larga o passeio e CARREGA pra cima da nave (chase 6.6 vs
-            // walk 1.6 u/s no Bevy ≈ 4× a força do idle)
-            if (distSq <= 690*690 && distSq > 80*80) {
+            // walk 1.6 u/s no Bevy ≈ 4× a força do idle).
+            // EXCETO com a nave congelada no tutorial (TAKE_DAMAGE): ele
+            // colava em <80px e a dist mínima de tiro travava o passo 06.
+            if (distSq <= 690*690 && distSq > 80*80 && !this._tutFreezeNave) {
                 const angC = Math.atan2(dy, dx);
                 const chaseF = IDLE_F * 4.1;
                 f.applyForce({ x: Math.cos(angC) * chaseF, y: Math.sin(angC) * chaseF });
             }
 
             f._cooldown -= delta;
-            if (distSq <= SHOOT_SQ && distSq > 80*80 && f._cooldown <= 0) {
+            if (distSq <= SHOOT_SQ && (distSq > 80*80 || this._tutFreezeNave) && f._cooldown <= 0) {
                 f._cooldown = Phaser.Math.Between(2200, 3800);
                 const ang = Math.atan2(dy, dx);
                 // Cap rígido (M5)

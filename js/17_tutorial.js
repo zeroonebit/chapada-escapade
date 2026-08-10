@@ -29,6 +29,9 @@ const TUT_STEPS = [
         title: '01. PILOTANDO A NAVE',
         text: 'Voa por aí. Mouse arrasta ou WASD pra mover.',
         note: 'Move uns 200 px.',
+        en: { shortLabel: 'FLYING THE SHIP',
+              text: 'Fly around. Drag the mouse or use WASD to move.',
+              note: 'Move about 200 px.' },
         highlight: ['nave'],
     },
     {
@@ -37,6 +40,9 @@ const TUT_STEPS = [
         title: '02. TESTANDO O FEIXE',
         text: 'Segura o botão pra ativar o feixe. A barra azul (GRAVITON) drena enquanto segura. Solta pra recarregar.',
         note: 'Drena <50%, solta, espera 100%.',
+        en: { shortLabel: 'TESTING THE BEAM',
+              text: 'Hold the button to fire the beam. The blue bar (GRAVITON) drains while held. Release to recharge.',
+              note: 'Drain below 50%, release, wait for 100%.' },
         highlight: ['nave', 'graviton'],
     },
     {
@@ -45,6 +51,9 @@ const TUT_STEPS = [
         title: '03. ROUBANDO VACAS',
         text: 'Agora puxa de verdade! Centra o feixe na vaca e segura.',
         note: 'Abduz 1 vaca.',
+        en: { shortLabel: 'STEALING COWS',
+              text: 'Now pull for real! Center the beam on a cow and hold.',
+              note: 'Abduct 1 cow.' },
         highlight: ['cows'],
     },
     {
@@ -53,6 +62,9 @@ const TUT_STEPS = [
         title: '04. ENTREGA EXPRESSA',
         text: 'Leva pro curral. A seta verde aponta o caminho.',
         note: 'Entrega no curral.',
+        en: { shortLabel: 'EXPRESS DELIVERY',
+              text: 'Take it to the corral. The green arrow shows the way.',
+              note: 'Deliver at the corral.' },
         highlight: ['curral'],
     },
     {
@@ -61,6 +73,9 @@ const TUT_STEPS = [
         title: '05. HORA DO LANCHE',
         text: 'Espera virar burger (3s) e absorve com o feixe. Recarrega COMBUSTÍVEL.',
         note: 'Coleta um burger.',
+        en: { shortLabel: 'SNACK TIME',
+              text: 'Wait for it to become a burger (3s) and absorb it with the beam. Refills FUEL.',
+              note: 'Collect one burger.' },
         highlight: ['burger_pronto', 'combustivel'],
     },
     {
@@ -69,6 +84,9 @@ const TUT_STEPS = [
         title: '06. REVIDE',
         text: 'Fazendeiro chegou pra revidar! Você fica congelado um instante pra sentir o tranco.',
         note: 'Leva um tiro.',
+        en: { shortLabel: 'PAYBACK',
+              text: 'A farmer came to fight back! You freeze for a moment to feel the hit.',
+              note: 'Take one shot.' },
         highlight: ['farmer', 'combustivel'],
     },
     {
@@ -77,6 +95,9 @@ const TUT_STEPS = [
         title: '07. PEGANDO O FAZENDEIRO',
         text: 'Joga o feixe nele igual numa vaca — ele vem junto.',
         note: 'Captura um fazendeiro.',
+        en: { shortLabel: 'GRABBING THE FARMER',
+              text: 'Throw the beam on him like a cow — he comes along.',
+              note: 'Capture a farmer.' },
         highlight: ['farmer'],
     },
     {
@@ -85,6 +106,9 @@ const TUT_STEPS = [
         title: '08. ARREMESSO NAS PEDRAS',
         text: 'Com ele preso, voa rápido contra uma PEDRA. KO instantâneo!',
         note: 'Mata batendo numa rocha.',
+        en: { shortLabel: 'ROCK TOSS',
+              text: 'With him caught, fly fast into a ROCK. Instant KO!',
+              note: 'Kill him against a rock.' },
         highlight: ['farmer', 'rock'],
     },
     {
@@ -93,6 +117,9 @@ const TUT_STEPS = [
         title: '09. ESQUIVA DE TORPEDOS',
         text: 'MECHAS disparam torpedos perseguidores! Eles perdem o rastro em uns segundos — voa em curva pra despistar.',
         note: 'Esquiva de 5 torpedos.',
+        en: { shortLabel: 'TORPEDO DODGE',
+              text: 'MECHAS fire homing torpedoes! They lose track after a few seconds — fly in curves to shake them.',
+              note: 'Dodge 5 torpedoes.' },
         highlight: ['atirador'],
     },
     {
@@ -101,11 +128,21 @@ const TUT_STEPS = [
         title: '10. ABATER MECHA',
         text: 'Pega um fazendeiro no feixe e arremessa contra o MECHA. Ou guia um torpedo até ele — fogo amigo vale ponto!',
         note: 'Derrota 1 mecha.',
+        en: { shortLabel: 'TAKE DOWN A MECHA',
+              text: 'Grab a farmer with the beam and hurl him at the MECHA. Or guide a torpedo into it — friendly fire counts!',
+              note: 'Defeat 1 mecha.' },
         highlight: ['atirador'],
     },
 ];
 
 Object.assign(Jogo.prototype, {
+
+    // i18n: EN default; PT quando dbg.behavior.lang === 'pt'. Cada etapa
+    // guarda os textos PT no corpo e os EN em step.en.
+    _tutLoc(step) {
+        if ((this.dbg?.behavior?.lang || 'en') === 'pt' || !step.en) return step;
+        return step.en;
+    },
 
     _setupTutorial() {
         this.tutorialMode = true;
@@ -128,7 +165,12 @@ Object.assign(Jogo.prototype, {
             if (f && f.scene) { f._destroyed = true; f.destroy(); }
         });
         this.farmers = [];
-        (this.shooters || []).slice().forEach(t => { if (t && t.scene) t.destroy(); });
+        // Shooters pós-F2 são objetos {sprite,...} — destruir o SPRITE
+        // (t.destroy() era no-op e deixava mechas órfãos na tela; a sombra
+        // se auto-limpa no _updateShadows quando o sprite morre)
+        (this.shooters || []).slice().forEach(t => {
+            if (t && t.sprite && t.sprite.scene) t.sprite.destroy();
+        });
         this.shooters = [];
 
         // Removes cows existentes — only spawns na etapa ABDUCT (with 50 globais)
@@ -291,7 +333,7 @@ Object.assign(Jogo.prototype, {
                 if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5) && !this._tutDamageTaken) {
                     this._tutDamageTaken = true;
                     this._tutFreezeNave = false;
-                    this._tutShowSuccess('TIRO RECEBIDO');
+                    this._tutShowSuccess(this.dbg?.behavior?.lang === 'pt' ? 'TIRO RECEBIDO' : 'SHOT TAKEN');
                     this.time.delayedCall(1500, () => {
                         if (this._tutStepIdx !== null && TUT_STEPS[this._tutStepIdx]?.key === 'TAKE_DAMAGE') {
                             this._tutAdvance();
@@ -339,6 +381,7 @@ Object.assign(Jogo.prototype, {
                     this._tutStepInit = 'DODGE_TORPEDOS';
                     this._tutDodgeBase = this._torpedoesDodged || 0;
                 }
+                if ((this.shooters || []).length === 0) this._tutSpawnMecha();
                 // Seta pro mecha mais perto — o step pede pra ir provocar
                 let best = null, bd = Infinity;
                 for (const at of (this.shooters || [])) {
@@ -356,6 +399,7 @@ Object.assign(Jogo.prototype, {
                     this._tutStepInit = 'KILL_SHOOTER';
                     this._tutShooterBase = this.shootersTotal || 0;
                 }
+                if ((this.shooters || []).length === 0) this._tutSpawnMecha();
                 // Garante farmer vivo pra arremessar + seta pro mecha mais perto
                 const vivos = (this.farmers || []).filter(f => f.scene && !f._dying);
                 if (vivos.length === 0) this._tutSpawnFazendeiro();
@@ -393,6 +437,29 @@ Object.assign(Jogo.prototype, {
         if (!this._createFarmer) return;
         const cx = this.ufo.x, cy = this.ufo.y;
         this._createFarmer(cx + 350, cy - 150);
+    },
+
+    // Mecha único pro tutorial — o _setupTutorial limpa os 6 do mapa, então
+    // os passos 09 (torpedos) e 10 (abate) spawnam o próprio alvo por perto.
+    // Sem isto os dois passos travavam em soft-lock (sem mecha = sem torpedo).
+    _tutSpawnMecha() {
+        let ax = this.ufo.x + 520, ay = this.ufo.y;
+        for (let i = 0; i < 20; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const tx2 = Phaser.Math.Clamp(this.ufo.x + Math.cos(ang) * 520, 400, 7600);
+            const ty2 = Phaser.Math.Clamp(this.ufo.y + Math.sin(ang) * 520, 400, 5600);
+            if (!this._isWaterAt || !this._isWaterAt(tx2, ty2)) { ax = tx2; ay = ty2; break; }
+        }
+        const skin = 'blue';
+        const spr = this.add.image(ax, ay, 'mecha_atlas', `mecha_${skin}_S`).setDepth(2);
+        spr.setScale(80 / spr.height);
+        this._attachSombra(spr, { rx: 16, ry: 5.5, alpha: 0.40, offY: 33, offX: 2 });
+        this.shooters.push({
+            x: ax, y: ay, sprite: spr, skin,
+            dir: 'S', awake: false,
+            swayPhase: Math.random() * Math.PI * 2,
+            cooldown: 800,
+        });
     },
 
     // Spawns N cows em circulo ao redor da ship (raios variados)
@@ -597,7 +664,8 @@ Object.assign(Jogo.prototype, {
         // Calcula height dinamica: header + N etapas + bloco expandido current
         const LINE_H = 18;
         const HEADER_H = 30;
-        const EXPANDED_LINES = Math.ceil(step.text.length / 36) + 2;  // text + note
+        const loc = this._tutLoc(step);
+        const EXPANDED_LINES = Math.ceil(loc.text.length / 36) + 2;  // text + note
         const totalH = HEADER_H + (TUT_STEPS.length * LINE_H) + (EXPANDED_LINES * 12) + 18;
         const by = PAD_Y;
 
@@ -631,7 +699,7 @@ Object.assign(Jogo.prototype, {
             const icon = isDone ? '●' : (isCurrent ? '◉' : '○');
             const color = isDone ? '#446655' : (isCurrent ? '#aaffcc' : '#447766');
             const num   = String(i + 1).padStart(2, '0');
-            const label = `${icon} ${num}. ${s.shortLabel}`;
+            const label = `${icon} ${num}. ${this._tutLoc(s).shortLabel}`;
             const t = this.add.text(bx + PAD_X, cursorY, label, {
                 fontSize: '13px', fill: color,
                 fontStyle: isCurrent ? 'bold' : 'normal',
@@ -642,7 +710,7 @@ Object.assign(Jogo.prototype, {
 
             // Etapa atual: expande com text + note
             if (isCurrent) {
-                const tBody = this.add.text(bx + PAD_X + 14, cursorY + 2, step.text, {
+                const tBody = this.add.text(bx + PAD_X + 14, cursorY + 2, loc.text, {
                     fontSize: '12px', fill: '#88ddaa',
                     fontFamily: FONT,
                     wordWrap: { width: BOX_W - PAD_X*2 - 14 }
@@ -650,7 +718,7 @@ Object.assign(Jogo.prototype, {
                 items.push(tBody);
                 cursorY += tBody.height + 4;
 
-                const tNote = this.add.text(bx + PAD_X + 14, cursorY, '▸ ' + step.note, {
+                const tNote = this.add.text(bx + PAD_X + 14, cursorY, '▸ ' + loc.note, {
                     fontSize: '12px', fill: '#66aa88', fontStyle: 'italic',
                     fontFamily: FONT,
                     wordWrap: { width: BOX_W - PAD_X*2 - 14 }
@@ -721,7 +789,7 @@ Object.assign(Jogo.prototype, {
 
         const bg = this.add.rectangle(w/2, h/2 - 10, 400, 110, 0x000a04, 0.94)
             .setScrollFactor(0).setDepth(508).setStrokeStyle(2, 0x00ff55, 1);
-        const txt = this.add.text(w/2, h/2 - 26, '✓ TUTORIAL CONCLUÍDO!', {
+        const txt = this.add.text(w/2, h/2 - 26, (this.dbg?.behavior?.lang === 'pt' ? '✓ TUTORIAL CONCLUÍDO!' : '✓ TUTORIAL COMPLETE!'), {
             fontSize: '20px', fill: '#00ff55', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(510);
         const sub = this.add.text(w/2, h/2 + 8, 'Agora você está pronto para jogar.', {
@@ -730,7 +798,7 @@ Object.assign(Jogo.prototype, {
 
         const btn = this.add.rectangle(w/2, h/2 + 38, 200, 36, 0x00dd44)
             .setScrollFactor(0).setDepth(509).setInteractive({ useHandCursor: true });
-        const btnTxt = this.add.text(w/2, h/2 + 38, 'JOGAR AGORA', {
+        const btnTxt = this.add.text(w/2, h/2 + 38, (this.dbg?.behavior?.lang === 'pt' ? 'JOGAR AGORA' : 'PLAY NOW'), {
             fontSize: '13px', fill: '#001a08', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(510);
         btn.on('pointerover', () => btn.setFillStyle(0x44ff88));
