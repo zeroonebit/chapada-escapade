@@ -9,9 +9,10 @@ Object.assign(Jogo.prototype, {
         let v = this.matter.add.sprite(x, y, tex);
         v.setFixedRotation();  // without this, collision with beam/shooter deita o bicho de lado
         // setDisplaySize force size visual fixo (anim frames 68px e static 180px viram mesma scale)
-        // pig 59 = 68 × (2.6/3.0) — proporção quad Bevy pig/cow
-        const baseSize = tipo === 'bull' ? 78 : (tipo === 'pig' ? 59 : 68);
-        const sizeScale = tipo === 'bull' ? ((this.dbg?.scale?.bull) ?? 3.0) : ((this.dbg?.scale?.cow) ?? 1.0);
+        // PARIDADE BEVY (config live do user × 16px/u): cow 3.0u×1.75=84px,
+        // bull 4.8u×1.25=96px, pig 2.6u×1.25=52px. Sliders agora partem de 1.0.
+        const baseSize = tipo === 'bull' ? 96 : (tipo === 'pig' ? 52 : 84);
+        const sizeScale = tipo === 'bull' ? ((this.dbg?.scale?.bull) ?? 1.0) : ((this.dbg?.scale?.cow) ?? 1.0);
         const size = baseSize * sizeScale;
         v.setDisplaySize(size, size);
         const mass = tipo === 'bull' ? 3.2 : 2;
@@ -62,7 +63,7 @@ Object.assign(Jogo.prototype, {
         const tex = variants[Phaser.Math.Between(0, variants.length-1)];
         const b = this.matter.add.image(x, y, tex, null, { shape: { type: 'circle', radius: 10 } });
         const burgerScale = this.dbg?.scale?.burger ?? 1.0;
-        b.setDisplaySize(28 * burgerScale, 28 * burgerScale);
+        b.setDisplaySize(35 * burgerScale, 35 * burgerScale); // BURGER_QUAD 2.2u ×16px/u (Bevy)
         b.setFrictionAir(0.015).setMass(0.5).setDepth(3).setCollisionCategory(2);
         b.isBurger = true;
         b.valorBurger = 100;
@@ -308,7 +309,7 @@ Object.assign(Jogo.prototype, {
         const tex = variants[Phaser.Math.Between(0, variants.length-1)];
         v.setTexture(tex);
         const burgerScale = this.dbg?.scale?.burger ?? 1.0;
-        v.setDisplaySize(28 * burgerScale, 28 * burgerScale);
+        v.setDisplaySize(35 * burgerScale, 35 * burgerScale); // BURGER_QUAD 2.2u ×16px/u (Bevy)
         v.isBurger = true;
         v.setMass(0.5).setDepth(3);
         this.burgerCount++;

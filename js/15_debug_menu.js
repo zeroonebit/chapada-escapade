@@ -82,10 +82,13 @@ const DBG_DEFAULTS = {
         beam:     true,
         scenery:  true,
     },
+    // PARIDADE BEVY: os tamanhos-alvo agora estão BAKED nos baseSizes
+    // (cow 84 / bull 96 / pig 52 / farmer 100 / mecha 80 / ufo 96) —
+    // sliders partem todos de 1.0. Migração _parityV2 reseta valores velhos.
     scale: {
         cow:    1.0,
-        bull:   3.0,
-        farmer: 2.0,
+        bull:   1.0,
+        farmer: 1.0,
         beam:   1.0,
         ufo:    1.0,
         burger: 1.0,
@@ -117,8 +120,8 @@ const DBG_DEFAULTS = {
         beamSparks:     true,
         beamShake:      true,
         fancyExplosion: true,
-        wangtiles:      true,
-        tileStyle:      'dirt_grass_32',  // 'test' | 'dirt_grass_32' | 'ocean_sand_32'
+        wangtiles:      false,  // OFF (parity Bevy 07-07 "motor wang arrancado") — terreno = canvas procedural
+        tileStyle:      'dirt_grass_32',  // 'test' | 'dirt_grass_32' | 'ocean_sand_32' (só com wangtiles on)
         wangDebug:      false,            // overlay com numero do tile em cada celula
         timeOfDay:      'day',     // dawn|day|dusk|sunset|night|midnight
         timeAutoCycle:  false,     // ciclo auto a each 60s
@@ -137,6 +140,11 @@ const DBG_DEFAULTS = {
         vertCaPasses:   4,     // smoothing iterations (0=raw noise, 6+=convergencia)
         autoSortTiles:  true,  // runtime auto-sort por color sampling (cr31)
         island:         true,  // F3: ilha fBm (parity Bevy) — off = mapa retangular legado
+        // Defaults do gerador da ilha = Bevy debug_menu.rs (visíveis aqui
+        // pra não ficarem enterrados no fallback inline do 04_scenery)
+        noiseScale:     14,    // escala fBm da elevação
+        waterLevel:     0.30,  // e < isto = água (0.34 do Bevy dava 43% no grid 4:3)
+        moisture:       0.30,  // m < isto = árido — CAUDA do fBm, não mediana!
         activeMap:      '',    // nome do map preset salvo no PixaPro (vazio = procedural live)
     },
 };
@@ -168,8 +176,21 @@ Object.assign(Jogo.prototype, {
                 fx:       Object.assign({}, DBG_DEFAULTS.fx,       migrated.fx),
                 proc:     Object.assign({}, DBG_DEFAULTS.proc,     migrated.proc),
             };
+            // Migração PARITY V2 (one-shot): os tamanhos-alvo Bevy foram
+            // baked nos baseSizes, então sliders salvos na era antiga
+            // (bull 3.0, farmer 2.0...) inflariam tudo 2-3×. Reseta scale e
+            // os 3 knobs do gerador pra os novos defaults uma única vez.
+            if (!raw._parityV2) {
+                this.dbg.scale = Object.assign({}, DBG_DEFAULTS.scale);
+                this.dbg.proc.noiseScale = DBG_DEFAULTS.proc.noiseScale;
+                this.dbg.proc.waterLevel = DBG_DEFAULTS.proc.waterLevel;
+                this.dbg.proc.moisture   = DBG_DEFAULTS.proc.moisture;
+                this.dbg.fx.wangtiles    = false;  // terreno canvas vira o default
+            }
+            this.dbg._parityV2 = true;
         } catch (e) {
             this.dbg = JSON.parse(JSON.stringify(DBG_DEFAULTS));
+            this.dbg._parityV2 = true;
         }
     },
 
@@ -867,7 +888,7 @@ Object.assign(Jogo.prototype, {
                 f.setDisplaySize(60 * val, 60 * val);
             });
         } else if (key === 'ufo' && this.ufo?.scene) {
-            this.ufo.setDisplaySize(80 * val, 80 * val);
+            this.ufo.setDisplaySize(96 * val, 96 * val);
         } else if (key === 'burger' && this.cows) {
             this.cows.forEach(b => {
                 if (!b?.scene || !b.isBurger) return;

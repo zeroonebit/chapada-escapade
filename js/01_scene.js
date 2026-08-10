@@ -169,7 +169,7 @@ class Jogo extends Phaser.Scene {
         this.ufo = this.matter.add.sprite(W/2, H/2, 'nave', null, {shape:{type:'circle',radius:20}});
         this.ufo.setFrictionAir(0.04).setMass(5).setDepth(10).setCollisionCategory(4).setCollidesWith([1]);
         const ufoScale = this.dbg?.scale?.ufo ?? 1.0;
-        this.ufo.setDisplaySize(80 * ufoScale, 80 * ufoScale);
+        this.ufo.setDisplaySize(96 * ufoScale, 96 * ufoScale); // UFO_QUAD 8u ×0.75 (user) ×16px/u
         // MOBILE_MODE: ufo com inercia alta (frictionAir baixo) + bounce
         // total nas bordas (matter combina restitution via Math.max — walls
         // default=0, ship=1 -> bounce without perda de energia).
@@ -215,6 +215,7 @@ class Jogo extends Phaser.Scene {
         this._gameOverFx         = null;
         this._gameOverSmokeEvent = null;
         this._gameOverDebrisSmoke = null;
+        this._cinematicHide      = false;  // religa cockpit/quest log no restart
         this.energiaMax = 100;
         this.energiaLed = 100;
         this.energiaDrain = 5;

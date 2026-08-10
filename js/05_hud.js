@@ -223,6 +223,9 @@ Object.assign(Jogo.prototype, {
     // Por frame: células discretas + lente do emissor + joystick vivo
     _updateCockpit() {
         if (!this._cockpit) return;
+        // Cinematic (game over/vitória): não religar knob/lente/células —
+        // _hideForCinematic escondeu tudo e o update loop continua rodando
+        if (this._cinematicHide) return;
         const w = this.scale.width, h = this.scale.height;
         if (this._ckW !== w || this._ckH !== h) {
             this._ckW = w; this._ckH = h;

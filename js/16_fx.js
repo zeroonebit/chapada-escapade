@@ -14,11 +14,10 @@ void main() {
     vec2 c = uv - 0.5;
     float r2 = dot(c, c);
     vec2 d = c * (1.0 + strength * r2 * 1.6) + 0.5;
-    if (d.x < 0.0 || d.x > 1.0 || d.y < 0.0 || d.y > 1.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    } else {
-        gl_FragColor = texture2D(uMainSampler, d);
-    }
+    // Fora de [0,1]: CLAMP na borda em vez de pintar preto — a moldura preta
+    // curva em volta da tela inteira era isto (parity Bevy CRT "edge blur
+    // SEM borda preta")
+    gl_FragColor = texture2D(uMainSampler, clamp(d, 0.0, 1.0));
 }`;
 
 if (typeof Phaser !== 'undefined' && Phaser.Renderer?.WebGL?.Pipelines?.PostFXPipeline) {

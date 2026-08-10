@@ -217,6 +217,9 @@ Object.assign(Jogo.prototype, {
         if (this._metaOnVictory && !this.gameOver) this._metaOnVictory();
         this.gameOver = true;
         this._releaseAll();
+        // Esconde cockpit/quest log/beam — sem isto o HUD (depth 200+) fica
+        // POR CIMA do overlay da vitória (199-201) e knob/lente vazam
+        this._hideForCinematic();
 
         const w = this.scale.width, h = this.scale.height;
 
@@ -499,12 +502,20 @@ Object.assign(Jogo.prototype, {
 
     // Esconde HUD, indicators, beam, todos enemies, corral decor, tutorial
     _hideForCinematic() {
+        // Flag lida por _updateCockpit/_updateMinimap: sem ela o update loop
+        // religava knob/lente/ícones do cockpit todo frame durante o cinematic
+        this._cinematicHide = true;
         if (this.hud) {
             for (const k in this.hud) {
                 const o = this.hud[k];
                 if (o && typeof o.setVisible === 'function') o.setVisible(false);
+                // ckIcons é ARRAY (o check acima não pega) — esconde um a um
+                if (Array.isArray(o)) o.forEach(e => { if (e && e.setVisible) e.setVisible(false); });
             }
         }
+        // Quest log + moedas do F6 (vivem na cena, não no this.hud)
+        if (this._questTexts) this._questTexts.forEach(t => { if (t && t.setVisible) t.setVisible(false); });
+        if (this.scoreText) this.scoreText.setVisible(false);
         if (this.indicatorArrow) this.indicatorArrow.setVisible(false);
         if (this.trailGraphic) this.trailGraphic.setVisible(false);
         if (this.beam) this.beam.setVisible(false);

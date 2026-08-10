@@ -33,9 +33,16 @@ Object.assign(Jogo.prototype, {
     _seedIslandGrid(COLS, ROWS, proc, mapCfg) {
         const seed = (Math.random() * 0xffffffff) >>> 0;
         this._islandSeed = seed;
-        const scale  = mapCfg.noiseScale ?? proc.noiseScale ?? 13;
+        // Defaults = Bevy debug_menu.rs (14/0.34/0.30). moisture 0.30 fica na
+        // CAUDA da distribuição do fBm (média ~0.5): árido vira 2-3 manchas
+        // localizadas. O 0.47 antigo era a MEDIANA → ilha inteira flipava
+        // grama/terra por seed (bug "terreno quebrado" do Pages).
+        // waterLevel 0.30 (≠ Bevy 0.34): o grid 4:3 com recorte ELÍPTICO já
+        // perde mais terra pro rim que o círculo do Bevy num grid quadrado —
+        // 0.34 aqui dava 43% de água (F3 calibrou 0.30 ≈ 32%).
+        const scale  = mapCfg.noiseScale ?? proc.noiseScale ?? 14;
         const tWater = mapCfg.waterLevel ?? proc.waterLevel ?? 0.30;
-        const tMoist = mapCfg.moisture   ?? proc.moisture   ?? 0.47;
+        const tMoist = mapCfg.moisture   ?? proc.moisture   ?? 0.30;
         const moistSeed = (seed + 0x9E3779B9) >>> 0;
         const grid = [];
         for (let y = 0; y < ROWS; y++) {
@@ -49,6 +56,193 @@ Object.assign(Jogo.prototype, {
             }
         }
         return grid;
+    },
+
+    // EDT euclidiano exato (Felzenszwalb & Huttenlocher, parábolas 1D em
+    // dist², 2 passes col→row) — port de distance_from_euclid (terrain.rs).
+    _edtFromWater(grid, COLS, ROWS) {
+        return this._edtFrom(grid, COLS, ROWS, (c) => c === 0);
+    },
+    _edtFrom(grid, COLS, ROWS, isSource) {
+        const INF = 1e12;
+        const f = [];
+        for (let y = 0; y < ROWS; y++) {
+            f[y] = [];
+            for (let x = 0; x < COLS; x++) f[y][x] = isSource(grid[y][x]) ? 0 : INF;
+        }
+        const edt1d = (src, out) => {
+            const n = src.length;
+            const v = new Array(n).fill(0), z = new Array(n + 1).fill(0);
+            let k = 0; z[0] = -1e20; z[1] = 1e20;
+            for (let q = 1; q < n; q++) {
+                let s;
+                for (;;) {
+                    const p = v[k];
+                    s = ((src[q] + q * q) - (src[p] + p * p)) / (2 * (q - p));
+                    if (s <= z[k] && k > 0) k--;
+                    else break;
+                }
+                k++; v[k] = q; z[k] = s; z[k + 1] = 1e20;
+            }
+            k = 0;
+            for (let q = 0; q < n; q++) {
+                while (z[k + 1] < q) k++;
+                const p = v[k];
+                out[q] = (q - p) * (q - p) + src[p];
+            }
+        };
+        const colIn = new Array(ROWS), buf = new Array(Math.max(ROWS, COLS));
+        for (let x = 0; x < COLS; x++) {
+            for (let y = 0; y < ROWS; y++) colIn[y] = f[y][x];
+            edt1d(colIn, buf);
+            for (let y = 0; y < ROWS; y++) f[y][x] = buf[y];
+        }
+        const rowIn = new Array(COLS);
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) rowIn[x] = f[y][x];
+            edt1d(rowIn, buf);
+            for (let x = 0; x < COLS; x++) f[y][x] = Math.sqrt(buf[x]);
+        }
+        return f;
+    },
+
+    // ── TERRENO SEM TILES (parity Bevy pós-07-07: "MOTOR WANG ARRANCADO") ──
+    // Uma ÚNICA textura canvas pro mundo inteiro, pintada POR PIXEL com
+    // domain warp (as bordas de célula somem, viram costa orgânica — o
+    // truque do terrain_proc.wgsl em 2D). Água com profundidade + espuma
+    // na costa, praia com faixa molhada, grama/terra com dithering fBm.
+    // Substitui ~7k imagens de tile por 1 image → FPS do Pages agradece.
+    _renderTerrainCanvas(grid, COLS, ROWS, CELL, W, H) {
+        const t0 = performance.now();
+        const RES = 8;                       // 1 texel = 8 world px (cell 80 = 10 texels)
+        const CW = Math.round(W / RES), CH2 = Math.round(H / RES);
+        const seed = (this._islandSeed || 1) >>> 0;
+        const distW = this._distWater;       // células de terra: dist da água
+        const distL = this._edtFrom(grid, COLS, ROWS, (c) => c !== 0);  // células de água: dist da terra
+        const ocean = this._oceanMask;
+
+        // Paleta (tons Bevy/cerrado)
+        const PAL = {
+            oceanDeep:  [18, 42, 66],   oceanShal: [43, 93, 126],
+            lake:       [47, 106, 143], foam:      [196, 226, 232],
+            sand:       [216, 192, 132], sandWet:  [178, 148, 96],
+            grassA:     [110, 162, 77],  grassB:   [92, 143, 66],
+            dirtA:      [160, 104, 72],  dirtB:    [140, 88, 58],
+        };
+        const canvas = document.createElement('canvas');
+        canvas.width = CW; canvas.height = CH2;
+        const ctx = canvas.getContext('2d');
+        const img = ctx.createImageData(CW, CH2);
+        const px = img.data;
+        const noise = (x, y, s) => this._terrNoise(x, y, s);  // 1 octave (barato)
+        // ±0.85 célula = 68px: derrete o degrau de 80px sem descolar demais
+        // do grid lógico (barreira da nave tolera ~1 célula de mismatch —
+        // mesmo trade do Bevy: "margem de fronteira no scatter, warp ±8u")
+        const WARP = 0.85;                   // amplitude do warp em CÉLULAS
+        const WSCALE = 2.6;                  // escala do noise do warp (células)
+
+        for (let ty = 0; ty < CH2; ty++) {
+            const gy0 = (ty * RES) / CELL;   // pos em células (float)
+            for (let tx = 0; tx < CW; tx++) {
+                const gx0 = (tx * RES) / CELL;
+                // Domain warp: amostra deslocada por noise coerente
+                const wx = gx0 + (noise(gx0 / WSCALE, gy0 / WSCALE, seed ^ 0xA11CE) - 0.5) * 2 * WARP;
+                const wy = gy0 + (noise(gx0 / WSCALE + 37.7, gy0 / WSCALE + 11.3, seed ^ 0xB0B0) - 0.5) * 2 * WARP;
+                let cx = Math.floor(wx), cy = Math.floor(wy);
+                if (cx < 0) cx = 0; else if (cx >= COLS) cx = COLS - 1;
+                if (cy < 0) cy = 0; else if (cy >= ROWS) cy = ROWS - 1;
+                const t = grid[cy][cx];
+                // Dither/variação: hash por texel + fBm suave por área
+                const h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
+                const dth = ((h >>> 8) & 0xff) / 255;         // 0..1
+                let r, g2, b;
+                if (t === 0) {
+                    const dl = distL[cy][cx];                  // profundidade (células)
+                    const isOc = ocean ? ocean[cy][cx] : true;
+                    if (dl <= 1 && dth > 0.55 - (1 - dl) * 0.2) {
+                        [r, g2, b] = PAL.foam;                 // espuma na linha da costa
+                    } else if (!isOc) {
+                        [r, g2, b] = PAL.lake;
+                        const k = Math.min(1, dl / 3) * 0.25;
+                        r *= (1 - k); g2 *= (1 - k); b *= (1 - k);
+                    } else {
+                        // gradiente raso → fundo (cap 6 células)
+                        const k = Math.min(1, dl / 6);
+                        r  = PAL.oceanShal[0] + (PAL.oceanDeep[0] - PAL.oceanShal[0]) * k;
+                        g2 = PAL.oceanShal[1] + (PAL.oceanDeep[1] - PAL.oceanShal[1]) * k;
+                        b  = PAL.oceanShal[2] + (PAL.oceanDeep[2] - PAL.oceanShal[2]) * k;
+                        // traços de onda sutis — 2 noises multiplicados
+                        // quebram as bandas contínuas (ficava listrado)
+                        const wv = noise(gx0 / 1.6, gy0 / 0.9, seed ^ 0x77A7);
+                        const wm = noise(gx0 / 4.2, gy0 / 4.2, seed ^ 0x3EA1);
+                        if (wv > 0.74 && wm > 0.45 && k < 0.8) { r += 24; g2 += 28; b += 28; }
+                    }
+                } else if (t === 1) {
+                    const dw = distW ? distW[cy][cx] : 3;
+                    const wet = Math.max(0, 1 - dw / 2.2);     // faixa molhada rente à água
+                    r  = PAL.sand[0] + (PAL.sandWet[0] - PAL.sand[0]) * wet;
+                    g2 = PAL.sand[1] + (PAL.sandWet[1] - PAL.sand[1]) * wet;
+                    b  = PAL.sand[2] + (PAL.sandWet[2] - PAL.sand[2]) * wet;
+                    const gr = (dth - 0.5) * 14;               // grão
+                    r += gr; g2 += gr; b += gr;
+                } else {
+                    const A = (t === 2) ? PAL.grassA : PAL.dirtA;
+                    const B = (t === 2) ? PAL.grassB : PAL.dirtB;
+                    // manchas orgânicas 2-tons (fBm binário + dither na fronteira)
+                    const m = noise(gx0 / 3.2, gy0 / 3.2, seed ^ (t === 2 ? 0x6EA5 : 0xD1F7));
+                    const mix = (m + (dth - 0.5) * 0.22) > 0.5 ? 1 : 0;
+                    r = mix ? B[0] : A[0]; g2 = mix ? B[1] : A[1]; b = mix ? B[2] : A[2];
+                    const gr = (((h >>> 16) & 0xff) / 255 - 0.5) * 10;
+                    r += gr; g2 += gr; b += gr;
+                }
+                const i = (ty * CW + tx) * 4;
+                px[i] = r; px[i + 1] = g2; px[i + 2] = b; px[i + 3] = 255;
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+        if (this.textures.exists('terrain_canvas')) this.textures.remove('terrain_canvas');
+        this.textures.addCanvas('terrain_canvas', canvas);
+        this.add.image(W / 2, H / 2, 'terrain_canvas')
+            .setDisplaySize(W, H).setDepth(-0.5);
+        console.log('[TERRAIN] canvas', CW + 'x' + CH2, 'em', Math.round(performance.now() - t0) + 'ms');
+    },
+
+    // QUINTAIS de curral (port terrain.rs:1558+): escolhe os spots ANTES do
+    // render e carimba um disco de TERRA wobbled sob cada um — no Bevy é
+    // daqui que vem quase todo o dirt visível (moisture 0.30 deixa o árido
+    // raro). Easing: costa WANT 16 → MIN 9 células (nunca abaixo — currais
+    // na borda eram reclamação do user), separação 1360→880px (85→55u).
+    _stampCorralYards(grid, COLS, ROWS, CELL) {
+        const spots = [];
+        if (!this._distWater) { this._corralSpots = spots; return; }
+        const yardSeed = ((this._islandSeed || 1) ^ 0xD1B7) >>> 0;
+        let tries = 0;
+        while (spots.length < 5 && tries < 6000) {
+            tries++;
+            const sepEase   = Math.min(1, tries / 1200);
+            const coastEase = Math.max(0, Math.min(1, (tries - 1500) / 3000));
+            const sep   = 1360 - 480 * sepEase;
+            const coast = 16 + (9 - 16) * coastEase;
+            const gy = Phaser.Math.Between(2, ROWS - 3);
+            const gx = Phaser.Math.Between(2, COLS - 3);
+            if (grid[gy][gx] !== 2) continue;
+            if (this._distWater[gy][gx] < coast) continue;
+            const px = gx * CELL + CELL / 2, py = gy * CELL + CELL / 2;
+            if (spots.some(p => Phaser.Math.Distance.Between(px, py, p.x, p.y) < sep)) continue;
+            const baseR = 3 + Math.random() * 1.5;
+            for (let dr = -6; dr <= 6; dr++) {
+                for (let dc = -6; dc <= 6; dc++) {
+                    const rr = gy + dr, cc = gx + dc;
+                    if (rr < 0 || cc < 0 || rr >= ROWS || cc >= COLS) continue;
+                    const d = Math.sqrt(dr * dr + dc * dc);
+                    const wobble = this._terrFbm(cc / 3, rr / 3, yardSeed) * 1.6;
+                    if (d < baseR + wobble && grid[rr][cc] === 2) grid[rr][cc] = 3;
+                }
+            }
+            spots.push({ x: px, y: py });
+        }
+        if (spots.length < 5) console.warn('[CORRAL] só', spots.length, 'de 5 quintais couberam');
+        this._corralSpots = spots;
     },
 
     // Pós-CA (ordem do Bevy): recorte ELÍPTICO da ilha com rim ondulado por
@@ -69,24 +263,19 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // dist_water: BFS 4-conn a partir de TODA célula de água
-        const INF = 0xffff;
-        const dist = [], queue = [];
+        // dist_water: EUCLIDIANO (Felzenszwalb 2-pass, port de
+        // distance_from_euclid do Bevy) + wobble fBm de costa. O BFS 4-conn
+        // antigo media Manhattan → isolinhas viravam octógono ("ângulos
+        // quase retos") e a praia afinava nas diagonais.
+        const dist = this._edtFromWater(grid, COLS, ROWS);
+        const coastSeed = ((this._islandSeed || 1) ^ 0xC0A57) >>> 0;
         for (let y = 0; y < ROWS; y++) {
-            dist[y] = [];
             for (let x = 0; x < COLS; x++) {
-                if (grid[y][x] === 0) { dist[y][x] = 0; queue.push([y, x]); }
-                else dist[y][x] = INF;
+                if (dist[y][x] > 0) {
+                    const w = (this._terrFbm(x / 3.5, y / 3.5, coastSeed) - 0.5) * 1.5;
+                    dist[y][x] = Math.round(Math.max(0.51, dist[y][x] + w));
+                }
             }
-        }
-        let qi = 0;
-        while (qi < queue.length) {
-            const [y, x] = queue[qi++];
-            const d0 = dist[y][x];
-            if (y > 0        && dist[y-1][x] > d0 + 1) { dist[y-1][x] = d0 + 1; queue.push([y-1, x]); }
-            if (y < ROWS - 1 && dist[y+1][x] > d0 + 1) { dist[y+1][x] = d0 + 1; queue.push([y+1, x]); }
-            if (x > 0        && dist[y][x-1] > d0 + 1) { dist[y][x-1] = d0 + 1; queue.push([y, x-1]); }
-            if (x < COLS - 1 && dist[y][x+1] > d0 + 1) { dist[y][x+1] = d0 + 1; queue.push([y, x+1]); }
         }
         this._distWater = dist;
 
@@ -227,8 +416,10 @@ Object.assign(Jogo.prototype, {
                             counts[grid[ny][nx]]++;
                         }
                     }
-                    // Pega o tipo com mais votos (tiebreak: tipo atual ou maior id)
-                    let best = grid[y][x], bestCount = -1;
+                    // Tipo com mais votos — empate mantém o ATUAL (parity
+                    // Rust; o argmax antigo deixava o menor id vencer = viés
+                    // pra água nos empates)
+                    let best = grid[y][x], bestCount = counts[best];
                     for (let t = 0; t < 4; t++) {
                         if (counts[t] > bestCount) { bestCount = counts[t]; best = t; }
                     }
@@ -239,7 +430,13 @@ Object.assign(Jogo.prototype, {
         }
 
         // Pós-CA da ilha (ordem do Bevy: seed → CA → rim/praia/masks)
-        if (useIsland) this._applyIslandPost(grid, COLS, ROWS);
+        this._corralSpots = null;
+        if (useIsland) {
+            this._applyIslandPost(grid, COLS, ROWS);
+            // Quintais ANTES do render: o dirt carimbado precisa existir no
+            // grid quando os wang tiles forem criados (Bevy: yards → mesh)
+            this._stampCorralYards(grid, COLS, ROWS, CELL);
+        }
 
         // Saves grid to detecção de grass nas cows
         this.terrainGrid = grid;
@@ -304,6 +501,9 @@ Object.assign(Jogo.prototype, {
             // CAMADA BASE: água e areia pintadas por célula (1 Graphics só) —
             // é aqui que a ILHA finalmente aparece. Oceano mais escuro que
             // lago, praia em faixa clara. Terra recebe wang tile por cima.
+            // Backdrop full-world de segurança: tile faltando vira cor de
+            // oceano em vez de buraco preto sobre o void
+            this.add.rectangle(W/2, H/2, W, H, 0x1d4260).setDepth(-0.7);
             const baseGfx = this.add.graphics().setDepth(-0.5);
             const OCEAN_COL = 0x1d4260, LAKE_COL = 0x2f6a8f, SAND_COL = 0xd8c084;
             for (let y = 0; y < ROWS; y++) {
@@ -316,6 +516,59 @@ Object.assign(Jogo.prototype, {
                     } else if (t0 === 1) {
                         baseGfx.fillStyle(SAND_COL, 1);
                         baseGfx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                    }
+                }
+            }
+
+            // CAMADA OCEANO↔PRAIA (dual-layer wang, parity Bevy pré-shader
+            // 2026-07-05: "wang DUAL-LAYER water/sand→set ocean↔sand,
+            // grass/dirt→set dirt↔grass"). Mata a água/areia CHAPADA em
+            // blocos retos — todo cell de água/areia ganha tile com
+            // transição. Cantos: maioria de TERRA (grid>=1) nos vizinhos.
+            const oceanStyle = mapCfg.oceanStyle || 'ocean_sand_32';
+            const useOcean = this.textures.exists(`wang_${oceanStyle}_00`);
+            if (useOcean) {
+                const remapO = (this.dbg?.proc?.autoSortTiles)
+                    ? this._autoSortWangTiles(oceanStyle)
+                    : null;
+                const resolveO = (typeof resolveTileTransform === 'function')
+                    ? (i) => resolveTileTransform(oceanStyle, i)
+                    : (i) => ({ srcIdx: i, rot: 0, flipH: false, flipV: false });
+                const tileTO = [];
+                for (let i = 0; i < 16; i++) tileTO.push(resolveO(i));
+                const cornersO = [];
+                for (let y = 0; y < CH; y++) {
+                    cornersO[y] = [];
+                    for (let x = 0; x < CW; x++) {
+                        let l = 0, n = 0;
+                        if (y > 0    && x > 0)    { n++; if (grid[y-1][x-1] >= 1) l++; }
+                        if (y > 0    && x < COLS) { n++; if (grid[y-1][x]   >= 1) l++; }
+                        if (y < ROWS && x > 0)    { n++; if (grid[y][x-1]   >= 1) l++; }
+                        if (y < ROWS && x < COLS) { n++; if (grid[y][x]     >= 1) l++; }
+                        cornersO[y][x] = (n > 0 && l * 2 >= n) ? 1 : 0;
+                    }
+                }
+                for (let y = 0; y < ROWS; y++) {
+                    for (let x = 0; x < COLS; x++) {
+                        if (grid[y][x] >= 2) continue;  // terra: dirt_grass cuida
+                        const nw = cornersO[y][x],   ne = cornersO[y][x+1];
+                        const sw = cornersO[y+1][x], se = cornersO[y+1][x+1];
+                        const idx = nw + ne*2 + se*4 + sw*8;
+                        const t = tileTO[idx];
+                        const srcIdx = remapO ? remapO[idx] : t.srcIdx;
+                        const key = `wang_${oceanStyle}_${String(srcIdx).padStart(2, '0')}`;
+                        // SEM rot/flip aleatório: tiles PixelLab não são
+                        // rotation-safe (lição Bevy 2026-07-05, hash revertido)
+                        const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
+                            .setDisplaySize(CELL, CELL).setDepth(-0.4);
+                        if (t.rot) img.setAngle(t.rot);
+                        if (t.flipH) img.setFlipX(true);
+                        if (t.flipV) img.setFlipY(true);
+                        // Lago: leve véu claro por cima (distingue do oceano
+                        // sem perder a textura — o tint não clareia)
+                        if (grid[y][x] === 0 && this._oceanMask && !this._oceanMask[y][x]) {
+                            img.setAlpha(0.88);
+                        }
                     }
                 }
             }
@@ -335,40 +588,21 @@ Object.assign(Jogo.prototype, {
                     const srcIdx = remap ? remap[idx] : t.srcIdx;
                     const f = String(srcIdx).padStart(2, '0');
                     const key = useStyle ? `wang_${style}_${f}` : `wang_${f}`;
-                    // Random orientation pra tiles uniformes (cr31 0/15)
-                    let extraRot = 0, extraFH = false, extraFV = false;
-                    if (idx === 0 || idx === 15) {
-                        const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
-                        extraRot = (h & 3) * 90;
-                        extraFH = !!(h & 4);
-                        extraFV = !!(h & 8);
-                    }
+                    // SEM rot/flip aleatório nos uniformes: tiles PixelLab não
+                    // são rotation-safe (lição Bevy 2026-07-05, hash revertido)
                     const img = this.add.image(x*CELL + CELL/2, y*CELL + CELL/2, key)
                         .setDisplaySize(CELL, CELL).setDepth(0);
-                    const finalRot = (t.rot + extraRot) % 360;
-                    if (finalRot) img.setAngle(finalRot);
-                    if (t.flipH !== extraFH) img.setFlipX(true);
-                    if (t.flipV !== extraFV) img.setFlipY(true);
+                    if (t.rot) img.setAngle(t.rot);
+                    if (t.flipH) img.setFlipX(true);
+                    if (t.flipV) img.setFlipY(true);
                 }
             }
             // Re-render overlay caso ja estivesse on antes do scenery
             if (this.dbg?.fx?.wangDebug) this._renderWangDebug();
         } else {
-            // Fallback sem wang: pinta o grid COMPLETO por célula (a ilha
-            // aparece igual — água/areia/grama/terra)
-            this.add.rectangle(W/2, H/2, W, H, 0x6e9b3a).setDepth(-0.6);
-            const terraGfx = this.add.graphics().setDepth(-0.5);
-            const PAL4 = { 0: 0x1d4260, 1: 0xd8c084, 3: 0xa06848 };
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    const t0 = grid[y][x];
-                    if (t0 === 2) continue;  // grama = o verde de fundo
-                    let col = PAL4[t0];
-                    if (t0 === 0 && this._oceanMask && !this._oceanMask[y][x]) col = 0x2f6a8f;
-                    terraGfx.fillStyle(col, 1);
-                    terraGfx.fillRect(x * CELL, y * CELL, CELL, CELL);
-                }
-            }
+            // DEFAULT (parity Bevy pós-07-07, sem tiles): canvas procedural
+            // por pixel com domain warp — ver _renderTerrainCanvas
+            this._renderTerrainCanvas(grid, COLS, ROWS, CELL, W, H);
         }
         // this._setupTerrainShader(W, H);  // re-habilitar when confirmar não trava
 
@@ -425,57 +659,36 @@ Object.assign(Jogo.prototype, {
             return;
         }
 
-        // ── 5. OBSTÁCULOS (preferem dirt/grass, evitam water)
+        // ── 5. SCATTER — PARIDADE BEVY LIVE (scatter.json): o mundo Bevy do
+        // user roda com 7 landmarks ligados de 156 assets — windmill 20u,
+        // water_tower 20u (sem PNG aqui), 4 trucks 10u (idem) e old_truck 7u.
+        // Cactos/arbustos/agaves/barris/dry_turf/church/satellite = OFF lá,
+        // então saem daqui também. Régua mundo-a-mundo: 500u ↔ 8000px = 16px/u.
         const isLand = (px, py) => {
             const cx = Math.floor(px / CELL);
             const cy = Math.floor(py / CELL);
             if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
             return grid[cy][cx] >= 1;  // sand ou above
         };
-        // Pools de assets PixelLab carregados em preload (nat_vege_* e nat_pedra_*)
-        const vegeKeys  = this._natureVegKeys   || [];
-        const rocksKeys = this._natureRocksKeys || [];
-        const pickV = () => vegeKeys[Phaser.Math.Between(0, vegeKeys.length - 1)];
-        const pickP = () => rocksKeys[Phaser.Math.Between(0, rocksKeys.length - 1)];
 
-        // Scale BASE by asset — sources são 64×64 mas conteúdo varia muito
-        // (saguaro high preenche todo, agave preenche pouco). Map manual + jitter ±15%.
-        const SCALE_MAP = {
-            // pedras
-            'boulder_red_cluster': 1.6,   // cluster largo
-            'rock_small_smooth':   1.0,   // pedrinha
-            'rock_pillar_tall':    1.9,   // formação alta
-            // vegetação — saguaros e clusters maiores, dead/dry menores
-            'cactus_saguaro_tall': 2.0,
-            'cactus_saguaro_2':    1.9,
-            'cactus_branching':    1.7,
-            'cactus_medium':       1.3,
-            'cactus_cluster_low':  1.4,
-            'cactus_dead_dry':     1.0,
-            'cactus_dead_vine':    1.0,
-            'agave_dark':          1.3,
-            'bush_round_dense':    1.5,
-            'bush_round':          1.4,
-            'bush_dry':            0.9,
-            'patch_cluster':       1.6,
+        // 5a. PEDRAS — Bevy tem elas off, mas aqui são MECÂNICA (farmer morre
+        // em pedra + tutorial REVIDE). Mantém um set mínimo nos TAMANHOS do
+        // manifest Bevy: rock_small 1.9u=30px, boulder 4u=64px, pillar 5.4u=86px.
+        const ROCK_TARGET = {
+            'nat_rock_rock_small_smooth': 30,
+            'nat_rock_boulder_red_cluster': 64,
+            'nat_rock_rock_pillar_tall': 86,
         };
-        const scaleFor = (texKey) => {
-            // D+R2: prefixo atualizado pos refator (nat_pedra_/nat_vege_ -> nat_rock_/nat_veg_)
-            const name = texKey.replace(/^nat_(rock|veg)_/, '');
-            const base = SCALE_MAP[name] || 1.0;
-            return base * Phaser.Math.FloatBetween(0.85, 1.15);
-        };
-
-        // Coloca uma peça testando overlap (até 12 tentativas), retorna true se conseguiu
+        const rockKeys = Object.keys(ROCK_TARGET).filter(k => this.textures.exists(k));
         const placed = [];
-        const tryPlace = (cx0, cy0, spread, tex, label) => {
-            const sc = scaleFor(tex);
-            const myR = 32 * sc * 0.85;  // radius de bounding circle (source 64×64) — 0.85 allows leve overlap
-            for (let att = 0; att < 12; att++) {
-                const rr = Math.random() * spread, aa = Math.random() * Math.PI * 2;
-                const ox = cx0 + Math.cos(aa) * rr, oy = cy0 + Math.sin(aa) * rr;
+        for (let i = 0; i < 8 && rockKeys.length; i++) {
+            for (let tries = 0; tries < 12; tries++) {
+                const ox = Phaser.Math.Between(300, W - 300);
+                const oy = Phaser.Math.Between(300, H - 300);
                 if (!isLand(ox, oy)) continue;
-                // Checa contra TODAS as peças já colocadas (não only do cluster atual)
+                const tex = rockKeys[Phaser.Math.Between(0, rockKeys.length - 1)];
+                const target = ROCK_TARGET[tex] * Phaser.Math.FloatBetween(0.85, 1.15);
+                const myR = target * 0.45;
                 let collides = false;
                 for (const p of placed) {
                     const dx = p.x - ox, dy = p.y - oy;
@@ -484,44 +697,27 @@ Object.assign(Jogo.prototype, {
                 if (collides) continue;
                 placed.push({ x: ox, y: oy, r: myR });
                 const o = this.matter.add.image(ox, oy, tex, null, {isStatic:true, shape:'circle'});
-                o.setDepth(1).setScale(sc).body.label = label;
-                return true;
-            }
-            return false;
-        };
-
-        for (let i = 0; i < 18; i++) {
-            for (let tries = 0; tries < 8; tries++) {
-                const cx = Phaser.Math.Between(300, W-300);
-                const cy = Phaser.Math.Between(300, H-300);
-                if (!isLand(cx, cy)) continue;
-                if (Math.random() > 0.5) {
-                    for (let j = 0; j < 5; j++) tryPlace(cx, cy, 90, pickV() || 'bush', 'bush');
-                } else {
-                    for (let j = 0; j < 3; j++) tryPlace(cx, cy, 70, pickP() || 'rocha_organica', 'rock');
-                }
+                const sc = target / (o.height || 64);
+                o.setDepth(1).setScale(sc).body.label = 'rock';
                 break;
             }
         }
 
-        // ── 5b. LANDMARKS V3 (objects) — 1 each, distantes between si
-        // church, windmill, old_truck, satellite_dish_rusty
-        // without collision (decorativos puros), depth 1.4 to ficar below de personagens
-        const landmarks = ['nat_obj_church', 'nat_obj_windmill', 'nat_obj_old_truck', 'nat_obj_satellite_dish_rusty'];
-        const LM_SCALE = { nat_obj_church: 2.6, nat_obj_windmill: 2.4, nat_obj_old_truck: 2.0, nat_obj_satellite_dish_rusty: 2.0 };
+        // 5b. LANDMARKS (só os do Bevy live com PNG local): windmill 20u=320px,
+        // old_truck 7u=112px. Separação 140u=2240px (clear_of do scenery.rs).
+        const LM_TARGET = { nat_obj_windmill: 320, nat_obj_old_truck: 112 };
         const lmPlaced = [];
-        const truckSpots = [];  // pra spawnar gas_cans atrelados ao truck (5c)
-        for (const lm of landmarks) {
-            for (let tries = 0; tries < 20; tries++) {
+        for (const lm of Object.keys(LM_TARGET)) {
+            if (!this.textures.exists(lm)) continue;
+            for (let tries = 0; tries < 60; tries++) {
                 const cx = Phaser.Math.Between(800, W-800);
                 const cy = Phaser.Math.Between(800, H-800);
                 if (!isLand(cx, cy)) continue;
-                const tooClose = lmPlaced.some(p => Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < 1500);
+                const tooClose = lmPlaced.some(p => Phaser.Math.Distance.Between(cx, cy, p.x, p.y) < 2240);
                 if (tooClose) continue;
                 lmPlaced.push({x: cx, y: cy});
-                const lmScale = LM_SCALE[lm] || 2.0;
-                this.add.image(cx, cy, lm).setScale(lmScale).setDepth(1.4);
-                if (lm === 'nat_obj_old_truck') truckSpots.push({ x: cx, y: cy, scale: lmScale });
+                const img = this.add.image(cx, cy, lm).setDepth(1.4);
+                img.setScale(LM_TARGET[lm] / (img.height || 192));
                 // Track to sistema de quips (proximity check em 20_quips.js)
                 if (!this._landmarkPositions) this._landmarkPositions = [];
                 this._landmarkPositions.push({ x: cx, y: cy, key: lm });
@@ -529,78 +725,36 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        // ── 5c. GAS CANS — sempre atrelados a um truck (visualmente associados)
-        // Tamanho proporcional ao truck (~35% do scale do truck) + tint marrom
-        // pra harmonizar com a paleta do old_truck (cor enferrujada)
-        for (const t of truckSpots) {
-            const n = Phaser.Math.Between(1, 3);
-            const gasScale = t.scale * 0.35;
-            for (let j = 0; j < n; j++) {
-                const angj = Math.random() * Math.PI * 2;
-                const rr   = 60 + Math.random() * 40;  // 60-100px do truck
-                const px = t.x + Math.cos(angj) * rr;
-                const py = t.y + Math.sin(angj) * rr;
-                this.add.image(px, py, 'nat_obj_gas_can')
-                    .setScale(gasScale * (0.9 + Math.random() * 0.2))
-                    .setTint(0xc88a5a)  // marrom-laranja pra casar com truck enferrujado
-                    .setDepth(1.5);
-            }
-        }
-
-        // ── 5c-2. BARRELS RUSTY — cluster random independente (mantem variedade)
-        for (let i = 0; i < 3; i++) {
-            for (let tries = 0; tries < 8; tries++) {
-                const cx = Phaser.Math.Between(500, W-500);
-                const cy = Phaser.Math.Between(500, H-500);
-                if (!isLand(cx, cy)) continue;
-                const n = Phaser.Math.Between(2, 4);
-                for (let j = 0; j < n; j++) {
-                    const angj = Math.random() * Math.PI * 2;
-                    const rr   = Math.random() * 50;
-                    this.add.image(cx + Math.cos(angj)*rr, cy + Math.sin(angj)*rr, 'nat_obj_barrel_rusty')
-                        .setScale(0.9 + Math.random()*0.3).setDepth(1.5);
-                }
-                break;
-            }
-        }
-
-        // ── 5d. DRY TURF patches (chão seco amarelado) — 8 spots aleatórios em dirt
-        for (let i = 0; i < 8; i++) {
-            for (let tries = 0; tries < 5; tries++) {
-                const cx = Phaser.Math.Between(400, W-400);
-                const cy = Phaser.Math.Between(400, H-400);
-                if (!isLand(cx, cy)) continue;
-                this.add.image(cx, cy, 'nat_obj_dry_turf').setScale(1.5 + Math.random()*0.8).setDepth(0.65).setAlpha(0.85);
-                break;
-            }
-        }
-
-        // ── 6. corrals — INLAND na ilha (parity Bevy corral_spots): só em
-        // GRAMA, longe da costa (dist_water 9→5 células conforme as
-        // tentativas queimam) e com separação 1300→600px (WANT→MIN easing)
+        // ── 6. corrals — nos SPOTS escolhidos por _stampCorralYards (cada
+        // curral senta no próprio quintal de terra, como no Bevy). Fallback
+        // pro search antigo se os spots não existirem (mapa legado sem ilha).
         this.corrals = [];
         this.driveThrus = this.corrals;
-        const corralPositions = [];
-        for (let i = 0; i < 5; i++) {
-            for (let tries = 0; tries < 300; tries++) {
-                const ease = Math.min(1, tries / 150);
-                const minCoast = this._distWater ? Math.round(9 - 4 * ease) : 0;
-                const minDist  = 1300 - 700 * ease;
-                const gy = Phaser.Math.Between(2, ROWS - 3);
-                const gx = Phaser.Math.Between(2, COLS - 3);
-                if (grid[gy][gx] !== 2) continue;  // só grama
-                if (this._distWater && this._distWater[gy][gx] < minCoast) continue;
-                const px = gx * CELL + CELL / 2, py = gy * CELL + CELL / 2;
-                const tooClose = corralPositions.some(p =>
-                    Phaser.Math.Distance.Between(px, py, p.x, p.y) < minDist);
-                if (tooClose) continue;
-                corralPositions.push({ x: px, y: py });
-                this._buildCorral(px, py);
-                break;
+        if (this._corralSpots && this._corralSpots.length) {
+            for (const p of this._corralSpots) this._buildCorral(p.x, p.y);
+        } else {
+            const corralPositions = [];
+            for (let i = 0; i < 5; i++) {
+                for (let tries = 0; tries < 300; tries++) {
+                    const ease = Math.min(1, tries / 150);
+                    const minCoast = this._distWater ? Math.round(9 - 4 * ease) : 0;
+                    const minDist  = 1300 - 700 * ease;
+                    const gy = Phaser.Math.Between(2, ROWS - 3);
+                    const gx = Phaser.Math.Between(2, COLS - 3);
+                    if (grid[gy][gx] !== 2) continue;  // só grama
+                    if (this._distWater && this._distWater[gy][gx] < minCoast) continue;
+                    const px = gx * CELL + CELL / 2, py = gy * CELL + CELL / 2;
+                    const tooClose = corralPositions.some(p =>
+                        Phaser.Math.Distance.Between(px, py, p.x, p.y) < minDist);
+                    if (tooClose) continue;
+                    corralPositions.push({ x: px, y: py });
+                    this._buildCorral(px, py);
+                    break;
+                }
             }
-        }
-        if (corralPositions.length < 5) {
-            console.warn('[CORRAL] só', corralPositions.length, 'de 5 currais couberam inland');
+            if (corralPositions.length < 5) {
+                console.warn('[CORRAL] só', corralPositions.length, 'de 5 currais couberam inland');
+            }
         }
     },
 
@@ -608,19 +762,20 @@ Object.assign(Jogo.prototype, {
     _buildCorral(cx, cy) {
         // Curral V2: sprite PixelLab 200x200 (substitui cercas procedural).
         // 5 variantes random + slotOffsetY pro burger row em 08_corrals._slotPos.
+        // displaySize 224 flat = CORRAL_QUAD 14u × 16px/u (paridade Bevy)
         const VARIANTS = [
             // mascotCfg: tipo (cow/ox), anim, posicao relativa ao curral, e se mostra balde
-            { key: 'nat_obj_curral_01_pequeno',    displaySize: 240, slotOffsetY: 130, gateOpen: true,  name: 'pequeno_quadrado',
+            { key: 'nat_obj_curral_01_pequeno',    displaySize: 224, slotOffsetY: 121, gateOpen: true,  name: 'pequeno_quadrado',
               mascotCfg: { tipo: 'cow', anim: 'cow_eat_S',  dx: -14, dy:  0, bucket: true } },
-            { key: 'nat_obj_curral_02_redondo',    displaySize: 260, slotOffsetY: 140, gateOpen: true,  name: 'redondo_feno',
+            { key: 'nat_obj_curral_02_redondo',    displaySize: 224, slotOffsetY: 121, gateOpen: true,  name: 'redondo_feno',
               mascotCfg: { tipo: 'cow', anim: 'cow_eat_S',  dx: -14, dy:  0, bucket: true } },
             // hexagonal: tem coxo (water trough) ao norte -> boi/vaca bebendo agua, facing N
-            { key: 'nat_obj_curral_03_hexagonal',  displaySize: 280, slotOffsetY: 150, gateOpen: true,  name: 'hexagonal_ornamental',
-              mascotCfg: { tipo: 'cow', anim: 'cow_eat_N',  dx:  0,  dy: 24, bucket: false } },
+            { key: 'nat_obj_curral_03_hexagonal',  displaySize: 224, slotOffsetY: 120, gateOpen: true,  name: 'hexagonal_ornamental',
+              mascotCfg: { tipo: 'cow', anim: 'cow_eat_N',  dx:  0,  dy: 20, bucket: false } },
             // rustico_pedra: cow deitada (lie_down anim) — feno ja no sprite
-            { key: 'nat_obj_curral_04_rustico',    displaySize: 250, slotOffsetY: 135, gateOpen: true,  name: 'rustico_pedra',
-              mascotCfg: { tipo: 'cow', anim: 'cow_angry_S', dx: -10, dy: 5, bucket: false } },
-            { key: 'nat_obj_curral_05_abandonado', displaySize: 260, slotOffsetY: 140, gateOpen: false, name: 'abandonado',
+            { key: 'nat_obj_curral_04_rustico',    displaySize: 224, slotOffsetY: 121, gateOpen: true,  name: 'rustico_pedra',
+              mascotCfg: { tipo: 'cow', anim: 'cow_angry_S', dx: -9, dy: 4, bucket: false } },
+            { key: 'nat_obj_curral_05_abandonado', displaySize: 224, slotOffsetY: 121, gateOpen: false, name: 'abandonado',
               mascotCfg: { tipo: 'ox',  anim: 'ox_walk_S',  dx: -14, dy:  0, bucket: false } },
         ];
         const v = VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
