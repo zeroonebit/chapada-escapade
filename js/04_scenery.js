@@ -117,8 +117,27 @@ Object.assign(Jogo.prototype, {
         const RES = 8;                       // 1 texel = 8 world px (cell 80 = 10 texels)
         const CW = Math.round(W / RES), CH2 = Math.round(H / RES);
         const seed = (this._islandSeed || 1) >>> 0;
-        const distW = this._distWater;       // células de terra: dist da água
-        const distL = this._edtFrom(grid, COLS, ROWS, (c) => c !== 0);  // células de água: dist da terra
+        // Campos FLOAT por célula, amostrados com BILINEAR por pixel (o
+        // truque do terrain_proc.wgsl): as isolinhas curvam entre células —
+        // nearest-cell deixava canto reto mesmo com warp (só deslocava o
+        // retângulo). Costa = campo assinado dw−dl.
+        const dwF = this._edtFrom(grid, COLS, ROWS, (c) => c === 0);   // dist da água
+        const dlF = this._edtFrom(grid, COLS, ROWS, (c) => c !== 0);   // dist da terra
+        const dirtF = [];                                              // máscara grama(0)×terra(1)
+        for (let y = 0; y < ROWS; y++) {
+            dirtF[y] = [];
+            for (let x = 0; x < COLS; x++) dirtF[y][x] = (grid[y][x] === 3) ? 1 : 0;
+        }
+        // Bilinear no centro das células (campo[cy][cx] vale em cy+0.5,cx+0.5)
+        const bilin = (f, px2, py2) => {
+            const u = px2 - 0.5, v = py2 - 0.5;
+            let ix = Math.floor(u), iy = Math.floor(v);
+            if (ix < 0) ix = 0; else if (ix > COLS - 2) ix = COLS - 2;
+            if (iy < 0) iy = 0; else if (iy > ROWS - 2) iy = ROWS - 2;
+            const fx = Math.min(1, Math.max(0, u - ix)), fy = Math.min(1, Math.max(0, v - iy));
+            const a = f[iy][ix], b = f[iy][ix + 1], c = f[iy + 1][ix], d = f[iy + 1][ix + 1];
+            return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+        };
         const ocean = this._oceanMask;
 
         // Paleta (tons Bevy/cerrado)
@@ -148,48 +167,54 @@ Object.assign(Jogo.prototype, {
                 // Domain warp: amostra deslocada por noise coerente
                 const wx = gx0 + (noise(gx0 / WSCALE, gy0 / WSCALE, seed ^ 0xA11CE) - 0.5) * 2 * WARP;
                 const wy = gy0 + (noise(gx0 / WSCALE + 37.7, gy0 / WSCALE + 11.3, seed ^ 0xB0B0) - 0.5) * 2 * WARP;
-                let cx = Math.floor(wx), cy = Math.floor(wy);
-                if (cx < 0) cx = 0; else if (cx >= COLS) cx = COLS - 1;
-                if (cy < 0) cy = 0; else if (cy >= ROWS) cy = ROWS - 1;
-                const t = grid[cy][cx];
-                // Dither/variação: hash por texel + fBm suave por área
+                // Campos bilineares na posição warpada (tudo em células)
+                const dw = bilin(dwF, wx, wy);       // dist da água
+                const dl = bilin(dlF, wx, wy);       // dist da terra
+                const sd = dw - dl;                  // >0 terra, <0 água (costa = 0)
+                // Dither/variação: hash por texel
                 const h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
                 const dth = ((h >>> 8) & 0xff) / 255;         // 0..1
                 let r, g2, b;
-                if (t === 0) {
-                    const dl = distL[cy][cx];                  // profundidade (células)
-                    const isOc = ocean ? ocean[cy][cx] : true;
-                    if (dl <= 1 && dth > 0.55 - (1 - dl) * 0.2) {
-                        [r, g2, b] = PAL.foam;                 // espuma na linha da costa
+                if (sd < 0) {
+                    // ÁGUA — profundidade contínua pelo campo
+                    const depth = -sd;
+                    let cx = Math.floor(wx), cy = Math.floor(wy);
+                    if (cx < 0) cx = 0; else if (cx >= COLS) cx = COLS - 1;
+                    if (cy < 0) cy = 0; else if (cy >= ROWS) cy = ROWS - 1;
+                    const isOc = ocean ? (ocean[cy][cx] || grid[cy][cx] !== 0) : true;
+                    if (depth < 0.42 && dth > 0.30 + depth * 0.9) {
+                        [r, g2, b] = PAL.foam;                 // espuma abraça a costa curva
                     } else if (!isOc) {
                         [r, g2, b] = PAL.lake;
-                        const k = Math.min(1, dl / 3) * 0.25;
+                        const k = Math.min(1, depth / 3) * 0.25;
                         r *= (1 - k); g2 *= (1 - k); b *= (1 - k);
                     } else {
-                        // gradiente raso → fundo (cap 6 células)
-                        const k = Math.min(1, dl / 6);
+                        const k = Math.min(1, depth / 6);
                         r  = PAL.oceanShal[0] + (PAL.oceanDeep[0] - PAL.oceanShal[0]) * k;
                         g2 = PAL.oceanShal[1] + (PAL.oceanDeep[1] - PAL.oceanShal[1]) * k;
                         b  = PAL.oceanShal[2] + (PAL.oceanDeep[2] - PAL.oceanShal[2]) * k;
-                        // traços de onda sutis — 2 noises multiplicados
-                        // quebram as bandas contínuas (ficava listrado)
+                        // traços de onda — 2 noises multiplicados (sem listra)
                         const wv = noise(gx0 / 1.6, gy0 / 0.9, seed ^ 0x77A7);
                         const wm = noise(gx0 / 4.2, gy0 / 4.2, seed ^ 0x3EA1);
                         if (wv > 0.74 && wm > 0.45 && k < 0.8) { r += 24; g2 += 28; b += 28; }
                     }
-                } else if (t === 1) {
-                    const dw = distW ? distW[cy][cx] : 3;
-                    const wet = Math.max(0, 1 - dw / 2.2);     // faixa molhada rente à água
+                } else if (dw < 4.2 + (dth - 0.5) * 0.7) {
+                    // PRAIA — banda contínua do campo (não depende das células
+                    // de areia), borda externa com dither fino
+                    const wet = Math.max(0, 1 - dw / 2.2);     // molhada rente à água
                     r  = PAL.sand[0] + (PAL.sandWet[0] - PAL.sand[0]) * wet;
                     g2 = PAL.sand[1] + (PAL.sandWet[1] - PAL.sand[1]) * wet;
                     b  = PAL.sand[2] + (PAL.sandWet[2] - PAL.sand[2]) * wet;
                     const gr = (dth - 0.5) * 14;               // grão
                     r += gr; g2 += gr; b += gr;
                 } else {
-                    const A = (t === 2) ? PAL.grassA : PAL.dirtA;
-                    const B = (t === 2) ? PAL.grassB : PAL.dirtB;
-                    // manchas orgânicas 2-tons (fBm binário + dither na fronteira)
-                    const m = noise(gx0 / 3.2, gy0 / 3.2, seed ^ (t === 2 ? 0x6EA5 : 0xD1F7));
+                    // INTERIOR — grama×terra pela máscara bilinear (rampa de
+                    // ~1 célula) + dither na transição = borda orgânica
+                    const dirt = bilin(dirtF, wx, wy);
+                    const isDirt = (dirt + (dth - 0.5) * 0.3) > 0.5;
+                    const A = isDirt ? PAL.dirtA : PAL.grassA;
+                    const B = isDirt ? PAL.dirtB : PAL.grassB;
+                    const m = noise(gx0 / 3.2, gy0 / 3.2, seed ^ (isDirt ? 0xD1F7 : 0x6EA5));
                     const mix = (m + (dth - 0.5) * 0.22) > 0.5 ? 1 : 0;
                     r = mix ? B[0] : A[0]; g2 = mix ? B[1] : A[1]; b = mix ? B[2] : A[2];
                     const gr = (((h >>> 16) & 0xff) / 255 - 0.5) * 10;
