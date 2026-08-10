@@ -32,8 +32,8 @@ Object.assign(Jogo.prototype, {
         for (const { x: ax, y: ay } of spots) {
             const skin = SKINS[i % SKINS.length]; i++;
             const spr = this.add.image(ax, ay, 'mecha_atlas', `mecha_${skin}_S`).setDepth(2);
-            spr.setScale(150 / spr.height);  // ~150px de altura, AR preservado
-            this._attachSombra(spr, { rx: 30, ry: 10, alpha: 0.40, offY: 62, offX: 4 });
+            spr.setScale(80 / spr.height);  // SCARECROW_QUAD 5u ×16px/u = 80px (Bevy)
+            this._attachSombra(spr, { rx: 16, ry: 5.5, alpha: 0.40, offY: 33, offX: 2 });
             this.shooters.push({
                 x: ax, y: ay, sprite: spr, skin,
                 dir: 'S', awake: false,
@@ -137,16 +137,16 @@ Object.assign(Jogo.prototype, {
             }
             // TORPEDO perseguidor (parity Bevy): homing 3-4.5s + boost de saída
             const ang = Math.atan2(dy, dx);
-            const tor = this.add.sprite(at.x, at.y - 50, 'mecha_atlas', 'missile_frame_00')
+            const tor = this.add.sprite(at.x, at.y - 27, 'mecha_atlas', 'missile_frame_00')
                 .setDepth(8);
-            tor.setScale(44 / tor.height);
+            tor.setScale(29 / tor.height);  // BULLET_QUAD 1.8u ×16px/u (Bevy)
             tor.play('missile_fly');
             this.bullets.push({
                 sprite: tor, torpedo: true, ang, age: 0,
                 guideMs: Phaser.Math.Between(TORPEDO_GUIDE_MIN, TORPEDO_GUIDE_MAX),
             });
 
-            const flash = this.add.circle(at.x, at.y - 50, 14, 0xffcc00, 0.9).setDepth(9);
+            const flash = this.add.circle(at.x, at.y - 27, 11, 0xffcc00, 0.9).setDepth(9);
             this.tweens.add({ targets: flash, scale: 0.1, alpha: 0, duration: 180, onComplete: () => flash.destroy() });
             if (this._sfx) this._sfx('shot');
         }
@@ -271,8 +271,9 @@ Object.assign(Jogo.prototype, {
                 : { x: Phaser.Math.Between(400, W-400), y: Phaser.Math.Between(400, H-400) };
             const x = p.x, y = p.y;
             // matter.add.SPRITE (not image) — sprite suporta .anims to running
-            const farmerScale = (this.dbg?.scale?.farmer) ?? 2.0;
-            const farmerSize  = 81 * farmerScale;
+            // FARMER_QUAD 2.5u × scale 2.5 (config live do user) × 16px/u = 100px
+            const farmerScale = (this.dbg?.scale?.farmer) ?? 1.0;
+            const farmerSize  = 100 * farmerScale;
             const f = this.matter.add.sprite(x, y, 'farmer_S');
             // setBody EXPLÍCITO after — o options no sprite parece ser ignorado em algumas
             // versões do Phaser, deixando body do size da textura (180×180 = bug)
@@ -302,7 +303,7 @@ Object.assign(Jogo.prototype, {
                 }
             });
             // shadow blur below do farmer
-            this._attachSombra(f, { rx: 24, ry: 9, alpha: 0.45, offY: 18, offX: 5 });
+            this._attachSombra(f, { rx: 15, ry: 5.5, alpha: 0.45, offY: 11, offX: 3 });
 
             this.farmers.push(f);
         }
