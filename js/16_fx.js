@@ -13,10 +13,12 @@ void main() {
     vec2 uv = outTexCoord;
     vec2 c = uv - 0.5;
     float r2 = dot(c, c);
-    vec2 d = c * (1.0 + strength * r2 * 1.6) + 0.5;
-    // Fora de [0,1]: CLAMP na borda em vez de pintar preto — a moldura preta
-    // curva em volta da tela inteira era isto (parity Bevy CRT "edge blur
-    // SEM borda preta")
+    // RENORMALIZADO pelo fator do canto (r2=0.5): o canto mapeia EXATO na
+    // borda da textura — nunca amostra fora, então nem moldura preta nem
+    // borrão de clamp (parity Bevy CRT "edge blur SEM borda preta").
+    // Curvatura relativa centro→borda preservada; centro ganha ~12% de zoom
+    // no strength default 0.15.
+    vec2 d = c * (1.0 + strength * r2 * 1.6) / (1.0 + strength * 0.8) + 0.5;
     gl_FragColor = texture2D(uMainSampler, clamp(d, 0.0, 1.0));
 }`;
 
