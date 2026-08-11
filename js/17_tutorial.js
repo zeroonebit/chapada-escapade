@@ -359,16 +359,28 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'FARMER_KILL': {
+                // Baseline do contador na entrada do step — o _explode REMOVE
+                // o farmer de this.farmers, então a checagem antiga
+                // (allDead && length>0) NUNCA fechava após o kill na pedra e
+                // o else-if ainda respawnava outro = loop infinito de matar.
+                // farmersTotal é cumulativo e incrementa no _explode: robusto.
+                if (this._tutStepInit !== 'FARMER_KILL') {
+                    this._tutStepInit = 'FARMER_KILL';
+                    this._tutFarmerKillBase = this.farmersTotal || 0;
+                }
                 // Seta to rocha more perto do farmer abduzido
                 const farmer = this.abductedCows.find(e => e.isEnemy);
                 if (farmer) {
                     const rocha = this._tutAcharRochaPerto(farmer.x, farmer.y);
                     if (rocha) this._tutDrawArrow(rocha.x, rocha.y);
                 }
-                const allDead = !this.farmers || this.farmers.every(f => !f.scene || f._dying || f._destroyed);
-                if (canAdvance && this._tutFarmerAbducted && allDead && this.farmers.length > 0) {
+                if (canAdvance && (this.farmersTotal || 0) > (this._tutFarmerKillBase || 0)) {
                     this._tutAdvance();
-                } else if (this._tutFarmerAbducted && (!this.farmers || this.farmers.length === 0)) {
+                    break;
+                }
+                // Perdeu o farmer sem matar (soltou longe/água)? repõe alvo
+                const alive = (this.farmers || []).filter(f => f.scene && !f._dying).length;
+                if (alive === 0 && !this.abductedCows.some(e => e.isEnemy)) {
                     this._tutSpawnFazendeiro();
                 }
                 break;
