@@ -43,10 +43,12 @@ Object.assign(Jogo.prototype, {
                     }
                     // O caminho passa pela entrada do BURGER, que seta fuel
                     // em 15% (side effect da lição) — sem repor, quem retoma
-                    // um passo tardio nasce seco e morre de novo (death loop)
-                    if (TUT_STEPS[this._tutStepIdx]?.key !== 'BURGER') {
-                        this.fuelCurrent = this.fuelMax;
-                    }
+                    // um passo tardio nasce seco e morre de novo (death loop).
+                    // Retomando NO próprio BURGER: mínimo 50% (a lição fica,
+                    // o sufoco de renascer com 15% não — pedido do user)
+                    this.fuelCurrent = (TUT_STEPS[this._tutStepIdx]?.key === 'BURGER')
+                        ? Math.max(this.fuelCurrent, this.fuelMax * 0.5)
+                        : this.fuelMax;
                 });
             } else {
                 this.tutorialMode = false;
