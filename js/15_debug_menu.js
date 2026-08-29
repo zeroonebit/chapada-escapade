@@ -486,9 +486,9 @@ Object.assign(Jogo.prototype, {
                     <fieldset>
                         <legend data-i18n="music_player">MUSIC PLAYER</legend>
                         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-                            <button type="button" id="mus-playpause" style="padding:3px 10px;font-size:13px;">&#9208;</button>
-                            <button type="button" id="mus-prev" style="padding:3px 10px;font-size:13px;">&#9198;</button>
-                            <button type="button" id="mus-next" style="padding:3px 10px;font-size:13px;">&#9197;</button>
+                            <button type="button" id="mus-playpause" style="padding:3px 14px;font-size:14px;flex:0 0 auto;width:auto;min-width:48px;">&#9208;</button>
+                            <button type="button" id="mus-prev" style="padding:3px 14px;font-size:14px;flex:0 0 auto;width:auto;min-width:48px;">&#9198;</button>
+                            <button type="button" id="mus-next" style="padding:3px 14px;font-size:14px;flex:0 0 auto;width:auto;min-width:48px;">&#9197;</button>
                         </div>
                         <label><span data-i18n="track">track</span>
                             <select data-cfg="audio.track" id="mus-track" style="flex:1;max-width:240px;min-width:180px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
