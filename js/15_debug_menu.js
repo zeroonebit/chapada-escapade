@@ -826,6 +826,9 @@ Object.assign(Jogo.prototype, {
     _toggleDebugMenu(visible) {
         const el = document.getElementById('debug-menu');
         if (el) el.style.display = visible ? 'block' : 'none';
+        // "tocando agora" do player só muda quando alguém clica nos botoes;
+        // ao ABRIR o menu ele estaria mostrando o estado de quando foi criado.
+        if (visible && this._musPlayerRefresh) this._musPlayerRefresh();
     },
 
     // ── MAP PRESETS via PixaPro API ───────────────────────────────────
