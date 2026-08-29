@@ -113,6 +113,10 @@ Object.assign(Jogo.prototype, {
         setHoverPlay(); setHoverTut();
 
         const allBtns = [this.splashBg, this.splashImg, btnL, lblL, btnR, lblR];
+        // Transport de música (⏮ ⏯ ⏭) no topo-direita — parity Bevy splash
+        if (this._buildSplashMusicTransport) {
+            allBtns.push(...this._buildSplashMusicTransport());
+        }
         // Expõe to function PREVIEW poder hide/show temporariamente
         this._splashElements = allBtns;
 
