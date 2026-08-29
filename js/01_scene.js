@@ -415,6 +415,11 @@ class Jogo extends Phaser.Scene {
         // F3 + debug overlay funcionam since o splash
         if (this._updateDebugOverlay) this._updateDebugOverlay();
 
+        // Áudio roda FORA do _updateBody: o update() retorna cedo no splash e
+        // no game over, e é justo aí que a música de menu toca e a de jogo
+        // precisa sumir no crossfade (F5 chamava dentro do corpo = nunca rodava).
+        if (this._updateAudio) this._updateAudio(delta);
+
         // WANG_DEBUG: skip normal update loop, só roda camera scroll
         if (this.WANG_DEBUG) {
             if (this._wangUpdate) this._wangUpdate(time, delta);
@@ -599,7 +604,6 @@ class Jogo extends Phaser.Scene {
         if (this._updateWind) this._updateWind(delta);
         if (this._quipProximityCheck) this._quipProximityCheck(delta);
         if (this._updateActiveQuips) this._updateActiveQuips();
-        if (this._updateAudio) this._updateAudio(delta);   // F5: loops + música
         if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
         if (this._metaUpdate) this._metaUpdate();          // F6: raros + quest log
 
