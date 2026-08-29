@@ -228,4 +228,69 @@ Object.assign(Jogo.prototype, {
         refresh();
     },
 
+    // Transport de música no SPLASH — parity Bevy (gameflow.rs, o bloco
+    // "MUSIC TRANSPORT, TOP-RIGHT"): ⏮ ⏯ ⏭ no canto superior direito com o
+    // nome da SELEÇÃO à esquerda. Mesmas medidas do Bevy (44×38, gap 8,
+    // margem 40, y 42) e mesma regra: pular faixa despausa, porque quem
+    // pula quer ouvir. Devolve os objetos pro splash destruir com o resto.
+    _buildSplashMusicTransport() {
+        const w = this.scale.width;
+        const BW = 44, BH = 38, GAP = 8;
+        const right = w - 40, ty = 42;
+        const opts = ['auto', ...MUSIC_ALL];
+        const objs = [];
+        const FONT = { fontFamily: 'VT323, monospace' };  // fallback carrega os glifos
+
+        const label = this.add.text(right - 3 * BW - 2 * GAP - 12, ty, '',
+            Object.assign({ fontSize: '18px', color: '#aaffcc' }, FONT))
+            .setOrigin(1, 0.5).setAlpha(0.82).setScrollFactor(0).setDepth(503);
+        objs.push(label);
+
+        let ppLbl = null;
+        const refresh = () => {
+            const a = this.dbg.audio;
+            const t = a.track === 'auto'
+                ? 'AUTO' : a.track.replace(/_/g, ' ').toUpperCase();
+            label.setText(a.paused ? `♪ ${t} (paused)` : `♪ ${t}`);
+            if (ppLbl) ppLbl.setText(a.paused ? '▶' : '⏸');
+            if (this._musPlayerRefresh) this._musPlayerRefresh();  // espelha no CONFIGS
+        };
+
+        const mkBtn = (slot, glyph, onClick) => {
+            const cx = right - (2 - slot) * (BW + GAP) - BW * 0.5;
+            const bg = this.add.rectangle(cx, ty, BW, BH, 0x0a2216, 0.75)
+                .setStrokeStyle(1.5, 0x00ff55, 0.55)
+                .setScrollFactor(0).setDepth(502)
+                .setInteractive({ useHandCursor: true });
+            const lbl = this.add.text(cx, ty, glyph,
+                Object.assign({ fontSize: '22px', color: '#00ff55' }, FONT))
+                .setOrigin(0.5).setScrollFactor(0).setDepth(503);
+            bg.on('pointerover', () => bg.setFillStyle(0x336655, 1));
+            bg.on('pointerout',  () => bg.setFillStyle(0x0a2216, 0.75));
+            bg.on('pointerdown', (p, x, y, ev) => {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                onClick();
+                if (this._saveDebugCfg) this._saveDebugCfg();
+                refresh();
+            });
+            objs.push(bg, lbl);
+            return lbl;
+        };
+
+        const step = (d) => {
+            const i = Math.max(0, opts.indexOf(this.dbg.audio.track));
+            this.dbg.audio.track = opts[(i + d + opts.length) % opts.length];
+            this.dbg.audio.paused = false;   // pular = quer ouvir (Bevy)
+            if (this._metaAch) this._metaAch('audiophile');
+        };
+
+        mkBtn(0, '⏮', () => step(-1));
+        ppLbl = mkBtn(1, '⏸', () => {
+            this.dbg.audio.paused = !this.dbg.audio.paused;
+        });
+        mkBtn(2, '⏭', () => step(1));
+        refresh();
+        return objs;
+    },
+
 });
