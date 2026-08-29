@@ -176,26 +176,29 @@
       "id": "tutorial-7-9-finish",
       "title": "Concluir tutorial etapas 7-9 (TAKE_DAMAGE, FARMER, FARMER_KILL)",
       "type": "in-game-integration",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "created_at": "2026-04-30T11:00:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
       "context": {
         "summary": "Tutorial reorganizado mas etapas 7-9 ainda precisam refinar texto/glow/condições.",
-        "current_state": "funcional mas precisa polish"
+        "current_state": "funcional mas precisa polish",
+        "resolution": "Concluídos no backport F2 (2026-07-22, passos 09/10) e destravados em 2026-08-10: passo 08 (kill na pedra) era impossível de fechar (o _explode remove o farmer do array e a condição pedia allDead && length>0) — agora conta por farmersTotal. Passos 09/10 auditados: padrão de contador com baseline, _torpedoesDodged incrementa em 09_enemies.js."
       },
       "spec": "Revisar js/17_tutorial.js etapas 7-9: textos i18n claros, glow nos elementos certos, condições de avanço corretas (ex: FARMER_KILL avança quando user matar 1 farmer com pedra)",
       "files_to_touch": [
         "js/17_tutorial.js"
       ],
       "verification": "Jogar tutorial até o fim sem travar nas 3 etapas finais",
-      "verified": false
+      "verified": false,
+      "completed_at": "2026-08-10T21:30:00-03:00",
+      "completed_by": "phaser-session-2026-08-10"
     },
     {
       "id": "scarecrow-droid-turrets-missile",
       "title": "Scarecrow droid turrets (3 cores × 8 dirs) + missile projectile (8 frames)",
       "type": "in-game-integration",
-      "status": "pending",
+      "status": "done",
       "priority": "high",
       "created_at": "2026-04-30T11:45:00-03:00",
       "created_by": "asset-gen-session-2026-04-30",
@@ -216,7 +219,8 @@
           "frame_06: EXPLOSION (EXPAND, peak)",
           "frame_07: EXPLOSION (PEAK/DISSIPATE, final)"
         ],
-        "source_files": "refs/scarecrowalternatives.png + refs/torpedomissle.png (sliced via Python kill_bege + auto_bbox)"
+        "source_files": "refs/scarecrowalternatives.png + refs/torpedomissle.png (sliced via Python kill_bege + auto_bbox)",
+        "resolution": "Feito no backport F2 (2026-07-22): mechas 8-dir (3 skins em MIX) com wake/sleep por histerese + torpedos perseguidores com anim de voo/explosão, via mecha_atlas. Escalas ajustadas pra paridade Bevy em 2026-08-10 (SCARECROW_QUAD 5u = 80px)."
       },
       "spec": [
         "1. js/02_preload.js: load 24 sprites scarecrow_droid_{blue,red,green}_{N..NW} + 8 missile_anim_frame_{0..7}; criar anim 'missile_fly' com frames 0-3 loop e 'missile_explode' com frames 4-7 once",
@@ -232,7 +236,9 @@
         "js/03_textures.js (anim defs)"
       ],
       "verification": "Visual via Pages: ver 4-6 torres scarecrow giarndo conforme player se move, atirando missiles que voam até player e explodem. Hit dá dano à barra COMBUSTÍVEL similar aos atiradores antigos.",
-      "verified": false
+      "verified": false,
+      "completed_at": "2026-08-10T21:30:00-03:00",
+      "completed_by": "phaser-session-2026-08-10"
     },
     {
       "id": "audit-cleanup-old-geometric-textures",

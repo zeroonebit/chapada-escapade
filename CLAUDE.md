@@ -444,21 +444,44 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Quips reescritos com tema TECH ART e expandidos pra 250 por idioma (500 total)** (`js/20_quips.js`) — QUIP_POOLS PT+EN simétricos (farmer 25 · ufo 45 · cow 30 · dairy 16 · fence 16 · burger 22 · church 18 · cactus 18 · generic 60), zero duplicatas. Temas: rig/LOD/UV/shader/instancing/wang tiles + Houdini (cook, HDA, VEX, Copy to Points, FLIP, VDB, vellum, pyro, RBD, PDG, USD/Solaris, chramp, $F, wrangle, SOPs), gaussian splats (COLMAP, radiance field, splat training), zoeira com Blender user (donut, modifiers, Cycles, Suzanne, geometry nodes, Eevee), ML/IA (dataset, overfitting, epoch, loss, tensor, alucinação), dados sintéticos, digital twins, scanner 3D/LiDAR/fotogrametria, impressora 3D (slicer, PLA, resina/IPA, infill, stringing, benchy, primeira camada, nozzle) e astrofoto (Bortle, stacking, dark/flat frames, Bahtinov, guiding, dithering, polar). Categorias, moods e cooldowns preservados; MOBILE_QUIPS mantém a mensagem "só PC". Commits `b966740` + `89af292` + `462aa77`, deploys Pages verificados. Easter egg: "Primeira camada da invasão: aderiu bem"
 - **Contexto:** o jogo agora é o **protótipo em destaque do portfolio ZerO-OneBit** — landing em `H:\Projects\ZerO-OneBit` embeda o jogo do Pages via click-to-play (iframe)
 
+### ✅ Pronto (cont. — sessão 2026-07-22 · BACKPORT Bevy→Phaser em 6 fases)
+- **F1 core** — vitória por QUOTA (30 burgers) + escalada por entrega (torres +80% cadência, farmers +50% vel) + COMBO (2 vacas extras no curral cheio = ×1.5 pts / ×1.75 fuel) + **porcos 10% do rebanho** (entrega = tanque cheio). Fix de bug pré-existente: spawn escrevia `tipo='ox'` mas o código todo checa `'bull'` — os "bois" do boot eram vacas disfarçadas
+- **F2 inimigos** — mechas 8-dir encarando a nave (wake/sleep com histerese, dormem pro sul) + torpedos perseguidores (1.8 rad/s, boost 1.3× por 1.5s) + **friendly-fire** (guiar torpedo no farmer/torre mata) + farmer AGRESSIVO (chase) + tutorial 09/10
+- **F3 mundo** — ilha procedural fBm (port de `terrain.rs`), rim elíptico, praia garantida, oceano×lago por flood fill, oceano é BARREIRA, lagos sobrevoáveis
+- **F4 visual** — radar vira MINIMAPA (terreno bakeado + blips decay) + cores de identidade + **beam-bússola** (cyan→âmbar→vermelho por distância/direção do curral) + quips em BALÃO cartoon
+- **F5 áudio** — 15 SFX + 3 músicas com crossfade por estado (menu/dia/noite), `js/21_audio.js`
+- **F6 meta** — save localStorage + **50 achievements** + 10 contratos (roll de 3, Contract Sweep +50%) + itens raros coletáveis pelo beam, `js/22_meta.js`
+- **A ILHA passou a APARECER** — o render dos wang gerava vertex grid de noise próprio e nunca lia o `terrainGrid` (a ilha existia nos spawns/barreira/radar, não na tela)
+- **COCKPIT FinalHud** — a arte do painel do user vira o HUD (dash 2056×541, contadores nos slots, radar no scope, células de fuel/graviton, lente do emissor, joystick vivo). O `_positionHUD` legado revertia tudo → early-return quando `_cockpit`
+- **Lição de ambiente:** cache de memória do Chrome serve JS velho → **bump do `V` no index.html a CADA batch**
+
+### ✅ Pronto (cont. — sessão 2026-08-10 · terreno PROCEDURAL sem tiles + paridade + tutorial destravado)
+- **TERRENO SEM TILES (default)** — `_renderTerrainCanvas` em `04_scenery.js`: canvas procedural por pixel (8px/texel, ~100ms), água com profundidade+ondas+espuma, praia molhada, grama/terra 2-tons. **~7.000 tiles → 1 imagem** (children 4.400 → 352, 60fps). Mesmo movimento do Bevy 07-07 ("motor wang arrancado"); wang segue atrás do toggle `dbg.fx.wangtiles`
+- **Bordas orgânicas** — campos de distância amostrados BILINEAR por pixel (truque do `terrain_proc.wgsl` em 2D): costa = campo assinado `dw−dl`, praia = banda contínua do campo, grama×terra = máscara bilinear + dither. O domain warp sozinho só deslocava o canto reto
+- **3 causas do "terreno quebrado"** — `moisture` 0.47 era a MEDIANA do fBm (Bevy 0.30 = cauda; flipava a ilha inteira por seed) · **quintais de curral nunca portados** (é de lá que vem o dirt do Bevy) · tileset `dirt_grass_32` **defeituoso no asset** (verde chroma stddev ZERO, baked no download)
+- **EDT euclidiano** (Felzenszwalb 2-pass) + wobble fBm de costa substitui o BFS Manhattan (isolinhas em octógono); guard de costa dos currais 16→9 células
+- **Escalas paridade Bevy** (config live do user × **16px/u**) baked nos baseSizes: cow 84 · bull 96 (era 234!) · pig 52 · farmer 100 · mecha 80 · ufo 96 · burger 35 · curral 224 · torpedo 29 + migração one-shot `_parityV2` no localStorage
+- **Scatter = Bevy live** — só windmill 320px + old_truck 112px + 8 pedras (pedra fica porque é mecânica do tutorial); cactos/arbustos/barris/church/satellite fora
+- **Barrel sem moldura preta E sem borrão** — renormalizado pelo fator do canto (`/(1+strength*0.8)`): o canto mapeia EXATO na borda. Custo ~12% de zoom no centro
+- **Quips tema DO JOGO** — 150 EN + 150 PT (invasão/quota/bacon/mechas/cerrado). Os 500 tech-art **arquivados em `docs/archive/20_quips_techart_2026-07-06.js`** (restaurar = copiar por cima)
+- **Tutorial destravado** — passo 08 (kill na pedra) era IMPOSSÍVEL (o `_explode` remove o farmer do array e a condição pedia `allDead && length>0`; o else-if respawnava outro = loop infinito) → agora conta por `farmersTotal` · **game over RETOMA da etapa que falhou** (`window.__cepTutResume`, resume repõe fuel; mínimo 50% se retomar no BURGER) · i18n EN completo + 3 soft-locks em 06/09/10
+- **Game over/vitória escondem o cockpit inteiro** — `_cinematicHide` guard no `_updateCockpit` (religava knob/lente todo frame), `ckIcons` é array, quest log do F6 não vivia em `this.hud`
+
 ### 🚧 Em andamento
+- **⚠️ VALIDAÇÃO DO USER PENDENTE (o gargalo real)** — tudo de 07-22 e 08-10 foi validado por **injeção de estado no console**, nunca jogado nem ouvido. Sem prova a olho/ouvido: **áudio** (o pane do browser silencia por `pauseOnBlur` — o jogo nunca foi escutado), paleta do terreno canvas, cockpit no pixel, tutorial 09/10 jogados de verdade
 - **Bevy 3D edition** — JOGÁVEL (ver seção 🌽 acima); polish contínuo guiado por playtests do user; próximo épico: Houdini→glTF→Bevy
-- **Audit element-by-element** continuação — terrain isolado robusto agora (TILES tab completo); próximo: adicionar UFO, beam, cow AI etc um por vez via toggles em CONFIGS
 - **Audit live testing PixaPro** — Audit panel Pages fallback pushed; falta user validar painel popula + walk through one-by-one
-- **Tutorial steps 09+10 completion logic** — DODGE_TORPEDOS counter + KILL_SHOOTER flag ainda placeholder
 - **Grass blades anim integration** — 5 base PNGs no disco, 20 anim frames BLOCKED (URL pattern PixelLab unknown)
 
 ### 🔜 Próximos passos
-0. **Port do terreno fBm do Bevy pra cá** (analisado 2026-07-06, user disse "ainda não" — aguardando ordem). Fonte: `H:/Projects/Bevy/ChapadaEscapade/src/terrain.rs` (sem crates, port JS quase mecânico). 1ª fatia sugerida: hash2/valueNoise/fbm + seed por elevação/umidade + ilha circular + distance fields BFS com praia garantida, atrás de toggle na aba TILES. Depois: oceano×lago (no-fly), quintais de curral (`corral_spots`), canyons random-walk, estilo wang único por partida. Detalhes na entrada 2026-07-06 (tarde) do PROGRESS.md
-1. **Slice 3 tilesets BASE/SHARED faltantes** — `mapa1_dirt_grass`, `mapa2_dirt_grass`, `shared_ocean_sand_16`. Existem na origem (PixelLab API) mas não sliced localmente. Tool `tools/slice_tilesets.py` precisa update pra cr31 mapping
-2. **Atlas extras (opcional)** — atlas pra 4 HUDs gigantes 1536x1024 requer bin-packing real. Cortaria mais ~300kb
-3. **Performance pass** — FPS no Pages cai pra 11 com 126 entities + barrel pipeline. Object pooling, layer culling, ou reduzir DBG_DEFAULTS counts
-4. **Tutorial 09/10 completion logic** — contadores em `_updateBody` + flag em `_destroyShooter`
-5. **Map presets reais** (5-6 variados) wirar pro splash escolher, dar variedade visual
-6. **Bevy 3D Phase 1 verificação** — quando user instalar Rust, rodar `cargo run` e validar checklist Phase 1 do plan
+1. **Jogar o tutorial de ponta a ponta** (10 passos) e o loop até a quota de 30 — é a validação que falta pro protótipo ser considerado jogável de verdade
+2. **Polish do cockpit que ficou de fora** — beacon glow (borda acendendo pro curral, precisa de mesh premultiplicada) · painéis laterais MAP MISSIONS / SHIP LOG · crop dos ícones (alguns têm margem transparente e ficam menores no slot)
+3. **Sliders de volume no CONFIGS** (sfx/music) + wirar a 4ª faixa `Barnyard_UFO.mp3` (o player escala sozinho)
+4. **Paridade de terreno que ficou de fora** — rios Catmull-Rom + lagoas metaball · relevo/AO (chapadas, baixadas, pico nevado, buracos negros) · neve por altitude. Nada disso é bug, é escopo
+5. **Minors do audit 08-10 não aplicados** — rim da ilha com wobble anisotrópico e margem 1 célula (Bevy usa 2) · falta clamp `.max(2.0)` no noiseScale · sem cap de área de lago
+6. **Achievements dormentes** — ~30 dos 50 ainda sem sinal que os dispare (wave-1 tem infra, falta wirar)
+7. **Map presets reais** (5-6 variados) wirar pro splash escolher, dar variedade visual
+8. **Slice 3 tilesets faltantes** (`mapa1_dirt_grass`, `mapa2_dirt_grass`, `shared_ocean_sand_16`) — baixa prioridade agora que o wang está OFF por default
 
 ### 🛠 Ferramentas criadas
 - `tools/project_server.py` (era `gallery_server.py`) — server local porta 8090 com API REST consumida pelo PixaPro standalone (8 endpoints: maps, scan_assets, apply_renames, check_refs, etc)
