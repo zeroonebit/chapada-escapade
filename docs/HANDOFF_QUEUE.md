@@ -6,22 +6,22 @@
 
 ---
 
-## Status atual (snapshot — limpeza 2026-07-16)
+## Status atual (snapshot — atualizado 2026-08-10)
 
 **Abertos:**
 
 | ID | Tipo | Status | Prio | Título |
 |---|---|---|---|---|
 | `grass-blades-integration` | in-game | 🔒 blocked | 🔴 high | Integrar 5 grass blades wind_sway in-game (20 frames BLOCKED no PixelLab) |
-| `scarecrow-droid-turrets-missile` | in-game | ⏳ pending | 🔴 high | Scarecrow turrets (3 cores × 8-dir) + missile (8 frames) — só no Phaser; no Bevy viraram os MECHAs |
 | `audit-cleanup-old-geometric-textures` | refactor | ⏳ pending | 🔴 high | Remover sprites geométricos legados de 03_textures.js (HUD v2 aliases já saíram em 2026-05-08) |
 | `pixapro-mark-in-game-assets` | docs | ⏳ pending | 🟡 medium | Sort + decidir 626 PNGs em uso sem decisão Manager |
-| `tutorial-7-9-finish` | in-game | ⏳ pending | 🟡 medium | Concluir tutorial etapas 7-9 (steps 09/10 ainda placeholder) |
 
-**Fechados na limpeza (já estavam feitos há meses):**
+**Fechados:**
 
 | ID | Status | Quando foi feito de fato |
 |---|---|---|
+| `scarecrow-droid-turrets-missile` | ✅ done | 2026-07-22 — backport F2: mechas 8-dir (3 skins, wake/sleep por histerese) + torpedos com anim de voo/explosão via `mecha_atlas`. Escalas ajustadas pra paridade Bevy em 2026-08-10 |
+| `tutorial-7-9-finish` | ✅ done | 2026-07-22 (passos 09/10 no F2) + 2026-08-10 (passo 08 destravado: contava por array que o `_explode` esvazia → agora por `farmersTotal`) |
 | `pixapro-spinoff-standalone` | ✅ done | 2026-05-02 — repo standalone `H:/Projects/PixaPro` + UI live no Pages |
 | `tilesets-16px-slice-and-group` | ✅ done | 2026-04-30 noite — 8 tilesets sliced cr31, WANG_STYLES 3→11 |
 | `currais-v2-test-and-tune` | ✅ done | 2026-05-02 — superado: burgers ao norte + 3 slots fixos + mascote |

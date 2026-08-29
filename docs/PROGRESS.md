@@ -4,6 +4,55 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-08-10 — Phaser: terreno PROCEDURAL sem tiles + paridade Bevy (gen/escalas/scatter) + tutorial destravado (8 commits `980add0`→`7517bd0`)
+
+**Report do user: "o terreno no pages ta completamente quebrado" + "o tamanho dos assets, e os assets usados, tudo isso ta diferente".** Audit multi-agente Bevy×Phaser (3 eixos: geração / render / scatter, 30 findings com verificação adversarial) achou **3 causas independentes**:
+
+- **`moisture` 0.47 era a MEDIANA do fBm** (Bevy usa 0.30 = a cauda). O campo de umidade inteiro flipava por seed: simulação de 300 seeds deu dirt entre 4% e 80% do mapa — daí o print todo-marrom. Em 0.30 estabiliza (p50 ~400 células, manchas localizadas). Os 3 knobs (`noiseScale`/`waterLevel`/`moisture`) subiram do fallback inline pra `DBG_DEFAULTS.proc` — estavam invisíveis e um cache de map-preset podia flipar o regime em silêncio
+- **Os QUINTAIS de curral nunca tinham sido portados.** No Bevy é deles que vem quase todo o dirt visível (`terrain.rs:1558+`: disco wobbled sob cada spot; o comentário do `proc_moisture: 0.30` diz literalmente "dirt comes from the yards"). Agora os spots são escolhidos ANTES do render e carimbam terra — sem isso, com moisture correto, ~1 em 5 seeds nascia com ZERO dirt
+- **O tileset `dirt_grass_32` é defeituoso NO ASSET:** audit de pixel provou verde chroma RGB(2,216,1) com stddev **zero**, baked no download do PixelLab (o `_tileset.png` commitado já vem assim; re-slicear reproduz). Nenhum código salvaria
+
+**Solução = o mesmo movimento do Bevy de 07-07 ("MOTOR WANG ARRANCADO"), sugerido pelo user:** o terreno vira **canvas procedural por pixel** (`_renderTerrainCanvas`, 1000×750 texels a 8px/texel, ~100ms de boot) — água com gradiente de profundidade + ondas + espuma, praia com faixa molhada, grama/terra em manchas 2-tons com dithering. **~7.000 imagens de tile → 1 imagem** (children da cena 4.400 → 352, 60fps). Wang fica atrás do toggle no CONFIGS (+ dual-layer ocean↔sand se religar).
+
+**Bordas orgânicas (2ª iteração, report "muito crackelando angulos retos"):** o domain warp sozinho só DESLOCAVA a borda — o canto de 90° sobrevivia como retângulo deslocado. Fix = o truque do `terrain_proc.wgsl` em 2D: **campos de distância amostrados BILINEAR por pixel** — costa = campo assinado `dist_água − dist_terra` (isolinha zero curva entre células), praia = banda contínua do campo (não depende mais das células de areia), grama×terra = máscara bilinear com rampa de ~1 célula + dither.
+
+**Outros fixes de geração:** `dist_water` virou **EDT euclidiano** (Felzenszwalb 2-pass, port de `distance_from_euclid`) + wobble fBm de costa — o BFS 4-conn media Manhattan e fazia isolinha em octógono; guard de costa dos currais 16→9 células (era 9→5, currais nasciam na praia); tie-break do CA mantém o tipo atual (o argmax antigo dava vitória ao menor id = viés pra água).
+
+**Escalas — paridade com o `debug_config.json` vivo do user × 16px/u (mundo 500u ↔ 8000px):** o boi estava **234px** com alvo 96; farmer 162→100; mecha 150→80. Baked nos baseSizes: cow 84 · bull 96 · pig 52 · farmer 100 · mecha 80 · ufo 96 · burger 35 · curral 224 · torpedo 29 — com migração one-shot `_parityV2` no localStorage (sliders salvos da era antiga inflariam tudo 2-3×). **Scatter = o Bevy live** (7 landmarks ligados de 156 no manifest): só windmill 320px + old_truck 112px + 8 pedras (pedra fica porque farmer-morre-em-pedra é mecânica do tutorial); cactos/arbustos/agaves/barris/church/satellite saíram.
+
+**Barrel post-FX, 2 iterações:** out-of-bounds pintava **preto** → era a moldura preta curva em volta da tela (não era falta de cobertura das camadas). Clamp resolveu o preto mas **esfregava o último pixel** (borrão riscado no splash — print do user). Final: **renormalizar pelo fator do canto** (`/(1+strength*0.8)`) — o canto mapeia EXATO na borda, sem preto nem smear; custo: ~12% de zoom no centro. É o "edge blur SEM borda preta" do CRT do Bevy.
+
+**Quips rethemados (pedido do user: "the game is not portfolio only anymore"):** os 500 tech-art (Houdini/VEX/Blender/splats/astro) foram **arquivados em `docs/archive/20_quips_techart_2026-07-06.js`** (restaurar = copiar por cima) e substituídos por **150 EN + 150 PT** simétricos, mesmas 9 categorias/moods/cooldowns, tema 100% do jogo (invasão, quota de 30 burgers, bacon, mechas, cerrado). `MOBILE_QUIPS` idem. Grep confirmou zero sobra de jargão.
+
+**Tutorial — 4 travas mortas** (i18n EN completo + 3 soft-locks em 06/09/10 no `f338cf2`, e depois):
+- **Passo 08 (kill na pedra) era IMPOSSÍVEL de fechar:** o `_explode` **remove** o farmer de `this.farmers`, e a condição pedia `allDead && farmers.length > 0`. Pior: o else-if via o array vazio e **respawnava outro** = loop infinito de matar. Agora conta por `farmersTotal` (cumulativo, incrementado pelo próprio `_explode`); respawn só se perdeu o alvo SEM matar
+- **Game over no tutorial RETOMA da etapa que falhou** (`window.__cepTutResume`, in-memory como `__cepPlayedOnce`) — antes o restart nem voltava pro tutorial, jogava no jogo normal. Descoberto no teste: o caminho de resume passa pela entrada do BURGER, que seta fuel 15% como parte da lição → quem retomasse tarde nascia seco e morria de novo (**death loop**). Resume repõe tanque cheio; **no próprio BURGER garante mínimo 50%** (pedido do user)
+- Passos 09/10 auditados depois: **sãos** (mesmo padrão de contador com baseline, e `_torpedoesDodged` incrementa de verdade)
+
+**Game over/vitória:** o cockpit inteiro some agora — `_updateCockpit` religava knob/lente todo frame depois do hide, `ckIcons` é array (o loop de hide não pegava) e o quest log do F6 nem vivia em `this.hud`. Vitória também chama `_hideForCinematic` (o HUD depth 200+ ficava por cima do overlay 199-201).
+
+**Domínio:** `thiagolaranjeira.com` faz 301 pra `zero-onebit.com` **só na raiz** — deep-link `/chapada-escapade/` dá 404 (forwarding sem "forward path", e apontando pra `http://`). Ajuste é no registrador, fora do alcance daqui.
+
+**Lição de método:** o audit multi-agente pagou — as 3 causas do terreno eram independentes e nenhuma era óbvia lendo o código de olho (a do tileset só apareceu medindo stddev dos pixels).
+
+---
+
+## Sessão 2026-07-22 — Phaser: BACKPORT do Bevy em 6 fases (F1→F6) + ilha visível + cockpit FinalHud (10 commits `5a39f64`→`c1538e7`)
+
+**Pedido do user: "vamos fazer o caminho contrario e deixar o html phaser o mais proximo possivel do bevy"** — a edição web (protótipo do portfólio) recebe o que a edição Bevy evoluiu. Mapeamento de unidades ~24.7px/u (depois corrigido pra 16px/u em 08-10).
+
+- **F1 (`5a39f64`) core:** quota de vitória 30 burgers + escalada por entrega (torres +80% cadência, farmers +50% vel) + combo (2 vacas extras no curral cheio = ×1.5 pts/×1.75 fuel) + **porcos 10% do rebanho** (entrega = tanque cheio, quip "oba, BACON!"). **Bug pré-existente achado:** o spawn escrevia `tipo='ox'` mas TODO o código checa `'bull'` — os "bois" do boot eram vacas disfarçadas (sprite/tamanho/yield de vaca). Mesmo bug em 2 lugares
+- **F2 (`8c4a118`) inimigos:** mechas 8-dir que encaram a nave com wake/sleep por histerese (dormem pro sul) + torpedos perseguidores (1.8 rad/s, boost 1.3× por 1.5s, guidance 3-4.5s) + **friendly-fire** (guiar torpedo no farmer/torre mata) + farmer AGRESSIVO (flee→chase) + tutorial ganha passos 09/10
+- **F3 (`5a70dec`) mundo:** ilha procedural fBm (port mecânico de `terrain.rs`: hash2→valueNoise→fbm, `Math.imul`=wrapping_mul), rim elíptico, praia garantida, oceano×lago por flood fill, **oceano é barreira** da nave, lagos sobrevoáveis
+- **F4 (`088ad9b`) visual:** radar vira **minimapa** com terreno bakeado + blips decay + cores de identidade + **beam-bússola** (tint cyan→âmbar→vermelho por distância/direção do curral) + quips em **balão cartoon**
+- **F5 (`32b5a60`) áudio:** o jogo ganha som — 15 SFX + 3 músicas com crossfade por estado (menu/dia/noite)
+- **F6 (`c1538e7`) meta:** save em localStorage + **50 achievements** + pool de 10 contratos (roll de 3, Contract Sweep +50%) + itens raros (golden burger / alien artifact coletáveis pelo beam, blip estrela no radar)
+- **A ILHA NÃO APARECIA (`9ad63c1`)** — falha do F3: o render dos wang tiles gerava um vertex grid de **noise próprio** e nunca lia o `terrainGrid`. A ilha existia nos spawns, na barreira e no radar, mas não na tela. Fix: cantos derivam do grid + camada base de cor (oceano/lago/praia) + tile só em terra (4195 tiles = 4195 células de terra, exato)
+- **COCKPIT FinalHud (`20c13ea`)** — a arte do painel do próprio user vira o HUD: dash 2056×541 bottom-center, contadores nos 5 slots com ícones e cores de LED, radar dentro do scope, SCORE na placa curva, células discretas de fuel/graviton via off-strips, lente do emissor dinâmica, joystick vivo. **Bug de ordem:** o `_positionHUD` legado rodava depois e revertia tudo — fix definitivo foi early-return dele quando `_cockpit` existe
+- **Lição de ambiente:** o cache de memória do Chrome servia JS velho mesmo com fonte nova (pigs 0/100 com código correto no disco) → disciplina de **bump do `V` no `index.html` a CADA batch**
+
+---
+
 ## Sessão 2026-07-16/18 — Bevy: code review pós-neve → 2 fixes CRÍTICOS validados em jogo + handoff queue limpa (2 commits LOCAL-ONLY `0781946`+`3dd182b` · docs `7cb380f`)
 
 **`/code-review` no diff de 07-15 (`016361d^..21f6605`, 16 arquivos):** 2 críticos confirmados + 2 menores.
