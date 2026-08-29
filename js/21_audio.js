@@ -85,11 +85,11 @@ Object.assign(Jogo.prototype, {
         return src[(Math.random() * src.length) | 0];
     },
 
-    // One-shot com o gain do Bevy × master (dbg.audio.sfx, default 0.9)
+    // One-shot com o gain do Bevy × master (dbg.audio.sfx, default 0.8)
     _sfx(key, mul = 1) {
         if (!this._audio || this.sound.locked) return;
         if (!this.cache.audio.exists(key)) return;
-        const master = this.dbg?.audio?.sfx ?? 0.9;
+        const master = this.dbg?.audio?.sfx ?? 0.8;
         const gain = (SFX_GAINS[key] ?? 0.5) * master * mul;
         if (gain <= 0.01) return;
         this.sound.play(key, { volume: Math.min(1, gain) });
@@ -103,11 +103,12 @@ Object.assign(Jogo.prototype, {
         this._sfx('cowbell');
     },
 
-    // Por frame no _updateBody: lerp dos loops + música
+    // Por frame no update() (fora do _updateBody, que nao roda no splash/game
+    // over): lerp dos loops + música
     _updateAudio(delta) {
         if (!this._audio) return;
         const dt = Math.min(delta, 100) / 1000;
-        const master = this.dbg?.audio?.sfx ?? 0.9;
+        const master = this.dbg?.audio?.sfx ?? 0.8;
         const L = this._audio.loops;
         const lerpVol = (s, target) => {
             if (!s) return;
@@ -139,10 +140,17 @@ Object.assign(Jogo.prototype, {
             const tod = this._atmoCurrent || 'day';
             state = (tod === 'night' || tod === 'midnight') ? 'night' : 'day';
         }
-        if (state !== A.curState) {
-            A.curState = state;
-            A.cur = state ? this._pickTrack(state) : null;
-        }
+
+        // Player do CONFIGS (parity Bevy music_ctl): pausa = silencio, faixa
+        // manual toca fixa, 'auto' volta a rotear por estado/TOD.
+        const cfgA = this.dbg?.audio || {};
+        const manual = (cfgA.track && cfgA.track !== 'auto') ? cfgA.track : null;
+        const wasManual = !!A.manual;
+        A.manual = !!manual;
+        if (!state || cfgA.paused) A.cur = null;
+        else if (manual) A.cur = manual;
+        else if (state !== A.curState || !A.cur || wasManual) A.cur = this._pickTrack(state);
+        A.curState = state;
         if (A.cur) this._ensureTrack(A.cur);
 
         // Só vira "want" quando o MP3 chegou; até lá o crossfade fica em silêncio
@@ -163,7 +171,7 @@ Object.assign(Jogo.prototype, {
             }
         }
 
-        const masterM = this.dbg?.audio?.music ?? 0.7;
+        const masterM = this.dbg?.audio?.music ?? 0.55;
         const k = Math.min(1, dt * 1.2);
         for (const key of Object.keys(A.music)) {
             const s = A.music[key];
@@ -172,6 +180,52 @@ Object.assign(Jogo.prototype, {
             s.setVolume(s.volume + (target - s.volume) * k);
             if (key !== want && s.volume < 0.01 && s.isPlaying) s.stop();
         }
+    },
+
+    // Player do CONFIGS > AUDIO — port 1:1 do MenuTab::Audio do Bevy.
+    // Os botoes nao sao data-cfg (nao mapeiam 1 controle -> 1 valor), entao
+    // tem bind proprio; o <select> ja e' bindado pelo menu generico.
+    _bindMusicPlayer() {
+        const pp   = document.getElementById('mus-playpause');
+        const prev = document.getElementById('mus-prev');
+        const next = document.getElementById('mus-next');
+        const sel  = document.getElementById('mus-track');
+        const now  = document.getElementById('mus-now');
+        if (!pp || !prev || !next || !sel) return;
+
+        const opts = ['auto', ...MUSIC_ALL];
+        const refresh = () => {
+            const a = this.dbg.audio;
+            pp.innerHTML = a.paused ? '&#9654;' : '&#9208;';   // ▶ / ⏸
+            sel.value = a.track;
+            if (now) {
+                const cur = this._audio?.cur;
+                now.textContent = a.paused ? '— paused —'
+                    : (cur ? '♪ ' + cur.replace(/_/g, ' ') : '…');
+            }
+        };
+        const step = (d) => {
+            const i = Math.max(0, opts.indexOf(this.dbg.audio.track));
+            this.dbg.audio.track = opts[(i + d + opts.length) % opts.length];
+            this._saveDebugCfg();
+            if (this._metaAch) this._metaAch('audiophile');
+            refresh();
+        };
+
+        pp.addEventListener('click', () => {
+            this.dbg.audio.paused = !this.dbg.audio.paused;
+            this._saveDebugCfg();
+            refresh();
+        });
+        prev.addEventListener('click', () => step(-1));
+        next.addEventListener('click', () => step(1));
+        sel.addEventListener('change', () => {
+            if (this._metaAch) this._metaAch('audiophile');
+            refresh();
+        });
+
+        this._musPlayerRefresh = refresh;
+        refresh();
     },
 
 });

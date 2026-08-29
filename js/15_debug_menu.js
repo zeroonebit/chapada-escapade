@@ -6,6 +6,9 @@ const DBG_KEY = 'chapEscapadeDebug';
 // Dicionário de tradução do menu CONFIGS (en default, pt opcional)
 const MENU_I18N = {
     en: {
+        audio:'AUDIO', volume:'VOLUME', music_player:'MUSIC PLAYER',
+        sfx_vol:'sfx volume', music_vol:'music volume', track:'track',
+        auto_track:'AUTO (menu/day/night)',
         configs:'CONFIGS', controls:'CONTROLS', looks:'VISUALS', vfx:'VFX', debug:'DEBUG',
         ufo:'SHIP', entities:'ENTITIES', entities_onoff:'ENTITIES (ON/OFF)',
         amounts:'AMOUNTS (restart)', scales:'SCALES', camera:'CAMERA',
@@ -37,6 +40,9 @@ const MENU_I18N = {
         opt_mouse:'Mouse', opt_wasd:'WASD + Space',
     },
     pt: {
+        audio:'ÁUDIO', volume:'VOLUME', music_player:'PLAYER DE MÚSICA',
+        sfx_vol:'volume sfx', music_vol:'volume música', track:'faixa',
+        auto_track:'AUTO (menu/dia/noite)',
         configs:'CONFIGURAÇÕES', controls:'CONTROLES', looks:'VISUAIS', vfx:'EFEITOS', debug:'DEBUG',
         ufo:'NAVE', entities:'ENTIDADES', entities_onoff:'ENTIDADES (ON/OFF)',
         amounts:'QUANTIDADES (reiniciar)', scales:'ESCALAS', camera:'CÂMERA',
@@ -103,6 +109,14 @@ const DBG_DEFAULTS = {
         barrel:         0.15,
         inputMode:      'mouse',  // 'mouse' | 'wasd'
         lang:           'en',     // 'en' | 'pt' (escolhido na splash)
+    },
+    // PARIDADE BEVY (DebugConfig): sfx_volume 0.8 / music_volume 0.55 /
+    // music_track "auto" / music_paused false
+    audio: {
+        sfx:    0.8,
+        music:  0.55,
+        track:  'auto',   // 'auto' = roteia por estado/TOD, senao um stem fixo
+        paused: false,
     },
     counts: {
         cows:    100,
@@ -175,6 +189,7 @@ Object.assign(Jogo.prototype, {
                 counts:   Object.assign({}, DBG_DEFAULTS.counts,   migrated.counts),
                 fx:       Object.assign({}, DBG_DEFAULTS.fx,       migrated.fx),
                 proc:     Object.assign({}, DBG_DEFAULTS.proc,     migrated.proc),
+                audio:    Object.assign({}, DBG_DEFAULTS.audio,    migrated.audio),
             };
             // Migração PARITY V2 (one-shot): os tamanhos-alvo Bevy foram
             // baked nos baseSizes, então sliders salvos na era antiga
@@ -302,6 +317,7 @@ Object.assign(Jogo.prototype, {
                     <button class="tab-btn active" data-tab="controls" data-i18n="controls">CONTROLS</button>
                     <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
+                    <button class="tab-btn" data-tab="audio" data-i18n="audio">AUDIO</button>
                     <button class="tab-btn" data-tab="map" data-i18n="map">MAP</button>
                     <button class="tab-btn" data-tab="tiles">TILES</button>
                     <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
@@ -450,6 +466,37 @@ Object.assign(Jogo.prototype, {
                         <label><span data-i18n="shake_beam">Shake/flash beam</span><input type="checkbox" data-cfg="fx.beamShake"></label>
                         <label><span data-i18n="explosion">Explosão fancy</span><input type="checkbox" data-cfg="fx.fancyExplosion"></label>
                         <label><span data-i18n="quips">Frases engraçadas</span><input type="checkbox" data-cfg="fx.quips"></label>
+                    </fieldset>
+                </div>
+
+                <!-- ABA: AUDIO — port 1:1 do CONFIGS>AUDIO do Bevy (debug_menu.rs
+                     MenuTab::Audio): 2 sliders de volume + player com
+                     play/pause, anterior/proximo e seletor de faixa. -->
+                <div class="tab-panel" id="tab-audio" style="display:none">
+                    <div class="note" data-i18n="note_live">Apply live without restart.</div>
+                    <fieldset>
+                        <legend data-i18n="volume">VOLUME</legend>
+                        <label><span data-i18n="sfx_vol">sfx volume</span>
+                            <input type="range" min="0" max="1" step="0.01" data-cfg="audio.sfx">
+                            <input type="number" class="val" data-show="audio.sfx" /></label>
+                        <label><span data-i18n="music_vol">music volume</span>
+                            <input type="range" min="0" max="1" step="0.01" data-cfg="audio.music">
+                            <input type="number" class="val" data-show="audio.music" /></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend data-i18n="music_player">MUSIC PLAYER</legend>
+                        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                            <button type="button" id="mus-playpause" style="padding:3px 10px;font-size:13px;">&#9208;</button>
+                            <button type="button" id="mus-prev" style="padding:3px 10px;font-size:13px;">&#9198;</button>
+                            <button type="button" id="mus-next" style="padding:3px 10px;font-size:13px;">&#9197;</button>
+                        </div>
+                        <label><span data-i18n="track">track</span>
+                            <select data-cfg="audio.track" id="mus-track" style="flex:1;max-width:240px;min-width:180px;background:#001a08;color:#aaffcc;border:1px solid #224433;padding:3px 6px;font-family:inherit;font-size:11px;cursor:pointer;">
+                                <option value="auto" data-i18n="auto_track">AUTO (menu/day/night)</option>
+                                ${(typeof MUSIC_ALL !== 'undefined' ? MUSIC_ALL : []).map(t =>
+                                    `<option value="${t}">${t.replace(/_/g, ' ')}</option>`).join('')}
+                            </select></label>
+                        <div id="mus-now" style="font-size:10px;opacity:0.6;margin-top:4px;"></div>
                     </fieldset>
                 </div>
 
@@ -674,6 +721,9 @@ Object.assign(Jogo.prototype, {
                 }
             });
         });
+
+        // Player de música (botoes nao sao data-cfg, bind proprio)
+        if (this._bindMusicPlayer) this._bindMusicPlayer();
 
         // Applies i18n initial baseado no lang salvo
         if (this._applyMenuI18n) this._applyMenuI18n();
