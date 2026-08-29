@@ -31,6 +31,11 @@ Object.assign(Jogo.prototype, {
         this._audio = {
             music: {}, loaded: new Set(), loading: new Set(), loops: {},
             cur: null, curState: undefined,
+            // Volume ATUAL de cada som, mantido por nós. O getter .volume do
+            // Phaser 3.60 nao reflete o setVolume() na hora (so' sincroniza no
+            // tick), entao um lerp que le dele parte de 1 e nunca converge —
+            // era o pico no comeco de cada faixa.
+            vol: {},
         };
 
         // Loops (beam/chuva/vento): tocam SEMPRE em volume 0, o update lerpa
@@ -110,20 +115,25 @@ Object.assign(Jogo.prototype, {
         const dt = Math.min(delta, 100) / 1000;
         const master = this.dbg?.audio?.sfx ?? 0.8;
         const L = this._audio.loops;
-        const lerpVol = (s, target) => {
+        const V = this._audio.vol;
+        const lerpVol = (key, target) => {
+            const s = L[key];
             if (!s) return;
-            s.setVolume(s.volume + (target - s.volume) * Math.min(1, dt * 6));
+            const cur = V[key] ?? 0;
+            const v = cur + (target - cur) * Math.min(1, dt * 6);
+            V[key] = v;
+            s.setVolume(v);
         };
         // Beam hum 0.85 com o feixe ligado (Bevy)
         const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 &&
             (this.isMobile ? !!this._beamHeld : this.input?.activePointer?.isDown);
-        lerpVol(L.beam_loop, beamOn ? 0.85 * master : 0);
+        lerpVol('beam_loop', beamOn ? 0.85 * master : 0);
         // Chuva: 0.20×rain / 0.28×storm, cap 0.35 (Bevy)
         const fx = this.dbg?.fx || {};
         const rainT = fx.rain ? (fx.weather === 'storm' ? 0.28 : 0.20) : 0;
-        lerpVol(L.rain_loop, Math.min(0.35, rainT) * master);
+        lerpVol('rain_loop', Math.min(0.35, rainT) * master);
         // Vento on/off (Bevy: wind_strength/2.2 × 0.35)
-        lerpVol(L.wind_loop, (fx.wind ? 0.20 : 0) * master);
+        lerpVol('wind_loop', (fx.wind ? 0.20 : 0) * master);
 
         this._updateMusic(dt);
     },
@@ -161,6 +171,7 @@ Object.assign(Jogo.prototype, {
             let s = A.music[want];
             if (!s) s = A.music[want] = this.sound.add(want, { loop: false, volume: 0 });
             if (!s.isPlaying) {
+                A.vol[want] = 0;
                 s.play();
                 s.setVolume(0);
                 s.off('complete');   // sem acúmulo quando a faixa é retomada
@@ -177,8 +188,11 @@ Object.assign(Jogo.prototype, {
             const s = A.music[key];
             if (!s) continue;
             const target = (key === want) ? masterM : 0;
-            s.setVolume(s.volume + (target - s.volume) * k);
-            if (key !== want && s.volume < 0.01 && s.isPlaying) s.stop();
+            const cur = A.vol[key] ?? 0;
+            const v = cur + (target - cur) * k;
+            A.vol[key] = v;
+            s.setVolume(v);
+            if (key !== want && v < 0.01 && s.isPlaying) s.stop();
         }
     },
 
