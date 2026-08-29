@@ -283,6 +283,11 @@ Object.assign(Jogo.prototype, {
             bg.on('pointerout',  () => bg.setFillStyle(0x0a2216, 0.75));
             bg.on('pointerdown', (p, x, y, ev) => {
                 if (ev && ev.stopPropagation) ev.stopPropagation();
+                // Touch + mouse emulado disparam DOIS pointerdown no mesmo
+                // toque; sem o gate o play/pause liga e desliga na hora.
+                const t = this.time?.now ?? 0;
+                if (t - (this._musBtnT || 0) < 250) return;
+                this._musBtnT = t;
                 onClick();
                 if (this._saveDebugCfg) this._saveDebugCfg();
                 refresh();
