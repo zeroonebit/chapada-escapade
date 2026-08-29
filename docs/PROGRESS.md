@@ -4,6 +4,32 @@ Log cronológico das sessões. Adicionar entrada nova no topo.
 
 ---
 
+## Sessão 2026-08-29 — Áudio: 9 faixas, player 1:1 do Bevy (CONFIGS + splash) e 3 bugs que só apareciam ouvindo (6 commits `f0abfad`→`7317d05`)
+
+**Entrada do user: pasta `N:/Downloads/ChapadaEscapadeTracks` com 9 `.mp4`, "confirma e implementa as tracks oq tiver faltando".** Das 9, **5 eram novas**; as outras 4 batem duração com os MP3 já no jogo (mesmos masters, não reencodei). Vieram como vídeo 1024² + AAC — áudio extraído pra MP3 192k/44.1k com ffmpeg e copiado pros **dois** builds. No Bevy isso basta: ele varre `assets/audio/*.mp3` no boot, então as 9 já aparecem no player dele.
+
+**Música: de 3 fixas pra 9 em pools.** Eram 3 faixas fixas (menu/dia/noite) baixadas todas de uma vez logo após o boot — com 9 (~28MB) isso não cabe mais no Pages. Agora cada estado tem um **pool** (menu 2 · dia 5 · noite 2), trocar de estado sorteia evitando repetir, e a faixa toca com `loop:false` pra que **ao terminar sorteie a próxima do mesmo pool** — todas as 9 aparecem jogando, não só 3. `_ensureTrack` baixa **uma faixa por vez**, só a que vai tocar; o cache de áudio é do game, então sobrevive ao `scene.restart`. Saiu o listener `filecomplete` global (vazava a cada restart) e entrou `filecomplete-audio-<key>` com `once()`. `Barnyard_UFO` estava no disco desde 22/07 **sem nunca ser tocada**.
+
+**Aba AUDIO no CONFIGS + player, port 1:1 do `MenuTab::Audio` do Bevy:** sliders sfx/music e transport com play/pause · anterior · próximo · combo de faixa, ciclando sobre `['auto', ...9]`. AUTO roteia por estado/TOD; faixa manual toca fixa (o loop vem do próprio `_updateMusic`, que a re-seleciona todo frame). Defaults alinhados com o `DebugConfig` do Bevy: **sfx 0.8** (era 0.9 hardcoded) e **music 0.55** (era 0.7). O achievement `audiophile` ("Change the music track in the player") estava dormente por falta do player — agora dispara (confirmado em jogo).
+
+**Transport também no SPLASH** (pedido do user: "do banner principal tem como pausar música? como tá no bevy?"), port do bloco "MUSIC TRANSPORT, TOP-RIGHT" do `gameflow.rs`: ⏮ ⏯ ⏭ no canto superior direito com o nome da seleção à esquerda, mesmas medidas (44×38, gap 8, margem 40, y 42), mesma paleta e a mesma regra de que **pular faixa despausa**. Os objetos entram no `allBtns` do splash, então somem no start e o PREVIEW continua escondendo tudo. Glifos com `fontFamily: 'VT323, monospace'` — a família nomeada sozinha não tem ⏮/⏸/▶/⏭ e sairia tofu (mesma pegadinha já vista no Bevy).
+
+**3 bugs, todos invisíveis sem ouvir:**
+
+- **A música de menu NUNCA tinha tocado.** `_updateAudio` era chamado de dentro do `_updateBody`, mas o `update()` faz early-return quando `!gameStarted` (splash) e quando `gameOver`. O pool de menu era código morto e a música de jogo também não sumia no fim de partida — ficava no último volume até o `scene.restart` chamar `removeAll`. Subiu pro topo do `update()`.
+- **O lerp de volume nunca convergia.** No Phaser 3.60 o getter `sound.volume` **não reflete** o `setVolume()` na hora (lê um valor sincronizado no tick do manager). Provado no build ao vivo: `sound.add(key,{volume:0})` devolve `.volume === 1` com `currentConfig.volume === 0`, e `setVolume(0)`/`setVolume(0.3)` mudam o config sem mexer no getter. Todo o módulo fazia `s.setVolume(s.volume + (target - s.volume)*k)` — lia 1 e escrevia sempre o mesmo número, então **cada faixa entrava perto do volume cheio e travava em ~0.95 em vez de descer pros 0.55** (medido: 0.949 e 0.977). Valia igual pros loops de beam/chuva/vento. Agora o volume atual mora em `_audio.vol` e o Phaser só recebe o `setVolume`; medido depois do fix, `currentConfig.volume` = 0.55 cravado.
+- **`pointerdown` dobrado** nos botões do splash (touch + mouse emulado disparam dois no mesmo toque): o play/pause ligava e desligava na mesma ação — o label voltava pra `(paused)` sozinho segundos depois. Gate de 250ms.
+
+**`dbg.audio` fora do merge do `_loadDebugCfg`** — a seção inteira ficaria `undefined` (o merge é explícito por seção). Pego antes de subir.
+
+**Ambiente (pra não cair de novo):** o **pane oculto congela o rAF**, e como o loader do Phaser é bombeado pelo game loop, o boot *parece* travado no meio (inflight 0, dezenas de arquivos PENDING). Não é bug do jogo — screenshot força pintura e a fila drena. O pane em 800×450 também dispara o **modo mobile** (preloader vermelho); emular 1280×800 antes de testar. E o `github.io` responde **301 pro domínio `zero-onebit.com`** — curl sem `-L` só vê o redirect.
+
+**Verificação:** tudo no Pages, com cliques reais nos botões do splash e leitura de estado (pools, download sob demanda, troca de pool no PLAY, faixa manual, pause/resume, volume no alvo). **Continua sem ninguém ter OUVIDO** — o pane do browser silencia o áudio.
+
+**Gap que sobra:** `fall.wav` (`Sfx::Fall`) é o único SFX do Bevy sem par aqui — dispara no `AbyssFall`, e abismo/buraco negro nunca foi portado. Não é lacuna de áudio, é mecânica que não existe. E o **AUTO do Bevy ainda roteia só 3 das 9** (o web passou na frente); passar os pools pra lá é o mesmo patch, aguardando decisão do user.
+
+---
+
 ## Sessão 2026-08-10 — Phaser: terreno PROCEDURAL sem tiles + paridade Bevy (gen/escalas/scatter) + tutorial destravado (8 commits `980add0`→`7517bd0`)
 
 **Report do user: "o terreno no pages ta completamente quebrado" + "o tamanho dos assets, e os assets usados, tudo isso ta diferente".** Audit multi-agente Bevy×Phaser (3 eixos: geração / render / scatter, 30 findings com verificação adversarial) achou **3 causas independentes**:
