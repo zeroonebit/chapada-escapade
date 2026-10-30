@@ -277,7 +277,7 @@ Object.assign(Jogo.prototype, {
         if (!this.save) return;
         // Raros: dentro do cone com o beam ligado → puxa 1.4× e coleta
         if (this._rareItems && this._rareItems.length) {
-            const beamOn = this.isMobile ? !!this._beamHeld : this.input?.activePointer?.isDown;
+            const beamOn = this._beamWanted();
             const r2 = (this.coneRadius || 100) * (this.coneRadius || 100);
             for (let i = this._rareItems.length - 1; i >= 0; i--) {
                 const it = this._rareItems[i];

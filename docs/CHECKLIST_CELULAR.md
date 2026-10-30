@@ -15,8 +15,10 @@
   exige `isMobile && !__MOBILE_MODE`, e toda tela que liga `isMobile` liga o teaser
   antes. Se o Thiago quiser o jogo completo no celular, é uma decisão de design
   (ver `CONTEXTO.md`), não um bug de teste.
-- Tablet em paisagem com ≥ 1024 px (iPad landscape, por exemplo) → **jogo completo**,
-  com o dedo fazendo o papel do mouse: tocar = mover a nave até o dedo **e** ligar o feixe.
+- Tablet em paisagem com ≥ 1024 px (iPad landscape, por exemplo) → **jogo completo com o
+  cockpit de toque** (30/10): o painel ocupa a base da tela, dedo na **bola vermelha** do
+  joystick move a nave, dedo na **lente do emissor** (direita) liga o feixe, dois dedos ao
+  mesmo tempo funcionam, e tocar no mapa não faz nada.
 
 ## Celular (Android Chrome e/ou iPhone Safari)
 
@@ -50,19 +52,23 @@
 - [ ] Volume razoável nos alto-falantes; não distorce.
 - [ ] Trocar de app e voltar: música retoma ou fica muda? (anotar)
 
-## Tablet em paisagem (≥ 1024 px) — jogo completo no toque
+## Tablet em paisagem (≥ 1024 px) — jogo completo com o cockpit de toque
 
 - [ ] Splash: botões PLAY / TUTORIAL respondem ao toque na primeira vez (hit area
       expandida compensa o barrel).
 - [ ] ⏮ ⏯ ⏭ do splash: um toque = uma ação (gate de 250 ms contra o duplo pointerdown).
-- [ ] Tutorial 01-05 com o dedo: mover, segurar pro feixe, abduzir, entregar, coletar.
+- [ ] Painel na largura toda, colado na base, sem cortar a arena (teto de 40% da altura).
+- [ ] Bola vermelha do joystick: o dedo pousa nela e ela acompanha; soltar = nave para de
+      acelerar. O curso (~90 px da arte) é confortável pro polegar? Raio de toque bom?
+- [ ] Lente do emissor: segurar = feixe + lente acesa; soltar = apaga e o graviton regenera.
+- [ ] Dois dedos ao mesmo tempo (joystick + lente): abduzir uma vaca andando.
+- [ ] Tocar no mapa não move a nave nem liga o feixe.
+- [ ] Tutorial 01-05 pelo painel: mover, segurar a lente, abduzir, entregar, coletar.
 - [ ] Tutorial 06-10: levar tiro, capturar fazendeiro, pedra, torpedos, mecha —
-      **dá pra fazer curva com o dedo rápido o bastante pra esquivar?** (09 é o passo
-      que mais depende de destreza).
+      **dá pra fazer curva com o joystick rápido o bastante pra esquivar?** (09 é o
+      passo que mais depende de destreza).
 - [ ] ESC não existe: dá pra pausar / abrir CONFIGS? (hoje só por teclado — anotar
       se faz falta).
-- [ ] Multi-toque: segundo dedo na tela não rouba o controle (o jogo ignora pointers
-      além do primeiro em `isMobile`, mas no tablet `isMobile` é falso).
 - [ ] Teclado virtual nunca aparece.
 
 ## Ambos

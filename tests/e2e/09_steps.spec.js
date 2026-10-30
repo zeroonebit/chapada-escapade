@@ -100,3 +100,24 @@ test.describe('tanque no tutorial (decisão do Thiago, 30/10)', () => {
         expect(st.fuel, 'tanque cheio ao concluir').toBeGreaterThanOrEqual(st.max - 1);
     });
 });
+
+test.describe('drain de tanque não escala com o tempo (parity Bevy fuel.rs)', () => {
+    test('depois de 5s de partida, a toda ainda gasta 3.5/s', async ({ game, page }) => {
+        // O web multiplicava o drain por `difficulty`, que crescia +0.018/s pra
+        // sempre: aos 5 min um tanque cheio durava 4s de voo. O Bevy não tem
+        // isso (escalada é por quota, em _escalation).
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startDirect({ tutorial: false, input: 'mouse' });
+        await page.waitForTimeout(5000);
+        const r = await game.scene(s => {
+            s.ufo.setVelocity(8, 0);
+            s.fuelCurrent = 100;
+            s._updateFuel(33.3);
+            return { drain: 100 - s.fuelCurrent, difficulty: s.difficulty };
+        });
+        const expected = 3.5 * 0.0333;
+        expect(r.drain).toBeGreaterThan(expected * 0.97);
+        expect(r.drain, 'drain a toda = 3.5/s, sem crescer com o tempo').toBeLessThan(expected * 1.03);
+    });
+});

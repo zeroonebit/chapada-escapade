@@ -125,8 +125,7 @@ Object.assign(Jogo.prototype, {
             s.setVolume(v);
         };
         // Beam hum 0.85 com o feixe ligado (Bevy)
-        const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 &&
-            ((this.isMobile && !window.__MOBILE_MODE) ? !!this._beamHeld : this.input?.activePointer?.isDown);
+        const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 && this._beamWanted();
         lerpVol('beam_loop', beamOn ? 0.85 * master : 0);
         // Chuva: 0.20×rain / 0.28×storm, cap 0.35 (Bevy)
         const fx = this.dbg?.fx || {};

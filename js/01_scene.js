@@ -229,7 +229,14 @@ class Jogo extends Phaser.Scene {
         this.isMobile = !!this.sys.game.device.input.touch
             && window.matchMedia('(pointer: coarse)').matches
             && window.innerWidth < 1024;
-        this.input.addPointer(1);
+        // COCKPIT DE TOQUE (user, 30/10): tela de toque no jogo completo (tablet)
+        // pilota pelo painel — joystick da esquerda move, lente do emissor liga
+        // o feixe, toque no mapa não faz nada (12_mobile.js). O teaser do
+        // celular (MOBILE_MODE) continua com o dedo direto; mouse = desktop.
+        this.touchCockpit = !!this.sys.game.device.input.touch
+            && window.matchMedia('(pointer: coarse)').matches
+            && !window.__MOBILE_MODE;
+        this.input.addPointer(this.touchCockpit ? 3 : 1);
         this.hud = {};
         this._createHUD();
         this._positionHUD();
@@ -380,6 +387,19 @@ class Jogo extends Phaser.Scene {
         this.events.once('shutdown', () => this._sceneCleanup());
     }
 
+    // Fonte ÚNICA do "quer feixe" (era copiado em 7 lugares, cada um com a
+    // sua regra — o feixe do teaser ficou mudo meses por isso):
+    //   cockpit de toque / joystick → lente/botão segurado = _beamHeld
+    //   WASD no desktop → SPACE (vira _beamHeld no _updateBody)
+    //   teaser do celular e mouse → ponteiro apertado
+    _beamWanted() {
+        const inputMode = this.dbg?.behavior?.inputMode ?? 'mouse';
+        if (this.touchCockpit) return !!this._beamHeld;
+        if (inputMode === 'wasd') return !!this._beamHeld;
+        if (this.isMobile && !window.__MOBILE_MODE) return !!this._beamHeld;
+        return !!this.input?.activePointer?.isDown;
+    }
+
     // Registra listener de resize no ScaleManager e guarda a referência pra
     // _sceneCleanup remover — usar no lugar de scale.on('resize', fn) direto
     _onResize(fn) {
@@ -485,7 +505,10 @@ class Jogo extends Phaser.Scene {
         }
         if (this.paused) return;
 
-        this.difficulty += 0.000018 * delta;
+        // (Era `difficulty += 0.000018 * delta` aqui: o drain de tanque dobrava
+        // a cada ~55s e aos 5 min um tanque cheio durava 4s de voo. O Bevy
+        // (fuel.rs) não tem multiplicador por tempo; a escalada da partida é
+        // por quota, em _escalation(). Removido em 30/10.)
 
         if (!this._tutCombustivelCongelado) this._updateFuel(delta);
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
@@ -499,8 +522,9 @@ class Jogo extends Phaser.Scene {
         const cam = this.cameras.main;
         let cursor;
         const inputMode = this.dbg?.behavior?.inputMode ?? 'mouse';
-        // Modo WASD: monta vetor das teclas + Space to beam
-        if (inputMode === 'wasd' && this._keysWASD) {
+        // Modo WASD: monta vetor das teclas + Space to beam (sem teclado no
+        // cockpit de toque — lá quem manda é o joystick do painel)
+        if (inputMode === 'wasd' && this._keysWASD && !this.touchCockpit) {
             let dx = 0, dy = 0;
             if (this._keysWASD.W.isDown) dy -= 1;
             if (this._keysWASD.S.isDown) dy += 1;
@@ -540,13 +564,17 @@ class Jogo extends Phaser.Scene {
             }
             // Beam via Space (sobrescreve _beamHeld pro código de beam pegar)
             this._beamHeld = this._keysWASD.SPACE.isDown;
-        } else if (this.isMobile && this._joyVec && this._joyVec.active) {
+        } else if ((this.isMobile || this.touchCockpit) && this._joyVec && this._joyVec.active) {
             // Joystick — vetor vira "alvo virtual" 220px à front da ship
             const REACH = 220;
             cursor = {
                 x: this.ufo.x + this._joyVec.x * REACH,
                 y: this.ufo.y + this._joyVec.y * REACH
             };
+        } else if (this.touchCockpit) {
+            // Cockpit de toque sem o dedo no joystick: nave parada — toque no
+            // mapa NÃO puxa a nave (decisão do user, 30/10)
+            cursor = { x: this.ufo.x, y: this.ufo.y };
         } else {
             const wp = cam.getWorldPoint(this.virtualX, this.virtualY);
             cursor = { x: wp.x, y: wp.y };
@@ -623,13 +651,7 @@ class Jogo extends Phaser.Scene {
         if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
         if (this._metaUpdate) this._metaUpdate();          // F6: raros + quest log
 
-        // Teaser do celular (MOBILE_MODE): não existe joystick nem _beamHeld
-        // (12_mobile sai cedo) — o dedo na tela É o feixe, como o _moveShip já faz.
-        // Sem isto o cone nunca acendia no celular desde que isMobile virou true lá.
-        const beamByHold = inputMode === 'wasd' || (this.isMobile && !window.__MOBILE_MODE);
-        const wantBeam = beamByHold
-            ? !!this._beamHeld
-            : this.input.activePointer.isDown;
+        const wantBeam = this._beamWanted();
         // Tutorial flags:
         //  _tutBeamNoDrain: cone aparece, NÃO consome graviton (etapa BEAM_VISUAL)
         //  _tutBeamNoPull:  cone aparece, NÃO atrai entidades (BEAM_VISUAL + GRAVITON_BAR)

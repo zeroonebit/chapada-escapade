@@ -345,7 +345,7 @@ Object.assign(Jogo.prototype, {
     // Atrai burgers ready em direction à ship when o beam is ativo e burger no coneRadius
     _attractBurgersBeam(curral) {
         this._ensureSlots(curral);
-        const beamOn = this.isMobile ? !!this._beamHeld : this.input.activePointer.isDown;
+        const beamOn = this._beamWanted();
         if (!beamOn || this.energiaLed <= 0) return;
         const r2 = (this.coneRadius || 100) * (this.coneRadius || 100);
         for (let i = 0; i < curral.slots.length; i++) {

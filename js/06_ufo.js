@@ -258,7 +258,9 @@ Object.assign(Jogo.prototype, {
         const speedNorm = Math.min(1, speed / 8); // normaliza pra 0..1
         const baseIdle  = 0.4;                    // drain minimo (idle)
         const baseMove  = 3.1;                    // drain extra em movimento
-        const rate = (baseIdle + baseMove * speedNorm) * this.difficulty;
+        // Parity Bevy fuel.rs: 0.4/s parado, 3.5/s a toda, SEM multiplicador
+        // por tempo (o `* this.difficulty` antigo dobrava a cada ~55s)
+        const rate = baseIdle + baseMove * speedNorm;
         // Passo da física: o Matter limita o delta a ~33ms (runner.deltaMax) mas o
         // delta da cena chega a 200ms (minFps 5). Com fps baixo a nave andava 33ms
         // e pagava 200ms de tanque — até 6x mais caro por metro. Drena pelo mesmo
