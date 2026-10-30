@@ -133,6 +133,34 @@ class GamePage {
         return { x: r.x + (sc.x / sc.w) * r.w, y: r.y + (sc.y / sc.h) * r.h, w: r.w, h: r.h, rect: r };
     }
 
+    // ── Cockpit de toque (12_mobile.js): centros do joystick e da lente ──
+    // Só existem depois do jogo começar numa tela de toque (touchCockpit).
+    // Cache: o painel não muda de lugar (viewport fixo no teste) e cada
+    // evaluate custa ~15ms — a esquiva de torpedo precisa reagir em <0.4s.
+    async useCockpit() {
+        if (!this.input.steer) return false;
+        if (this._cockpitOk) return true;
+        this._cockpitOk = await this.scene(s => !!(s.touchCockpit && s._ckJoyCenter));
+        return this._cockpitOk;
+    }
+    async joyCenterPage() {
+        if (this._joyCache) return this._joyCache;
+        const c = await this.scene(s => s._ckJoyCenter ? { ...s._ckJoyCenter(), r: 90 * (s._ckScale || 0.3) } : null);
+        if (!c) return null;
+        const p = await this.toPage(c.x, c.y);
+        const rect = await this.canvasRect();
+        const sz = await this.scene(s => s.scale.width);
+        this._joyCache = { x: p.x, y: p.y, r: c.r * (rect.w / sz) };
+        return this._joyCache;
+    }
+    async lensCenterPage() {
+        if (this._lensCache) return this._lensCache;
+        const c = await this.scene(s => s._ckLensCenter ? s._ckLensCenter() : null);
+        if (!c) return null;
+        this._lensCache = await this.toPage(c.x, c.y);
+        return this._lensCache;
+    }
+
     // ── Splash ───────────────────────────────────────────────────────
     // Botões do splash (11_gameflow.js): esq em x=240, dir em x=w-240, y=h-38
     async splashButton(side) {
@@ -187,8 +215,24 @@ class GamePage {
             const sx = (s.ufo.x - cam.scrollX), sy = (s.ufo.y - cam.scrollY);
             const dx = p.wx - s.ufo.x, dy = p.wy - s.ufo.y;
             const d = Math.hypot(dx, dy) || 1;
-            return { sx, sy, ux: dx / d, uy: dy / d, dist: d, w: s.scale.width, h: s.scale.height };
+            const v = s.ufo.body?.velocity || { x: 0, y: 0 };
+            return { sx, sy, ux: dx / d, uy: dy / d, dist: d, vx: v.x, vy: v.y,
+                     w: s.scale.width, h: s.scale.height };
         }, { wx, wy });
+        if (await this.useCockpit()) {
+            // Joystick do painel: qualquer deflexão >16% já é força máxima (o
+            // cursor virtual fica a 220px), então "apontar pro alvo" passa reto.
+            // Controle de velocidade: quer v ∝ distância; o joystick empurra na
+            // direção do ERRO (v desejada − v atual) e solta quando acertou.
+            const speed = Math.hypot(info.vx, info.vy);
+            if (info.dist <= stopWithin && speed < 2.5) { await this.input.steer(0, 0, 0); return info.dist; }
+            const vWant = info.dist <= stopWithin ? 0 : Math.min(9, info.dist * 0.06);
+            const ex = info.ux * vWant - info.vx, ey = info.uy * vWant - info.vy;
+            const m = Math.hypot(ex, ey);
+            if (m < 0.8) await this.input.steer(0, 0, 0);       // na velocidade certa: plana
+            else await this.input.steer(ex / m, ey / m, 1);
+            return info.dist;
+        }
         const r = info.dist <= stopWithin ? 0 : Math.min(reach, Math.max(55, info.dist));
         let cx = info.sx + info.ux * r, cy = info.sy + info.uy * r;
         cx = Math.max(4, Math.min(info.w - 4, cx));
@@ -210,9 +254,10 @@ class GamePage {
         while (Date.now() - t0 < timeout) {
             dist = await this.aimToward(wx, wy, reach, tol);
             if (dist <= tol) break;
+            if (await this.scene(s => !!s.gameOver)) break;   // morreu: não insiste 15s num cadáver
             await this.page.waitForTimeout(90);
         }
-        if (dist > tol) {
+        if (dist > tol && !(await this.scene(s => !!s.gameOver))) {
             // Diagnóstico: por que não chegou?
             const d = await this.scene((s, p) => ({
                 ship: [Math.round(s.ufo.x), Math.round(s.ufo.y)], target: [Math.round(p.wx), Math.round(p.wy)],
@@ -231,8 +276,17 @@ class GamePage {
         return dist;
     }
 
-    // Ponteiro em cima da nave (dist < 50 → nenhuma força)
+    // Ponteiro em cima da nave (dist < 50 → nenhuma força). No cockpit o
+    // joystick FREIA (empurra contra a velocidade) até parar, senão a nave
+    // plana — e perto da costa a barreira do oceano a arrasta pro centro.
     async hover() {
+        if (await this.useCockpit()) {
+            const v = await this.scene(s => ({ x: s.ufo.body.velocity.x, y: s.ufo.body.velocity.y }));
+            const sp = Math.hypot(v.x, v.y);
+            if (sp > 1.0) await this.input.steer(-v.x / sp, -v.y / sp, 1);
+            else await this.input.steer(0, 0, 0);
+            return;
+        }
         const sc = await this.scene(s => {
             const cam = s.cameras.main;
             return { x: s.ufo.x - cam.scrollX, y: s.ufo.y - cam.scrollY };
@@ -241,19 +295,22 @@ class GamePage {
         await this.input.move(p.x, p.y);
     }
 
-    // Espera a nave praticamente parar
+    // Espera a nave praticamente parar (no cockpit: freando pelo joystick).
+    // No timeout SOLTA o joystick — senão o freio vira aceleração ao contrário.
     async settle(ms = 1500) {
         const t0 = Date.now();
+        let sp = Infinity;
         while (Date.now() - t0 < ms) {
             await this.hover();
-            const sp = await this.scene(s => Math.hypot(s.ufo.body.velocity.x, s.ufo.body.velocity.y));
-            if (sp < 0.3) return;
+            sp = await this.scene(s => Math.hypot(s.ufo.body.velocity.x, s.ufo.body.velocity.y));
+            if (sp < 0.3) break;
             await this.page.waitForTimeout(80);
         }
+        if (this.input.steer && await this.useCockpit()) await this.input.steer(0, 0, 0);
     }
 
-    async beamOn()  { await this.input.down(); }
-    async beamOff() { await this.input.up(); }
+    async beamOn()  { if (await this.useCockpit()) await this.input.beamDown(); else await this.input.down(); }
+    async beamOff() { if (await this.useCockpit()) await this.input.beamUp(); else await this.input.up(); }
 
     // Segura o feixe sobre um alvo até `cond(scene, arg)` virar true. Com
     // `keep`, o feixe continua ligado quando deu certo (carga fica a bordo).
@@ -305,35 +362,100 @@ class MouseInput {
     async tap(x, y) { await this.page.mouse.click(x, y); }
 }
 
+// Toque por TouchEvent SINTÉTICO no canvas (new Touch/new TouchEvent): o
+// Phaser lê `changedTouches`/`identifier` direto do evento, então cada dedo
+// tem identidade própria. (O CDP Input.dispatchTouchEvent casa os pontos entre
+// eventos POR ÍNDICE, e soltar o 1º dedo com o 2º preso virava "o 2º soltou".)
+// Dois modos:
+//   cru     — move/down/up/tap: um dedo no mapa (teaser do celular, splash)
+//   cockpit — steer()/beamDown()/beamUp(): um dedo no joystick do painel,
+//             outro na lente do emissor (12_mobile.js, tablet)
 class TouchInput {
-    constructor(page) { this.page = page; this.cdp = null; this.pos = { x: 0, y: 0 }; this.isDown = false; this.needsHold = true; }
-    async init() { this.cdp = await this.page.context().newCDPSession(this.page); }
-    async _dispatch(type, points) {
-        await this.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
+    constructor(page) {
+        this.page = page; this.pos = { x: 0, y: 0 };
+        this.isDown = false; this.needsHold = false; this.game = null;
+        this.points = new Map();                     // id → {id, x, y}
+        this.slot = { raw: null, joy: null, lens: null };
+        this._nextId = 100;
     }
-    async move(x, y) {
-        this.pos = { x, y };
-        if (this.isDown) await this._dispatch('touchMove', [{ x, y, id: 1 }]);
+    async init(game) { this.game = game; }
+    _begin(slot) { const id = this._nextId++; this.slot[slot] = id; this.points.set(id, { id, x: 0, y: 0 }); return this.points.get(id); }
+    _pt(slot) { const id = this.slot[slot]; return id == null ? null : this.points.get(id); }
+    // Dispara `type` no canvas com `touches` = todos os dedos ativos e
+    // `changedTouches` = os que mudaram (no touchend, os que saíram)
+    async _dispatch(type, changed) {
+        const all = [...this.points.values()].map(p => ({ ...p }));
+        await this.page.evaluate(({ type, all, changed }) => {
+            const canvas = document.querySelector('#game-host canvas');
+            const mk = (p) => new Touch({ identifier: p.id, target: canvas,
+                clientX: p.x, clientY: p.y, pageX: p.x, pageY: p.y, screenX: p.x, screenY: p.y,
+                radiusX: 2.5, radiusY: 2.5, rotationAngle: 0, force: 1 });
+            const touches = all.map(mk), changedTouches = changed.map(mk);
+            canvas.dispatchEvent(new TouchEvent(type, { touches, targetTouches: touches, changedTouches,
+                bubbles: true, cancelable: true, composed: true }));
+        }, { type, all, changed: changed.map(p => ({ ...p })) });
     }
+    async _startSlot(slot, x, y) {
+        const f = this._begin(slot); f.x = x; f.y = y;
+        await this._dispatch('touchstart', [f]);
+        return f;
+    }
+    async _moveSlot(slot, x, y) {
+        const f = this._pt(slot); if (!f) return;
+        f.x = x; f.y = y;
+        await this._dispatch('touchmove', [f]);
+    }
+    async _endSlot(slot) {
+        const f = this._pt(slot); if (!f) return false;
+        this.points.delete(f.id); this.slot[slot] = null;
+        await this._dispatch('touchend', [f]);
+        return true;
+    }
+    // ── dedo cru no mapa (teaser / splash) ──
+    async move(x, y) { this.pos = { x, y }; await this._moveSlot('raw', x, y); }
     async down() {
-        if (this.isDown) return;
+        if (this._pt('raw')) return;
         this.isDown = true;
-        await this._dispatch('touchStart', [{ x: this.pos.x, y: this.pos.y, id: 1 }]);
+        await this._startSlot('raw', this.pos.x, this.pos.y);
         // Dedo real sempre treme ~1px: o jogo só lê a posição do dedo no
         // pointermove (01_scene virtualX/Y) — um touchstart parado não pilota.
         await this.page.waitForTimeout(30);
-        await this._dispatch('touchMove', [{ x: this.pos.x + 1, y: this.pos.y, id: 1 }]);
+        await this._moveSlot('raw', this.pos.x + 1, this.pos.y);
     }
     async up() {
-        if (!this.isDown) return;
+        if (!(await this._endSlot('raw'))) return;
         this.isDown = false;
-        await this._dispatch('touchEnd', []);
     }
     async tap(x, y) {
-        await this._dispatch('touchStart', [{ x, y, id: 1 }]);
+        const id = this._nextId++;
+        const f = { id, x, y };
+        this.points.set(id, f);
+        await this._dispatch('touchstart', [f]);
         await this.page.waitForTimeout(40);
-        await this._dispatch('touchEnd', []);
+        this.points.delete(id);
+        await this._dispatch('touchend', [f]);
     }
+    // ── cockpit: um dedo no joystick (k=0 solta), outro na lente ──
+    async steer(ux, uy, k) {
+        const c = await this.game.joyCenterPage();
+        if (!c) return;
+        if (k <= 0) {
+            if (await this._endSlot('joy')) {}
+            this.isDown = false;
+            return;
+        }
+        const x = c.x + ux * c.r * k, y = c.y + uy * c.r * k;
+        if (!this._pt('joy')) await this._startSlot('joy', c.x, c.y);
+        await this._moveSlot('joy', x, y);
+        this.isDown = true;
+    }
+    async beamDown() {
+        if (this._pt('lens')) return;
+        const l = await this.game.lensCenterPage();
+        if (!l) return;
+        await this._startSlot('lens', l.x, l.y);
+    }
+    async beamUp() { await this._endSlot('lens'); }
 }
 
 const test = base.test.extend({
@@ -360,7 +482,7 @@ const test = base.test.extend({
         page.on('pageerror', (err) => g.errors.push('pageerror: ' + (err.stack || err.message)));
 
         g.input = hasTouch ? new TouchInput(page) : new MouseInput(page);
-        if (g.input.init) await g.input.init();
+        if (g.input.init) await g.input.init(g);
 
         await use(g);
     },

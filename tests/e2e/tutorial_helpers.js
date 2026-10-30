@@ -46,6 +46,7 @@ async function waitStep(game, key, timeout = 30_000) {
 async function clickGameOverRestart(game) {
     expect(await game.waitFor(s => s._gameOverUiShown, { timeout: 12_000 }), 'UI de game over apareceu').toBe(true);
     await game.input.up();                  // no toque: dedo pode estar preso desde a morte
+    if (game.input.beamUp) await game.input.beamUp();   // cockpit: solta a lente também
     await game.page.waitForTimeout(1500);   // tween de entrada do botão
     const sz = await game.scene(s => ({ w: s.scale.width, h: s.scale.height }));
     const p = await game.toPage(sz.w / 2, sz.h / 2 + 250);
@@ -66,8 +67,10 @@ async function clickGameOverRestart(game) {
                 depth700: s.children.list.filter(o => o.depth >= 700).length,
                 fuel: Math.round(s.fuelCurrent), tutStep: s._tutStepIdx, resume: window.__cepTutResume,
                 errors: (s._errorLog || []).map(e => e.msg).slice(-3),
+                deep: s.children.list.filter(o => o.depth >= 500).map(o => [o.type, o.depth, (o.text || '').slice(0, 20), +o.alpha.toFixed(2), o.visible]),
+                children: s.children.list.length, fx: !!s._gameOverFx, smoke: !!s._gameOverDebrisSmoke,
             }));
-            console.log('[restart] toque não pegou:', JSON.stringify({ tap: p, ...d }));
+            console.log('[restart] toque não pegou:', JSON.stringify({ tap: p, ...d, pageErrors: game.errors.slice(-3) }));
         }
     }
     expect(ok, 'cena reiniciou').toBe(true);
@@ -77,6 +80,11 @@ async function clickGameOverRestart(game) {
 // Morreu no tutorial: RESTART e espera retomar no passo que falhou
 async function recoverFromGameOver(game, log) {
     const key = await game.scene(s => TUT_STEPS[window.__cepTutResume]?.key);
+    // Passo 10 fechou no MESMO frame em que o tanque zerou (torpedo mata o
+    // mecha e a nave): _tutConcluir limpa o resume e o RESTART volta pro jogo
+    // normal com o tutorial gravado como concluído. Conta como DONE.
+    const concluded = await game.scene(s => window.__cepTutResume == null && s._tutStepIdx == null &&
+        localStorage.getItem('cep_tutorial_done') === '1');
     // Diagnóstico da morte: tanque, graviton, inimigos/torpedos em cena, dedo
     const why = await game.scene(s => ({
         fuel: Math.round(s.fuelCurrent), energy: Math.round(s.energiaLed),
@@ -84,8 +92,9 @@ async function recoverFromGameOver(game, log) {
         bullets: s.bullets.length, down: s.input.activePointer.isDown,
         ship: [Math.round(s.ufo.x), Math.round(s.ufo.y)], cargo: s.abductedCows.length,
     }));
-    log(`  GAME OVER no passo ${key} — RESTART e retoma ${JSON.stringify(why)}`);
+    log(`  GAME OVER no passo ${concluded ? 'DONE (concluiu no frame da morte)' : key} — RESTART e retoma ${JSON.stringify(why)}`);
     await clickGameOverRestart(game);
+    if (concluded) { game.concludedOnDeath = true; return 'DONE'; }
     const ok = await game.waitFor(s => s.tutorialMode && s._tutStepIdx != null, { timeout: 10_000 });
     expect(ok, 'retomou o tutorial').toBe(true);
     await game.scene((s, ms) => { s._tutMinReadMs = ms; }, MIN_READ_MS);
@@ -168,6 +177,15 @@ async function deliverToCorral(game, log) {
         log(`  chegou a ${Math.round(d)}px do curral`);
         // _checkDelivery dropa quando d < 110
         dropped = !!(await game.waitFor(s => s.corrals.some(c => c.slots && c.slots.some(x => x)), { timeout: 5000 }));
+        if (!dropped) {
+            const dd = await game.scene(s => ({
+                cargo: s.abductedCows.length, held: !!s._beamHeld, beamP: s._beamPointerId, joyP: s._joyPointerId,
+                energy: Math.round(s.energiaLed), want: s._beamWanted(), gameOver: s.gameOver,
+                dCorral: Math.round(Math.min(...s.corrals.map(c => Math.hypot(c.x - s.ufo.x, c.y - s.ufo.y)))),
+                pointers: s.input.manager.pointers.map(q => [q.id, q.isDown, q.active]),
+            }));
+            log('  [deliver] não dropou: ' + JSON.stringify(dd) + ' driver=' + JSON.stringify([...(game.input.points || new Map()).keys()]));
+        }
     } finally {
         await game.beamOff();
     }
@@ -218,8 +236,10 @@ async function collectBurger(game, log) {
             ship: [Math.round(s.ufo.x), Math.round(s.ufo.y)], dSlot: Math.round(Math.hypot(s.ufo.x - p.x, s.ufo.y - p.y)),
             isDown: s.input.activePointer.isDown, energy: Math.round(s.energiaLed), cone: Math.round(s.coneRadius),
             gameOver: s.gameOver, burgers: s.burgersCollected, score: s.score, noPull: !!s._tutBeamNoPull,
+            held: !!s._beamHeld, beamP: s._beamPointerId, joyP: s._joyPointerId,
+            pointers: s.input.manager.pointers.map(q => [q.id, q.isDown, q.active, q.identifier]),
         }), slot);
-        log('  [collectBurger] falhou: ' + JSON.stringify(d));
+        log('  [collectBurger] falhou: ' + JSON.stringify(d) + ' driver=' + JSON.stringify([...(game.input.points || new Map()).keys()]));
     }
     log(`  score ${before.score} → ${await game.scene(s => s.score)}` +
         (got ? ` fuel ${Math.round(fuelPrev)} → ${Math.round(got.fuelAfter)}` : ''));
@@ -343,20 +363,21 @@ async function dodgeTorpedoes(game, log, need = 5) {
         }
         if (!st.mecha) { await game.page.waitForTimeout(200); continue; }
 
-        if (st.tor && st.tor.d < 170) {
+        if (st.tor && st.tor.d < 230) {
             // Perpendicular ao rumo do torpedo, pro lado em que a nave já está
             const px = -Math.sin(st.tor.ang), py = Math.cos(st.tor.ang);
             const rx = st.ufo.x - st.tor.x, ry = st.ufo.y - st.tor.y;
             const side = (rx * px + ry * py) >= 0 ? 1 : -1;
             await game.aimToward(st.ufo.x + px * side * 400, st.ufo.y + py * side * 400, 240);
-        } else if (st.mecha.d > 400) {
-            await game.aimToward(st.mecha.x, st.mecha.y, 240);
-        } else if (st.mecha.d < 300) {
-            await game.aimToward(st.ufo.x * 2 - st.mecha.x, st.ufo.y * 2 - st.mecha.y, 240);
-        } else {
-            // Orbita devagar (tangente)
+        } else if (st.mecha.d > 400 || st.mecha.d < 300) {
+            // Vai pro CENTRO da faixa de tiro (350px do mecha) — mirar o mecha
+            // em si oscilava entre aproximar e recuar a toda e queimava o tanque
             const ax = st.ufo.x - st.mecha.x, ay = st.ufo.y - st.mecha.y;
-            await game.aimToward(st.ufo.x - ay * 0.5, st.ufo.y + ax * 0.5, 120);
+            const d = Math.hypot(ax, ay) || 1;
+            await game.aimToward(st.mecha.x + ax / d * 350, st.mecha.y + ay / d * 350, 240, 25);
+        } else {
+            // Na faixa de tiro: PARADO (cada segundo a toda é 3.5 de tanque)
+            await game.hover();
         }
         await game.page.waitForTimeout(60);
     }
@@ -538,9 +559,9 @@ async function playTutorial(game, page) {
             gameOver: s.gameOver, stepIdx: s._tutStepIdx, fuel: Math.round(s.fuelCurrent),
             btn: s.children.list.some(o => o.type === 'Text' && /PLAY NOW|JOGAR AGORA/.test(o.text || '')),
         }));
-        log(`DONE (mortes no caminho: ${deaths}; fuel ao concluir ${fin.fuel}${fin.gameOver ? ' — morreu logo após concluir' : ''})`);
+        log(`DONE (mortes no caminho: ${deaths}; fuel ao concluir ${fin.fuel}${fin.gameOver ? ' — morreu logo após concluir' : ''}${game.concludedOnDeath ? ' — concluiu no frame da morte' : ''})`);
         expect(fin.stepIdx).toBeNull();
-        expect(fin.btn, 'botão JOGAR AGORA').toBe(true);
+        if (!game.concludedOnDeath) expect(fin.btn, 'botão JOGAR AGORA').toBe(true);
         expect(game.realErrors).toEqual([]);
         expect(fin.tutDone, 'cep_tutorial_done gravado').toBe('1');
         expect(fin.graduate, 'conquista graduate').toBe(true);
