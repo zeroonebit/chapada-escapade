@@ -158,7 +158,10 @@ Object.assign(Jogo.prototype, {
 
     _positionCockpit() {
         const w = this.scale.width, h = this.scale.height;
-        const s = (w * 0.44) / 2056;   // dash_scale do Bevy
+        // Painel toma a BASE da tela (user, 30/10: largura toda, toque e desktop).
+        // Era 44% da largura (dash_scale do Bevy). Teto de 40% da altura: em
+        // 16:9 a largura toda daria 42% e a arena sumiria.
+        const s = Math.min(w / 2056, (h * 0.40) / 541);
         const minX = w / 2 - (2056 * s) / 2, minY = h - 541 * s;
         this._ckScale = s; this._ckMin = { x: minX, y: minY };
         const dpx = (x, y) => ({ x: minX + x * s, y: minY + y * s });
@@ -256,15 +259,20 @@ Object.assign(Jogo.prototype, {
         }
 
         // Lente do emissor: apagada quando o graviton tá idle
-        const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 &&
-            (this.isMobile ? !!this._beamHeld : this.input?.activePointer?.isDown);
+        const beamOn = this.gameStarted && !this.gameOver && this.energiaLed > 0 && this._beamWanted();
         this.hud.ckBeamOff.setVisible(!beamOn);
 
-        // Joystick VIVO: só a bola, desloca com a velocidade da nave; no
-        // repouso some (a bola baked da arte assume — truque do Bevy)
-        const bv = this.ufo?.body?.velocity || { x: 0, y: 0 };
-        const dx = Phaser.Math.Clamp(bv.x * 1.2, -14, 14);
-        const dy = Phaser.Math.Clamp(bv.y * 1.2, -11, 11);
+        // Joystick VIVO: só a bola. Com o dedo nela (cockpit de toque) segue o
+        // dedo; senão desloca com a velocidade da nave e no repouso some (a
+        // bola baked da arte assume — truque do Bevy)
+        let dx, dy;
+        if (this.touchCockpit && this._joyPointerId != null && this._joyVec) {
+            dx = this._joyVec.x * 40; dy = this._joyVec.y * 32;
+        } else {
+            const bv = this.ufo?.body?.velocity || { x: 0, y: 0 };
+            dx = Phaser.Math.Clamp(bv.x * 1.2, -14, 14);
+            dy = Phaser.Math.Clamp(bv.y * 1.2, -11, 11);
+        }
         const mag = Math.hypot(dx, dy);
         const knob = this.hud.ckKnob;
         if (mag > 0.6) {

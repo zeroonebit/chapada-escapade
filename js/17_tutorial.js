@@ -266,17 +266,13 @@ Object.assign(Jogo.prototype, {
 
             case 'BEAM_VISUAL': {
                 // Cone aparece, without pull e without drain (flag em scene update)
-                const beamOn = (this.dbg?.behavior?.inputMode === 'wasd' || this.isMobile)
-                    ? !!this._beamHeld
-                    : this.input.activePointer.isDown;
+                const beamOn = this._beamWanted();
                 if (canAdvance && beamOn) this._tutAdvance();
                 break;
             }
 
             case 'GRAVITON_BAR': {
-                const beamG = (this.dbg?.behavior?.inputMode === 'wasd' || this.isMobile)
-                    ? !!this._beamHeld
-                    : this.input.activePointer.isDown;
+                const beamG = this._beamWanted();
                 if (this.energiaLed <= this.energiaMax * 0.5) this._tutGravitonDrained = true;
                 if (canAdvance &&
                     this._tutGravitonDrained &&
