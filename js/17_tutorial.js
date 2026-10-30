@@ -155,6 +155,12 @@ Object.assign(Jogo.prototype, {
         this._tutScoreAntes = this.score || 0;
         this._tutFarmerAbducted = false;
         this._tutFarmerKilled   = false;
+        // Baselines dos passos 08/09/10 (_tutFarmerKillBase/_tutDodgeBase/
+        // _tutShooterBase) são capturados quando _tutStepInit troca de passo.
+        // A cena é REUSADA no scene.restart, então sem este reset o resume
+        // (morreu no 10 depois de um fogo amigo no 09) ficava com baseline
+        // velho e o mecha abatido nunca contava — soft-lock.
+        this._tutStepInit = null;
         this._tutGfx  = this.add.graphics().setScrollFactor(0).setDepth(510);
         this._tutAngle = 0;
         this._tutBox   = null;
