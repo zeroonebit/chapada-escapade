@@ -1,0 +1,18 @@
+{
+  "name": "chapada-escapade",
+  "version": "0.9.0-alpha",
+  "private": true,
+  "description": "Chapada Escapade — jogo web (Phaser 3.60, sem build). Este package.json existe só pra suíte de testes Playwright.",
+  "scripts": {
+    "test": "playwright test",
+    "test:desktop": "playwright test --project=desktop",
+    "test:touch": "playwright test --project=tablet-touch --project=phone-touch",
+    "test:headed": "playwright test --headed --project=desktop",
+    "test:install": "playwright install chromium",
+    "serve": "node tests/serve.cjs 8787"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0",
+    "phaser": "3.60.0"
+  }
+}

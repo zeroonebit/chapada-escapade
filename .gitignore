@@ -30,3 +30,9 @@ tools/saves/
 tools/secrets/
 tools/pixellab_secret.txt
 
+
+# Testes (Playwright) — deps locais e artefatos de execucao
+node_modules/
+test-results/
+playwright-report/
+tests/.cache/
