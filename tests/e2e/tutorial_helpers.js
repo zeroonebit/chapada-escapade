@@ -56,9 +56,16 @@ async function clickGameOverRestart(game) {
         if (!ok) {
             const d = await game.scene(s => ({
                 gameOver: s.gameOver, ui: !!s._gameOverUiShown, inputEnabled: s.input.enabled,
+                active: s.scene.isActive(), status: s.sys.settings.status,
                 ptr: [Math.round(s.input.activePointer.x), Math.round(s.input.activePointer.y), s.input.activePointer.isDown],
                 downs: s.input.manager.pointers.filter(q => q.isDown).length,
                 btn: s.children.list.some(o => o.type === 'Rectangle' && o.input && o.input.enabled && Math.abs(o.y - s.scale.height / 2 - 250) < 2),
+                rects: s.children.list.filter(o => o.type === 'Rectangle' && o.y > s.scale.height / 2)
+                    .map(o => [Math.round(o.x), Math.round(o.y), o.depth, !!(o.input && o.input.enabled), o.visible, +o.alpha.toFixed(2)]).slice(0, 8),
+                texts: s.children.list.filter(o => o.type === 'Text' && /RESTART|JOGAR|GAME OVER|CHAPADA/.test(o.text || '')).map(o => [o.text, o.depth, +o.alpha.toFixed(2)]),
+                depth700: s.children.list.filter(o => o.depth >= 700).length,
+                fuel: Math.round(s.fuelCurrent), tutStep: s._tutStepIdx, resume: window.__cepTutResume,
+                errors: (s._errorLog || []).map(e => e.msg).slice(-3),
             }));
             console.log('[restart] toque não pegou:', JSON.stringify({ tap: p, ...d }));
         }
@@ -70,7 +77,14 @@ async function clickGameOverRestart(game) {
 // Morreu no tutorial: RESTART e espera retomar no passo que falhou
 async function recoverFromGameOver(game, log) {
     const key = await game.scene(s => TUT_STEPS[window.__cepTutResume]?.key);
-    log(`  GAME OVER no passo ${key} — RESTART e retoma`);
+    // Diagnóstico da morte: tanque, graviton, inimigos/torpedos em cena, dedo
+    const why = await game.scene(s => ({
+        fuel: Math.round(s.fuelCurrent), energy: Math.round(s.energiaLed),
+        farmers: s.farmers.filter(f => f.scene).length, mechas: s.shooters.length,
+        bullets: s.bullets.length, down: s.input.activePointer.isDown,
+        ship: [Math.round(s.ufo.x), Math.round(s.ufo.y)], cargo: s.abductedCows.length,
+    }));
+    log(`  GAME OVER no passo ${key} — RESTART e retoma ${JSON.stringify(why)}`);
     await clickGameOverRestart(game);
     const ok = await game.waitFor(s => s.tutorialMode && s._tutStepIdx != null, { timeout: 10_000 });
     expect(ok, 'retomou o tutorial').toBe(true);
