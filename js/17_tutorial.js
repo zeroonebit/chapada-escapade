@@ -797,6 +797,15 @@ Object.assign(Jogo.prototype, {
         this._tutSetMode('NONE');
         // Resets visibilidade das barras (game normal always shows)
         if (this._setBarsVisibility) this._setBarsVisibility(true, true);
+        // Graduação: grava o tutorial concluído. O _metaSetup (22_meta.js) lê
+        // cep_tutorial_done / save.tutorialDone pra dar `graduate`, mas
+        // ninguém escrevia — a conquista era dormente e o flag nunca existiu.
+        try { localStorage.setItem('cep_tutorial_done', '1'); } catch (e) {}
+        if (this.save) {
+            this.save.tutorialDone = true;
+            if (this._metaAch) this._metaAch('graduate');
+            if (this._metaPersist) this._metaPersist();
+        }
 
         const w = this.scale.width, h = this.scale.height;
 
