@@ -51,8 +51,8 @@ Nada abaixo é automatizável; é o que falta pro `v1.0.0`:
 
 | Situação | Tag |
 |---|---|
-| Hoje | `v0.9.0-alpha` (31/08/2026, `47df9e8`) |
-| Só correções e testes, sem feature nova | `v0.9.1-alpha` |
+| Hoje | `v0.9.1-alpha` (30/10/2026, conteúdo de `2530ae2`: suíte Playwright, 10 fixes, cockpit de toque) |
+| Só correções e testes, sem feature nova | `v0.9.2-alpha` |
 | Feature nova sem quebrar save/configs | `v0.10.0-alpha` |
 | **Validado pelo Thiago** (tutorial + loop + áudio + celular) | **`v1.0.0`** — só com o ok dele, nunca antes |
 

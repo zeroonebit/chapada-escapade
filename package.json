@@ -1,6 +1,6 @@
 {
   "name": "chapada-escapade",
-  "version": "0.9.0-alpha",
+  "version": "0.9.1-alpha",
   "private": true,
   "description": "Chapada Escapade — jogo web (Phaser 3.60, sem build). Este package.json existe só pra suíte de testes Playwright.",
   "scripts": {
