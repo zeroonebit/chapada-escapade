@@ -623,7 +623,11 @@ class Jogo extends Phaser.Scene {
         if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
         if (this._metaUpdate) this._metaUpdate();          // F6: raros + quest log
 
-        const wantBeam = (inputMode === 'wasd' || this.isMobile)
+        // Teaser do celular (MOBILE_MODE): não existe joystick nem _beamHeld
+        // (12_mobile sai cedo) — o dedo na tela É o feixe, como o _moveShip já faz.
+        // Sem isto o cone nunca acendia no celular desde que isMobile virou true lá.
+        const beamByHold = inputMode === 'wasd' || (this.isMobile && !window.__MOBILE_MODE);
+        const wantBeam = beamByHold
             ? !!this._beamHeld
             : this.input.activePointer.isDown;
         // Tutorial flags:
