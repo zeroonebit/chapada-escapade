@@ -491,9 +491,9 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
-        // COWS counter: usa _cowsInBeamCount mantido by _updateBeamCounters
-        // (was for-loop by frame before — H5 do audit)
-        this.hud.cowsText.setText(this._cowsInBeamCount || 0);
+        // COWS no cockpit = TOTAL entregue (parity Bevy board.cows_delivered),
+        // escrito em _dropCowsAtCorral como o BULLS. Antes este frame
+        // sobrescrevia com a carga do feixe e o total nunca aparecia na caixa.
         this.hud.burgersText.setText((this.burgersCollected || 0) + '/' + BURGER_QUOTA);
 
         const cam = this.cameras.main;
