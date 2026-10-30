@@ -636,12 +636,15 @@ class Jogo extends Phaser.Scene {
         const noDrain = !!this._tutBeamNoDrain;
         const beamActive = wantBeam && (noDrain || this.energiaLed > 0);
 
+        // Graviton drena/regenera pelo passo da física (~33ms), igual ao tanque
+        // em 06_ufo._updateFuel — com fps baixo o delta da cena vai a 200ms
+        const dtBeam = Math.min(delta, 1000 / 30) / 1000;
         if (wantBeam && !noDrain && this.energiaLed > 0) {
             const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
-            this.energiaLed -= this.energiaDrain * drainMul * (delta/1000);
+            this.energiaLed -= this.energiaDrain * drainMul * dtBeam;
             if (this.energiaLed < 0) this.energiaLed = 0;
         } else if (!wantBeam && !noDrain) {
-            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * (delta/1000));
+            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * dtBeam);
         }
 
         const enePct = this.energiaLed / this.energiaMax;
