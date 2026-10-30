@@ -673,6 +673,24 @@ Object.assign(Jogo.prototype, {
             targets: [scoreLabel, scoreVal, btn, btnLbl],
             alpha: 1, duration: 600, delay: 1100, ease: 'Cubic.easeOut',
         });
+
+        // ── Camera própria pra UI (Thiago no Z Fold, 30/10: "tela escura /
+        // botão apagado") ──
+        // Vinheta e grayscale do cinematic são postFX da camera PRINCIPAL e
+        // pintavam o GAME OVER, o score e o RESTART junto com o mundo: o
+        // vermelho cc1122 virava marrom quase preto e o score sumia no anel
+        // escuro. A UI passa a sair por uma segunda camera sem FX: a principal
+        // ignora a UI, a nova ignora tudo o que não é UI — inclusive o que
+        // nascer depois (fumaça dos destroços, telas da transição). O
+        // scene.restart() recria o CameraManager, então a camera morre junto.
+        const uiObjs = [goText, scoreLabel, scoreVal, btn, btnLbl];
+        const uiCam = this.cameras.add(0, 0, w, h, false, 'gameover-ui');
+        this.cameras.main.ignore(uiObjs);
+        uiCam.ignore(this.children.list.filter(o => !uiObjs.includes(o)));
+        const onAdd = (go) => { if (!uiObjs.includes(go)) uiCam.ignore(go); };
+        this.events.on('addedtoscene', onAdd);
+        this.events.once('shutdown', () => this.events.off('addedtoscene', onAdd));
+        this._gameOverUiCam = uiCam;
     }
 
 });

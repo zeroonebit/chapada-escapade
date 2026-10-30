@@ -216,6 +216,7 @@ class Jogo extends Phaser.Scene {
         this._gameOverSmokeEvent = null;
         this._gameOverDebrisSmoke = null;
         this._cinematicHide      = false;  // religa cockpit/quest log no restart
+        this._gameOverUiCam      = null;   // camera da UI do game over (morre no restart)
         this.energiaMax = 100;
         this.energiaLed = 100;
         this.energiaDrain = 5;
