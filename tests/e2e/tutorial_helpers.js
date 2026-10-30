@@ -330,13 +330,20 @@ async function killFarmerOnRock(game, log) {
     return false;
 }
 
-// Provoca o mecha e desvia. Controlador: fica a ~380px do mecha (dentro do
-// alcance de tiro 420); quando um torpedo chega a <170px, foge PERPENDICULAR
-// ao rumo dele — o torpedo (raio de curva ~200px) passa direto e fizzla.
+// Passo 09: esquivar 5 torpedos. Piloto = ÓRBITA contínua em volta do mecha
+// com raio 280 (dentro dos 420 de tiro mesmo com o sobressalto do controle).
+// A nave chega a ~15 px/frame; o torpedo anda 6.2 (8 no boost de 1.5s) e só
+// guina 1.8 rad/s: quem está em movimento tangencial não é alcançado. O
+// piloto antigo PARAVA na faixa e só reagia a 230px — saía do zero contra um
+// torpedo a 484 px/s e levava 4-5 acertos (13 de tanque cada) por tentativa.
+// Órbitas largas (330+) saíam do alcance e o mecha nem atirava. Medido em
+// 30/10 no passo isolado: R330 em alcance 7-15% do tempo; R280 91-95%,
+// 0 acertos, 5/5 esquivas em 12-18s sobrando 36-58 de tanque (3/3).
+const DODGE_ORBIT_R = 280;
 async function dodgeTorpedoes(game, log, need = 5) {
     const base = await game.scene(s => s._torpedoesDodged || 0);
     const t0 = Date.now();
-    let lastLog = 0;
+    let lastLog = 0, dir = 0;
     while (Date.now() - t0 < 120_000) {
         const st = await game.scene((s, b) => {
             let m = null, md = Infinity;
@@ -344,16 +351,11 @@ async function dodgeTorpedoes(game, log, need = 5) {
                 const d = distSq(a.x, a.y, s.ufo.x, s.ufo.y);
                 if (d < md) { md = d; m = { x: a.x, y: a.y, d: Math.sqrt(d) }; }
             }
-            let tor = null, td = Infinity;
-            for (const bl of s.bullets) {
-                if (!bl.torpedo || !bl.sprite?.active) continue;
-                const d = distSq(bl.sprite.x, bl.sprite.y, s.ufo.x, s.ufo.y);
-                if (d < td) { td = d; tor = { x: bl.sprite.x, y: bl.sprite.y, ang: bl.ang, d: Math.sqrt(d) }; }
-            }
-            return { dodged: (s._torpedoesDodged || 0) - b, mecha: m, tor,
-                     ufo: { x: s.ufo.x, y: s.ufo.y }, fuel: Math.round(s.fuelCurrent),
+            const v = s.ufo.body?.velocity || { x: 0, y: 0 };
+            return { dodged: (s._torpedoesDodged || 0) - b, mecha: m,
+                     ufo: { x: s.ufo.x, y: s.ufo.y }, vx: v.x, vy: v.y, fuel: Math.round(s.fuelCurrent),
                      gameOver: !!s.gameOver && (s.burgersCollected || 0) < BURGER_QUOTA,
-                     bullets: s.bullets.length };
+                     bullets: s.bullets.filter(q => q.torpedo).length };
         }, base);
         if (st.gameOver) return 'GAMEOVER';
         if (st.dodged >= need) return true;
@@ -363,23 +365,17 @@ async function dodgeTorpedoes(game, log, need = 5) {
         }
         if (!st.mecha) { await game.page.waitForTimeout(200); continue; }
 
-        if (st.tor && st.tor.d < 230) {
-            // Perpendicular ao rumo do torpedo, pro lado em que a nave já está
-            const px = -Math.sin(st.tor.ang), py = Math.cos(st.tor.ang);
-            const rx = st.ufo.x - st.tor.x, ry = st.ufo.y - st.tor.y;
-            const side = (rx * px + ry * py) >= 0 ? 1 : -1;
-            await game.aimToward(st.ufo.x + px * side * 400, st.ufo.y + py * side * 400, 240);
-        } else if (st.mecha.d > 400 || st.mecha.d < 300) {
-            // Vai pro CENTRO da faixa de tiro (350px do mecha) — mirar o mecha
-            // em si oscilava entre aproximar e recuar a toda e queimava o tanque
-            const ax = st.ufo.x - st.mecha.x, ay = st.ufo.y - st.mecha.y;
-            const d = Math.hypot(ax, ay) || 1;
-            await game.aimToward(st.mecha.x + ax / d * 350, st.mecha.y + ay / d * 350, 240, 25);
-        } else {
-            // Na faixa de tiro: PARADO (cada segundo a toda é 3.5 de tanque)
-            await game.hover();
-        }
-        await game.page.waitForTimeout(60);
+        const ax = st.ufo.x - st.mecha.x, ay = st.ufo.y - st.mecha.y;
+        // Sentido da órbita: o que a nave já estiver fazendo (sem meia-volta)
+        if (dir === 0) dir = (ax * st.vy - ay * st.vx) >= 0 ? 1 : -1;
+        const r = Math.hypot(ax, ay) || 1;
+        // Mira num ponto do círculo à frente: longe demais → menos avanço
+        // (puxa pra dentro); perto demais → mais avanço (abre)
+        const lead = Math.max(0.35, Math.min(1.3, 0.9 - (r - DODGE_ORBIT_R) / 150));
+        const th = Math.atan2(ay, ax) + dir * lead;
+        await game.aimToward(st.mecha.x + Math.cos(th) * DODGE_ORBIT_R,
+                             st.mecha.y + Math.sin(th) * DODGE_ORBIT_R, 240);
+        await game.page.waitForTimeout(40);
     }
     return false;
 }
