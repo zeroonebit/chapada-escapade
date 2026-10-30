@@ -66,7 +66,10 @@ Object.assign(Jogo.prototype, {
         const tex = this.splashImg.texture.getSourceImage();
         this.splashImg.setScale(Math.min(w / tex.width, h / tex.height));
 
-        // ── 2 BOTÕES: PLAY (esq) / TUTORIAL (dir) — clicar TUTORIAL transforma em MOUSE/WASD ─
+        // ── 2 BOTÕES: PLAY (esq) / TUTORIAL (dir) — começam DIRETO (Thiago, 30/10,
+        // 1:1 com Bevy/Unreal): idioma e controle vivem no CONFIGS (ESC); no PC o
+        // padrão é mouse e a 1ª visita usa o idioma do navegador
+        // (15_debug_menu._loadDebugCfg). Os pickers ENG|PTBR e MOUSE|WASD saíram. ─
         const BTN_W = 180, BTN_H = 46;
         const SIDE_PAD = 150;
         const bY = h - 38;
@@ -78,7 +81,7 @@ Object.assign(Jogo.prototype, {
             -HIT_PAD_X, -HIT_PAD_Y, BTN_W + HIT_PAD_X*2, BTN_H + HIT_PAD_Y*2
         );
 
-        // Botão esquerdo (começa PLAY, vira MOUSE após clicar TUTORIAL)
+        // Botão esquerdo: PLAY / JOGAR
         const btnL = this.add.rectangle(xLeft, bY, BTN_W, BTN_H, 0x00cc44)
             .setScrollFactor(0).setDepth(502)
             .setInteractive(mkHit(), Phaser.Geom.Rectangle.Contains);
@@ -87,7 +90,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '18px', fill: '#001a08', fontStyle: 'bold', letterSpacing: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // Botão direito (começa TUTORIAL, vira WASD após clicar TUTORIAL)
+        // Botão direito: TUTORIAL
         const btnR = this.add.rectangle(xRight, bY, BTN_W, BTN_H, 0x224433)
             .setScrollFactor(0).setDepth(502)
             .setStrokeStyle(2, 0x00ff55, 0.8)
@@ -97,7 +100,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '16px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503);
 
-        // Hover handlers (dependem do estado, will ser re-bound no toggleSelectInputMode)
+        // Hover handlers
         const setHoverPlay = () => {
             btnL.removeAllListeners('pointerover');
             btnL.removeAllListeners('pointerout');
@@ -120,57 +123,31 @@ Object.assign(Jogo.prototype, {
         // Expõe to function PREVIEW poder hide/show temporariamente
         this._splashElements = allBtns;
 
-        const _startGame = (tutorial, inputMode) => {
+        const _startGame = (tutorial) => {
             this.gameStarted  = true;
             this.tutorialMode = !!tutorial;
-            if (inputMode && this.dbg?.behavior) {
-                this.dbg.behavior.inputMode = inputMode;
-                if (this._saveDebugCfg) this._saveDebugCfg();
-            }
+            // Controle e idioma já estão no dbg (CONFIGS / padrões): nada a escolher
             // Marca to pular splash em restarts in-session (reseta no F5)
             window.__cepPlayedOnce = true;
             this.matter.world.enabled = true;
             allBtns.forEach(o => o.destroy());
             this._splashStartGame = null;
+            this._refreshSplashLabels = null;
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
         // Expõe pro botão PREVIEW do CONFIGS poder iniciar a partir do splash
         this._splashStartGame = _startGame;
 
-        // Picker state machine
-        // home          → PLAY  | TUTORIAL
-        //  ├─ click PLAY     → lang     → ENG | PTBR
-        //  │   └─ click       → playInput → MOUSE | WASD → start game
-        //  └─ click TUT      → tutInput → MOUSE | WASD → start tutorial
-        let picker = 'home';
-        const _setLang = (lang) => {
-            if (this.dbg?.behavior) {
-                this.dbg.behavior.lang = lang;
-                if (this._saveDebugCfg) this._saveDebugCfg();
-            }
-        };
-        const _toInputPicker = () => {
-            lblL.setText('MOUSE'); lblL.setFontSize(16); lblL.setColor('#001a08');
-            lblR.setText('WASD');  lblR.setFontSize(16);
-        };
+        // Um clique, começa
+        btnL.on('pointerdown', () => _startGame(false));
+        btnR.on('pointerdown', () => _startGame(true));
 
-        btnL.on('pointerdown', () => {
-            if (picker === 'tutInput')  return _startGame(true, 'mouse');
-            if (picker === 'playInput') return _startGame(false, 'mouse');
-            if (picker === 'lang')      { _setLang('en'); picker = 'playInput'; return _toInputPicker(); }
-            // 'home': PLAY → escolhe idioma
-            picker = 'lang';
-            lblL.setText('ENG');  lblL.setFontSize(20);
-            lblR.setText('PTBR'); lblR.setFontSize(20);
-        });
-        btnR.on('pointerdown', () => {
-            if (picker === 'tutInput')  return _startGame(true, 'wasd');
-            if (picker === 'playInput') return _startGame(false, 'wasd');
-            if (picker === 'lang')      { _setLang('pt'); picker = 'playInput'; return _toInputPicker(); }
-            // 'home': TUTORIAL → escolhe input direto
-            picker = 'tutInput';
-            _toInputPicker();
-        });
+        // Rótulo no idioma atual (muda ao vivo pelo CONFIGS aberto na splash)
+        this._refreshSplashLabels = () => {
+            if (!lblL.scene) return;
+            lblL.setText((this.dbg?.behavior?.lang || 'en') === 'pt' ? 'JOGAR' : 'PLAY');
+        };
+        this._refreshSplashLabels();
 
         // Resize
         this._onResize(() => {
@@ -189,41 +166,122 @@ Object.assign(Jogo.prototype, {
     },
 
     // ── PAUSA ─────────────────────────────────────────────────────────────
+    // Igual à do Bevy (gameflow.rs pause_ui), pedido do Thiago em 30/10: uma
+    // caixa com ⏸ PAUSADO, ▶ CONTINUAR, ↺ RECOMEÇAR e o player de música, que
+    // abre JUNTO com o CONFIGS ("os dois juntos, como no Bevy"). Como o CONFIGS
+    // é um painel DOM centralizado, a caixa é uma BARRA DOM fixa no topo, acima
+    // do painel (z 10000 > 9999) — assim não some atrás dele. ESC, o botão de
+    // pausa do cockpit de toque (05_hud) e os botões da barra passam todos por
+    // _setPaused.
     _setupPause() {
         this.paused = false;
         this.teclaEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         const pw = this.scale.width, ph = this.scale.height;
-
-        // Fundo semi-transparente
+        // Fundo semi-transparente (Phaser) — o resto da pausa é DOM
         this.pauseOverlay = this.add.rectangle(pw/2, ph/2, pw, ph, 0x000000, 0.72)
             .setScrollFactor(0).setDepth(300).setVisible(false);
-
-        // Símbolo ⏸ — duas barras desenhadas with Graphics
-        this.pauseGrafico = this.add.graphics()
-            .setScrollFactor(0).setDepth(301).setVisible(false);
-        this.pauseGrafico.fillStyle(0x00ff55, 1);
-        this.pauseGrafico.fillRoundedRect(-26, -45, 18, 90, 5); // barra left
-        this.pauseGrafico.fillRoundedRect(8,   -45, 18, 90, 5); // barra right
-        this.pauseGrafico.setPosition(pw/2, ph/2 - 35);
-
-        // Label "PAUSE"
-        this.pauseLabel = this.add.text(pw/2, ph/2 + 72, 'PAUSE', {
-            fontSize: '28px', fill: '#00ff55', fontStyle: 'bold', letterSpacing: 8
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(301).setVisible(false);
-
-        // Hint
-        this.pauseHint = this.add.text(pw/2, ph/2 + 112, 'ESC para continuar', {
-            fontSize: '13px', fill: '#666666'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(301).setVisible(false);
-
         this._onResize(() => {
             const w2 = this.scale.width, h2 = this.scale.height;
             this.pauseOverlay.setPosition(w2/2, h2/2).setSize(w2, h2);
-            this.pauseGrafico.setPosition(w2/2, h2/2 - 35);
-            this.pauseLabel.setPosition(w2/2, h2/2 + 72);
-            this.pauseHint.setPosition(w2/2, h2/2 + 112);
         });
+        this._setupPauseBar();
+        this._setPauseVisuals(false);
+    },
+
+    _setupPauseBar() {
+        if (document.getElementById('pause-bar')) return;   // scene.restart reusa o DOM
+        const style = document.createElement('style');
+        style.textContent = `
+            #pause-bar { position:fixed; top:10px; left:50%; transform:translateX(-50%);
+                display:none; align-items:center; gap:10px; padding:8px 16px; z-index:10000;
+                background:rgba(0,26,8,0.94); border:2px solid #00aa44; border-radius:12px;
+                color:#00dd44; font-family:'Courier New',monospace; font-size:12px;
+                box-shadow:0 0 24px rgba(0,255,85,0.25); white-space:nowrap; }
+            #pause-bar .pb-title { font-size:18px; font-weight:bold; letter-spacing:2px; margin-right:6px; }
+            #pause-bar button { background:#00aa44; color:#001a08; border:none; padding:6px 10px;
+                font-family:inherit; font-weight:bold; font-size:12px; letter-spacing:1px; cursor:pointer; }
+            #pause-bar button:hover { background:#22cc66; }
+            #pause-bar button.pb-mus { background:#0a2216; color:#00ff55; border:1px solid #00ff55; font-size:14px; padding:3px 9px; }
+            #pause-bar button.pb-mus:hover { background:#336655; }
+            #pause-bar .pb-sep { width:1px; height:26px; background:#224433; margin:0 4px; }
+            #pause-bar #pause-mus-name { color:#aaffcc; max-width:220px; overflow:hidden; text-overflow:ellipsis; }
+            /* CONFIGS desce um pouco pra barra ficar visível por cima */
+            body.pause-bar-on #debug-menu { top:calc(50% + 34px); max-height:calc(100vh - 140px); }
+        `;
+        document.head.appendChild(style);
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="pause-bar">
+                <span class="pb-title">⏸ <span id="pause-title">PAUSED</span></span>
+                <button id="pause-resume" type="button">▶ RESUME</button>
+                <button id="pause-restart" type="button">↺ RESTART</button>
+                <span class="pb-sep"></span>
+                <span id="pause-mus-name">♪ AUTO</span>
+                <button id="pause-mus-prev" class="pb-mus" type="button">⏮</button>
+                <button id="pause-mus-pp" class="pb-mus" type="button">⏸</button>
+                <button id="pause-mus-next" class="pb-mus" type="button">⏭</button>
+            </div>`);
+        // A cena é reusada no restart, mas por via das dúvidas resolve na hora
+        const scene = () => window.game?.scene?.keys?.Jogo || this;
+        document.getElementById('pause-resume').addEventListener('click', () => scene()._setPaused(false));
+        document.getElementById('pause-restart').addEventListener('click', () => scene()._pauseRestart());
+        // Player: mesma lógica do transport do splash e do CONFIGS (21_audio)
+        const step = (d) => {
+            const sc = scene(), a = sc.dbg.audio;
+            const opts = ['auto', ...(typeof MUSIC_ALL !== 'undefined' ? MUSIC_ALL : [])];
+            const i = Math.max(0, opts.indexOf(a.track));
+            a.track = opts[(i + d + opts.length) % opts.length];
+            a.paused = false;                      // pular = quer ouvir (Bevy)
+            if (sc._metaAch) sc._metaAch('audiophile');
+            sc._saveDebugCfg(); sc._refreshPauseBar();
+            if (sc._musPlayerRefresh) sc._musPlayerRefresh();
+        };
+        document.getElementById('pause-mus-prev').addEventListener('click', () => step(-1));
+        document.getElementById('pause-mus-next').addEventListener('click', () => step(1));
+        document.getElementById('pause-mus-pp').addEventListener('click', () => {
+            const sc = scene(); sc.dbg.audio.paused = !sc.dbg.audio.paused;
+            sc._saveDebugCfg(); sc._refreshPauseBar();
+            if (sc._musPlayerRefresh) sc._musPlayerRefresh();
+        });
+    },
+
+    _refreshPauseBar() {
+        const bar = document.getElementById('pause-bar');
+        if (!bar) return;
+        const pt = (this.dbg?.behavior?.lang || 'en') === 'pt';
+        bar.querySelector('#pause-title').textContent   = pt ? 'PAUSADO' : 'PAUSED';
+        bar.querySelector('#pause-resume').textContent  = pt ? '▶ CONTINUAR' : '▶ RESUME';
+        bar.querySelector('#pause-restart').textContent = pt ? '↺ RECOMEÇAR' : '↺ RESTART';
+        const a = this.dbg?.audio || {};
+        const t = (!a.track || a.track === 'auto') ? 'AUTO' : String(a.track).replace(/_/g, ' ').toUpperCase();
+        bar.querySelector('#pause-mus-name').textContent = a.paused ? `♪ ${t} (${pt ? 'pausado' : 'paused'})` : `♪ ${t}`;
+        bar.querySelector('#pause-mus-pp').textContent = a.paused ? '▶' : '⏸';
+    },
+
+    // Só o visual (overlay + barra + CONFIGS deslocado); a lógica fica em _setPaused
+    _setPauseVisuals(on) {
+        if (this.pauseOverlay) this.pauseOverlay.setVisible(!!on);
+        const bar = document.getElementById('pause-bar');
+        if (bar) bar.style.display = on ? 'flex' : 'none';
+        document.body.classList.toggle('pause-bar-on', !!on);
+        if (on) this._refreshPauseBar();
+    },
+
+    _setPaused(on) {
+        on = !!on;
+        this.paused = on;
+        this.matter.world.enabled = !on;
+        this._setPauseVisuals(on);
+        if (this._toggleDebugMenu) this._toggleDebugMenu(on);   // os dois juntos (Bevy)
+    },
+
+    // ↺ RECOMEÇAR: fecha barra e CONFIGS (o jogo segue congelado durante a
+    // transição) e reinicia no mesmo modo — tutorial do passo 01, partida do zero
+    _pauseRestart() {
+        this._setPauseVisuals(false);
+        if (this._toggleDebugMenu) this._toggleDebugMenu(false);
+        window.__cepTutResume = this.tutorialMode ? 0 : null;
+        this._restartTransition('pause');
     },
 
     // ── VITÓRIA ───────────────────────────────────────────────────────────
@@ -311,7 +369,7 @@ Object.assign(Jogo.prototype, {
         const w = this.scale.width, h = this.scale.height;
 
         // Cor initial muda baseado no estado: GAME OVER vermelho, VITORIA verde
-        const startColor = (fromState === 'victory')
+        const startColor = (fromState === 'victory' || fromState === 'pause')
             ? { r: 0x44, g: 0xff, b: 0x66 }
             : { r: 0xff, g: 0x22, b: 0x22 };
         const endColor = { r: 0x00, g: 0xff, b: 0x55 };

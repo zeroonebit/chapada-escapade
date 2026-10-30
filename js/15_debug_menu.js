@@ -79,6 +79,9 @@ const MENU_I18N = {
     },
 };
 
+// Idioma da 1ª visita = o do navegador (Thiago, 30/10); a preferência salva vence
+const browserLang = () => (String(navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+
 const DBG_DEFAULTS = {
     enabled: {
         cows:     true,
@@ -107,8 +110,9 @@ const DBG_DEFAULTS = {
         shooterDamage:  1.0,
         ufoRot:        0.0,
         barrel:         0.15,
-        inputMode:      'mouse',  // 'mouse' | 'wasd'
-        lang:           'en',     // 'en' | 'pt' (escolhido na splash)
+        inputMode:      'mouse',  // 'mouse' | 'wasd' — padrão no PC; muda só no CONFIGS (Thiago, 30/10)
+        lang:           'en',     // 'en' | 'pt' — 1ª visita: idioma do navegador (_loadDebugCfg); muda no CONFIGS
+        devMode:        false,    // CONFIGS: visão de jogador (false) ou abas/ajuste fino de dev (Bevy dev_mode)
     },
     // PARIDADE BEVY (DebugConfig): sfx_volume 0.8 / music_volume 0.55 /
     // music_track "auto" / music_paused false
@@ -191,6 +195,8 @@ Object.assign(Jogo.prototype, {
                 proc:     Object.assign({}, DBG_DEFAULTS.proc,     migrated.proc),
                 audio:    Object.assign({}, DBG_DEFAULTS.audio,    migrated.audio),
             };
+            // Sem idioma salvo (1ª visita): o do navegador
+            if (!migrated.behavior || migrated.behavior.lang == null) this.dbg.behavior.lang = browserLang();
             // Migração PARITY V2 (one-shot): os tamanhos-alvo Bevy foram
             // baked nos baseSizes, então sliders salvos na era antiga
             // (bull 3.0, farmer 2.0...) inflariam tudo 2-3×. Reseta scale e
@@ -205,6 +211,7 @@ Object.assign(Jogo.prototype, {
             this.dbg._parityV2 = true;
         } catch (e) {
             this.dbg = JSON.parse(JSON.stringify(DBG_DEFAULTS));
+            this.dbg.behavior.lang = browserLang();
             this.dbg._parityV2 = true;
         }
     },
@@ -277,7 +284,12 @@ Object.assign(Jogo.prototype, {
             #debug-menu #tab-tiles legend { font-size:9px; padding:0 4px; }
             #debug-menu #tab-tiles label { font-size:10px; margin:1px 0; }
             #debug-menu #tab-tiles label span { font-size:10px; }
-            #debug-menu h2 { color:#00ff55; margin:0 0 8px 0; font-size:14px; letter-spacing:2px; }
+            #debug-menu h2 { color:#00ff55; margin:0 0 8px 0; font-size:14px; letter-spacing:2px; display:flex; align-items:center; gap:10px; }
+            #debug-menu #dbg-devmode { margin-left:auto; flex:0 0 auto; background:#001a08; color:#558877;
+                border:1px solid #224433; font-size:10px; padding:3px 8px; letter-spacing:1px; }
+            #debug-menu #dbg-devmode.on { background:#00aa44; color:#001a08; border-color:#00aa44; }
+            /* Visão de jogador (DEV MODE OFF, Bevy dev_mode): abas MAP/TILES/DEBUG e ajuste fino somem */
+            #debug-menu.player [data-dev] { display:none !important; }
             #debug-menu .tab-bar { display:flex; gap:3px; margin-bottom:10px; }
             #debug-menu .tab-btn { flex:1; background:#001a08; color:#558877;
                 border:1px solid #224433; padding:5px 2px; font-family:inherit;
@@ -312,15 +324,15 @@ Object.assign(Jogo.prototype, {
 
         const html = `
             <div id="debug-menu">
-                <h2>⚙ <span data-i18n="configs">CONFIGS</span></h2>
+                <h2>⚙ <span data-i18n="configs">CONFIGS</span><button id="dbg-devmode" type="button">DEV MODE: OFF</button></h2>
                 <div class="tab-bar">
                     <button class="tab-btn active" data-tab="controls" data-i18n="controls">CONTROLS</button>
                     <button class="tab-btn" data-tab="looks" data-i18n="looks">VISUALS</button>
                     <button class="tab-btn" data-tab="vfx" data-i18n="vfx">VFX</button>
                     <button class="tab-btn" data-tab="audio" data-i18n="audio">AUDIO</button>
-                    <button class="tab-btn" data-tab="map" data-i18n="map">MAP</button>
-                    <button class="tab-btn" data-tab="tiles">TILES</button>
-                    <button class="tab-btn" data-tab="debug" data-i18n="debug">DEBUG</button>
+                    <button class="tab-btn" data-tab="map" data-i18n="map" data-dev>MAP</button>
+                    <button class="tab-btn" data-tab="tiles" data-dev>TILES</button>
+                    <button class="tab-btn" data-tab="debug" data-i18n="debug" data-dev>DEBUG</button>
                 </div>
 
                 <!-- ABA: CONTROLES -->
@@ -342,11 +354,11 @@ Object.assign(Jogo.prototype, {
                             <input type="range" min="1" max="1.5" step="0.25" data-cfg="behavior.sensitivity" list="sens-ticks">
                             <datalist id="sens-ticks"><option value="1"></option><option value="1.25"></option><option value="1.5"></option></datalist>
                             <input type="number" class="val" data-show="behavior.sensitivity" /></label>
-                        <label><span data-i18n="beam_force">Força beam (pull)</span>
+                        <label data-dev><span data-i18n="beam_force">Força beam (pull)</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.pullBeam">
                             <input type="number" class="val" data-show="behavior.pullBeam" /></label>
                     </fieldset>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="entities">ENTIDADES</legend>
                         <label><span data-i18n="vel_cows">Velocidade cows/oxen</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.cowSpeed">
@@ -358,7 +370,7 @@ Object.assign(Jogo.prototype, {
                             <input type="range" min="0" max="10" step="0.01" data-cfg="behavior.shooterDamage">
                             <input type="number" class="val" data-show="behavior.shooterDamage" /></label>
                     </fieldset>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="amounts">QUANTIDADES (reiniciar)</legend>
                         <label><span data-i18n="cows_spawn">Vacas spawn</span>
                             <input type="number" min="0" max="200" step="1" data-cfg="counts.cows"></label>
@@ -370,7 +382,7 @@ Object.assign(Jogo.prototype, {
                 <!-- ABA: LOOKS -->
                 <div class="tab-panel" id="tab-looks" style="display:none">
                     <div class="note" data-i18n="note_visual">Tudo aplica live.</div>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="scales">ESCALAS</legend>
                         <label><span data-i18n="cow">Vaca</span>
                             <input type="range" min="0" max="10" step="0.01" data-cfg="scale.cow">
@@ -425,9 +437,9 @@ Object.assign(Jogo.prototype, {
                                 <option value="fog" data-i18n="opt_fog">Fog</option>
                                 <option value="storm" data-i18n="opt_storm">Storm (rain+fog+lightning)</option>
                             </select></label>
-                        <label><span data-i18n="shuffle_prev">Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
+                        <label data-dev><span data-i18n="shuffle_prev">Shuffle on PREVIEW</span><input type="checkbox" data-cfg="fx.weatherShuffle"></label>
                     </fieldset>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="rain">CHUVA</legend>
                         <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.rain"></label>
                         <label><span data-i18n="intensity">Intensidade (alpha)</span>
@@ -446,14 +458,14 @@ Object.assign(Jogo.prototype, {
                             <input type="range" min="0.3" max="3" step="0.01" data-cfg="fx.rainSize">
                             <input type="number" class="val" data-show="fx.rainSize" /></label>
                     </fieldset>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="fog">NEBLINA</legend>
                         <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.fog"></label>
                         <label><span data-i18n="intensity">Intensidade</span>
                             <input type="range" min="0" max="1" step="0.01" data-cfg="fx.fogIntensity">
                             <input type="number" class="val" data-show="fx.fogIntensity" /></label>
                     </fieldset>
-                    <fieldset>
+                    <fieldset data-dev>
                         <legend data-i18n="wind">VENTO</legend>
                         <label><span data-i18n="active">Ativar</span><input type="checkbox" data-cfg="fx.wind"></label>
                         <label><span data-i18n="wind_force">Força (-0.05=esq, +0.05=dir)</span>
@@ -590,7 +602,7 @@ Object.assign(Jogo.prototype, {
                 </div>
 
                 <div class="btn-row">
-                    <button id="dbg-preview" style="background:#003355;color:#aaffcc;" data-i18n="btn_preview">👁 PREVIEW (live)</button>
+                    <button id="dbg-preview" data-dev style="background:#003355;color:#aaffcc;" data-i18n="btn_preview">👁 PREVIEW (live)</button>
                 </div>
                 <div class="btn-row">
                     <button id="dbg-reset" class="secondary" data-i18n="btn_reset">RESET</button>
@@ -615,6 +627,28 @@ Object.assign(Jogo.prototype, {
                 if (btn.dataset.tab === 'map' && this._refreshMapList) this._refreshMapList();
             });
         });
+
+        // DEV MODE (Bevy debug_menu.rs dev_mode, default OFF): visão de jogador
+        // esconde as abas MAP/TILES/DEBUG e o ajuste fino ([data-dev]); a chave
+        // no cabeçalho liga tudo e persiste em dbg.behavior.devMode
+        const devBtn = root.querySelector('#dbg-devmode');
+        this._applyDevMode = () => {
+            const on = !!this.dbg.behavior.devMode;
+            root.classList.toggle('player', !on);
+            devBtn.textContent = on ? 'DEV MODE: ON' : 'DEV MODE: OFF';
+            devBtn.classList.toggle('on', on);
+            // Saiu do dev numa aba de dev → volta pra CONTROLES
+            const active = root.querySelector('.tab-btn.active');
+            if (!on && active && active.hasAttribute('data-dev')) {
+                root.querySelector('.tab-btn[data-tab="controls"]').click();
+            }
+        };
+        devBtn.addEventListener('click', () => {
+            this.dbg.behavior.devMode = !this.dbg.behavior.devMode;
+            this._saveDebugCfg();
+            this._applyDevMode();
+        });
+        this._applyDevMode();
 
         // Bind inputs (range / checkbox / number without .val)
         root.querySelectorAll('input[data-cfg]').forEach(input => {
@@ -703,6 +737,8 @@ Object.assign(Jogo.prototype, {
                 if (section === 'behavior' && key === 'lang') {
                     if (this._applyMenuI18n) this._applyMenuI18n();
                     if (this._applyHudI18n) this._applyHudI18n();
+                    if (this._refreshSplashLabels) this._refreshSplashLabels();
+                    if (this._refreshPauseBar) this._refreshPauseBar();
                 }
                 // MAP preset selecionado -> fetch + cache em localStorage
                 // (proximo scene.restart vai pegar o cache em _createBody)
@@ -780,10 +816,7 @@ Object.assign(Jogo.prototype, {
             // Despausa to atmosphere/rain animarem
             this.paused = false;
             this.matter.world.enabled = true;
-            if (this.pauseOverlay) this.pauseOverlay.setVisible(false);
-            if (this.pauseGrafico) this.pauseGrafico.setVisible(false);
-            if (this.pauseLabel)   this.pauseLabel.setVisible(false);
-            if (this.pauseHint)    this.pauseHint.setVisible(false);
+            if (this._setPauseVisuals) this._setPauseVisuals(false);
 
             // 5s after: restaura
             this.time.delayedCall(5000, () => {
@@ -794,10 +827,7 @@ Object.assign(Jogo.prototype, {
                 snap.bullets.forEach(b => b && b.sprite && b.sprite.scene && b.sprite.setVisible(true));
                 this.paused = snap.pausadoBefore;
                 this.matter.world.enabled = snap.matterBefore;
-                if (this.pauseOverlay) this.pauseOverlay.setVisible(snap.pausadoBefore);
-                if (this.pauseGrafico) this.pauseGrafico.setVisible(snap.pausadoBefore);
-                if (this.pauseLabel)   this.pauseLabel.setVisible(snap.pausadoBefore);
-                if (this.pauseHint)    this.pauseHint.setVisible(snap.pausadoBefore);
+                if (this._setPauseVisuals) this._setPauseVisuals(snap.pausadoBefore);
                 // Reabre o menu CONFIGS
                 this._toggleDebugMenu(true);
                 if (inSplash) this._splashConfigsOpen = true;
@@ -826,6 +856,15 @@ Object.assign(Jogo.prototype, {
     _toggleDebugMenu(visible) {
         const el = document.getElementById('debug-menu');
         if (el) el.style.display = visible ? 'block' : 'none';
+        // Selects (idioma, controle, clima…) espelham o dbg ao abrir: o valor
+        // pode ter mudado por fora do menu (padrão do navegador, testes)
+        if (visible && el && this.dbg) {
+            el.querySelectorAll('select[data-cfg]').forEach(sel => {
+                const [section, key] = sel.dataset.cfg.split('.');
+                const v = this.dbg[section]?.[key];
+                if (v != null && sel.value !== String(v)) sel.value = v;
+            });
+        }
         // "tocando agora" do player só muda quando alguém clica nos botoes;
         // ao ABRIR o menu ele estaria mostrando o estado de quando foi criado.
         if (visible && this._musPlayerRefresh) this._musPlayerRefresh();

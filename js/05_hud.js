@@ -144,6 +144,25 @@ Object.assign(Jogo.prototype, {
         this.hud.ckFuelLbl  = mkT('PROPULSION REACTOR FUEL', '#ffaa40');
         this.hud.ckGravLbl  = mkT('TRACTOR GRAVITON BEAM PULSE', '#a280ff');
         this.hud.ckScoreLbl = mkT('SCORE', '#00ff55').setOrigin(1, 0.5);
+        // Botão de PAUSA no painel (Thiago, 30/10: sem ESC no tablet, o idioma
+        // sumiria no toque sem a splash). Ombro direito da arte (1860,95), acima
+        // da lente: fora das zonas da bola (137,229 r130) e da lente (1912,284
+        // r130) do 12_mobile. Só aparece no cockpit de toque; abre a MESMA
+        // pausa + CONFIGS do PC (_setPaused).
+        this.hud.ckPauseBtn = this.add.circle(0, 0, 12, 0x0a2216, 0.88)
+            .setStrokeStyle(2, 0x00ff55, 0.9).setScrollFactor(0).setDepth(D + 0.9)
+            .setInteractive({ useHandCursor: true }).setVisible(false);
+        this.hud.ckPauseLbl = this.add.text(0, 0, '⏸', {
+            fontFamily: 'VT323, monospace', fontSize: '16px', color: '#00ff55',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 0.95).setVisible(false);
+        this.hud.ckPauseBtn.on('pointerdown', () => {
+            if (!this.gameStarted || this.gameOver) return;
+            // Toque + mouse emulado disparam DOIS pointerdown no mesmo toque
+            const t = this.time?.now ?? 0;
+            if (t - (this._ckPauseT || 0) < 250) return;
+            this._ckPauseT = t;
+            if (this._setPaused) this._setPaused(!this.paused);
+        });
         this._positionCockpit();
         // O _positionHUD legado roda DEPOIS (create e resize) e devolve os
         // textos reutilizados pra row antiga. Como o listener de resize do
@@ -206,6 +225,14 @@ Object.assign(Jogo.prototype, {
                 .setFontSize(Math.max(10, Math.round(34 * s)))
                 .setColor('#00ff55').setDepth(201);
         }
+
+        // Botão de pausa (ombro direito da arte). Área de toque maior que o
+        // desenho e centrada nele (hitArea é relativa ao canto do objeto)
+        const pb = dpx(1860, 95), pr = Math.max(12, 46 * s), phr = Math.max(pr * 1.3, 24);
+        const pbtn = this.hud.ckPauseBtn;
+        pbtn.setPosition(pb.x, pb.y).setRadius(pr).setStrokeStyle(Math.max(1.5, 4 * s), 0x00ff55, 0.9);
+        if (pbtn.input && pbtn.input.hitArea) pbtn.input.hitArea.setTo(pr - phr, pr - phr, 2 * phr, 2 * phr);
+        this.hud.ckPauseLbl.setPosition(pb.x, pb.y + 1).setFontSize(Math.max(12, Math.round(56 * s)));
 
         // Radar DENTRO do scope da arte (centro 1020,278 · disco vivo 133 art px)
         const rc = dpx(1020, 278);
@@ -284,6 +311,13 @@ Object.assign(Jogo.prototype, {
                 .setDisplaySize(106 * 1.45 * s, 106 * 1.45 * s);
         } else {
             knob.setVisible(false);
+        }
+
+        // Botão de pausa só no cockpit de toque (teclado tem ESC)
+        const showPause = !!this.touchCockpit;
+        if (this.hud.ckPauseBtn && this.hud.ckPauseBtn.visible !== showPause) {
+            this.hud.ckPauseBtn.setVisible(showPause);
+            this.hud.ckPauseLbl.setVisible(showPause);
         }
 
         // Barras antigas re-escondidas (algum caminho legado pode reexibir)

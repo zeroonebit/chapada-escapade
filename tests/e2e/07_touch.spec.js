@@ -102,6 +102,38 @@ test.describe('touch (tablet 1024×768)', () => {
         expect(game.realErrors).toEqual([]);
     });
 
+    // Thiago (30/10): sem ESC no tablet, um botão pequeno no painel abre a mesma
+    // pausa (barra CONTINUAR/RECOMEÇAR/player) e o mesmo CONFIGS do PC. Não
+    // pode roubar área da bola nem da lente.
+    test('botão de pausa no painel: abre pausa + CONFIGS, CONTINUAR volta; longe da bola e da lente', async ({ game, page }) => {
+        test.setTimeout(120_000);
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
+        const b = await game.scene(s => {
+            const btn = s.hud.ckPauseBtn, lens = s._ckLensCenter(), joy = s._ckJoyCenter();
+            return { x: btn.x, y: btn.y, r: btn.radius, visible: btn.visible, zone: 130 * s._ckScale,
+                     dLens: Math.hypot(btn.x - lens.x, btn.y - lens.y), dJoy: Math.hypot(btn.x - joy.x, btn.y - joy.y),
+                     inDash: btn.y > s.hud.ckDash.y - s.hud.ckDash.displayHeight && btn.x < s.hud.ckDash.x + s.hud.ckDash.displayWidth / 2 };
+        });
+        expect(b.visible, 'botão visível no cockpit de toque').toBe(true);
+        expect(b.inDash, 'botão dentro do painel').toBe(true);
+        expect(b.dLens, 'fora da zona da lente').toBeGreaterThan(b.zone + b.r);
+        expect(b.dJoy, 'fora da zona do joystick').toBeGreaterThan(b.zone + b.r);
+        const p = await game.toPage(b.x, b.y);
+        await game.input.tap(p.x, p.y);
+        await page.waitForTimeout(300);
+        const paused = await game.scene(s => ({ p: s.paused, phys: s.matter.world.enabled,
+            bar: getComputedStyle(document.getElementById('pause-bar')).display, menu: document.getElementById('debug-menu').style.display }));
+        expect(paused).toEqual({ p: true, phys: false, bar: 'flex', menu: 'block' });
+        await page.locator('#pause-resume').click();
+        await page.waitForTimeout(200);
+        const resumed = await game.scene(s => ({ p: s.paused, phys: s.matter.world.enabled,
+            bar: getComputedStyle(document.getElementById('pause-bar')).display }));
+        expect(resumed).toEqual({ p: false, phys: true, bar: 'none' });
+        expect(game.realErrors).toEqual([]);
+    });
+
     test('loop no toque: vaca → curral → burger', async ({ game, page }) => {
         test.setTimeout(240_000);
         const log = (m) => console.log(m);

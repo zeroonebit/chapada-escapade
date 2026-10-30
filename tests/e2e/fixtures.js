@@ -162,7 +162,20 @@ class GamePage {
     }
 
     // ── Splash ───────────────────────────────────────────────────────
-    // Botões do splash (11_gameflow.js): esq em x=240, dir em x=w-240, y=h-38
+    // Botões do splash (11_gameflow.js): esq em x=240, dir em x=w-240, y=h-38.
+    // Desde 30/10 (Thiago) a splash é só PLAY | TUTORIAL: idioma e controle
+    // vivem no CONFIGS. Os helpers gravam a preferência no dbg (o que o
+    // CONFIGS faria) e dão UM clique.
+    async setPrefs({ lang, input } = {}) {
+        await this.scene((s, p) => {
+            if (p.lang)  s.dbg.behavior.lang = p.lang;
+            if (p.input) s.dbg.behavior.inputMode = p.input;
+            if (s._saveDebugCfg) s._saveDebugCfg();
+            if (p.lang && s._applyMenuI18n) s._applyMenuI18n();
+            if (p.lang && s._applyHudI18n) s._applyHudI18n();
+            if (s._refreshSplashLabels) s._refreshSplashLabels();
+        }, { lang, input });
+    }
     async splashButton(side) {
         const sz = await this.scene(s => ({ w: s.scale.width, h: s.scale.height }));
         const cx = side === 'left' ? 150 + 90 : sz.w - 150 - 90;
@@ -175,21 +188,20 @@ class GamePage {
         await this.page.waitForTimeout(150);
     }
 
-    // PLAY → idioma → input (cliques reais nos botões do splash)
+    // PLAY começa direto (clique real no botão); lang/input viram preferência
     async startPlayViaSplash({ lang = 'en', input = 'mouse' } = {}) {
-        await this.clickSplash('left');                       // PLAY → ENG | PTBR
-        await this.clickSplash(lang === 'pt' ? 'right' : 'left');
-        await this.clickSplash(input === 'wasd' ? 'right' : 'left');
+        await this.setPrefs({ lang, input });
+        await this.clickSplash('left');                       // PLAY
         await this.page.waitForFunction(() => window.game.scene.keys.Jogo.gameStarted);
         // Em modo mouse a nave sai atrás do ponteiro (que ficou no botão do
         // splash): traz o ponteiro pra cima da nave, como um jogador faria.
         if (input === 'mouse') await this.hover();
     }
 
-    // TUTORIAL → input (cliques reais)
+    // TUTORIAL começa direto (clique real)
     async startTutorialViaSplash({ input = 'mouse' } = {}) {
-        await this.clickSplash('right');                      // TUTORIAL → MOUSE | WASD
-        await this.clickSplash(input === 'wasd' ? 'right' : 'left');
+        await this.setPrefs({ input });
+        await this.clickSplash('right');                      // TUTORIAL
         await this.page.waitForFunction(() => window.game.scene.keys.Jogo.gameStarted);
         if (input === 'mouse') await this.hover();
     }

@@ -494,15 +494,10 @@ class Jogo extends Phaser.Scene {
             return;
         }
 
-        // ESC — toggle pausa + debug menu
+        // ESC — pausa (barra CONTINUAR/RECOMEÇAR/player) + CONFIGS, juntos
+        // (11_gameflow._setPaused; o botão do cockpit de toque usa o mesmo)
         if (Phaser.Input.Keyboard.JustDown(this.teclaEsc)) {
-            this.paused = !this.paused;
-            this.matter.world.enabled = !this.paused;
-            this.pauseOverlay.setVisible(this.paused);
-            this.pauseGrafico.setVisible(this.paused);
-            this.pauseLabel.setVisible(this.paused);
-            this.pauseHint.setVisible(this.paused);
-            this._toggleDebugMenu(this.paused);
+            this._setPaused(!this.paused);
         }
         if (this.paused) return;
 
