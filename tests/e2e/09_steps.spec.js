@@ -74,3 +74,29 @@ test.describe('economia de tanque independe do fps', () => {
         expect(r.d200, 'drain de um frame lento = drain do passo físico').toBeLessThanOrEqual(r.d33 * 1.05);
     });
 });
+
+test.describe('tanque no tutorial (decisão do Thiago, 30/10)', () => {
+    test('entrar no passo 06 (REVIDE) reabastece o tanque', async ({ game, page }) => {
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startTutorialViaSplash({ input: 'mouse' });
+        // Até o BURGER o tanque vai a 15% (lição); dali pra frente os passos de
+        // combate gastavam o que sobrava e a nave morria 2-5× até o fim
+        await game.scene(s => { s._tutMinReadMs = 300; for (let i = 0; i < 4; i++) s._tutAdvance(); });
+        expect(await game.scene(s => s.fuelCurrent)).toBeLessThanOrEqual(16);
+        await game.scene(s => s._tutAdvance());
+        const st = await game.scene(s => ({ key: TUT_STEPS[s._tutStepIdx].key, fuel: s.fuelCurrent, max: s.fuelMax }));
+        expect(st.key).toBe('TAKE_DAMAGE');
+        expect(st.fuel, 'tanque cheio ao entrar no 06').toBeGreaterThanOrEqual(st.max - 1);
+    });
+
+    test('concluir o tutorial reabastece o tanque (sem morrer na tela de conclusão)', async ({ game, page }) => {
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startTutorialViaSplash({ input: 'mouse' });
+        await game.scene(s => { s.fuelCurrent = 3; s._tutConcluir(); });
+        const st = await game.scene(s => ({ fuel: s.fuelCurrent, max: s.fuelMax, idx: s._tutStepIdx }));
+        expect(st.idx).toBeNull();
+        expect(st.fuel, 'tanque cheio ao concluir').toBeGreaterThanOrEqual(st.max - 1);
+    });
+});
