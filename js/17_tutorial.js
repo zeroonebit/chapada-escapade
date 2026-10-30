@@ -675,6 +675,10 @@ Object.assign(Jogo.prototype, {
         if (nextKey === 'TAKE_DAMAGE') {
             this._tutAtiradorSpawned = false;       // event flag
             this._tutDamageTaken    = false;        // event flag
+            // Tanque cheio pros passos de combate (06-10). A lição do BURGER
+            // deixava 15% + um burger, e quem demorava morria 2-5x até o fim
+            // (user, 30/10: "reabastece").
+            this.fuelCurrent = this.fuelMax;
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -824,6 +828,9 @@ Object.assign(Jogo.prototype, {
         this._tutSetMode('NONE');
         // Resets visibilidade das barras (game normal always shows)
         if (this._setBarsVisibility) this._setBarsVisibility(true, true);
+        // Tanque cheio: fechar o passo 10 com 1% matava na tela de "TUTORIAL
+        // COMPLETE" (o drain segue rodando) — user, 30/10: "reabastece".
+        this.fuelCurrent = this.fuelMax;
         // Graduação: grava o tutorial concluído. O _metaSetup (22_meta.js) lê
         // cep_tutorial_done / save.tutorialDone pra dar `graduate`, mas
         // ninguém escrevia — a conquista era dormente e o flag nunca existiu.
