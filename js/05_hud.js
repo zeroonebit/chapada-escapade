@@ -160,8 +160,10 @@ Object.assign(Jogo.prototype, {
         const w = this.scale.width, h = this.scale.height;
         // Painel toma a BASE da tela (user, 30/10: largura toda, toque e desktop).
         // Era 44% da largura (dash_scale do Bevy). Teto de 40% da altura: em
-        // 16:9 a largura toda daria 42% e a arena sumiria.
-        const s = Math.min(w / 2056, (h * 0.40) / 541);
+        // 16:9 a largura toda daria 42% e a arena sumiria. Depois, jogando no
+        // Z Fold: "pode ser menor uns 80% do tamanho atual" → COCKPIT_FIT.
+        const COCKPIT_FIT = 0.8;
+        const s = COCKPIT_FIT * Math.min(w / 2056, (h * 0.40) / 541);
         const minX = w / 2 - (2056 * s) / 2, minY = h - 541 * s;
         this._ckScale = s; this._ckMin = { x: minX, y: minY };
         const dpx = (x, y) => ({ x: minX + x * s, y: minY + y * s });
