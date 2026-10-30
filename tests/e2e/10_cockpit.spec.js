@@ -1,10 +1,11 @@
 // 10_cockpit.spec.js — painel (cockpit FinalHud) na base da tela, desktop.
 // user 30/10: "HUD tomando a parte de baixo da tela" — largura toda, com teto
-// de 40% da altura em telas largas (05_hud._positionCockpit).
+// de 40% da altura em telas largas; depois, jogando no Z Fold: "pode ser menor
+// uns 80% do tamanho atual" → tudo × 0.8 (05_hud._positionCockpit).
 const { test, expect } = require('./fixtures');
 
 test.describe('cockpit no desktop', () => {
-    test('painel ocupa a base: largura toda ou 40% da altura, o que vier primeiro', async ({ game, page }) => {
+    test('painel ocupa a base: 80% da largura ou 32% da altura, o que vier primeiro', async ({ game, page }) => {
         await page.goto('/');
         await game.waitForScene();
         await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
@@ -14,10 +15,11 @@ test.describe('cockpit no desktop', () => {
             dashX: s.hud.ckDash.x, dashY: s.hud.ckDash.y,
             touchCockpit: !!s.touchCockpit,
         }));
-        const sExpected = Math.min(st.w / 2056, (st.h * 0.40) / 541);
+        const sExpected = 0.8 * Math.min(st.w / 2056, (st.h * 0.40) / 541);
         expect(Math.abs(st.dashW - 2056 * sExpected)).toBeLessThan(2);
         expect(Math.abs(st.dashH - 541 * sExpected)).toBeLessThan(2);
-        expect(st.dashH / st.h).toBeLessThanOrEqual(0.401);
+        expect(st.dashH / st.h).toBeLessThanOrEqual(0.321);
+        expect(st.dashW).toBeLessThanOrEqual(st.w * 0.8 + 1);
         expect(st.dashX).toBeCloseTo(st.w / 2, 0);     // centrado
         expect(st.dashY).toBe(st.h);                    // colado na base (origin 0.5,1)
         expect(st.touchCockpit, 'desktop com mouse não é cockpit de toque').toBe(false);

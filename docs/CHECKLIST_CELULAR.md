@@ -57,7 +57,8 @@
 - [ ] Splash: botões PLAY / TUTORIAL respondem ao toque na primeira vez (hit area
       expandida compensa o barrel).
 - [ ] ⏮ ⏯ ⏭ do splash: um toque = uma ação (gate de 250 ms contra o duplo pointerdown).
-- [ ] Painel na largura toda, colado na base, sem cortar a arena (teto de 40% da altura).
+- [ ] Painel centrado a 80% da largura (teto de 32% da altura), colado na base, sem cortar
+      a arena.
 - [ ] Bola vermelha do joystick: o dedo pousa nela e ela acompanha; soltar = nave para de
       acelerar. O curso (~90 px da arte) é confortável pro polegar? Raio de toque bom?
 - [ ] Lente do emissor: segurar = feixe + lente acesa; soltar = apaga e o graviton regenera.

@@ -34,10 +34,11 @@ test.describe('touch (tablet 1024×768)', () => {
         const st = await game.state();
         expect(st.gameStarted).toBe(true);
 
-        // Painel na largura toda (1024×768: w/2056 = 0.498 < 0.4h/541 = 0.568)
+        // Painel a 80% da largura (1024×768: w/2056 = 0.498 < 0.4h/541 = 0.568,
+        // × 0.8 — Thiago no Z Fold, 30/10)
         const dash = await game.scene(s => ({ w: s.scale.width, h: s.scale.height,
             dw: s.hud.ckDash.displayWidth, dy: s.hud.ckDash.y }));
-        expect(Math.abs(dash.dw - dash.w)).toBeLessThan(2);
+        expect(Math.abs(dash.dw - 0.8 * dash.w)).toBeLessThan(2);
         expect(dash.dy).toBe(dash.h);
 
         // 1. Toque no MAPA: nave parada, feixe apagado
