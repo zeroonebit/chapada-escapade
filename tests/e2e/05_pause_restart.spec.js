@@ -1,6 +1,7 @@
 // 05_pause_restart.spec.js — pausa (ESC) congela o mundo e abre o CONFIGS;
-// game over → reinício recria a cena SEM duplicar objetos/listeners; morrer no
-// tutorial retoma do passo que falhou.
+// game over → reinício recria a cena SEM duplicar objetos/listeners; a UI do
+// game over sai legível por cima da vinheta; morrer no tutorial retoma do passo
+// que falhou.
 const { test, expect } = require('./fixtures');
 const { pressKey, clickGameOverRestart } = require('./tutorial_helpers');
 
@@ -65,6 +66,48 @@ test.describe('pausa e reinício', () => {
         expect(resumed.physics).toBe(true);
         expect(resumed.overlay).toBe(false);
         expect(resumed.menu).toBe('none');
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Thiago no Z Fold (30/10): "tela escura / botão apagado". A vinheta e o
+    // grayscale do cinematic são postFX da CAMERA principal e pintavam por cima
+    // do GAME OVER, do score e do RESTART (vermelho cc1122 virava marrom quase
+    // preto). A UI tem que sair por uma camera própria, sem FX.
+    test('game over: RESTART e GAME OVER legíveis por cima da vinheta (camera sem postFX)', async ({ game, page }) => {
+        test.setTimeout(120_000);
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
+        await page.waitForTimeout(500);
+        await dieByFuel(game);
+        await page.waitForTimeout(2500);     // tween de entrada (1.1s + 0.6s) + folga
+        const px = await game.scene(s => new Promise(res => {
+            const w = s.scale.width, h = s.scale.height;
+            const read = (x, y) => new Promise(r => s.game.renderer.snapshotPixel(x, y, c => r([c.r, c.g, c.b])));
+            // Botão em 11_gameflow._showGameOverUI: w/2, h/2+250, 280×52, fill 0xcc1122.
+            // Lê à esquerda do texto, dentro do preenchimento (longe do stroke).
+            (async () => {
+                const btn = await read(Math.round(w / 2 - 100), Math.round(h / 2 + 250));
+                const go  = await read(Math.round(w / 2),       Math.round(h / 2 - 200));
+                res({
+                    btn, go,
+                    cams: s.cameras.cameras.length,
+                    mainFx: !!(s._gameOverFx && s._gameOverFx.vignFx &&
+                        s.cameras.main.postPipelines.some(p => p.controller === s._gameOverFx.vignFx)),
+                });
+            })();
+        }));
+        // Cinematic continua na camera principal (vinheta + grayscale)...
+        expect(px.mainFx, 'vinheta segue na camera principal').toBe(true);
+        // ...e a UI sai limpa: o botão lê vermelho de verdade, não marrom escuro.
+        expect(px.btn[0], `botão R (lido ${px.btn})`).toBeGreaterThan(170);
+        expect(px.btn[1], `botão G (lido ${px.btn})`).toBeLessThan(70);
+        expect(px.btn[2], `botão B (lido ${px.btn})`).toBeLessThan(90);
+        expect(px.cams, 'camera própria da UI').toBe(2);
+
+        await clickRestart(game);
+        // scene.restart recria o CameraManager: a camera da UI não vaza
+        expect(await game.scene(s => s.cameras.cameras.length), 'cameras após restart').toBe(1);
         expect(game.realErrors).toEqual([]);
     });
 
