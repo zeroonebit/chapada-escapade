@@ -153,7 +153,7 @@ Object.assign(Jogo.prototype, {
             if (this._cockpit) this._positionCockpit();
         });
         ckLate();
-        this.scale.on('resize', ckLate);
+        this._onResize(ckLate);
     },
 
     _positionCockpit() {

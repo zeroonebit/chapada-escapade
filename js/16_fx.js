@@ -81,7 +81,7 @@ Object.assign(Jogo.prototype, {
         });
 
         // Resize: recompõe os tamanhos
-        this.scale.on('resize', () => this._fxResize());
+        this._onResize(() => this._fxResize());
 
         // ── wind ──────────────────────────────────────────────────────
         // Particulas de swirl horizontal (curtas, semi-transparentes, drift

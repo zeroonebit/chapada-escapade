@@ -238,7 +238,7 @@ class Jogo extends Phaser.Scene {
         // estar 100% pronto pro radar (ring/dome PNGs nao apareciam ate restart).
         // Re-call cobre o gap sem custo perceptivel.
         this.time.delayedCall(50, () => { if (this._positionHUD) this._positionHUD(); });
-        this.scale.on('resize', () => this._positionHUD());
+        this._onResize(() => this._positionHUD());
 
         // MOBILE_MODE teaser: esconde HUD inteiro to player ver so terreno +
         // ship + beam + smoke + weather (experiencia atmosferica pura).
@@ -321,7 +321,7 @@ class Jogo extends Phaser.Scene {
                 .setScrollFactor(0).setDepth(190);
             // Vignette fixa centralizada (size exato to cobrir screen)
             this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
-            this.scale.on('resize', () => {
+            this._onResize(() => {
                 if (this.fxMobileVignette?.scene) {
                     this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
                     this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
@@ -380,6 +380,15 @@ class Jogo extends Phaser.Scene {
         this.events.once('shutdown', () => this._sceneCleanup());
     }
 
+    // Registra listener de resize no ScaleManager e guarda a referência pra
+    // _sceneCleanup remover — usar no lugar de scale.on('resize', fn) direto
+    _onResize(fn) {
+        if (!this._resizeHandlers) this._resizeHandlers = [];
+        this._resizeHandlers.push(fn);
+        this.scale.on('resize', fn);
+        return fn;
+    }
+
     // M4: chamado em scene.shutdown — limpa listeners globais, timers DOM,
     // graphics persistentes que sobreviveriam ao restart
     _sceneCleanup() {
@@ -387,6 +396,13 @@ class Jogo extends Phaser.Scene {
         if (this._tHandler) {
             window.removeEventListener('keydown', this._tHandler);
             this._tHandler = null;
+        }
+        // Listeners de resize do ScaleManager (vive no GAME, sobrevive ao
+        // scene.restart): sem isto cada reinício somava ~5 closures presas
+        // a objetos destruídos (HUD, splash, pausa, FX, atmosfera)
+        if (this._resizeHandlers) {
+            for (const fn of this._resizeHandlers) this.scale.off('resize', fn);
+            this._resizeHandlers = null;
         }
         // M7: cancela debounce timers do save de localStorage
         if (this._saveDbgTimer)    { clearTimeout(this._saveDbgTimer);    this._saveDbgTimer = null; }

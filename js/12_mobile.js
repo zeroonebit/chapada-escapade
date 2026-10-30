@@ -100,7 +100,7 @@ Object.assign(Jogo.prototype, {
         });
 
         // Reposiciona em resize
-        this.scale.on('resize', () => this._positionMobileControls());
+        this._onResize(() => this._positionMobileControls());
     },
 
     _updateJoy(p) {

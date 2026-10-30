@@ -173,7 +173,7 @@ Object.assign(Jogo.prototype, {
         });
 
         // Resize
-        this.scale.on('resize', () => {
+        this._onResize(() => {
             if (this.gameStarted) return;
             const w2 = this.scale.width, h2 = this.scale.height;
             this.splashBg.setPosition(w2/2, h2/2).setSize(w2, h2);
@@ -217,7 +217,7 @@ Object.assign(Jogo.prototype, {
             fontSize: '13px', fill: '#666666'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(301).setVisible(false);
 
-        this.scale.on('resize', () => {
+        this._onResize(() => {
             const w2 = this.scale.width, h2 = this.scale.height;
             this.pauseOverlay.setPosition(w2/2, h2/2).setSize(w2, h2);
             this.pauseGrafico.setPosition(w2/2, h2/2 - 35);
