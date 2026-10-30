@@ -155,6 +155,12 @@ Object.assign(Jogo.prototype, {
         this._tutScoreAntes = this.score || 0;
         this._tutFarmerAbducted = false;
         this._tutFarmerKilled   = false;
+        // Baselines dos passos 08/09/10 (_tutFarmerKillBase/_tutDodgeBase/
+        // _tutShooterBase) são capturados quando _tutStepInit troca de passo.
+        // A cena é REUSADA no scene.restart, então sem este reset o resume
+        // (morreu no 10 depois de um fogo amigo no 09) ficava com baseline
+        // velho e o mecha abatido nunca contava — soft-lock.
+        this._tutStepInit = null;
         this._tutGfx  = this.add.graphics().setScrollFactor(0).setDepth(510);
         this._tutAngle = 0;
         this._tutBox   = null;
@@ -313,6 +319,15 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BURGER': {
+                // Sem burger a caminho E sem vaca por perto → repõe 3 vacas.
+                // Acontece ao RETOMAR aqui depois de morrer (o restart limpa
+                // vacas e currais e o resume pula o spawn do ABDUCT/DELIVER):
+                // sem isto a lição era impossível de fechar (soft-lock).
+                const cooking = (this.corrals || []).some(c =>
+                    c.slots && c.slots.some(s => s && (s.state === 'loading' || s.state === 'ready')));
+                if (!cooking && this._tutVacasVivas() + this.abductedCows.length < 2) {
+                    this._tutSpawnVacas(3);
+                }
                 // Avança when score sobe (coleta do corral incrementa score)
                 if (canAdvance && (this.score || 0) > (this._tutScoreBurgerAntes || 0)) {
                     this._tutAdvance();
@@ -324,10 +339,22 @@ Object.assign(Jogo.prototype, {
                 // Trava ship + spawn 1 farmer atirando then (cooldown 400ms)
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
+                    // Congela DE VERDADE: o freeze só corta a força, e quem chega
+                    // do curral a toda continua deslizando — o tiro é reto, mira a
+                    // posição do disparo e passava longe
+                    if (this.ufo?.body) this.ufo.setVelocity(0, 0);
                     this._tutSpawnFazendeiroAtirando();
                     this._tutAtiradorSpawned = true;
                     this._tutCombustivelAntes = this.fuelCurrent;
                     this._tutCombustivelCongelado = true;
+                }
+                // Fazendeiro passeou pra fora do alcance (420px) ou morreu antes de
+                // acertar? Repõe outro perto. Com nave e tanque congelados a lição
+                // travava sem saída (nem morrer dava).
+                if (!this._tutDamageTaken) {
+                    const near = (this.farmers || []).some(f => f.scene && !f._dying && !f._destroyed &&
+                        distSq(f.x, f.y, this.ufo.x, this.ufo.y) <= 400 * 400);
+                    if (!near) this._tutSpawnFazendeiroAtirando();
                 }
                 // Hit detectado -> descongela ufo + mensagem de sucesso + auto-avanca em 1.5s
                 if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5) && !this._tutDamageTaken) {
@@ -648,6 +675,10 @@ Object.assign(Jogo.prototype, {
         if (nextKey === 'TAKE_DAMAGE') {
             this._tutAtiradorSpawned = false;       // event flag
             this._tutDamageTaken    = false;        // event flag
+            // Tanque cheio pros passos de combate (06-10). A lição do BURGER
+            // deixava 15% + um burger, e quem demorava morria 2-5x até o fim
+            // (user, 30/10: "reabastece").
+            this.fuelCurrent = this.fuelMax;
         }
         this._tutStepIdx = nextIdx;
         this._tutShowStep(nextIdx);
@@ -797,6 +828,18 @@ Object.assign(Jogo.prototype, {
         this._tutSetMode('NONE');
         // Resets visibilidade das barras (game normal always shows)
         if (this._setBarsVisibility) this._setBarsVisibility(true, true);
+        // Tanque cheio: fechar o passo 10 com 1% matava na tela de "TUTORIAL
+        // COMPLETE" (o drain segue rodando) — user, 30/10: "reabastece".
+        this.fuelCurrent = this.fuelMax;
+        // Graduação: grava o tutorial concluído. O _metaSetup (22_meta.js) lê
+        // cep_tutorial_done / save.tutorialDone pra dar `graduate`, mas
+        // ninguém escrevia — a conquista era dormente e o flag nunca existiu.
+        try { localStorage.setItem('cep_tutorial_done', '1'); } catch (e) {}
+        if (this.save) {
+            this.save.tutorialDone = true;
+            if (this._metaAch) this._metaAch('graduate');
+            if (this._metaPersist) this._metaPersist();
+        }
 
         const w = this.scale.width, h = this.scale.height;
 

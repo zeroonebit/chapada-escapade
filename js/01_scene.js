@@ -238,7 +238,7 @@ class Jogo extends Phaser.Scene {
         // estar 100% pronto pro radar (ring/dome PNGs nao apareciam ate restart).
         // Re-call cobre o gap sem custo perceptivel.
         this.time.delayedCall(50, () => { if (this._positionHUD) this._positionHUD(); });
-        this.scale.on('resize', () => this._positionHUD());
+        this._onResize(() => this._positionHUD());
 
         // MOBILE_MODE teaser: esconde HUD inteiro to player ver so terreno +
         // ship + beam + smoke + weather (experiencia atmosferica pura).
@@ -321,7 +321,7 @@ class Jogo extends Phaser.Scene {
                 .setScrollFactor(0).setDepth(190);
             // Vignette fixa centralizada (size exato to cobrir screen)
             this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
-            this.scale.on('resize', () => {
+            this._onResize(() => {
                 if (this.fxMobileVignette?.scene) {
                     this.fxMobileVignette.setPosition(this.scale.width/2, this.scale.height/2);
                     this.fxMobileVignette.setDisplaySize(this.scale.width, this.scale.height);
@@ -380,6 +380,15 @@ class Jogo extends Phaser.Scene {
         this.events.once('shutdown', () => this._sceneCleanup());
     }
 
+    // Registra listener de resize no ScaleManager e guarda a referência pra
+    // _sceneCleanup remover — usar no lugar de scale.on('resize', fn) direto
+    _onResize(fn) {
+        if (!this._resizeHandlers) this._resizeHandlers = [];
+        this._resizeHandlers.push(fn);
+        this.scale.on('resize', fn);
+        return fn;
+    }
+
     // M4: chamado em scene.shutdown — limpa listeners globais, timers DOM,
     // graphics persistentes que sobreviveriam ao restart
     _sceneCleanup() {
@@ -387,6 +396,13 @@ class Jogo extends Phaser.Scene {
         if (this._tHandler) {
             window.removeEventListener('keydown', this._tHandler);
             this._tHandler = null;
+        }
+        // Listeners de resize do ScaleManager (vive no GAME, sobrevive ao
+        // scene.restart): sem isto cada reinício somava ~5 closures presas
+        // a objetos destruídos (HUD, splash, pausa, FX, atmosfera)
+        if (this._resizeHandlers) {
+            for (const fn of this._resizeHandlers) this.scale.off('resize', fn);
+            this._resizeHandlers = null;
         }
         // M7: cancela debounce timers do save de localStorage
         if (this._saveDbgTimer)    { clearTimeout(this._saveDbgTimer);    this._saveDbgTimer = null; }
@@ -475,9 +491,9 @@ class Jogo extends Phaser.Scene {
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
         if (this.tutorialMode && this._updateTutorial) this._updateTutorial(time, delta);
 
-        // COWS counter: usa _cowsInBeamCount mantido by _updateBeamCounters
-        // (was for-loop by frame before — H5 do audit)
-        this.hud.cowsText.setText(this._cowsInBeamCount || 0);
+        // COWS no cockpit = TOTAL entregue (parity Bevy board.cows_delivered),
+        // escrito em _dropCowsAtCorral como o BULLS. Antes este frame
+        // sobrescrevia com a carga do feixe e o total nunca aparecia na caixa.
         this.hud.burgersText.setText((this.burgersCollected || 0) + '/' + BURGER_QUOTA);
 
         const cam = this.cameras.main;
@@ -607,7 +623,11 @@ class Jogo extends Phaser.Scene {
         if (this._updateCockpit) this._updateCockpit();    // cockpit FinalHud
         if (this._metaUpdate) this._metaUpdate();          // F6: raros + quest log
 
-        const wantBeam = (inputMode === 'wasd' || this.isMobile)
+        // Teaser do celular (MOBILE_MODE): não existe joystick nem _beamHeld
+        // (12_mobile sai cedo) — o dedo na tela É o feixe, como o _moveShip já faz.
+        // Sem isto o cone nunca acendia no celular desde que isMobile virou true lá.
+        const beamByHold = inputMode === 'wasd' || (this.isMobile && !window.__MOBILE_MODE);
+        const wantBeam = beamByHold
             ? !!this._beamHeld
             : this.input.activePointer.isDown;
         // Tutorial flags:
@@ -616,12 +636,15 @@ class Jogo extends Phaser.Scene {
         const noDrain = !!this._tutBeamNoDrain;
         const beamActive = wantBeam && (noDrain || this.energiaLed > 0);
 
+        // Graviton drena/regenera pelo passo da física (~33ms), igual ao tanque
+        // em 06_ufo._updateFuel — com fps baixo o delta da cena vai a 200ms
+        const dtBeam = Math.min(delta, 1000 / 30) / 1000;
         if (wantBeam && !noDrain && this.energiaLed > 0) {
             const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
-            this.energiaLed -= this.energiaDrain * drainMul * (delta/1000);
+            this.energiaLed -= this.energiaDrain * drainMul * dtBeam;
             if (this.energiaLed < 0) this.energiaLed = 0;
         } else if (!wantBeam && !noDrain) {
-            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * (delta/1000));
+            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * dtBeam);
         }
 
         const enePct = this.energiaLed / this.energiaMax;

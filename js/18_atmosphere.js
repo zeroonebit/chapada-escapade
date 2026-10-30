@@ -31,7 +31,7 @@ Object.assign(Jogo.prototype, {
         this._atmoCurrent = 'day';
         this._scheduleStormFlash();
         // Resize: redesenha gradient cobrindo nova area
-        this.scale.on('resize', () => this._drawAtmoGradient(TOD_PRESETS[this._atmoCurrent]));
+        this._onResize(() => this._drawAtmoGradient(TOD_PRESETS[this._atmoCurrent]));
         this._applyAtmosphere();
     },
 
