@@ -565,7 +565,13 @@ Object.assign(Jogo.prototype, {
             if (c.mascot && c.mascot.setVisible) c.mascot.setVisible(false);
             if (c.hayBale && c.hayBale.setVisible) c.hayBale.setVisible(false);
             if (c.gfx && c.gfx.setVisible) c.gfx.setVisible(false);
+            // Slot vazio é null (08_corrals._ensureSlots) — sem o guard o
+            // forEach estourava TypeError: no game over caía no fallback sem
+            // cinematic, e na VITÓRIA travava o jogo sem tela nem botão.
+            // O slot atual guarda o burger em `icon` (burger/platform = legado).
             if (c.slots) c.slots.forEach(s => {
+                if (!s) return;
+                if (s.icon && s.icon.setVisible) s.icon.setVisible(false);
                 if (s.burger && s.burger.setVisible) s.burger.setVisible(false);
                 if (s.platform && s.platform.setVisible) s.platform.setVisible(false);
             });
