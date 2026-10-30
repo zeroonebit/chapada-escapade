@@ -485,7 +485,10 @@ class Jogo extends Phaser.Scene {
         }
         if (this.paused) return;
 
-        this.difficulty += 0.000018 * delta;
+        // (Era `difficulty += 0.000018 * delta` aqui: o drain de tanque dobrava
+        // a cada ~55s e aos 5 min um tanque cheio durava 4s de voo. O Bevy
+        // (fuel.rs) não tem multiplicador por tempo; a escalada da partida é
+        // por quota, em _escalation(). Removido em 30/10.)
 
         if (!this._tutCombustivelCongelado) this._updateFuel(delta);
         if (!this.EXPERIMENT_MODE) this._updateCowsAI();
