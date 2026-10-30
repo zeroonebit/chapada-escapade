@@ -313,6 +313,15 @@ Object.assign(Jogo.prototype, {
             }
 
             case 'BURGER': {
+                // Sem burger a caminho E sem vaca por perto → repõe 3 vacas.
+                // Acontece ao RETOMAR aqui depois de morrer (o restart limpa
+                // vacas e currais e o resume pula o spawn do ABDUCT/DELIVER):
+                // sem isto a lição era impossível de fechar (soft-lock).
+                const cooking = (this.corrals || []).some(c =>
+                    c.slots && c.slots.some(s => s && (s.state === 'loading' || s.state === 'ready')));
+                if (!cooking && this._tutVacasVivas() + this.abductedCows.length < 2) {
+                    this._tutSpawnVacas(3);
+                }
                 // Avança when score sobe (coleta do corral incrementa score)
                 if (canAdvance && (this.score || 0) > (this._tutScoreBurgerAntes || 0)) {
                     this._tutAdvance();
