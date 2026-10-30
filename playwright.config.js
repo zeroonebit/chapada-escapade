@@ -14,9 +14,11 @@ const PORT = 8787;
 
 module.exports = defineConfig({
     testDir: './tests/e2e',
-    // O jogo é pesado (WebGL por software no headless): paralelismo moderado.
+    // O jogo é pesado (WebGL por software no headless): 2 workers. Com 3 o fps cai,
+    // o Matter limita o passo a 33ms mas o delta da cena vai a 200ms e o tanque
+    // (06_ufo._updateFuel) drena mais rápido do que a nave anda — testes de voo falham.
     fullyParallel: true,
-    workers: process.env.CI ? 2 : 3,
+    workers: 2,
     retries: process.env.CI ? 1 : 0,
     timeout: 120_000,
     expect: { timeout: 15_000 },
