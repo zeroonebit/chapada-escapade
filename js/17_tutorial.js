@@ -339,10 +339,22 @@ Object.assign(Jogo.prototype, {
                 // Trava ship + spawn 1 farmer atirando then (cooldown 400ms)
                 this._tutFreezeNave = true;
                 if (!this._tutAtiradorSpawned) {
+                    // Congela DE VERDADE: o freeze só corta a força, e quem chega
+                    // do curral a toda continua deslizando — o tiro é reto, mira a
+                    // posição do disparo e passava longe
+                    if (this.ufo?.body) this.ufo.setVelocity(0, 0);
                     this._tutSpawnFazendeiroAtirando();
                     this._tutAtiradorSpawned = true;
                     this._tutCombustivelAntes = this.fuelCurrent;
                     this._tutCombustivelCongelado = true;
+                }
+                // Fazendeiro passeou pra fora do alcance (420px) ou morreu antes de
+                // acertar? Repõe outro perto. Com nave e tanque congelados a lição
+                // travava sem saída (nem morrer dava).
+                if (!this._tutDamageTaken) {
+                    const near = (this.farmers || []).some(f => f.scene && !f._dying && !f._destroyed &&
+                        distSq(f.x, f.y, this.ufo.x, this.ufo.y) <= 400 * 400);
+                    if (!near) this._tutSpawnFazendeiroAtirando();
                 }
                 // Hit detectado -> descongela ufo + mensagem de sucesso + auto-avanca em 1.5s
                 if (this.fuelCurrent < (this._tutCombustivelAntes - 0.5) && !this._tutDamageTaken) {
