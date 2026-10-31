@@ -144,16 +144,17 @@ Object.assign(Jogo.prototype, {
         this.hud.ckFuelLbl  = mkT('PROPULSION REACTOR FUEL', '#ffaa40');
         this.hud.ckGravLbl  = mkT('TRACTOR GRAVITON BEAM PULSE', '#a280ff');
         this.hud.ckScoreLbl = mkT('SCORE', '#00ff55').setOrigin(1, 0.5);
-        // Botão de PAUSA no painel (Thiago, 30/10: sem ESC no tablet, o idioma
-        // sumiria no toque sem a splash). Ombro direito da arte (1860,95), acima
-        // da lente: fora das zonas da bola (137,229 r130) e da lente (1912,284
-        // r130) do 12_mobile. Só aparece no cockpit de toque; abre a MESMA
-        // pausa + CONFIGS do PC (_setPaused).
-        this.hud.ckPauseBtn = this.add.circle(0, 0, 12, 0x0a2216, 0.88)
+        // Botão de PAUSA (Thiago, 30/10: sem ESC no tablet, o idioma sumiria no
+        // toque sem a splash). Primeiro no ombro do painel; jogando no Z Fold:
+        // "o pause no canto esquerdo em cima, ao lado oposto da rádio" → canto
+        // superior esquerdo da TELA, espelho do botão do Bevy (touch.rs: centro
+        // a 48px das bordas, raio 26, toque 40). Só aparece no cockpit de toque;
+        // abre a MESMA pausa + CONFIGS do PC (_setPaused).
+        this.hud.ckPauseBtn = this.add.circle(0, 0, 26, 0x0a2216, 0.88)
             .setStrokeStyle(2, 0x00ff55, 0.9).setScrollFactor(0).setDepth(D + 0.9)
             .setInteractive({ useHandCursor: true }).setVisible(false);
         this.hud.ckPauseLbl = this.add.text(0, 0, '⏸', {
-            fontFamily: 'VT323, monospace', fontSize: '16px', color: '#00ff55',
+            fontFamily: 'VT323, monospace', fontSize: '30px', color: '#00ff55',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 0.95).setVisible(false);
         this.hud.ckPauseBtn.on('pointerdown', () => {
             if (!this.gameStarted || this.gameOver) return;
@@ -180,14 +181,24 @@ Object.assign(Jogo.prototype, {
         // Painel toma a BASE da tela (user, 30/10: largura toda, toque e desktop).
         // Era 44% da largura (dash_scale do Bevy). Teto de 40% da altura: em
         // 16:9 a largura toda daria 42% e a arena sumiria. Depois, jogando no
-        // Z Fold: "pode ser menor uns 80% do tamanho atual" → COCKPIT_FIT.
-        const COCKPIT_FIT = 0.8;
+        // Z Fold: "pode ser menor uns 80% do tamanho atual" → 0.8; e de novo:
+        // "pode ficar ainda um pouco menor, tá clipando embaixo da tela" → 0.7.
+        const COCKPIT_FIT = 0.7;
         const s = COCKPIT_FIT * Math.min(w / 2056, (h * 0.40) / 541);
-        const minX = w / 2 - (2056 * s) / 2, minY = h - 541 * s;
+        // O "clipando" não era tamanho: o barrel (16_fx BARREL_FRAG) renormaliza
+        // pelos CANTOS, então o meio de cada borda empurra conteúdo pra fora — no
+        // meio da borda de baixo some h·0.2k/(1+0.8k) (k = strength; 2,7% da
+        // altura no padrão 0.15), bem na placa do SCORE. O painel sobe esse tanto:
+        // a base dele cai exatamente na última linha que o barrel mostra.
+        const k = this._barrelPipeline ? (this.dbg?.behavior?.barrel ?? 0) : 0;
+        const lift = h * 0.2 * k / (1 + 0.8 * k);
+        this._ckBarrelK = k;
+        const baseY = h - lift;
+        const minX = w / 2 - (2056 * s) / 2, minY = baseY - 541 * s;
         this._ckScale = s; this._ckMin = { x: minX, y: minY };
         const dpx = (x, y) => ({ x: minX + x * s, y: minY + y * s });
 
-        this.hud.ckDash.setPosition(w / 2, h).setDisplaySize(2056 * s, 541 * s);
+        this.hud.ckDash.setPosition(w / 2, baseY).setDisplaySize(2056 * s, 541 * s);
 
         // Contadores REUTILIZADOS nos slots da arte (cores F4 já aplicadas)
         const SLOTS = [[457, 672], [692, 901], [921, 1134], [1155, 1360], [1381, 1592]];
@@ -226,13 +237,15 @@ Object.assign(Jogo.prototype, {
                 .setColor('#00ff55').setDepth(201);
         }
 
-        // Botão de pausa (ombro direito da arte). Área de toque maior que o
-        // desenho e centrada nele (hitArea é relativa ao canto do objeto)
-        const pb = dpx(1860, 95), pr = Math.max(12, 46 * s), phr = Math.max(pr * 1.3, 24);
+        // Botão de pausa: canto superior esquerdo da tela, tamanho fixo (Bevy
+        // touch.rs PAUSE_X/Y 48, PAUSE_BTN_R 26, PAUSE_BTN_GRAB_R 40). A área de
+        // toque é um quadrado de 80px centrado no botão (hitArea é relativa ao
+        // canto do objeto, que mede 2r).
+        const PB_X = 48, PB_Y = 48, PB_R = 26, PB_GRAB = 40;
         const pbtn = this.hud.ckPauseBtn;
-        pbtn.setPosition(pb.x, pb.y).setRadius(pr).setStrokeStyle(Math.max(1.5, 4 * s), 0x00ff55, 0.9);
-        if (pbtn.input && pbtn.input.hitArea) pbtn.input.hitArea.setTo(pr - phr, pr - phr, 2 * phr, 2 * phr);
-        this.hud.ckPauseLbl.setPosition(pb.x, pb.y + 1).setFontSize(Math.max(12, Math.round(56 * s)));
+        pbtn.setPosition(PB_X, PB_Y).setRadius(PB_R).setStrokeStyle(2.5, 0x00ff55, 0.9);
+        if (pbtn.input && pbtn.input.hitArea) pbtn.input.hitArea.setTo(PB_R - PB_GRAB, PB_R - PB_GRAB, 2 * PB_GRAB, 2 * PB_GRAB);
+        this.hud.ckPauseLbl.setPosition(PB_X, PB_Y + 1);
 
         // Radar DENTRO do scope da arte (centro 1020,278 · disco vivo 133 art px)
         const rc = dpx(1020, 278);
@@ -259,7 +272,8 @@ Object.assign(Jogo.prototype, {
         // _hideForCinematic escondeu tudo e o update loop continua rodando
         if (this._cinematicHide) return;
         const w = this.scale.width, h = this.scale.height;
-        if (this._ckW !== w || this._ckH !== h) {
+        const kNow = this._barrelPipeline ? (this.dbg?.behavior?.barrel ?? 0) : 0;
+        if (this._ckW !== w || this._ckH !== h || this._ckBarrelK !== kNow) {
             this._ckW = w; this._ckH = h;
             this._positionCockpit();
         }

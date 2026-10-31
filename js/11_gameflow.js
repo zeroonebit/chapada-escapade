@@ -122,6 +122,8 @@ Object.assign(Jogo.prototype, {
         }
         // Expõe to function PREVIEW poder hide/show temporariamente
         this._splashElements = allBtns;
+        // Posição real dos botões (os testes clicam onde eles estão)
+        this._splashBtns = { play: btnL, tutorial: btnR };
 
         const _startGame = (tutorial) => {
             this.gameStarted  = true;
@@ -133,6 +135,7 @@ Object.assign(Jogo.prototype, {
             allBtns.forEach(o => o.destroy());
             this._splashStartGame = null;
             this._refreshSplashLabels = null;
+            this._splashBtns = null;
             if (this.tutorialMode && this._setupTutorial) this._setupTutorial();
         };
         // Expõe pro botão PREVIEW do CONFIGS poder iniciar a partir do splash
