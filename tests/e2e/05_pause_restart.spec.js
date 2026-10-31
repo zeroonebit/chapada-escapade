@@ -193,11 +193,21 @@ test.describe('pausa e reinício', () => {
         expect(c2.debugMenus).toBe(1);
         expect(Math.abs(c2.children - c0.children)).toBeLessThanOrEqual(40);
 
-        // Jogo continua jogável depois de 2 reinícios: nave responde, sem erro
+        // Jogo continua jogável depois de 2 reinícios: nave responde, sem erro.
+        // "Responde" = anda na direção pedida. Medir a posição FINAL de um flyTo
+        // era instável: o piloto do teste passa do alvo e volta (±300px) e, sem
+        // pegar a janela de 80px a tempo, o timeout de 8s caía com a nave no meio
+        // de uma volta (68-123px; visto em main 1/4 e de novo na branch, 30/10).
         const u0 = await game.scene(s => ({ x: s.ufo.x, y: s.ufo.y }));
-        await game.flyTo(u0.x + 300, u0.y, { tol: 80, timeout: 8000 });
-        const u1 = await game.scene(s => ({ x: s.ufo.x, y: s.ufo.y }));
-        expect(u1.x - u0.x).toBeGreaterThan(150);
+        let maxDx = 0;
+        const tFly = Date.now();
+        while (Date.now() - tFly < 8000 && maxDx <= 150) {
+            await game.aimToward(u0.x + 300, u0.y, 240, 80);
+            await page.waitForTimeout(90);
+            maxDx = Math.max(maxDx, (await game.scene(s => s.ufo.x)) - u0.x);
+        }
+        await game.hover();
+        expect(maxDx, 'nave respondeu ao comando depois de 2 reinícios').toBeGreaterThan(150);
         // Resize da janela depois dos restarts não pode estourar listener velho
         await page.setViewportSize({ width: 1200, height: 760 });
         await page.waitForTimeout(400);
