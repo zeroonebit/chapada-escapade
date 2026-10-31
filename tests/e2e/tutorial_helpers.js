@@ -325,7 +325,8 @@ async function killFarmerOnRock(game, log) {
         if (outcome === true || outcome === 'GAMEOVER') return outcome;
         log(`  tentativa falhou (${outcome || 'timeout'}) — ${JSON.stringify(await game.scene(status))}`);
         await game.settle(1200);
-        await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 6000 });
+        // Recarga do feixe é 5/s (paridade Bevy): de 0 a 90% são 18 s
+        await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 20_000 });
     }
     return false;
 }
@@ -447,7 +448,8 @@ async function killMecha(game, log) {
         if (await game.scene((s, b) => (s.shootersTotal || 0) > b, base)) return true;
         log(`  tentativa falhou (${outcome || 'timeout'}) — ${JSON.stringify(await game.scene(status))}`);
         await game.settle(1200);
-        await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 6000 });
+        // Recarga do feixe é 5/s (paridade Bevy): de 0 a 90% são 18 s
+        await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 20_000 });
     }
     return false;
 }
@@ -520,6 +522,9 @@ async function playTutorial(game, page) {
             const drained = await game.waitFor(s => s.energiaLed <= s.energiaMax * 0.5, { timeout: 15_000 });
             await game.beamOff();
             expect(drained, 'graviton drenou abaixo de 50%').toBe(true);
+            // O passo fecha com o graviton a 99%; a 5/s (paridade Bevy) de 50%
+            // são ~10 s — espera aqui pra não estourar o waitStep de 15 s
+            await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.99 || s.gameOver, { timeout: 25_000 });
             return true;
         });
 
