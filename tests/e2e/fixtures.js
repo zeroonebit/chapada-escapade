@@ -176,10 +176,14 @@ class GamePage {
             if (s._refreshSplashLabels) s._refreshSplashLabels();
         }, { lang, input });
     }
+    // side 'left' = PLAY, 'right' = TUTORIAL (nomes da época dos botões lado a lado)
     async splashButton(side) {
-        const sz = await this.scene(s => ({ w: s.scale.width, h: s.scale.height }));
-        const cx = side === 'left' ? 150 + 90 : sz.w - 150 - 90;
-        return this.toPage(cx, sz.h - 38);
+        const p = await this.scene((s, k) => {
+            const b = s._splashBtns && s._splashBtns[k];
+            return b ? { x: b.x, y: b.y } : null;
+        }, side === 'left' ? 'play' : 'tutorial');
+        if (!p) throw new Error('splash sem _splashBtns');
+        return this.toPage(p.x, p.y);
     }
 
     async clickSplash(side) {

@@ -57,8 +57,7 @@
 - [ ] Splash: botões PLAY / TUTORIAL respondem ao toque na primeira vez (hit area
       expandida compensa o barrel).
 - [ ] ⏮ ⏯ ⏭ do splash: um toque = uma ação (gate de 250 ms contra o duplo pointerdown).
-- [ ] Painel centrado a 80% da largura (teto de 32% da altura), colado na base, sem cortar
-      a arena.
+- [ ] Painel centrado a 70% da largura (teto de 28% da altura), perto da base, placa do SCORE inteira (sem corte embaixo).
 - [ ] Bola vermelha do joystick: o dedo pousa nela e ela acompanha; soltar = nave para de
       acelerar. O curso (~90 px da arte) é confortável pro polegar? Raio de toque bom?
 - [ ] Lente do emissor: segurar = feixe + lente acesa; soltar = apaga e o graviton regenera.
@@ -68,9 +67,9 @@
 - [ ] Tutorial 06-10: levar tiro, capturar fazendeiro, pedra, torpedos, mecha —
       **dá pra fazer curva com o joystick rápido o bastante pra esquivar?** (09 é o
       passo que mais depende de destreza).
-- [ ] Botão ⏸ no ombro direito do painel (acima da lente) abre a barra de pausa (CONTINUAR /
-      RECOMEÇAR / player de música) junto do CONFIGS; CONTINUAR volta ao jogo; o botão não
-      atrapalha a bola nem a lente.
+- [ ] Botão ⏸ no canto superior esquerdo abre a barra de pausa (CONTINUAR / RECOMEÇAR /
+      player de música) junto do CONFIGS; CONTINUAR volta ao jogo; o log de CONTRATOS fica
+      ao lado, sem cortar.
 - [ ] CONFIGS no toque: trocar idioma e controle vale na hora (visão de jogador; DEV MODE
       liga o resto).
 - [ ] Splash: só PLAY e TUTORIAL (sem escolher idioma/controle); 1ª visita no idioma do aparelho.

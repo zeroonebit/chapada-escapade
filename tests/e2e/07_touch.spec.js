@@ -34,12 +34,12 @@ test.describe('touch (tablet 1024×768)', () => {
         const st = await game.state();
         expect(st.gameStarted).toBe(true);
 
-        // Painel a 80% da largura (1024×768: w/2056 = 0.498 < 0.4h/541 = 0.568,
-        // × 0.8 — Thiago no Z Fold, 30/10)
+        // Painel a 70% da largura (1024×768: w/2056 = 0.498 < 0.4h/541 = 0.568,
+        // × 0.7 — Thiago no Z Fold, 30/10) e acima do corte do barrel
         const dash = await game.scene(s => ({ w: s.scale.width, h: s.scale.height,
-            dw: s.hud.ckDash.displayWidth, dy: s.hud.ckDash.y }));
-        expect(Math.abs(dash.dw - 0.8 * dash.w)).toBeLessThan(2);
-        expect(dash.dy).toBe(dash.h);
+            dw: s.hud.ckDash.displayWidth, dy: s.hud.ckDash.y, k: s.dbg.behavior.barrel }));
+        expect(Math.abs(dash.dw - 0.7 * dash.w)).toBeLessThan(2);
+        expect(Math.abs(dash.dy - (dash.h - dash.h * 0.2 * dash.k / (1 + 0.8 * dash.k)))).toBeLessThan(1.5);
 
         // 1. Toque no MAPA: nave parada, feixe apagado
         const u0 = await game.scene(s => ({ x: s.ufo.x, y: s.ufo.y }));
@@ -102,24 +102,35 @@ test.describe('touch (tablet 1024×768)', () => {
         expect(game.realErrors).toEqual([]);
     });
 
-    // Thiago (30/10): sem ESC no tablet, um botão pequeno no painel abre a mesma
-    // pausa (barra CONTINUAR/RECOMEÇAR/player) e o mesmo CONFIGS do PC. Não
-    // pode roubar área da bola nem da lente.
-    test('botão de pausa no painel: abre pausa + CONFIGS, CONTINUAR volta; longe da bola e da lente', async ({ game, page }) => {
+    // Thiago (30/10): sem ESC no tablet, um botão abre a mesma pausa (barra
+    // CONTINUAR/RECOMEÇAR/player) e o mesmo CONFIGS do PC. Primeiro ficou no
+    // ombro do painel; jogando no Z Fold: "o pause no canto esquerdo em cima, ao
+    // lado oposto da rádio" → canto superior esquerdo, espelho do Bevy (centro a
+    // 48px das bordas, raio 26, toque 40). O log de CONTRATOS sai da frente.
+    test('botão de pausa no canto superior esquerdo: abre pausa + CONFIGS, CONTINUAR volta', async ({ game, page }) => {
         test.setTimeout(120_000);
         await page.goto('/');
         await game.waitForScene();
         await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
+        await page.waitForTimeout(400);   // log de contratos nasce num delayedCall
         const b = await game.scene(s => {
-            const btn = s.hud.ckPauseBtn, lens = s._ckLensCenter(), joy = s._ckJoyCenter();
-            return { x: btn.x, y: btn.y, r: btn.radius, visible: btn.visible, zone: 130 * s._ckScale,
-                     dLens: Math.hypot(btn.x - lens.x, btn.y - lens.y), dJoy: Math.hypot(btn.x - joy.x, btn.y - joy.y),
-                     inDash: btn.y > s.hud.ckDash.y - s.hud.ckDash.displayHeight && btn.x < s.hud.ckDash.x + s.hud.ckDash.displayWidth / 2 };
+            const btn = s.hud.ckPauseBtn;
+            const grab = 40;
+            // Textos do log de contratos não podem cair na área de toque do botão
+            const hitQuest = (s._questTexts || []).filter(t => t.visible && t.text).some(t => {
+                const r = t.getBounds();
+                const nx = Math.max(r.x, Math.min(btn.x, r.right)), ny = Math.max(r.y, Math.min(btn.y, r.bottom));
+                return Math.hypot(btn.x - nx, btn.y - ny) < grab;
+            });
+            return { x: btn.x, y: btn.y, r: btn.radius, visible: btn.visible, hitQuest,
+                     quests: (s._questTexts || []).filter(t => t.text).length };
         });
         expect(b.visible, 'botão visível no cockpit de toque').toBe(true);
-        expect(b.inDash, 'botão dentro do painel').toBe(true);
-        expect(b.dLens, 'fora da zona da lente').toBeGreaterThan(b.zone + b.r);
-        expect(b.dJoy, 'fora da zona do joystick').toBeGreaterThan(b.zone + b.r);
+        expect(Math.abs(b.x - 48), 'centro a 48px da esquerda').toBeLessThan(1);
+        expect(Math.abs(b.y - 48), 'centro a 48px do topo').toBeLessThan(1);
+        expect(b.r).toBe(26);
+        expect(b.quests, 'log de contratos na tela').toBeGreaterThan(0);
+        expect(b.hitQuest, 'log de contratos fora da área de toque do botão').toBe(false);
         const p = await game.toPage(b.x, b.y);
         await game.input.tap(p.x, p.y);
         await page.waitForTimeout(300);

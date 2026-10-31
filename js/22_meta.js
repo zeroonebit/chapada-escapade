@@ -110,10 +110,14 @@ Object.assign(Jogo.prototype, {
             if (q.def.kind === 'rare') this._spawnRareItem(q.def.item);
         }
 
-        // Quest log (canto sup-ESQ, estilo console verde)
+        // Quest log (canto sup-ESQ, estilo console verde). No cockpit de toque o
+        // botão de pausa ocupa o canto (05_hud, centro 48,48, toque r40): o log
+        // começa à direita dele e 8px mais baixo — longe do canto, o barrel corta
+        // mais da borda de cima e comia o topo do título.
         if (this._questTexts) for (const t of this._questTexts) t.destroy();
         this._questTexts = [];
-        const mk = (y, size, color) => this.add.text(14, y, '', {
+        const qx = this.touchCockpit ? 96 : 14, qy = this.touchCockpit ? 8 : 0;
+        const mk = (y, size, color) => this.add.text(qx, y + qy, '', {
             fontFamily: '"VT323", "Courier New", monospace',
             fontSize: size + 'px', fill: color,
             stroke: '#001a08', strokeThickness: 3,
