@@ -61,6 +61,8 @@
 - [ ] Bola vermelha do joystick: o dedo pousa nela e ela acompanha; soltar = nave para de
       acelerar. O curso (~90 px da arte) é confortável pro polegar? Raio de toque bom?
 - [ ] Lente do emissor: segurar = feixe + lente acesa; soltar = apaga e o graviton regenera.
+- [ ] Economia do feixe do Bevy (31/10): o graviton dura ~13 s ligado e leva ~20 s pra encher.
+      No toque dá pra jogar sem ficar esperando o graviton? (o passo 02 do tutorial espera ~10 s).
 - [ ] Dois dedos ao mesmo tempo (joystick + lente): abduzir uma vaca andando.
 - [ ] Tocar no mapa não move a nave nem liga o feixe.
 - [ ] Tutorial 01-05 pelo painel: mover, segurar a lente, abduzir, entregar, coletar.

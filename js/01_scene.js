@@ -226,8 +226,10 @@ class Jogo extends Phaser.Scene {
         this._gameOverUiCam      = null;   // camera da UI do game over (morre no restart)
         this.energiaMax = 100;
         this.energiaLed = 100;
-        this.energiaDrain = 5;
-        this.energiaRegen = 30;
+        // Paridade Bevy (Thiago 31/10, "Web segue o Bevy"): 7,5/s · 5/s — um
+        // feixe cheio dura ~13 s e enche de novo em 20 s. Era 5/s · 30/s.
+        this.energiaDrain = 7.5;
+        this.energiaRegen = 5;
 
         // ── HUD ──────────────────────────────────────────────────────
         // L5: detection mais conservadora pra evitar false-positive em hybrid
@@ -493,6 +495,21 @@ class Jogo extends Phaser.Scene {
         }
     }
 
+    // Um passo do graviton (≈ step_beam do Bevy beam.rs): drena com o feixe
+    // ligado, regenera solto. Pelo passo da física (~33ms), igual ao tanque em
+    // 06_ufo._updateFuel — com fps baixo o delta da cena vai a 200ms. Sem a
+    // trava do Bevy (zera → rearma em 20): divergência decidida, fica de fora.
+    _stepGraviton(delta, wantBeam, noDrain) {
+        const dtBeam = Math.min(delta, 1000 / 30) / 1000;
+        if (wantBeam && !noDrain && this.energiaLed > 0) {
+            const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
+            this.energiaLed -= this.energiaDrain * drainMul * dtBeam;
+            if (this.energiaLed < 0) this.energiaLed = 0;
+        } else if (!wantBeam && !noDrain) {
+            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * dtBeam);
+        }
+    }
+
     _updateBody(time, delta) {
 
         // T — toggle EXPERIMENT_MODE (recarrega) — fallback Phaser path
@@ -661,16 +678,7 @@ class Jogo extends Phaser.Scene {
         const noDrain = !!this._tutBeamNoDrain;
         const beamActive = wantBeam && (noDrain || this.energiaLed > 0);
 
-        // Graviton drena/regenera pelo passo da física (~33ms), igual ao tanque
-        // em 06_ufo._updateFuel — com fps baixo o delta da cena vai a 200ms
-        const dtBeam = Math.min(delta, 1000 / 30) / 1000;
-        if (wantBeam && !noDrain && this.energiaLed > 0) {
-            const drainMul = this._tutGravitonDrain2x ? 2.0 : 1.0;
-            this.energiaLed -= this.energiaDrain * drainMul * dtBeam;
-            if (this.energiaLed < 0) this.energiaLed = 0;
-        } else if (!wantBeam && !noDrain) {
-            this.energiaLed = Math.min(this.energiaMax, this.energiaLed + this.energiaRegen * dtBeam);
-        }
+        this._stepGraviton(delta, wantBeam, noDrain);
 
         const enePct = this.energiaLed / this.energiaMax;
         // V2: setCrop no fillImg

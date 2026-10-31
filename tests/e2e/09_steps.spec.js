@@ -75,6 +75,34 @@ test.describe('economia de tanque independe do fps', () => {
     });
 });
 
+// Thiago (31/10, "Web segue o Bevy"): a economia do feixe vira a do Bevy —
+// gasta 7,5/s, recarga 5/s (o ajuste do PC dele virou o padrão do jogo no Bevy,
+// 7e4999a). Antes a web era 5/s · 30/s. Tanque de 100 nas duas frentes.
+test.describe('economia do feixe (paridade Bevy)', () => {
+    test('graviton gasta 7,5/s com o feixe ligado e recarrega 5/s solto; tutorial 02 gasta 2×', async ({ game, page }) => {
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startDirect({ tutorial: false, input: 'mouse' });
+        const r = await game.scene(s => {
+            const step = (n, want) => { for (let i = 0; i < n; i++) s._stepGraviton(1000 / 30, want, false); };
+            s._tutGravitonDrain2x = false;
+            s.energiaLed = 100; step(30, true);  const drain = 100 - s.energiaLed;   // 1 s de feixe
+            s.energiaLed = 50;  step(30, false); const regen = s.energiaLed - 50;    // 1 s solto
+            s.energiaLed = 100; s._tutGravitonDrain2x = true; step(30, true);
+            const drain2x = 100 - s.energiaLed; s._tutGravitonDrain2x = false;
+            s.energiaLed = 1;   step(30, true);  const floor = s.energiaLed;          // não passa de 0
+            s.energiaLed = 99;  step(30, false); const cap = s.energiaLed;            // não passa de 100
+            return { drain, regen, drain2x, floor, cap, max: s.energiaMax };
+        });
+        expect(r.max, 'tanque de 100 (igual ao ENERGY_MAX do Bevy)').toBe(100);
+        expect(r.drain, 'gasto por segundo').toBeCloseTo(7.5, 1);
+        expect(r.regen, 'recarga por segundo').toBeCloseTo(5, 1);
+        expect(r.drain2x, 'passo 02 do tutorial gasta 2×').toBeCloseTo(15, 1);
+        expect(r.floor).toBe(0);
+        expect(r.cap).toBe(100);
+    });
+});
+
 test.describe('tanque no tutorial (decisão do Thiago, 30/10)', () => {
     test('entrar no passo 06 (REVIDE) reabastece o tanque', async ({ game, page }) => {
         await page.goto('/');
