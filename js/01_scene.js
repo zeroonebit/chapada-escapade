@@ -17,6 +17,13 @@ class Jogo extends Phaser.Scene {
     }
 
     _createBody() {
+        // Carga do feixe da partida anterior: scene.restart() reusa a instância e
+        // os contadores sobreviviam. Morrer com vaca no feixe deixava
+        // _cowsInBeamCount > 0, e o _desenharCone abaixo (chamado ANTES de a nave
+        // ser recriada) lia this.ufo.x da nave morta → CREATE ERR, jogo travado
+        // no game over (achado do Ensaio Geral, 30/10).
+        this._cowsInBeamCount = 0;
+        this._farmersInBeamCount = 0;
         // Map 2.5× maior (was 3200x2400) — more espaço to scenery, corrals, exploração
         const W = 8000, H = 6000;
         this.matter.world.setBounds(0, 0, W, H);

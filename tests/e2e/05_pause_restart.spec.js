@@ -3,7 +3,7 @@
 // game over sai legível por cima da vinheta; morrer no tutorial retoma do passo
 // que falhou.
 const { test, expect } = require('./fixtures');
-const { pressKey, clickGameOverRestart } = require('./tutorial_helpers');
+const { pressKey, clickGameOverRestart, abductOne } = require('./tutorial_helpers');
 
 // Contagens que devem ser iguais antes e depois de um scene.restart()
 const counts = (s) => ({
@@ -145,6 +145,39 @@ test.describe('pausa e reinício', () => {
         await clickRestart(game);
         // scene.restart recria o CameraManager: a camera da UI não vaza
         expect(await game.scene(s => s.cameras.cameras.length), 'cameras após restart').toBe(1);
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Achado do Ensaio Geral (30/10), em produção desde o beam-bússola (F4):
+    // morrer com vaca no feixe e apertar RESTART travava o jogo. _cowsInBeamCount
+    // não era zerado no reinício; _createBody desenha o feixe ANTES de recriar a
+    // nave, e com carga o beam-bússola lia this.ufo.x da nave morta (o x de um
+    // sprite Matter lê body.position → CREATE ERR "reading 'position'").
+    test('game over COM vaca no feixe → RESTART recria a cena (sem CREATE ERR)', async ({ game, page }) => {
+        test.setTimeout(150_000);
+        const log = (m) => console.log(m);
+        await game.presetConfig({ enabled: { farmers: false, shooters: false } });
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
+        await page.waitForTimeout(500);
+        expect(await abductOne(game, log, { keep: true }), 'abduziu vaca').toBe(true);
+        expect(await game.scene(s => s._cowsInBeamCount), 'vaca no feixe na hora da morte').toBeGreaterThan(0);
+        await dieByFuel(game);
+        await clickRestart(game);
+        const st = await game.scene(s => ({
+            inBeam: s._cowsInBeamCount || 0, abducted: s.abductedCows.length,
+            gameOver: s.gameOver, started: s.gameStarted, ufoBody: !!(s.ufo && s.ufo.body),
+            cams: s.cameras.cameras.length, errLog: (s._errorLog || []).map(e => e.msg),
+        }));
+        expect(st.gameOver).toBe(false);
+        expect(st.started).toBe(true);
+        expect(st.ufoBody, 'nave nova com corpo').toBe(true);
+        expect(st.inBeam, 'carga zerada no reinício').toBe(0);
+        expect(st.abducted).toBe(0);
+        expect(st.cams).toBe(1);
+        expect(st.errLog, 'sem erro capturado no create/update').toEqual([]);
+        expect(game.realErrors.filter(e => /CREATE ERR|position/.test(e))).toEqual([]);
         expect(game.realErrors).toEqual([]);
     });
 

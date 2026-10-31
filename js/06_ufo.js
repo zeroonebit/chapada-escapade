@@ -18,7 +18,8 @@ Object.assign(Jogo.prototype, {
         // pro curral (o "ovo" 2D). Sem carga: família verde clássica.
         let col = [0x66ff99, 0x88ffaa, 0xaaffcc, 0xddffee];
         let lean = null;
-        if ((this._cowsInBeamCount || 0) > 0 && this.corrals?.length) {
+        // Só com nave viva: o x/y de um sprite Matter lê body.position
+        if ((this._cowsInBeamCount || 0) > 0 && this.corrals?.length && this.ufo?.body) {
             let best = null, bd = Infinity;
             for (const c of this.corrals) {
                 const d = Phaser.Math.Distance.Between(this.ufo.x, this.ufo.y, c.x, c.y);
