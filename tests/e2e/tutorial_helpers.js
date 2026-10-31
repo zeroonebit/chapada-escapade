@@ -339,9 +339,39 @@ async function killFarmerOnRock(game, log) {
 // Órbitas largas (330+) saíam do alcance e o mecha nem atirava. Medido em
 // 30/10 no passo isolado: R330 em alcance 7-15% do tempo; R280 91-95%,
 // 0 acertos, 5/5 esquivas em 12-18s sobrando 36-58 de tanque (3/3).
+//
+// NO TOQUE (cockpit) esse piloto falhava: o aimToward do joystick limita a
+// velocidade a 9 px/frame e seguir a CORDA até o ponto do círculo puxa pra
+// dentro — a nave descia a ~120px do mecha, levava torpedo de perto e às vezes
+// o próprio torpedo matava o mecha (fogo amigo) e o passo ficava sem tiro.
+// No toque o piloto é outro: tangente ao círculo + correção radial, joystick
+// no fim do curso (o que um jogador faz pra fugir). Medido 30/10 no passo
+// isolado, tablet: atual 2/4 (r mín 116) × este 4/4, 0-1 acerto. No desktop
+// o atual ganha (4/4, 0 acertos, alcance 86-91%) e o radial abre demais
+// (alcance 41%): cada um no seu modo.
+// Raio e ganho do toque medidos SOB CARGA (2 workers) com o tanque de entrada
+// real do passo 09 (68): R280/ganho 120 deixava a órbita na mediana de 412px,
+// no limite dos 420 de tiro (alcance 84-87%; no tutorial inteiro saía do
+// alcance, o mecha parava de atirar e o tanque acabava só de voar). R260 com
+// ganho 60 e correção pra dentro até 3×: mediana 340px, alcance 96-99%, 4/4,
+// 0 acertos, 12-16s. Joystick é liga/desliga (a força satura a 16% do curso),
+// então a curva sai da DIREÇÃO, não da velocidade.
 const DODGE_ORBIT_R = 280;
+const DODGE_TOUCH_R = 260, DODGE_TOUCH_GAIN = 60, DODGE_TOUCH_KMIN = -3;
+async function dodgeSteerTouch(game, st, dir) {
+    const ax = st.ufo.x - st.mecha.x, ay = st.ufo.y - st.mecha.y;
+    const r = Math.hypot(ax, ay) || 1;
+    const rx = ax / r, ry = ay / r;
+    // + = abre, - = fecha (fechar pode pesar até 3× a tangente)
+    const k = Math.max(DODGE_TOUCH_KMIN, Math.min(1.2, (DODGE_TOUCH_R - r) / DODGE_TOUCH_GAIN));
+    let dx = -ry * dir + rx * k, dy = rx * dir + ry * k;
+    const n = Math.hypot(dx, dy) || 1;
+    await game.input.steer(dx / n, dy / n, 1);
+}
 async function dodgeTorpedoes(game, log, need = 5) {
     const base = await game.scene(s => s._torpedoesDodged || 0);
+    const touch = await game.useCockpit();
+    const release = async () => { if (touch) await game.input.steer(0, 0, 0); };
     const t0 = Date.now();
     let lastLog = 0, dir = 0;
     while (Date.now() - t0 < 120_000) {
@@ -357,8 +387,8 @@ async function dodgeTorpedoes(game, log, need = 5) {
                      gameOver: !!s.gameOver && (s.burgersCollected || 0) < BURGER_QUOTA,
                      bullets: s.bullets.filter(q => q.torpedo).length };
         }, base);
-        if (st.gameOver) return 'GAMEOVER';
-        if (st.dodged >= need) return true;
+        if (st.gameOver) { await release(); return 'GAMEOVER'; }
+        if (st.dodged >= need) { await release(); return true; }
         if (Date.now() - lastLog > 5000) {
             log(`  esquivas ${st.dodged}/${need} fuel ${st.fuel} mecha ${st.mecha ? Math.round(st.mecha.d) : '-'} torpedos ${st.bullets}`);
             lastLog = Date.now();
@@ -368,6 +398,7 @@ async function dodgeTorpedoes(game, log, need = 5) {
         const ax = st.ufo.x - st.mecha.x, ay = st.ufo.y - st.mecha.y;
         // Sentido da órbita: o que a nave já estiver fazendo (sem meia-volta)
         if (dir === 0) dir = (ax * st.vy - ay * st.vx) >= 0 ? 1 : -1;
+        if (touch) { await dodgeSteerTouch(game, st, dir); await game.page.waitForTimeout(40); continue; }
         const r = Math.hypot(ax, ay) || 1;
         // Mira num ponto do círculo à frente: longe demais → menos avanço
         // (puxa pra dentro); perto demais → mais avanço (abre)
@@ -377,6 +408,7 @@ async function dodgeTorpedoes(game, log, need = 5) {
                              st.mecha.y + Math.sin(th) * DODGE_ORBIT_R, 240);
         await game.page.waitForTimeout(40);
     }
+    await release();
     return false;
 }
 
