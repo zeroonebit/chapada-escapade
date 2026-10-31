@@ -40,7 +40,8 @@ test.describe('pausa e reinício', () => {
         await page.waitForTimeout(200);
         const paused = await game.scene(s => ({
             paused: s.paused, physics: s.matter.world.enabled,
-            overlay: s.pauseOverlay.visible, label: s.pauseLabel.visible,
+            overlay: s.pauseOverlay.visible,
+            bar: getComputedStyle(document.getElementById('pause-bar')).display,
             menu: document.getElementById('debug-menu')?.style.display,
             cowPos: s.cows.slice(0, 10).map(v => [v.x, v.y]),
             fuel: s.fuelCurrent,
@@ -48,7 +49,7 @@ test.describe('pausa e reinício', () => {
         expect(paused.paused).toBe(true);
         expect(paused.physics).toBe(false);
         expect(paused.overlay).toBe(true);
-        expect(paused.label).toBe(true);
+        expect(paused.bar, 'barra de pausa (CONTINUAR/RECOMEÇAR/player) junto do CONFIGS').toBe('flex');
         expect(paused.menu).toBe('block');
         // Mundo congelado: vacas não andam, combustível não gasta
         await page.waitForTimeout(800);
@@ -60,12 +61,48 @@ test.describe('pausa e reinício', () => {
         await page.waitForTimeout(200);
         const resumed = await game.scene(s => ({
             paused: s.paused, physics: s.matter.world.enabled, overlay: s.pauseOverlay.visible,
+            bar: getComputedStyle(document.getElementById('pause-bar')).display,
             menu: document.getElementById('debug-menu')?.style.display,
         }));
         expect(resumed.paused).toBe(false);
         expect(resumed.physics).toBe(true);
         expect(resumed.overlay).toBe(false);
+        expect(resumed.bar).toBe('none');
         expect(resumed.menu).toBe('none');
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Thiago (30/10): pausa igual à do Bevy — CONTINUAR, RECOMEÇAR e o player de
+    // música numa caixa, abrindo JUNTO com o CONFIGS (a caixa é uma barra fixa
+    // em cima do painel pra não sumir atrás dele).
+    test('barra de pausa estilo Bevy: CONTINUAR volta ao jogo, RECOMEÇAR reinicia, player troca a faixa', async ({ game, page }) => {
+        test.setTimeout(120_000);
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startPlayViaSplash({ lang: 'pt', input: 'mouse' });
+        await game.scene(s => { s.score = 150; });
+        await pressKey(page, 'Escape');
+        const bar = page.locator('#pause-bar');
+        await expect(bar).toBeVisible();
+        await expect(bar).toContainText('PAUSADO');
+        await expect(bar.locator('#pause-resume')).toContainText('CONTINUAR');
+        await expect(bar.locator('#pause-restart')).toContainText('RECOMEÇAR');
+        await expect(page.locator('#debug-menu')).toBeVisible();
+        const before = await game.scene(s => s.dbg.audio.track);
+        await bar.locator('#pause-mus-next').click();
+        expect(await game.scene(s => s.dbg.audio.track), 'player da barra troca a faixa').not.toBe(before);
+        await bar.locator('#pause-resume').click();
+        await expect(bar).toBeHidden();
+        expect(await game.scene(s => ({ p: s.paused, phys: s.matter.world.enabled, menu: document.getElementById('debug-menu').style.display })))
+            .toEqual({ p: false, phys: true, menu: 'none' });
+        // RECOMEÇAR: transição + scene.restart, sem voltar pra splash
+        await pressKey(page, 'Escape');
+        await expect(bar).toBeVisible();
+        await bar.locator('#pause-restart').click();
+        await expect(bar).toBeHidden();
+        const restarted = await game.waitFor(s => s.gameStarted && !s.paused && s.score === 0 && s.matter.world.enabled, { timeout: 8000 });
+        expect(restarted, 'partida reiniciada').toBe(true);
+        expect(await game.scene(s => s.cameras.cameras.length)).toBe(1);
         expect(game.realErrors).toEqual([]);
     });
 

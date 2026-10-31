@@ -68,8 +68,12 @@
 - [ ] Tutorial 06-10: levar tiro, capturar fazendeiro, pedra, torpedos, mecha —
       **dá pra fazer curva com o joystick rápido o bastante pra esquivar?** (09 é o
       passo que mais depende de destreza).
-- [ ] ESC não existe: dá pra pausar / abrir CONFIGS? (hoje só por teclado — anotar
-      se faz falta).
+- [ ] Botão ⏸ no ombro direito do painel (acima da lente) abre a barra de pausa (CONTINUAR /
+      RECOMEÇAR / player de música) junto do CONFIGS; CONTINUAR volta ao jogo; o botão não
+      atrapalha a bola nem a lente.
+- [ ] CONFIGS no toque: trocar idioma e controle vale na hora (visão de jogador; DEV MODE
+      liga o resto).
+- [ ] Splash: só PLAY e TUTORIAL (sem escolher idioma/controle); 1ª visita no idioma do aparelho.
 - [ ] Teclado virtual nunca aparece.
 
 ## Ambos

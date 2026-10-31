@@ -36,6 +36,10 @@ test.describe('loop principal', () => {
             cowsTotal: s.cowsTotal, bullsTotal: s.bullsTotal,
             // loading OU ready: a 1ª vaca pode ter caído ao passar a <110px, antes da 2ª
             loading: s.corrals.reduce((n, c) => n + (c.slots || []).filter(x => x && (x.state === 'loading' || x.state === 'ready')).length, 0),
+            // Sob fps baixo (2 workers) a 1ª vaca pode ter virado burger E sido
+            // coletada pelo feixe (que segue ligado) antes de a 2ª cair: o slot
+            // esvazia, mas a entrega continua contada — soma os dois lados
+            collected: s.burgersCollected || 0,
             mascot: s.corrals.some(c => c.mascot && c.mascotCountTxt),   // criada pela entrega (xN some em 3s, quando vira burger)
         }));
         // No caminho até o curral o feixe pode pegar mais uma vaca: tudo que
@@ -44,7 +48,7 @@ test.describe('loop principal', () => {
         expect(afterDrop.inBeam).toBe(0);
         expect(delivered).toBeGreaterThanOrEqual(1);
         expect(delivered).toBeLessThanOrEqual(3);
-        expect(afterDrop.loading).toBe(delivered);
+        expect(afterDrop.loading + afterDrop.collected, 'cada animal entregue virou slot (ou burger já coletado)').toBe(delivered);
         expect(afterDrop.mascot, 'mascote do curral criada na entrega').toBe(true);
         // HUD: a caixa COWS mostra o TOTAL entregue (parity Bevy board.cows_delivered),
         // igual à caixa BULLS — não a carga no feixe (que já voltou a 0)
