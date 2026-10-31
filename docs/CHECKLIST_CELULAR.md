@@ -58,7 +58,6 @@
       expandida compensa o barrel).
 - [ ] ⏮ ⏯ ⏭ do splash: um toque = uma ação (gate de 250 ms contra o duplo pointerdown).
 - [ ] Painel centrado a 70% da largura (teto de 28% da altura), perto da base, placa do SCORE inteira (sem corte embaixo).
-      a arena.
 - [ ] Bola vermelha do joystick: o dedo pousa nela e ela acompanha; soltar = nave para de
       acelerar. O curso (~90 px da arte) é confortável pro polegar? Raio de toque bom?
 - [ ] Lente do emissor: segurar = feixe + lente acesa; soltar = apaga e o graviton regenera.
