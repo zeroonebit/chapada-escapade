@@ -380,7 +380,8 @@ Object.assign(Jogo.prototype, {
         f.x = f._drownX; f.y = f._drownY;
         if (f.body) { f.setStatic(false); f.setSensor(false); }
         f.setScale(f._drownS).setAlpha(1);
-        if (f.body) f.setMass(2);
+        // setScale num corpo dinâmico recalcula a inércia: devolve a rotação fixa
+        if (f.body) f.setMass(2).setFixedRotation();
         f.clearTint();
         if (f.shadow && f.shadow.setVisible) f.shadow.setVisible(true);
         if (!f._rescued) {
@@ -428,10 +429,11 @@ Object.assign(Jogo.prototype, {
         const IDLE_F   = 0.0008 * velMul * escF; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
-        // Velocidade própria máxima (medida 01/11: perseguindo ~5,0 px/frame,
-        // andando ~1,1; +20%): acima disso o fazendeiro solto ainda está no
-        // embalo do feixe e cair n'água afoga
-        const OWN_MAX  = 6 * velMul * escF;
+        // Velocidade própria máxima: acima disso o fazendeiro solto ainda está
+        // no embalo do feixe e cair n'água afoga. Medido 01/11: novo (atrito
+        // 0,1) persegue a ~5,0 px/frame; já solto (atrito 0,08 depois do giro)
+        // persegue com o passeio a favor a ~7,1 (Ensaio). 7,5 cobre os dois.
+        const OWN_MAX  = 7.5 * velMul * escF;
 
         this._updateSplashFx(delta);
 

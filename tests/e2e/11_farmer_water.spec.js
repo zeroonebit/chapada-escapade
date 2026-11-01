@@ -43,6 +43,22 @@ function findShore(s) {
     return null;
 }
 
+// Beira de lago: 5 células de terra a oeste e 5 de lago a leste; a nave fica
+// a 4 células lago adentro (640 px do fazendeiro, dentro dos 690 da caça, e
+// longe dos 80 px em que ele para de perseguir)
+function findLakeShore(s) {
+    const g = s.terrainGrid, m = s._oceanMask, C = s.terrainCell || 80;
+    for (let y = 2; y < g.length - 2; y++)
+        for (let x = 6; x < g[0].length - 3; x++) {
+            let ok = true;
+            for (let k = 0; k <= 5 && ok; k++) if (g[y][x - k] === 0) ok = false;
+            for (let k = 1; k <= 5 && ok; k++) if (g[y][x + k] !== 0 || (m && m[y][x + k])) ok = false;
+            if (ok) return { land: { x: (x - 4 + 0.5) * C, y: (y + 0.5) * C },
+                             lake: { x: (x + 4 + 0.5) * C, y: (y + 0.5) * C } };
+        }
+    return null;
+}
+
 async function water(game, kind) {
     return game.scene((s, a) => {
         const find = new Function('return (' + a.src + ')')();
@@ -206,7 +222,8 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
                 s._releaseAll();
             }, { pt, pickNew });
             expect(await game.waitFor(() => !!window.__alvo._drowning, { timeout: 2000 }), 'começou a se afogar').toBe(true);
-            await game.scene((s, p) => { s.ufo.setPosition(p.x, p.y); s.ufo.setVelocity(0, 0); s.energiaLed = s.energiaMax; }, pt);
+            await game.scene((s, p) => { s.ufo.setPosition(p.x, p.y); s.ufo.setVelocity(0, 0);
+                s.cameras.main.centerOn(p.x, p.y); s.energiaLed = s.energiaMax; }, pt);
             await game.hover();
             await game.beamOn();
             const got = await game.waitFor(s => s.abductedCows.includes(window.__alvo), { timeout: 1200 });
@@ -215,6 +232,7 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
                 inList: s.farmers.includes(window.__alvo), onScreen: !!window.__alvo.scene,
                 total: s.farmersTotal || 0, rescued: s.save.farmersRescued || 0,
                 mercy: s.save.achievements.includes('mercy'),
+                inertia: window.__alvo.body ? window.__alvo.body.inertia : null,
             }));
             // Solta em terra firme pra não afogar de novo (fora do feixe e longe d'água)
             await game.beamOff();
@@ -231,6 +249,7 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
         expect(r1.inList, 'continua vivo').toBe(true);
         expect(r1.total, 'resgate não é morte').toBe(0);
         expect(r1.rescued).toBe(1);
+        expect(r1.inertia, 'rotação fixa de volta (inércia infinita)').toBe(Infinity);
         const r1b = await rescue(false);          // o mesmo fazendeiro de novo
         expect(r1b.got).toBe(true);
         expect(r1b.rescued, 'o mesmo fazendeiro conta uma vez só').toBe(1);
@@ -251,7 +270,7 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
         expect(await game.waitFor(() => !!window.__alvo._drowning, { timeout: 2000 })).toBe(true);
         // Pula pro começo do afundar e põe a nave em cima, feixe cheio
         await game.scene((s, p) => { window.__alvo._drownT = 1230; s.ufo.setPosition(p.x, p.y);
-            s.ufo.setVelocity(0, 0); s.energiaLed = s.energiaMax; }, pt);
+            s.ufo.setVelocity(0, 0); s.cameras.main.centerOn(p.x, p.y); s.energiaLed = s.energiaMax; }, pt);
         await game.hover();
         await game.beamOn();
         try {
@@ -262,6 +281,37 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
         } finally {
             await game.beamOff();
         }
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Achado do Ensaio (01/11): depois do giro o atrito fica 0,08 e ele corre
+    // até ~7,1 px/frame perseguindo; com o limite em 6 a marca não saía e ele
+    // afogava correndo por conta própria pra nave sobre o lago
+    test('solto, o giro acaba com embalo e ele corre sozinho pra nave sobre o lago: nada de volta', async ({ game, page }) => {
+        await startPlaying(game, page);
+        const sh = await game.scene((s, a) => new Function('return (' + a + ')')()(s), findLakeShore.toString());
+        expect(sh, 'o mapa da seed tem beira de lago').not.toBeNull();
+        const base = await game.scene((s, p) => {
+            const f = s.farmers.find(v => v.scene && v.body && !v._dying);
+            window.__alvo = f;
+            s.ufo.setPosition(p.lake.x, p.lake.y); s.ufo.setVelocity(0, 0);
+            s.cameras.main.centerOn(p.lake.x, p.lake.y);
+            f.setPosition(p.land.x, p.land.y);
+            f._thrown = true; f._releaseSpinUntil = 0; f.setFrictionAir(0.08);
+            f.wanderAngle = 0; f._wandering = true; if (f._timer) f._timer.paused = true;
+            f.setVelocity(10, 0);   // fim do giro, ainda no embalo, rumo à nave
+            return s.farmersTotal || 0;
+        }, sh);
+        await game.hover();
+        await page.waitForTimeout(2500);
+        const st = await game.scene(s => { const a = window.__alvo;
+            return { alive: !!(a.scene && a.body), drowning: !!a._drowning, dying: !!a._dying,
+                     thrown: !!a._thrown, total: s.farmersTotal || 0 }; });
+        expect(st.alive, 'correndo por conta própria não afoga (segue vivo)').toBe(true);
+        expect(st.drowning, 'correndo por conta própria não afoga').toBe(false);
+        expect(st.dying).toBe(false);
+        expect(st.thrown, 'a marca saiu quando ele voltou à velocidade de correr').toBe(false);
+        expect(st.total).toBe(base);
         expect(game.realErrors).toEqual([]);
     });
 
