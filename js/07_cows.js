@@ -504,7 +504,7 @@ Object.assign(Jogo.prototype, {
             // Arremessado: cair n'água agora afoga (09_enemies._updateFarmers);
             // grava o impulso do feixe, que o _updateFarmers decai
             vaca._thrown = true;
-            if (vaca.body && this._setBeamImpulse) this._setBeamImpulse(vaca, vaca.body.velocity.x, vaca.body.velocity.y);
+            if (vaca.body && this._setBeamImpulse) this._setBeamImpulse(vaca, vaca.body.velocity.x, vaca.body.velocity.y, true);
             // Random spin direction + speed (rad/sec)
             vaca._spinRate = (Math.random() < 0.5 ? -1 : 1) * Phaser.Math.FloatBetween(8, 14);
             return;
@@ -545,7 +545,7 @@ Object.assign(Jogo.prototype, {
             // pra ela no embalo, ele afoga
             if (v.isEnemy) {
                 v._thrown = true;
-                if (v.body && this._setBeamImpulse) this._setBeamImpulse(v, v.body.velocity.x, v.body.velocity.y);
+                if (v.body && this._setBeamImpulse) this._setBeamImpulse(v, v.body.velocity.x, v.body.velocity.y, true);
             }
         }
     }

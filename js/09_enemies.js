@@ -372,10 +372,13 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Impulso do feixe: módulo e direção (o soltar e o graviton zerado gravam)
-    _setBeamImpulse(f, vx, vy) {
+    // Impulso do feixe: módulo e direção (o soltar e o graviton zerado gravam).
+    // fresh = gravado depois do passo do Matter deste frame: o _updateFarmers
+    // não decai de novo no mesmo frame
+    _setBeamImpulse(f, vx, vy, fresh) {
         const v = Math.hypot(vx, vy);
         f._beamV = v;
+        f._beamFresh = !!fresh;
         if (v > 0.01) { f._beamDx = vx / v; f._beamDy = vy / v; }
         else { f._beamDx = 0; f._beamDy = 0; }
     },
@@ -480,10 +483,13 @@ Object.assign(Jogo.prototype, {
                     this._setBeamImpulse(f, bvx, bvy);
                 } else {
                     const fa = f.body.frictionAir;
-                    const dt = Math.min(delta, 1000 / 30) / (1000 / 60);
-                    f._beamV = (f._beamV || 0) * Math.max(0, 1 - fa * dt);
-                    // Resto do escorregão (soma geométrica v·(1−f)/f)
-                    const rest = fa > 0 ? f._beamV * (1 - fa) / fa : 0;
+                    // dt do passo do Matter (não o delta da cena: com frame
+                    // irregular o Matter usa o menor delta recente)
+                    const dt = (f.body.deltaTime || 1000 / 60) / (1000 / 60);
+                    if (f._beamFresh) f._beamFresh = false;
+                    else f._beamV = (f._beamV || 0) * Math.max(0, 1 - fa * dt);
+                    // Resto do escorregão (soma geométrica v·(1−f·dt)/f)
+                    const rest = fa > 0 ? f._beamV * Math.max(0, 1 - fa * dt) / fa : 0;
                     if (rest < 1 || !this._beamSlideHitsWater(f, rest)) f._thrown = false;
                 }
             }
