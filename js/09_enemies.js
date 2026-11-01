@@ -316,14 +316,22 @@ Object.assign(Jogo.prototype, {
         }
     },
 
-    // Se debate 1,2 s (treme de lado, tom de água; splash grande na entrada e
-    // pequeno a cada 0,35 s, igual ao Bevy), afunda em 0,3 s e some. Conta igual à morte na pedra: _beginDeath faz o total e o
-    // HUD; a pedra não paga ponto na web, então o afogamento também não.
-    _drownFarmer(f) {
-        if (!f || f._dying || f._destroyed) return;
-        this._beginDeath(f);
+    // Afogamento (Thiago 01/11). Se debate 1,2 s (treme de lado, tom de água;
+    // splash grande na entrada e pequeno a cada 0,35 s, igual ao Bevy), afunda
+    // em 0,3 s e some. Anda pelo update (_updateDrowning), que não roda com o
+    // jogo pausado: o afogamento congela na pausa. Enquanto se debate ele
+    // continua em this.farmers e o feixe pode resgatar (_rescueFarmer); a morte
+    // só conta quando afunda, igual à pedra (_beginDeath: total, HUD,
+    // FARMER_KILL; 0 ponto na web).
+    _startDrowning(f) {
+        if (!f || f._dying || f._destroyed || f._drowning) return;
+        f._drowning = true;
         f._thrown = false;
         f._releaseSpinUntil = 0;
+        f._drownT = 0;
+        f._drownSinking = false;
+        f._drownSplashes = 0;
+        f._drownX = f.x; f._drownY = f.y; f._drownS = f.scale;
         if (f.body) { f.setVelocity(0, 0); f.setSensor(true); f.setStatic(true); }
         f.rotation = 0;
         if (f.anims?.isPlaying) f.anims.stop();
@@ -331,33 +339,86 @@ Object.assign(Jogo.prototype, {
         if (f.shadow && f.shadow.setVisible) f.shadow.setVisible(false);
         if (this._sfx) this._sfx('drop');
         if (this._showQuip) this._showQuip(f, 'farmer');
-        const x0 = f.x, y0 = f.y, s0 = f.scale;
-        const splash = (n, r0, drops) => {
-            for (let i = 0; i < n; i++) {
-                const ring = this.add.circle(x0, y0 + 8, r0 + i * 6, 0x000000, 0)
-                    .setStrokeStyle(2, 0xd8f4ff, 0.9).setDepth(5.5);
-                this.tweens.add({ targets: ring, scale: 2.6, alpha: 0, duration: 520 + i * 140,
-                    onComplete: () => ring.destroy() });
+        this._spawnSplash(f.x, f.y, 2, 10, 6);
+    },
+
+    _updateDrowning(f, delta) {
+        const STRUGGLE = 1200, SINK = 300;
+        f._drownT += delta;
+        const t = f._drownT;
+        if (t < STRUGGLE) {
+            // 8 sacudidas de 150 ms, afundando um pouco
+            f.x = f._drownX + 5 * Math.sin(t / 150 * Math.PI * 2);
+            f.setScale(f._drownS * (1 - 0.15 * t / STRUGGLE));
+            const due = Math.min(3, Math.floor(t / 350));
+            while (f._drownSplashes < due) {
+                f._drownSplashes++;
+                this._spawnSplash(f._drownX, f._drownY, 1, 6, 3);
             }
-            for (let i = 0; i < drops; i++) {
-                const a = (i / drops) * Math.PI * 2 + Math.random() * 0.5;
-                const drop = this.add.circle(x0, y0, 2.5, 0xd8f4ff, 0.9).setDepth(6.5);
-                this.tweens.add({ targets: drop, x: x0 + Math.cos(a) * 26, y: y0 + Math.sin(a) * 16 - 10,
-                    alpha: 0, duration: 420, onComplete: () => drop.destroy() });
-            }
-        };
-        splash(2, 10, 6);
-        for (const t of [350, 700, 1050]) this.time.delayedCall(t, () => { if (f.scene) splash(1, 6, 3); });
-        // Debate: 8 sacudidas de 150 ms = 1,2 s, afundando um pouco
-        this.tweens.add({ targets: f, x: x0 + 5, duration: 75, yoyo: true, repeat: 7, ease: 'Sine.easeInOut' });
-        this.tweens.add({ targets: f, scale: s0 * 0.85, duration: 1200 });
-        this.time.delayedCall(1200, () => {
-            if (!f.scene) return;
-            this.tweens.add({
-                targets: f, scale: s0 * 0.35, alpha: 0, y: y0 + 8, duration: 300,
-                onComplete: () => { this._destroyCow(f); this._checkVictory(); },
-            });
-        });
+            return;
+        }
+        // Afundando: o feixe não resgata mais (combinado com o Bevy)
+        f._drownSinking = true;
+        const k = Math.min(1, (t - STRUGGLE) / SINK);
+        f.x = f._drownX;
+        f.y = f._drownY + 8 * k;
+        f.setScale(f._drownS * (0.85 - 0.5 * k));
+        f.setAlpha(1 - k);
+        if (k >= 1) {
+            f._drowning = false;
+            this._beginDeath(f);
+            this._destroyCow(f);
+            this._checkVictory();
+        }
+    },
+
+    // Pego pelo feixe nos 1,2 s de debate (_tryAbduct; afundando não pega):
+    // sobrevive e não conta como morte. Misericórdia conta 1× por fazendeiro.
+    _rescueFarmer(f) {
+        if (!f._drowning) return;
+        f._drowning = false;
+        f.x = f._drownX; f.y = f._drownY;
+        if (f.body) { f.setStatic(false); f.setSensor(false); }
+        f.setScale(f._drownS).setAlpha(1);
+        // setScale num corpo dinâmico recalcula a inércia: devolve a rotação fixa
+        if (f.body) f.setMass(2).setFixedRotation();
+        f.clearTint();
+        if (f.shadow && f.shadow.setVisible) f.shadow.setVisible(true);
+        if (!f._rescued) {
+            f._rescued = true;
+            if (this._metaOnRescue) this._metaOnRescue(f);
+        }
+    },
+
+    // Splash d'água: anéis que abrem + gotas. Também pelo update (congela na pausa)
+    _spawnSplash(x, y, rings, r0, drops) {
+        if (!this._splashFx) this._splashFx = [];
+        for (let i = 0; i < rings; i++) {
+            const o = this.add.circle(x, y + 8, r0 + i * 6, 0x000000, 0)
+                .setStrokeStyle(2, 0xd8f4ff, 0.9).setDepth(5.5);
+            this._splashFx.push({ o, t: 0, dur: 520 + i * 140, ring: true });
+        }
+        for (let i = 0; i < drops; i++) {
+            const a = (i / drops) * Math.PI * 2 + Math.random() * 0.5;
+            const o = this.add.circle(x, y, 2.5, 0xd8f4ff, 0.9).setDepth(6.5);
+            this._splashFx.push({ o, t: 0, dur: 420, x0: x, y0: y,
+                dx: Math.cos(a) * 26, dy: Math.sin(a) * 16 - 10 });
+        }
+    },
+
+    _updateSplashFx(delta) {
+        const fx = this._splashFx;
+        if (!fx || !fx.length) return;
+        for (let i = fx.length - 1; i >= 0; i--) {
+            const p = fx[i];
+            if (!p.o.scene) { fx.splice(i, 1); continue; }
+            p.t += delta;
+            const k = Math.min(1, p.t / p.dur);
+            if (p.ring) p.o.setScale(1 + 1.6 * k);
+            else { p.o.x = p.x0 + p.dx * k; p.o.y = p.y0 + p.dy * k; }
+            p.o.setAlpha(1 - k);
+            if (k >= 1) { p.o.destroy(); fx.splice(i, 1); }
+        }
     },
 
     _updateFarmers(delta) {
@@ -368,9 +429,17 @@ Object.assign(Jogo.prototype, {
         const IDLE_F   = 0.0008 * velMul * escF; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
+        // Velocidade própria máxima: acima disso o fazendeiro solto ainda está
+        // no embalo do feixe e cair n'água afoga. Medido 01/11: novo (atrito
+        // 0,1) persegue a ~5,0 px/frame; já solto (atrito 0,08 depois do giro)
+        // persegue com o passeio a favor a ~7,1 (Ensaio). 7,5 cobre os dois.
+        const OWN_MAX  = 7.5 * velMul * escF;
+
+        this._updateSplashFx(delta);
 
         for (const f of this.farmers) {
             if (!f.scene || !f.body) continue;
+            if (f._drowning) { this._updateDrowning(f, delta); continue; }
 
             const isAbducted = this.abductedCows.includes(f);
 
@@ -384,11 +453,13 @@ Object.assign(Jogo.prototype, {
             const inSpin = f._releaseSpinUntil && now < f._releaseSpinUntil;
             // AFOGAMENTO (Thiago 01/11, regra das 3 frentes): solto ou
             // arremessado pelo feixe e caiu n'água (lago, rio ou oceano; na web
-            // o oceano da borda faz o papel do abismo) → afoga. Passado o giro
-            // de 3 s em terra ele volta a ser pedestre e nada de volta.
+            // o oceano da borda faz o papel do abismo) → afoga. O embalo conta
+            // ("Embalo da praia afoga"): a marca só sai em terra, com o giro de
+            // 3 s acabado e a velocidade de volta à de quem anda por conta própria.
             if (f._thrown && !isAbducted) {
-                if (this._isWaterAt && this._isWaterAt(f.x, f.y)) { this._drownFarmer(f); continue; }
-                if (!inSpin) f._thrown = false;
+                if (this._isWaterAt && this._isWaterAt(f.x, f.y)) { this._startDrowning(f); continue; }
+                const sp = Math.hypot(f.body.velocity.x, f.body.velocity.y);
+                if (!inSpin && sp <= OWN_MAX) f._thrown = false;
             }
             if (inSpin) {
                 // Spin continuo a _spinRate rad/s (delta em ms -> /1000)
