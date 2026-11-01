@@ -501,8 +501,10 @@ Object.assign(Jogo.prototype, {
                 vaca.setFrictionAir(0.01).setDepth(5);  // friction baixa = inercia continua
             }
             vaca._releaseSpinUntil = now + 3000;
-            // Arremessado: cair n'água agora afoga (09_enemies._updateFarmers)
+            // Arremessado: cair n'água agora afoga (09_enemies._updateFarmers);
+            // grava o impulso do feixe, que o _updateFarmers decai
             vaca._thrown = true;
+            if (vaca.body && this._setBeamImpulse) this._setBeamImpulse(vaca, vaca.body.velocity.x, vaca.body.velocity.y);
             // Random spin direction + speed (rad/sec)
             vaca._spinRate = (Math.random() < 0.5 ? -1 : 1) * Phaser.Math.FloatBetween(8, 14);
             return;
@@ -541,7 +543,10 @@ Object.assign(Jogo.prototype, {
             if (v.walkTimer) v.walkTimer.paused = false;
             // Graviton em 0 também é soltar pelo feixe: n'água ou escorregando
             // pra ela no embalo, ele afoga
-            if (v.isEnemy) v._thrown = true;
+            if (v.isEnemy) {
+                v._thrown = true;
+                if (v.body && this._setBeamImpulse) this._setBeamImpulse(v, v.body.velocity.x, v.body.velocity.y);
+            }
         }
     }
 

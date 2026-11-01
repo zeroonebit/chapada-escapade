@@ -181,6 +181,37 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
         expect(game.realErrors).toEqual([]);
     });
 
+    // Achado do Ensaio (01/11, 26ca80b): o limite por velocidade não separa
+    // embalo de corrida. No começo da partida o embalo abaixo de 7,5 nunca
+    // afogava; no fim (escalada ~1,5, limite ~11) quase nenhum. Agora a marca
+    // fica enquanto o escorregão que o impulso do feixe ainda dá chega à água
+    for (const c of [{ esc: 0, v: 8, label: 'começo da partida' }, { esc: 29, v: 10, label: 'fim da partida (escalada ~1,5)' }]) {
+        test(`graviton zerado na praia, embalo de ${c.v} px/frame no ${c.label}: escorrega e se afoga`, async ({ game, page }) => {
+            await startPlaying(game, page);
+            const shore = await game.scene((s, a) => new Function('return (' + a + ')')()(s), findShore.toString());
+            expect(shore, 'o mapa da seed tem praia').not.toBeNull();
+            await game.beamOn();
+            try {
+                const base = await game.scene((s, a) => {
+                    s.burgersCollected = a.esc;          // escalada pela quota (29/30, sem vitória)
+                    const f = s.farmers.find(v => v.scene && v.body && !v._dying);
+                    window.__alvo = f;
+                    s.energiaLed = 0;
+                    f.setPosition(a.p.x, a.p.y); f.setVelocity(a.v, 0);   // a 40 px da água, rumo a ela
+                    s.abductedCows.push(f);
+                    return s.farmersTotal || 0;
+                }, { p: shore, esc: c.esc, v: c.v });
+                expect(await game.waitFor(() => !!window.__alvo._drowning || !window.__alvo.scene, { timeout: 3000 }),
+                    'escorregou pra água no embalo e começou a se afogar').toBe(true);
+                expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'afundou').toBe(true);
+                expect(await game.scene(s => s.farmersTotal || 0)).toBe(base + 1);
+            } finally {
+                await game.beamOff();
+            }
+            expect(game.realErrors).toEqual([]);
+        });
+    }
+
     // Thiago 01/11 ("Afogamento pausa"): pausado, o debate e o afundar congelam
     test('a pausa congela o afogamento e ele continua ao despausar', async ({ game, page }) => {
         await startPlaying(game, page);
@@ -285,35 +316,41 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
     });
 
     // Achado do Ensaio (01/11): depois do giro o atrito fica 0,08 e ele corre
-    // até ~7,1 px/frame perseguindo; com o limite em 6 a marca não saía e ele
-    // afogava correndo por conta própria pra nave sobre o lago
-    test('solto, o giro acaba com embalo e ele corre sozinho pra nave sobre o lago: nada de volta', async ({ game, page }) => {
-        await startPlaying(game, page);
-        const sh = await game.scene((s, a) => new Function('return (' + a + ')')()(s), findLakeShore.toString());
-        expect(sh, 'o mapa da seed tem beira de lago').not.toBeNull();
-        const base = await game.scene((s, p) => {
-            const f = s.farmers.find(v => v.scene && v.body && !v._dying);
-            window.__alvo = f;
-            s.ufo.setPosition(p.lake.x, p.lake.y); s.ufo.setVelocity(0, 0);
-            s.cameras.main.centerOn(p.lake.x, p.lake.y);
-            f.setPosition(p.land.x, p.land.y);
-            f._thrown = true; f._releaseSpinUntil = 0; f.setFrictionAir(0.08);
-            f.wanderAngle = 0; f._wandering = true; if (f._timer) f._timer.paused = true;
-            f.setVelocity(10, 0);   // fim do giro, ainda no embalo, rumo à nave
-            return s.farmersTotal || 0;
-        }, sh);
-        await game.hover();
-        await page.waitForTimeout(2500);
-        const st = await game.scene(s => { const a = window.__alvo;
-            return { alive: !!(a.scene && a.body), drowning: !!a._drowning, dying: !!a._dying,
-                     thrown: !!a._thrown, total: s.farmersTotal || 0 }; });
-        expect(st.alive, 'correndo por conta própria não afoga (segue vivo)').toBe(true);
-        expect(st.drowning, 'correndo por conta própria não afoga').toBe(false);
-        expect(st.dying).toBe(false);
-        expect(st.thrown, 'a marca saiu quando ele voltou à velocidade de correr').toBe(false);
-        expect(st.total).toBe(base);
-        expect(game.realErrors).toEqual([]);
-    });
+    // até ~7,1 px/frame perseguindo (10,6 com a escalada no máximo). Correndo
+    // por conta própria pra nave sobre o lago ele não afoga: o escorregão que o
+    // impulso do feixe (10 no fim do giro) ainda dava terminava em terra
+    for (const c of [{ esc: 0, label: 'começo' }, { esc: 29, label: 'fim (escalada ~1,5)' }]) {
+        test(`solto, o giro acaba com embalo e ele corre sozinho pra nave sobre o lago (${c.label}): nada de volta`, async ({ game, page }) => {
+            await startPlaying(game, page);
+            const sh = await game.scene((s, a) => new Function('return (' + a + ')')()(s), findLakeShore.toString());
+            expect(sh, 'o mapa da seed tem beira de lago').not.toBeNull();
+            const base = await game.scene((s, a) => {
+                const p = a.sh;
+                s.burgersCollected = a.esc;
+                const f = s.farmers.find(v => v.scene && v.body && !v._dying);
+                window.__alvo = f;
+                s.ufo.setPosition(p.lake.x, p.lake.y); s.ufo.setVelocity(0, 0);
+                s.cameras.main.centerOn(p.lake.x, p.lake.y);
+                f.setPosition(p.land.x, p.land.y);
+                // fim do giro: marca de arremesso, impulso 10 rumo à nave
+                f._thrown = true; s._setBeamImpulse(f, 10, 0); f._releaseSpinUntil = 0; f.setFrictionAir(0.08);
+                f.wanderAngle = 0; f._wandering = true; if (f._timer) f._timer.paused = true;
+                f.setVelocity(10, 0);
+                return s.farmersTotal || 0;
+            }, { sh, esc: c.esc });
+            await game.hover();
+            await page.waitForTimeout(2500);
+            const st = await game.scene(s => { const a = window.__alvo;
+                return { alive: !!(a.scene && a.body), drowning: !!a._drowning, dying: !!a._dying,
+                         thrown: !!a._thrown, total: s.farmersTotal || 0 }; });
+            expect(st.alive, 'correndo por conta própria não afoga (segue vivo)').toBe(true);
+            expect(st.drowning, 'correndo por conta própria não afoga').toBe(false);
+            expect(st.dying).toBe(false);
+            expect(st.thrown, 'a marca saiu: o escorregão do feixe terminava em terra').toBe(false);
+            expect(st.total).toBe(base);
+            expect(game.realErrors).toEqual([]);
+        });
+    }
 
     test('andando sozinho e entrando na água ele nada de volta (não morre)', async ({ game, page }) => {
         await startPlaying(game, page);
