@@ -98,7 +98,7 @@ de 13/10). A conquista `full_fleet` ("Unlock every saucer variant") existe na ta
 | `04_loop` ganho de fuel (`collectBurger`) | o "antes" era lido num evaluate separado e às vezes já vinha com a recompensa | mede no próprio quadro da coleta (`preupdate` → `postupdate`) |
 | `04_loop` "vaca no feixe" e cota (`abductOne`) | a vaca caía num curral no caminho (entrega automática), ou o helper mirava 5× uma vaca que a nave não alcançava | aceita a vaca já entregue; pula vaca não alcançada (>400 px depois do voo) |
 | `05` "vaca no feixe na hora da morte" / "game over disparou" | mesma entrega automática; burger ou porco no caminho repunham o tanque | tenta até ter carga e zera o tanque no mesmo quadro; segura o tanque em ≤0,2 até o game over |
-| tutorial no toque, passo 04 | sob carga o voo até o curral passava dos 13 s de graviton e a vaca caía | recarrega o graviton e leva outra vaca (até 3×) |
+| tutorial no toque, passo 04, e `07` "loop no toque" | sob carga o voo até o curral passava dos 13 s de graviton e a vaca caía | recarrega o graviton e leva outra vaca (até 3×; `deliverWithRetry` no loop) |
 | `05` voo depois de 2 reinícios | 8 s pra andar 150 px não bastavam sob carga (143 px) | janela de 15 s (sai assim que passa de 150) |
 
 ## Limites do headless (o que a suíte NÃO prova)

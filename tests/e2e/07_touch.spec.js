@@ -4,7 +4,7 @@
 // a nave, dedo na lente do emissor liga o feixe, toque no mapa não faz nada.
 // Os toques vão por CDP Input.dispatchTouchEvent (TouchInput na fixture).
 const { test, expect } = require('./fixtures');
-const { playTutorial, abductOne, deliverToCorral, collectBurger } = require('./tutorial_helpers');
+const { playTutorial, abductOne, deliverToCorral, deliverWithRetry, collectBurger } = require('./tutorial_helpers');
 
 test.describe('touch (tablet 1024×768)', () => {
     test('boot em touch: jogo completo, sem modo teaser, splash com botões', async ({ game, page }) => {
@@ -153,7 +153,7 @@ test.describe('touch (tablet 1024×768)', () => {
         await game.waitForScene();
         await game.startPlayViaSplash({ lang: 'pt', input: 'mouse' });
         expect(await abductOne(game, log, { keep: true })).toBe(true);
-        expect(await deliverToCorral(game, log)).toBe(true);
+        expect(await deliverWithRetry(game, log)).toBe(true);
         expect(await collectBurger(game, log)).toBe(true);
         // Com o dedo na tela o feixe vai junto: pode entregar e coletar mais de um
         const st = await game.state();
