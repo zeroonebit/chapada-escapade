@@ -120,9 +120,9 @@ Object.assign(Jogo.prototype, {
         if (v.scene) v.destroy();
     },
 
-    // Animation + cleanup unificado de explosão (cow, ox, farmer)
-    _explode(entity, color = 0xff2222) {
-        if (!entity || entity._dying || entity._destroyed) return;
+    // Começo comum de toda morte (explosão, afogamento): sai do feixe, para os
+    // timers e conta. Farmer entra no farmersTotal (HUD, passo FARMER_KILL).
+    _beginDeath(entity) {
         entity._dying = true;
         if (this.abductedCows.includes(entity)) this._releaseCow(entity);
         // H4: limpa _timer/walkTimer to avoid timer orphan referenciando dead farmer
@@ -136,6 +136,12 @@ Object.assign(Jogo.prototype, {
         } else {
             this.cows = this.cows.filter(v => v !== entity);
         }
+    },
+
+    // Animation + cleanup unificado de explosão (cow, ox, farmer)
+    _explode(entity, color = 0xff2222) {
+        if (!entity || entity._dying || entity._destroyed) return;
+        this._beginDeath(entity);
         if (entity.body) entity.setStatic(true);
         entity.setTint(color);
         if (this._sfx) this._sfx('explosion');
@@ -491,6 +497,8 @@ Object.assign(Jogo.prototype, {
                 vaca.setFrictionAir(0.01).setDepth(5);  // friction baixa = inercia continua
             }
             vaca._releaseSpinUntil = now + 3000;
+            // Arremessado: cair n'água agora afoga (09_enemies._updateFarmers)
+            vaca._thrown = true;
             // Random spin direction + speed (rad/sec)
             vaca._spinRate = (Math.random() < 0.5 ? -1 : 1) * Phaser.Math.FloatBetween(8, 14);
             return;
@@ -527,6 +535,8 @@ Object.assign(Jogo.prototype, {
             if (v.scene && v.body && !v._dying) v.setFrictionAir(0.08).setDepth(5);
             if (v.timer) { v.timer.remove(); v.timer = null; }
             if (v.walkTimer) v.walkTimer.paused = false;
+            // Graviton em 0 também é soltar pelo feixe: n'água ele afoga
+            if (v.isEnemy) v._thrown = true;
         }
     }
 

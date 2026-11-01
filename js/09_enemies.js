@@ -316,6 +316,50 @@ Object.assign(Jogo.prototype, {
         }
     },
 
+    // Se debate 1,2 s (treme de lado, tom de água; splash grande na entrada e
+    // pequeno a cada 0,35 s, igual ao Bevy), afunda em 0,3 s e some. Conta igual à morte na pedra: _beginDeath faz o total e o
+    // HUD; a pedra não paga ponto na web, então o afogamento também não.
+    _drownFarmer(f) {
+        if (!f || f._dying || f._destroyed) return;
+        this._beginDeath(f);
+        f._thrown = false;
+        f._releaseSpinUntil = 0;
+        if (f.body) { f.setVelocity(0, 0); f.setSensor(true); f.setStatic(true); }
+        f.rotation = 0;
+        if (f.anims?.isPlaying) f.anims.stop();
+        f.setTint(0x9fd8ff);
+        if (f.shadow && f.shadow.setVisible) f.shadow.setVisible(false);
+        if (this._sfx) this._sfx('drop');
+        if (this._showQuip) this._showQuip(f, 'farmer');
+        const x0 = f.x, y0 = f.y, s0 = f.scale;
+        const splash = (n, r0, drops) => {
+            for (let i = 0; i < n; i++) {
+                const ring = this.add.circle(x0, y0 + 8, r0 + i * 6, 0x000000, 0)
+                    .setStrokeStyle(2, 0xd8f4ff, 0.9).setDepth(5.5);
+                this.tweens.add({ targets: ring, scale: 2.6, alpha: 0, duration: 520 + i * 140,
+                    onComplete: () => ring.destroy() });
+            }
+            for (let i = 0; i < drops; i++) {
+                const a = (i / drops) * Math.PI * 2 + Math.random() * 0.5;
+                const drop = this.add.circle(x0, y0, 2.5, 0xd8f4ff, 0.9).setDepth(6.5);
+                this.tweens.add({ targets: drop, x: x0 + Math.cos(a) * 26, y: y0 + Math.sin(a) * 16 - 10,
+                    alpha: 0, duration: 420, onComplete: () => drop.destroy() });
+            }
+        };
+        splash(2, 10, 6);
+        for (const t of [350, 700, 1050]) this.time.delayedCall(t, () => { if (f.scene) splash(1, 6, 3); });
+        // Debate: 8 sacudidas de 150 ms = 1,2 s, afundando um pouco
+        this.tweens.add({ targets: f, x: x0 + 5, duration: 75, yoyo: true, repeat: 7, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: f, scale: s0 * 0.85, duration: 1200 });
+        this.time.delayedCall(1200, () => {
+            if (!f.scene) return;
+            this.tweens.add({
+                targets: f, scale: s0 * 0.35, alpha: 0, y: y0 + 8, duration: 300,
+                onComplete: () => { this._destroyCow(f); this._checkVictory(); },
+            });
+        });
+    },
+
     _updateFarmers(delta) {
         const velMul = this.dbg?.behavior?.farmerSpeed ?? 1.0;
         const danoMul = this.dbg?.behavior?.shooterDamage ?? 1.0;
@@ -338,6 +382,14 @@ Object.assign(Jogo.prototype, {
             // OU se acabou de ser solto (release-spin window de 3s, mantem inercia + spin).
             const now = this.time?.now ?? 0;
             const inSpin = f._releaseSpinUntil && now < f._releaseSpinUntil;
+            // AFOGAMENTO (Thiago 01/11, regra das 3 frentes): solto ou
+            // arremessado pelo feixe e caiu n'água (lago, rio ou oceano; na web
+            // o oceano da borda faz o papel do abismo) → afoga. Passado o giro
+            // de 3 s em terra ele volta a ser pedestre e nada de volta.
+            if (f._thrown && !isAbducted) {
+                if (this._isWaterAt && this._isWaterAt(f.x, f.y)) { this._drownFarmer(f); continue; }
+                if (!inSpin) f._thrown = false;
+            }
             if (inSpin) {
                 // Spin continuo a _spinRate rad/s (delta em ms -> /1000)
                 f.rotation += (f._spinRate || 10) * (delta / 1000);
