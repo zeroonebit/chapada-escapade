@@ -1,6 +1,11 @@
 # Chapada Escapade — Project Context
 
 > Este arquivo é carregado automaticamente pelo Claude Code no início de cada sessão. Mantenha enxuto e atualizado.
+>
+> **Status (01/11/2026): web em fechamento.** Unreal = versão principal (PC e Android),
+> Bevy = Android, web = universal. A web congela na `v1.0.0` depois do checklist do
+> celular e vira referência e comparativo pro Unreal (ver `README.md`). O log abaixo é
+> histórico; o estado vivo fica no `CONTEXTO.md`.
 
 ## Sobre o usuário
 
@@ -17,8 +22,8 @@
 - **Phaser 3.60** (CDN) — engine
 - **Matter.js** (built-in do Phaser) — física
 - **HTML único** — sem build, sem npm, abre direto no navegador
-- **Hospedagem local:** `H:\Projects\ChapadaEscapade` (Python HTTP server porta 8080)
-- **Hospedagem online:** GitHub Pages — https://zeroonebit.github.io/chapada-escapade/
+- **Hospedagem local:** `N:\Projects\ChapadaEscapade` (Python HTTP server porta 8080)
+- **Hospedagem online:** GitHub Pages — https://zero-onebit.com/chapada-escapade/ (o `zeroonebit.github.io/chapada-escapade/` redireciona pra ele)
 
 ### Arquivos principais
 - `index.html` — só CSS + carregamento dos módulos `js/*.js` (renomeado de `ChapadaEscapade.html`)
@@ -29,7 +34,7 @@
 - `docs/PROMPTS.md` — biblioteca dos prompts Nano Banana
 
 ### Localização
-- **Projeto:** `H:\Projects\ChapadaEscapade`
+- **Projeto:** `N:\Projects\ChapadaEscapade`
 - **Preview local:** `http://localhost:8080` (launch config em `.claude/launch.json`)
 - **Repo:** https://github.com/zeroonebit/chapada-escapade (push → ~30s deploy no Pages)
 
@@ -37,9 +42,9 @@
 
 **Convenção de portas (após audit cleanup 2026-05-02 + editor Bevy 2026-07-07):**
 - **8080** = game canvas (`python -m http.server 8080`)
-- **8089** = PixaPro UI standalone (`H:/Projects/PixaPro/server.py`)
+- **8089** = PixaPro UI standalone (`N:/Projects/PixaPro/server.py`)
 - **8090** = project server deste projeto (este script) — onde PixaPro standalone fala via API
-- **8091** = editor_server do BEVY edition (`H:/Projects/Bevy/ChapadaEscapade/tools/editor_server.py`) — aba 🎮 Bevy do PixaPro fala aqui (manifest de scatter + runtime_state)
+- **8091** = editor_server do BEVY edition (`N:/Projects/Bevy/ChapadaEscapade/tools/editor_server.py`) — aba 🎮 Bevy do PixaPro fala aqui (manifest de scatter + runtime_state)
 
 Endpoints — ver docstring de `tools/project_server.py` pra lista completa. Principais:
 - `POST /save_decisions`, `POST /save_configs`, `POST /save_mcp_queue` → persistem em `tools/saves/`
@@ -51,28 +56,28 @@ Endpoints — ver docstring de `tools/project_server.py` pra lista completa. Pri
 ```
 python -m http.server 8080                # game em http://localhost:8080
 python tools/project_server.py            # API/static em http://localhost:8090
-python H:/Projects/PixaPro/server.py 8089 # PixaPro UI em http://localhost:8089
+python N:/Projects/PixaPro/server.py 8089 # PixaPro UI em http://localhost:8089
 ```
 
-PixaPro NÃO vive mais dentro do Chapada (era em `tools/pixapro/`, deletado no audit). Repo standalone: `H:/Projects/PixaPro`. Doc de integração: `H:/Projects/PixaPro/PROJECT_INTEGRATION.md`.
+PixaPro NÃO vive mais dentro do Chapada (era em `tools/pixapro/`, deletado no audit). Repo standalone: `N:/Projects/PixaPro`. Doc de integração: `N:/Projects/PixaPro/PROJECT_INTEGRATION.md`.
 
 ### ⚡ No INÍCIO de toda sessão, rodar:
 1. `mcp__Claude_Preview__preview_start({ name: "Chapada Escapade (static)" })` — inicializa o preview panel pra abrir pasta/arquivos do jogo
 2. Não esperar o usuário pedir — fazer automático na primeira mensagem
 
 ### 🚦 Workflow de trabalho (padrão fixo)
-- **Sempre trabalhar na worktree** (`H:\Projects\ChapadaEscapade\.claude\worktrees\intelligent-euler-7a236d`)
+- **Sempre trabalhar na worktree** (`N:\Projects\ChapadaEscapade\.claude\worktrees\intelligent-euler-7a236d`)
 - **Ao final de cada request com mudança de código:** commit na worktree + sync completo (merge main + push)
 - Preview local da sessão atual quebrou (canvas vazio, scripts não rodam) — não usar
-- **Testar via GitHub Pages** — após push, ~30s o Pages atualiza em https://zeroonebit.github.io/chapada-escapade/
+- **Testar via GitHub Pages** — após push, ~30s o Pages atualiza em https://zero-onebit.com/chapada-escapade/
 
 ### 📤 Sync ao final de cada request (AUTOMÁTICO após qualquer mudança)
 Executar **todos** os passos abaixo, sem pular nenhum:
 1. `git add` + `git commit` na worktree (branch `claude/intelligent-euler-7a236d`)
 2. `git push origin claude/intelligent-euler-7a236d`
-3. Mudar pro branch `main` dentro do projeto principal (`H:\Projects\ChapadaEscapade`) e fazer merge:
+3. Mudar pro branch `main` dentro do projeto principal (`N:\Projects\ChapadaEscapade`) e fazer merge:
    ```
-   cd H:/Projects/ChapadaEscapade
+   cd N:/Projects/ChapadaEscapade
    git merge claude/intelligent-euler-7a236d
    git push origin main
    ```
@@ -250,7 +255,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **PixaPro modularizado** — `tools/asset_gallery.html` 121kb → 17kb (-86%), zero `<script>` inline (era 2778 linhas)
 - **Estrutura `tools/pixapro/`:** 7 CSS + 13 JS modules (constants, store, api, utils, popup, classify, thumb, tabs, tab-manager/gallery/editor/detail/tiles)
 - **Padrão usado:** ES script-globals (não module), top-level `let`/`function` visíveis script-wide entre `<script src>` tags
-- **⚠️ DELETADO no audit cleanup de 2026-05-02** — `tools/pixapro/` migrou pra repo standalone `H:/Projects/PixaPro`. `tools/asset_gallery.html` removido (UI antiga). Ver sessão 2026-05-02 abaixo.
+- **⚠️ DELETADO no audit cleanup de 2026-05-02** — `tools/pixapro/` migrou pra repo standalone `N:/Projects/PixaPro`. `tools/asset_gallery.html` removido (UI antiga). Ver sessão 2026-05-02 abaixo.
 
 ### ✅ Pronto (cont. — sessão 2026-04-30 tarde·noite)
 - **Currais V2 mascotCfg per-variante** — `_buildCorral` push salva `mascotCenografico=true` + `mascotCfg{tipo,anim,dx,dy,bucket}`. `_ensureCowMascot` lê config (cow/bull, anim cow_eat_S/N/cow_angry_S/ox_walk_S). 01 pequeno + 02 redondo: cow eat S+balde. 03 hexagonal: cow drinking N (alinha coxo). 04 rustico: cow lie_down. 05 abandonado: ox walk S
@@ -319,7 +324,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 
 ### ✅ Pronto (cont. — sessão 2026-05-02 · audit cleanup + PixaPro spinoff + Asset Naming) — *primeira parte*
 **Audit + cleanup:**
-- **`tools/pixapro/` deletado** — migrou pra repo standalone `H:/Projects/PixaPro` (estava duplicado, drift entre as 2 cópias)
+- **`tools/pixapro/` deletado** — migrou pra repo standalone `N:/Projects/PixaPro` (estava duplicado, drift entre as 2 cópias)
 - **`tools/asset_gallery.html` deletado** — UI antiga substituída pelo PixaPro standalone
 - **`gallery_server.py` → `project_server.py`** — nome reflete papel real (serve estático + API REST consumida pelo PixaPro)
 - **Convenção de portas final:** 8080 game · 8089 PixaPro UI · 8090 project_server
@@ -391,7 +396,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - Adicionar PixelLab assets novos: salva PNG → adiciona entrada no dict `ATLASES` em `pack_atlas.py` → roda. `02_preload.js` já tem `load.atlas()`, registrar alias em `_registerAtlasFrameTextures` se for static frame referenciado por `setTexture()` em call sites
 
 ### 🌽 Bevy 3D edition (paralelo) — JOGÁVEL, fases 0-7 percorridas (2026-07-02/06)
-- Repo: `H:/Projects/Bevy/ChapadaEscapade/` — port 1:1 do Phaser em **Rust+Bevy 0.19** (migrado da 0.15 em 2026-07-14), jogo desktop completo
+- Repo: `N:/Projects/Bevy/ChapadaEscapade/` — port 1:1 do Phaser em **Rust+Bevy 0.19** (migrado da 0.15 em 2026-07-14), jogo desktop completo
 - **Rust instalado** (scoop, stable 1.96 MSVC). Rodar: `cargo run`. Em bash do Claude: `export PATH="$HOME/scoop/persist/rustup/.cargo/bin:$PATH"` antes
 - **Implementado:** billboards PixelLab 8-dir (~330 PNGs) · mouse follow força+inércia (probe no Phaser live: accel 60/drag 2.4/tilt 23°/sens 1.54 embutida) · core loop (cargo anel cap 5, 4 currais slots, burgers, score, fuel) · terrain CA 100×100 em 500×500u + wang layer ESTILO ÚNICO por partida (5 estilos, auto-sort com upper_hint, aba TILES com REGENERAR) · enemies (farmers mutex, 6 torres, slam, rochas com HP) · game flow completo (splash art, pause+RECOMEÇAR, game over espiral, vitória) · 5 weathers + TOD overlay uniforme (tudo unlit) + shuffle · HUD PixelLab + radar sonar (ping/rastro/decay) · CONFIGS 6 abas · F3/F4 (inspector) · tutorial 7 etapas · exhaust cone · blob shadows Multiply
 - **Fixes memoráveis:** abdução travada por gravidade × pull (BeamGrip) · mundo duplicando no unpause (guards nos OnEnter) · B0002 Res+ResMut · egui try_ctx_mut race · sombras-bloco (NotShadowCaster) · flicker de transparências via `depth_bias` fixo (sombras -60 < fumaça 0 < cone +30) · overlays egui numa layer única `screen_layer()` ordenada pelos systems (fog pintava sobre o HUD)
@@ -401,7 +406,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 - **Shaders WGSL + clima (2026-07-05/06, 4 commits `fee652c`→`0514a0b`):** SHADER #1 `wang_tiles.wgsl` (10k entidades quad → 2 meshes + texture array 16 camadas ordem cr31, atributo TILE_INDEX `@interpolate(flat)`, tonemap por fragment; regen instantâneo) · SHADER #2 `terrain_proc.wgsl` (costa POR PIXEL via campo assinado `dist_water−dist_land`, água profundidade + 2 ondas deslizantes + espuma que respira, areia molhada, grão, lambert manual; sliders ondas/espuma LIVE via uniform) · AO fake vertex color (concavidade 2 raios, slider) · tilesets PAINTERLY Python (`tools/newtiles` v1 retos + `newtiles_v2` SDF redondos — radius=0.5 OBRIGATÓRIO pro encaixe cr31; bugfix `"E" in "INNER_SW"`; 4 estilos `paint_*`, sampler linear ≥64px) · lagos INTERNOS sobrevoáveis (flood-fill oceano×lago) + canyons idem + nave segue relevo (`grid.heights` bilinear da malha real) + `AltitudeLift` (sprite cresce ~+22% na mesa) + sombra assenta no relevo · VENTO UNIFICADO por clima: `wind_strength(weather)` fog 0.35→storm 2.2 + `WIND_WAVE_K/GUST_K` no prelude (grama dobra, swirl viaja, chuva/neve escorrem TODOS pro mesmo sudeste; rajada compartilhada) · swirls cartoon (fita S taper bilateral, o visual final do Phaser) · exe standalone (dynamic_linking → feature `fast-dev`; AssetPlugin path absoluto CARGO_MANIFEST_DIR) · FPS counter mini sempre visível (F3 expande) · fix curral DEITADO (era Billboard girando + tampava mascote) · sombras 1.7×/alpha 215/bias -75 · `try_insert` B0003 · default `dirt_grass_32` + hint por estilo no auto-sort (genérico invertia grama↔terra)
 - **Água + parity + vento GPU (2026-07-06, 39 commits `d7ec2cc`→`4b2ce11`):** SHADER #3 `water_proc.wgsl` — água em MESH SEPARADO (plano y=-0.32 cruza o heightfield, costa = interseção geométrica, profundidade exata na borda; UV=altura+dist costa, UV1=tamanho do corpo) · foam cartoon 3 elementos (cristas mar→costa em SEGMENTOS `floor(phase+0.5)` + máscara noise por crista, dispersão, colar pulsante; refs gamedeveloper/halisavakis/desenho do user) · lagos <12 células sem onda · areia molhada DINÂMICA sync com as cristas (mesma fase/sliders) · 3 sliders água live · lição: campo ncp descontínuo no eixo medial = "raios", noise por world pos resolve · PARITY Phaser: farmers atiram, anéis de captura, laser cursor, VT323 + logo restart transition + game over/vitória/splash, trovoada double-strike · chapadas+vales + ILHA CIRCULAR (cabe exata no radar) · biomas POR PIXEL (cells texture + domain warp no fragment) · VENTO 3 camadas da mesma fonte (WindDir ±X/partida × clima): grama PENTEADA (viés 1.5 dominante), fitas ondulando, GPU streaks **bevy_hanabi 0.14** (AlongVelocity + curl-fake por fase F32_0 razão 1:2.5, textura core-no-halo em código, rate 26, fog desliga via `EffectInitializers`) · TOD slider duração + crossfade real + `WeatherMix` auto-cycle hold/fade · neve v2 por ALTITUDE (snowline desce, cap random 20–33%) · sombras dinâmicas por hora (TOD_SHADOW) · beam 5 DISCOS concêntricos + shake/flash + abduzidos SOLTOS (spring+jitter, pêndulo BillboardRoll, gravidade+bounce) · **CAUSA RAIZ rasto sombras: follow systems → PostUpdate `.before(TransformPropagate)`** (memorizada) · escada depth_bias completa (-80…+52) · RADAR = MINIMAPA (fan mesh texturizado com o terreno, blips absolutos, fade meia-volta) · quips BALÃO cartoon (rabinho, stroke mood, bold, TTL por texto) · lição workflow: matar só o próprio PID (taskkill //IM derrubou a sessão do user)
 - **PixaPro editor + placement + wang morto (2026-07-07, 13 commits `ecb56f5`→`22dc291`):** PixaPro virou EDITOR DO JOGO (Fases 1-3): `assets/manifest/scatter.json` bootstrap + `manifest_watch` mtime 2s = **re-scatter LIVE sem recompilar** · `tools/editor_server.py` porta **8091** (manifest CRUD + backup, sprite_map, CORS+PNA) · aba 🎮 Bevy no PixaPro (thumbs, órfãos +add, hover-zoom, painel LIVE polling 4s) · `telemetry.rs` (runtime_state.json 5s: fps/counts/scatter por sprite/missing) · **tecla B** = curador (banir asset apontando cursor, reversível) · aba ASSETS no CONFIGS (ex-TILES) = mesmo editor in-game com ícones+hover preview AR-correto · PLACEMENT AUDIT: torres por sampling (fixas caíam NO OCEANO da ilha = vitória impossível!), `rescue_dir` (náufragos do beam saem da água), margem de fronteira no scatter (warp ±8u do shader), tudo assenta no relevo · **beam flicker reincidiu e provou a regra**: follower em Update = bomba (beam_visual_sync+anéis+sparkles → PostUpdate) · **aspect ratio GLOBAL**: quad quadrado esticava todo PNG (pedra-ovo 1.64×) → quad respeita canvas · `ImagePlugin::default_nearest` (o pixelArt:true do Phaser nunca portado! + linear explícito na sombra radial) · **MOTOR WANG ARRANCADO**: -850 linhas, -176 texturas no boot (603→~430), wang_material.rs+wgsl deletados, PNGs ficam · sparkles do graviton (port `_emitBeamSparkle`) · research: Tiny Glade talk (truque copas → épico Houdini) e **bevy_voxel_world REJEITADO** (voxel cúbico mata shaders #2/#3; engavetado: crateras por deformação de heightfield)
-- **i18n + tradução total (2026-07-08, 16 commits `921d69a`→`80ea4ef`):** toggle **LANGUAGE ENG/PTBR** no CONFIGS→CONTROLS com **default EN** (`DebugConfig.lang` + helper `cfg.tr(en,pt)`/`cfg.is_pt()`) · textos de jogo bilingues (tutorial, game over/vitória, pause, diálogo tecla B, label FUEL) · quips 1:1 dos pools EN do Phaser (`quips.rs` `pool(pt)`) · **CODEBASE 100% EN pra equipe de porting**: 26 `.rs` + 2 shaders WGSL (`terrain_proc`/`water_proc`), comentários e strings de dev traduzidos, identificadores mantidos · **15 batches** commitados um a um, `cargo check` limpo em cada · metodologia: scripts Python de substituição exata + re-scan grep estrito de palavras PT (não só acento) até zerar · "migração pra pasta certa" = no-op (repo já mora em `H:/Projects/Bevy/ChapadaEscapade`, cópia única); publicar remote fica esperando decisão do user (local-only por design)
+- **i18n + tradução total (2026-07-08, 16 commits `921d69a`→`80ea4ef`):** toggle **LANGUAGE ENG/PTBR** no CONFIGS→CONTROLS com **default EN** (`DebugConfig.lang` + helper `cfg.tr(en,pt)`/`cfg.is_pt()`) · textos de jogo bilingues (tutorial, game over/vitória, pause, diálogo tecla B, label FUEL) · quips 1:1 dos pools EN do Phaser (`quips.rs` `pool(pt)`) · **CODEBASE 100% EN pra equipe de porting**: 26 `.rs` + 2 shaders WGSL (`terrain_proc`/`water_proc`), comentários e strings de dev traduzidos, identificadores mantidos · **15 batches** commitados um a um, `cargo check` limpo em cada · metodologia: scripts Python de substituição exata + re-scan grep estrito de palavras PT (não só acento) até zerar · "migração pra pasta certa" = no-op (repo já mora em `N:/Projects/Bevy/ChapadaEscapade`, cópia única); publicar remote fica esperando decisão do user (local-only por design)
 - **CRT + heat-haze + buraco negro + terraços + radar vivo (2026-07-11, 26 commits `6853bca`→`4f165b4`):** **CRT post-process** (1º do projeto: ViewNode no Core3d, barrel quártico + scanlines finas + vignette + aberração + grão + edge blur SEM borda preta, HUD indentado via `crt_warp`, 6 sliders VFX) · **beam = heat-haze field** (câmera HDR+Bloom, `beam_field.wgsl` refrata o fundo na elipse projetada + núcleo HDR florescendo no bloom; discos mesh DELETADOS; máscara da nave só no haze) · **UI Phaser total** (VT323 default do egui + palette exata `#00ff55/#aaffcc/#001a08`, HUD X/Y, +100 popup, FUEL flash, ufo_height slider, ícone do exe via winresource+winit, CONFIGS 86%×72%) · **terreno com identidade**: TERRAÇOS praia 0<grama 0.30<terra 0.62 (clamp relativo ao degrau, âncoras de curral/NPC corrigidas) + BAIXADAS orgânicas fBm 16-30u (piso -2.2, causa raiz: piso -0.26 engolia tudo) + PICO nevado intransponível c/ anel de nuvens + **BURACOS NEGROS 1-3/seed** (poço de gravidade → horizonte de eventos → espiral no centro de massa encolhendo → game over; névoa própria) + NPCs com MEDO do vazio (spawn+steering) · avental de oceano virou ANEL (quad 7× por baixo da ilha alagava as baixadas) · **névoa viva** (campo de nuvens no MUNDO 57×33, drift INTEGRADO — fix teleporte no crossfade — sliders density/coverage/size/speed) · **radar-instrumento** (minimapa 400² bilinear+warp+hillshade+blend largo, marcadores pico/abismo, zoom dial 0.5/0.75/1.0 vencedor do A/B, blips = mini SPRITES, névoa zoom-aware no disco) · lições: cap 16 params de system (tuple-param 2×), `git add` com path ignorado vaza o stage pro commit seguinte (ícone entrou no `87f6cec`)
 - **ÁUDIO completo + polish radar/chuva (2026-07-11 noite, 10 commits `0cf0e1d`→`fab507f`):** **som do zero via bevy_audio built-in** (Cargo features wav+mp3): `src/audio.rs` SfxPlugin — 12 one-shots (Grab/Drop/Deliver/BurgerReady/Collect/Shot/Hit/Explosion/Thunder/Fall/GameOver/Victory) pegando carona nos eventos existentes + loops beam/chuva/vento com lerp · `tools/gen_sfx.py` 15 WAVs procedurais (Python stdlib, seed 1991) · **música dinâmica**: 4 MP3s AI em `assets/audio/` com crossfade por estado (menu no splash, dia/noite por TOD idx 3|4), pasta escaneada em runtime · **music player no CONFIGS AUDIO** (⏮/⏭ + combo AUTO/manual + sliders music/sfx) · bug: IA renomeou faixa noturna → const errada deixaria a noite muda · prompts entregues: música + **28 SFX cartoon** Looney Tunes (user gerando; híbrido c/ Kenney CC0 depois) · **radar**: blips → pontinhos coloridos de volta (sprites ficaram ENORMES; só o disco fica sprite 20px), metade do tamanho (4.5/6.0), burgers prontos = blip ROXO, círculo-legenda nas caixas do HUD (marrom/branco/amarelo/vermelho/roxo), score box -22%, roda do mouse = zoom · **chuva forte/acesa/molhada**: 420 gotas maiores+claras (Add brilha de noite), aterrissam no RELEVO REAL (antes afundavam nas chapadas), respingos = pool 90 anéis expand+fade (textura em código, depth_bias -55) · splash PLAY/TUTORIAL em VT323 explícita
 - **Mega-sessão pré-alpha (2026-07-12, ~30 commits `14e9005`→`73f55e4`):** **CORE LOOP NOVO**: vitória por QUOTA 30 burgers (check antigo stale 6 torres vs 10) + escalada por entrega (torres +80%, farmers +50%) + torres=objetivo lateral pago · **COMBO** (+2 vacas no curral cheio = bebida+batata, 1.5×pts/1.75×fuel) · **PROGRESSÃO**: save.json + 50 achievements (tabela gerada de docs/design/ACHIEVEMENTS.md via tools/gen_achievements_table.py) + tracker wave-1 + toasts c/ ícone — comprovado em jogo · **ÁGUA em 3 atos**: EDT euclidiano (BFS=octógono) → domain warp ±1.8cel na geometria (platôs de célula) → rios Catmull-Rom + lagoas metaball + ondas DIRECIONAIS c/ vento (fase dist-à-costa = "caleidoscópio" em lago redondo) · **SHORE-LIFE**: sapo/pato/égua completos (spawn beira d'água; PixelLab: jobs falham silencioso, grupos hasheados, 502 duplica, disco cheio) · **SCATTER 2.0**: clusters âncora→satélites no scatter.json (14 sets, regra do galão do Phaser generalizada) + Occupancy spatial-hash global (fim da sobreposição) + trim -30% (7099→5425) + 4 trucks coloridos · **HUD**: dash 46%, score curvado c/ quinas pill no verde forte, células off da própria arte, fuel espelhada, labels s/ %, dial/nomes maiores, tema A/B (CLASSIC venceu), aba AUDIO dedicada (player estava enterrado na CONTROLS) · **TOOLING**: ⚖ compare no SIZES c/ px/u, tools/scale_audit.py (--apply-category), world presets 1×/3×/5× · **ARTE ~250 gens (saldo ~810)**: 50 ícones achievements em 1 call, 8 raros+moedas, hangar, combo+3 gags, 4 pickups, cockpit v2 candidato (create-ui-asset c/ pieces) em assets/refs/ · **FIXES**: touro frames rosa, véus TOD capados 0.32/0.42, chuva RAIN_WIND 3.8, rajada dessincronizada, torres→ESPANTALHOS · **docs/design/ALPHA_REVIEW.md** (P1/P2/P3 + 15 achievements + 7 quests + tutorial 10 passos + checklist alpha: bloqueador AssetPlugin path absoluto) · workflow novo: compilar+abrir+self-test automático (memória)
@@ -442,7 +447,7 @@ Executar **todos** os passos abaixo, sem pular nenhum:
 
 ### ✅ Pronto (cont. — sessão 2026-07-06 · quips tech-art + jogo vira protótipo do portfolio)
 - **Quips reescritos com tema TECH ART e expandidos pra 250 por idioma (500 total)** (`js/20_quips.js`) — QUIP_POOLS PT+EN simétricos (farmer 25 · ufo 45 · cow 30 · dairy 16 · fence 16 · burger 22 · church 18 · cactus 18 · generic 60), zero duplicatas. Temas: rig/LOD/UV/shader/instancing/wang tiles + Houdini (cook, HDA, VEX, Copy to Points, FLIP, VDB, vellum, pyro, RBD, PDG, USD/Solaris, chramp, $F, wrangle, SOPs), gaussian splats (COLMAP, radiance field, splat training), zoeira com Blender user (donut, modifiers, Cycles, Suzanne, geometry nodes, Eevee), ML/IA (dataset, overfitting, epoch, loss, tensor, alucinação), dados sintéticos, digital twins, scanner 3D/LiDAR/fotogrametria, impressora 3D (slicer, PLA, resina/IPA, infill, stringing, benchy, primeira camada, nozzle) e astrofoto (Bortle, stacking, dark/flat frames, Bahtinov, guiding, dithering, polar). Categorias, moods e cooldowns preservados; MOBILE_QUIPS mantém a mensagem "só PC". Commits `b966740` + `89af292` + `462aa77`, deploys Pages verificados. Easter egg: "Primeira camada da invasão: aderiu bem"
-- **Contexto:** o jogo agora é o **protótipo em destaque do portfolio ZerO-OneBit** — landing em `H:\Projects\ZerO-OneBit` embeda o jogo do Pages via click-to-play (iframe)
+- **Contexto:** o jogo agora é o **protótipo em destaque do portfolio ZerO-OneBit** — landing em `N:\Projects\ZerO-OneBit` embeda o jogo do Pages via click-to-play (iframe)
 
 ### ✅ Pronto (cont. — sessão 2026-07-22 · BACKPORT Bevy→Phaser em 6 fases)
 - **F1 core** — vitória por QUOTA (30 burgers) + escalada por entrega (torres +80% cadência, farmers +50% vel) + COMBO (2 vacas extras no curral cheio = ×1.5 pts / ×1.75 fuel) + **porcos 10% do rebanho** (entrega = tanque cheio). Fix de bug pré-existente: spawn escrevia `tipo='ox'` mas o código todo checa `'bull'` — os "bois" do boot eram vacas disfarçadas

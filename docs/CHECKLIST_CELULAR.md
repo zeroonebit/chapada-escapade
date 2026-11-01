@@ -2,7 +2,7 @@
 
 > A suíte emula toque por CDP (Chromium headless) e cobre lógica e fluxo. O que está
 > aqui depende de hardware, browser móvel real ou olho/ouvido humano.
-> URL: https://zeroonebit.github.io/chapada-escapade/ (ou o IP da máquina na porta 8080
+> URL: https://zero-onebit.com/chapada-escapade/ (ou o IP da máquina na porta 8080
 > com `python -m http.server 8080` na pasta do repo, no mesmo Wi-Fi).
 
 ## Como o jogo se comporta hoje no celular (pra saber o que esperar)
@@ -69,8 +69,11 @@
 - [ ] Tutorial 06-10: levar tiro, capturar fazendeiro, pedra, torpedos, mecha —
       **dá pra fazer curva com o joystick rápido o bastante pra esquivar?** (09 é o
       passo que mais depende de destreza).
-- [ ] Fazendeiro na água (01/11): capturar um fazendeiro, levar até um lago e soltar. Ele se debate
-      ~1 s, afunda e some, e o contador de fazendeiros sobe. Andando sozinho na água ele nada de volta.
+- [ ] Fazendeiro na água (01/11): soltar um fazendeiro no meio de um lago. Ele se debate ~1 s,
+      afunda e some, e o contador de fazendeiros sobe. Solto perto da margem (ou a até 2 células
+      da praia no oceano), ele nada até a terra. Andando sozinho na água ele também nada de volta.
+- [ ] Fazendeiro no curral (01/11): solto em cima de um curral, fica preso ~3 s sem andar nem
+      atirar e depois sai andando.
 - [ ] Fazendeiro se debatendo: pausar no meio congela (e continua ao despausar); passar o feixe
       nele antes de afundar salva, e 3 resgates dão a conquista Misericórdia.
 - [ ] Botão ⏸ no canto superior esquerdo abre a barra de pausa (CONTINUAR / RECOMEÇAR /
