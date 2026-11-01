@@ -59,6 +59,81 @@ function findLakeShore(s) {
     return null;
 }
 
+// Laboratório quadro a quadro (o mesmo método do Ensaio de 01/11): o loop do
+// jogo dorme e cada frame é um headlessStep com relógio sintético; os outros
+// fazendeiros e as vacas ficam parados, a nave presa longe, e cada caso usa
+// um fazendeiro novo largado pelo caminho real (graviton 0 com SPACE).
+function LAB() {
+    const g = window.game, S = () => g.scene.keys.Jogo;
+    let T = 0, UFO = null, profile = '60', phase = 0;
+    const DT = { '60': [1000 / 60], 'jit': [1000 / 60, 1000 / 30] };
+    const pin = () => { const s = S();
+        if (UFO && s.ufo && s.ufo.body) { s.ufo.setPosition(UFO.x, UFO.y); s.ufo.setVelocity(0, 0); }
+        s.fuelCurrent = s.fuelMax; };
+    const step = () => { const a = DT[profile], dt = a[phase++ % a.length]; T += dt; g.headlessStep(T, dt); pin(); return dt; };
+    const isW = (cx, cy) => { const gr = S().terrainGrid;
+        return cy < 0 || cy >= gr.length || cx < 0 || cx >= gr[0].length || gr[cy][cx] === 0; };
+    const bodiesIn = (x0, y0, x1, y1) => { const s = S(); let n = 0;
+        for (const b of s.matter.world.localWorld.bodies) { if (b === s.ufo.body) continue; const bb = b.bounds;
+            if (bb.max.x < x0 || bb.min.x > x1 || bb.max.y < y0 || bb.min.y > y1) continue; n++; }
+        return n; };
+    return {
+        init() { const s = S(); g.loop.sleep(); T = s.time.now;
+            for (const f of s.farmers) { if (f.body) f.setStatic(true); if (f._timer) f._timer.paused = true; f._cooldown = 1e12; }
+            s.farmers = [];
+            for (const c of s.cows) { if (c.body) c.setStatic(true); if (c.walkTimer) c.walkTimer.paused = true; }
+            if (s.dbg && s.dbg.behavior) s.dbg.behavior.inputMode = 'wasd';
+            UFO = { x: s.ufo.x, y: s.ufo.y }; },
+        setProfile(p) { profile = p; phase = 0; for (let i = 0; i < 70; i++) step(); },
+        // Praia reta pro leste: terra em cx-4..cx, água em cx+1..cx+4 (3 linhas), sem corpos
+        shore() { const s = S(), C = s.terrainCell || 80, gr = s.terrainGrid;
+            for (let cy = 2; cy < gr.length - 2; cy++) for (let cx = 5; cx < gr[0].length - 5; cx++) {
+                let ok = true;
+                for (let yy = cy - 1; yy <= cy + 1 && ok; yy++) {
+                    for (let k = 0; k <= 4 && ok; k++) if (isW(cx - k, yy)) ok = false;
+                    for (let k = 1; k <= 4 && ok; k++) if (!isW(cx + k, yy)) ok = false; }
+                if (!ok) continue;
+                const X = (cx + 1) * C;
+                if (bodiesIn(X - 4 * C, (cy - 1) * C, X + 20, (cy + 2) * C)) continue;
+                return { X, yc: (cy + 0.5) * C }; }
+            return null; },
+        // Terra aberta 7×3 células sem corpos (mede o escorregão puro)
+        land() { const s = S(), C = s.terrainCell || 80, gr = s.terrainGrid;
+            for (let cy = 1; cy < gr.length - 4; cy++) for (let cx = 1; cx < gr[0].length - 8; cx++) {
+                let ok = true;
+                for (let yy = cy; yy < cy + 3 && ok; yy++) for (let xx = cx; xx < cx + 7 && ok; xx++) if (isW(xx, yy)) ok = false;
+                if (!ok || bodiesIn(cx * C, cy * C, (cx + 7) * C, (cy + 3) * C)) continue;
+                return { x0: cx * C, y0: cy * C }; }
+            return null; },
+        // Largado pelo graviton zerado em (x, y) com embalo v pro leste
+        drop(x, y, v) { const s = S(); phase = 0; s.burgersCollected = 0;
+            UFO = { x: x - 1200, y }; pin();
+            const f = s._createFarmer(x, y);
+            f._cooldown = 1e12; if (f._timer) f._timer.paused = true; f._wandering = false;
+            f.setFrictionAir(0.015); f.setVelocity(v, 0);            // como no feixe (_tryAbduct)
+            s.abductedCows.push(f); s._updateBeamCounters();
+            s.energiaLed = 0; s._keysWASD.SPACE.isDown = true;
+            step();
+            s._keysWASD.SPACE.isDown = false;
+            const rec = { drowned: false, maxAlong: 0, thrownEnd: null };
+            let ms = 4000, n = 0;
+            while (ms > 0) {
+                if (!f.scene || !f.body) break;
+                ms -= step(); n++;
+                if (!f.scene || !f.body) break;
+                if (f.x - x > rec.maxAlong) rec.maxAlong = f.x - x;
+                if (f._drowning) { rec.drowned = true; break; }
+                if (!f._thrown && Math.hypot(f.body.velocity.x, f.body.velocity.y) < 0.03 && n > 5) break;
+            }
+            rec.thrownEnd = !!f._thrown;
+            s.farmers = s.farmers.filter(q => q !== f);
+            s.abductedCows = s.abductedCows.filter(q => q !== f); s._updateBeamCounters();
+            if (f.scene) s._destroyCow(f);
+            rec.maxAlong = Math.round(rec.maxAlong * 10) / 10;
+            return rec; },
+    };
+}
+
 async function water(game, kind) {
     return game.scene((s, a) => {
         const find = new Function('return (' + a.src + ')')();
@@ -209,6 +284,32 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
                 await game.beamOff();
             }
             expect(game.realErrors).toEqual([]);
+        });
+    }
+
+    // Achado do Ensaio (01/11, 5d5b636): no fim do escorregão ele entrava na
+    // água e nadava (3 a 9 px a 60 fps, até 18 com frame irregular). O impulso
+    // decaía 2× no frame da soltura, o dt vinha do delta da cena e não do passo
+    // do Matter, e o resto do escorregão supunha passo de 16,7 ms
+    for (const prof of ['60', 'jit']) {
+        test(`quadro a quadro (${prof === '60' ? '60 fps' : 'frame irregular 16/33 ms'}): escorregão que chega à água por meio quadro afoga; o que para antes não`, async ({ game, page }) => {
+            await startPlaying(game, page);
+            const r = await game.scene((s, a) => {
+                const L = new Function('return (' + a.src + ')')()();
+                L.init(); L.setProfile(a.prof);
+                const sh = L.shore(), ld = L.land();
+                if (!sh || !ld) return { missing: !sh ? 'praia' : 'terra' };
+                const v = 8;
+                const pure = L.drop(ld.x0 + 40, ld.y0 + 120, v);
+                const near = L.drop(sh.X - (pure.maxAlong - 0.5 * v), sh.yc, v);
+                const short = L.drop(sh.X - (pure.maxAlong + 15), sh.yc, v);
+                return { L: pure.maxAlong, near, short };
+            }, { src: LAB.toString(), prof });
+            expect(r.missing, 'o mapa da seed tem praia reta e terra aberta').toBeUndefined();
+            expect(r.L, 'escorregão puro de um embalo de 8').toBeGreaterThan(60);
+            expect(r.near.drowned, `o escorregão puro (${r.L} px) chega à água por 4 px: afoga`).toBe(true);
+            expect(r.short.drowned, 'o escorregão para 15 px antes da água: não afoga').toBe(false);
+            expect(r.short.thrownEnd, 'a marca saiu em terra').toBe(false);
         });
     }
 
