@@ -535,6 +535,8 @@ Object.assign(Jogo.prototype, {
             if (v.scene && v.body && !v._dying) v.setFrictionAir(0.08).setDepth(5);
             if (v.timer) { v.timer.remove(); v.timer = null; }
             if (v.walkTimer) v.walkTimer.paused = false;
+            // Graviton em 0 também é soltar pelo feixe: n'água ele afoga
+            if (v.isEnemy) v._thrown = true;
         }
     }
 

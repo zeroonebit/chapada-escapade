@@ -97,6 +97,31 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
         });
     }
 
+    // Achado do Ensaio Geral (01/11): com o botão apertado e o graviton em 0 o
+    // feixe larga a carga pelo _dropNonBurgers, que não passava pelo
+    // _releaseCow — sem a marca, o fazendeiro nadava de volta. No Bevy todo
+    // fazendeiro fora do feixe na água morre (regra combinada).
+    test('graviton zerado com o botão apertado: o fazendeiro cai do feixe na água e se afoga', async ({ game, page }) => {
+        await startPlaying(game, page);
+        const pt = await water(game, 'lake') || await water(game, 'ocean');
+        await game.beamOn();
+        try {
+            const base = await game.scene((s, p) => {
+                const f = s.farmers.find(v => v.scene && v.body && !v._dying);
+                window.__alvo = f;
+                s.energiaLed = 0;
+                f.setPosition(p.x, p.y); f.setVelocity(0, 0);
+                s.abductedCows.push(f);
+                return s.farmersTotal || 0;
+            }, pt);
+            expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'caiu do feixe e afundou').toBe(true);
+            expect(await game.scene(s => s.farmersTotal || 0)).toBe(base + 1);
+        } finally {
+            await game.beamOff();
+        }
+        expect(game.realErrors).toEqual([]);
+    });
+
     test('andando sozinho e entrando na água ele nada de volta (não morre)', async ({ game, page }) => {
         await startPlaying(game, page);
         const pt = await water(game, 'lake') || await water(game, 'ocean');
