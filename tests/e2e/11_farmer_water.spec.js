@@ -3,7 +3,9 @@
 // solto ou arremessado pelo feixe e caiu n'água (lago, rio, oceano — na web o
 // oceano da borda faz o papel do abismo) → se debate ~1,2 s e afunda; conta
 // igual à morte na pedra. Andando sozinho ele continua nadando de volta, e
-// vaca/boi não mudam.
+// vaca/boi não mudam. Decisões de 01/11: o embalo do feixe afoga (inclusive
+// escorregando depois de solto), a pausa congela o afogamento e resgatar com
+// o feixe quem se debate salva (conquista Misericórdia, 3 resgates).
 const { test, expect } = require('./fixtures');
 
 // Célula de água do grid. kind 'lake' = água fora do oceano; 'ocean' = oceano.
@@ -28,6 +30,17 @@ function findWater(s, kind) {
         }
     }
     return deep || loose;
+}
+
+// Célula de terra com 2 de água a leste e terra a oeste: a beira de uma praia
+function findShore(s) {
+    const g = s.terrainGrid, C = s.terrainCell || 80;
+    for (let y = 2; y < g.length - 2; y++)
+        for (let x = 2; x < g[0].length - 3; x++)
+            if (g[y][x] !== 0 && g[y][x - 1] !== 0 && g[y][x + 1] === 0 && g[y][x + 2] === 0 &&
+                g[y - 1][x + 1] === 0 && g[y + 1][x + 1] === 0)
+                return { x: (x + 0.5) * C, y: (y + 0.5) * C };
+    return null;
 }
 
 async function water(game, kind) {
@@ -73,22 +86,25 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
             const before = await throwAt(game, 'farmer', pt);
             expect(before, 'jogou um fazendeiro').not.toBeNull();
 
-            // Debate: já saiu da lista de vivos (IA parada), mas ainda aparece
+            // Debate: se afogando (dá pra resgatar), a morte ainda não contou
             await page.waitForTimeout(400);
             const mid = await game.scene(s => ({
-                inList: s.farmers.includes(window.__alvo),
+                drowning: !!window.__alvo._drowning, total: s.farmersTotal || 0,
                 dying: !!window.__alvo._dying, onScreen: !!window.__alvo.scene,
             }));
-            expect(mid.inList, 'saiu da lista de vivos (não nada de volta)').toBe(false);
-            expect(mid.dying).toBe(true);
+            expect(mid.drowning, 'se afogando (não nada de volta)').toBe(true);
+            expect(mid.dying).toBe(false);
+            expect(mid.total, 'a morte só conta quando afunda').toBe(before.total);
             expect(mid.onScreen, 'ainda se debatendo aos 0,4 s').toBe(true);
 
             // Afunda e some entre 1 e 1,5 s (+ folga)
             expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'afundou e sumiu').toBe(true);
             const after = await game.scene(s => ({
+                inList: s.farmers.includes(window.__alvo),
                 total: s.farmersTotal || 0, score: s.score || 0,
                 hud: s.hud?.farmersText ? s.hud.farmersText.text : null,
             }));
+            expect(after.inList, 'saiu da lista de vivos').toBe(false);
             expect(after.total, 'entra no total de fazendeiros').toBe(before.total + 1);
             // Mesma pontuação da morte na pedra: na web a pedra paga 0
             expect(after.score, 'mesma pontuação da pedra (0 na web)').toBe(before.score);
@@ -116,6 +132,133 @@ test.describe('fazendeiro solto pelo feixe na água se afoga (Thiago 01/11)', ()
             }, pt);
             expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'caiu do feixe e afundou').toBe(true);
             expect(await game.scene(s => s.farmersTotal || 0)).toBe(base + 1);
+        } finally {
+            await game.beamOff();
+        }
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Thiago 01/11 ("Embalo da praia afoga"): largado pelo graviton zerado na
+    // praia, ele escorrega pra água no embalo; antes a marca saía no 1º frame
+    // em terra (sem giro) e ele nadava de volta
+    test('graviton zerado na praia com embalo pra água: escorrega e se afoga', async ({ game, page }) => {
+        await startPlaying(game, page);
+        const shore = await game.scene((s, a) => new Function('return (' + a + ')')()(s), findShore.toString());
+        expect(shore, 'o mapa da seed tem praia').not.toBeNull();
+        await game.beamOn();
+        try {
+            const base = await game.scene((s, p) => {
+                const f = s.farmers.find(v => v.scene && v.body && !v._dying);
+                window.__alvo = f;
+                s.energiaLed = 0;
+                f.setPosition(p.x, p.y); f.setVelocity(12, 0);   // embalo pra leste (água)
+                s.abductedCows.push(f);
+                return s.farmersTotal || 0;
+            }, shore);
+            expect(await game.waitFor(() => !!window.__alvo._drowning || !window.__alvo.scene, { timeout: 3000 }),
+                'escorregou pra água e começou a se afogar').toBe(true);
+            expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'afundou').toBe(true);
+            expect(await game.scene(s => s.farmersTotal || 0)).toBe(base + 1);
+        } finally {
+            await game.beamOff();
+        }
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Thiago 01/11 ("Afogamento pausa"): pausado, o debate e o afundar congelam
+    test('a pausa congela o afogamento e ele continua ao despausar', async ({ game, page }) => {
+        await startPlaying(game, page);
+        const pt = await water(game, 'lake') || await water(game, 'ocean');
+        const before = await throwAt(game, 'farmer', pt);
+        await page.waitForTimeout(300);
+        const p0 = await game.scene(s => { s._setPaused(true); const f = window.__alvo;
+            return { t: f._drownT, a: f.alpha, sc: f.scale, on: !!f.scene }; });
+        expect(p0.on).toBe(true);
+        await page.waitForTimeout(2500);
+        const p1 = await game.scene(s => { const f = window.__alvo;
+            return { t: f._drownT, a: f.alpha, sc: f.scale, on: !!f.scene, total: s.farmersTotal || 0 }; });
+        expect(p1.on, 'ainda na tela depois de 2,5 s pausado').toBe(true);
+        expect(p1.t, 'o relógio do afogamento parou').toBe(p0.t);
+        expect(p1.sc).toBe(p0.sc);
+        expect(p1.total).toBe(before.total);
+        await game.scene(s => s._setPaused(false));
+        expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'despausado, afundou').toBe(true);
+        expect(await game.scene(s => s.farmersTotal || 0)).toBe(before.total + 1);
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Thiago 01/11 ("achievment de misericordia ao resgatar uns afogados"):
+    // pegar com o feixe quem se debate salva; 3 resgates = Misericórdia, e o
+    // mesmo fazendeiro só conta uma vez
+    test('resgatar com o feixe quem se debate: sobrevive, não é morte; 3 resgates dão Misericórdia', async ({ game, page }) => {
+        test.setTimeout(120_000);
+        await startPlaying(game, page);
+        const pt = await water(game, 'lake');
+        expect(pt, 'o mapa da seed tem lago (a nave voa sobre ele)').not.toBeNull();
+        const rescue = async (pickNew) => {
+            await game.scene((s, a) => {
+                const f = a.pickNew
+                    ? s.farmers.find(v => v.scene && v.body && !v._dying && !v._drowning && !v._rescued)
+                    : window.__alvo;
+                window.__alvo = f;
+                f.setPosition(a.pt.x, a.pt.y); f.setVelocity(0, 0);
+                s.abductedCows.push(f);
+                s._releaseAll();
+            }, { pt, pickNew });
+            expect(await game.waitFor(() => !!window.__alvo._drowning, { timeout: 2000 }), 'começou a se afogar').toBe(true);
+            await game.scene((s, p) => { s.ufo.setPosition(p.x, p.y); s.ufo.setVelocity(0, 0); s.energiaLed = s.energiaMax; }, pt);
+            await game.hover();
+            await game.beamOn();
+            const got = await game.waitFor(s => s.abductedCows.includes(window.__alvo), { timeout: 1200 });
+            const st = await game.scene(s => ({
+                drowning: !!window.__alvo._drowning, dying: !!window.__alvo._dying,
+                inList: s.farmers.includes(window.__alvo), onScreen: !!window.__alvo.scene,
+                total: s.farmersTotal || 0, rescued: s.save.farmersRescued || 0,
+                mercy: s.save.achievements.includes('mercy'),
+            }));
+            // Solta em terra firme pra não afogar de novo (fora do feixe e longe d'água)
+            await game.beamOff();
+            await game.scene(s => { const f = window.__alvo; const l = s._randLandPos();
+                if (f.scene && !f._dying) { f._drowning = false; f._thrown = false;
+                    if (f.body) { f.setStatic(false); f.setSensor(false); }
+                    f.setPosition(l.x, l.y); f.setVelocity(0, 0); } });
+            return { got, ...st };
+        };
+        const r1 = await rescue(true);
+        expect(r1.got, 'o feixe pegou quem se debatia').toBe(true);
+        expect(r1.drowning, 'parou de se afogar').toBe(false);
+        expect(r1.dying).toBe(false);
+        expect(r1.inList, 'continua vivo').toBe(true);
+        expect(r1.total, 'resgate não é morte').toBe(0);
+        expect(r1.rescued).toBe(1);
+        const r1b = await rescue(false);          // o mesmo fazendeiro de novo
+        expect(r1b.got).toBe(true);
+        expect(r1b.rescued, 'o mesmo fazendeiro conta uma vez só').toBe(1);
+        expect((await rescue(true)).rescued).toBe(2);
+        const r3 = await rescue(true);
+        expect(r3.rescued).toBe(3);
+        expect(r3.mercy, 'conquista Misericórdia').toBe(true);
+        expect(r3.total, 'nenhuma morte nos resgates').toBe(0);
+        expect(game.realErrors).toEqual([]);
+    });
+
+    // Combinado com o Bevy (01/11): resgate só nos 1,2 s de debate; no afundar
+    // final (0,3 s) o feixe não pega mais
+    test('afundando (0,3 s finais) o feixe não resgata mais', async ({ game, page }) => {
+        await startPlaying(game, page);
+        const pt = await water(game, 'lake');
+        const before = await throwAt(game, 'farmer', pt);
+        expect(await game.waitFor(() => !!window.__alvo._drowning, { timeout: 2000 })).toBe(true);
+        // Pula pro começo do afundar e põe a nave em cima, feixe cheio
+        await game.scene((s, p) => { window.__alvo._drownT = 1230; s.ufo.setPosition(p.x, p.y);
+            s.ufo.setVelocity(0, 0); s.energiaLed = s.energiaMax; }, pt);
+        await game.hover();
+        await game.beamOn();
+        try {
+            expect(await game.waitFor(() => !window.__alvo.scene, { timeout: 3000 }), 'afundou mesmo com o feixe').toBe(true);
+            const st = await game.scene(s => ({ total: s.farmersTotal || 0, rescued: s.save.farmersRescued || 0 }));
+            expect(st.total).toBe(before.total + 1);
+            expect(st.rescued, 'afundando não conta resgate').toBe(0);
         } finally {
             await game.beamOff();
         }

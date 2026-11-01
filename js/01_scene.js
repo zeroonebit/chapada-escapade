@@ -24,6 +24,7 @@ class Jogo extends Phaser.Scene {
         // no game over (achado do Ensaio Geral, 30/10).
         this._cowsInBeamCount = 0;
         this._farmersInBeamCount = 0;
+        this._splashFx = [];   // anéis/gotas do afogamento (objetos morrem no restart)
         // Map 2.5× maior (was 3200x2400) — more espaço to scenery, corrals, exploração
         const W = 8000, H = 6000;
         this.matter.world.setBounds(0, 0, W, H);

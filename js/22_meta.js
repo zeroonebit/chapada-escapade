@@ -1,4 +1,4 @@
-// 22_meta.js — F6 backport: SAVE (localStorage) + 50 ACHIEVEMENTS + QUESTS
+// 22_meta.js — F6 backport: SAVE (localStorage) + 51 ACHIEVEMENTS + QUESTS
 // Port de Bevy save.rs / achievements_table.rs / quests.rs. O save é o
 // espelho do save.json (coins, totais lifetime, vitórias, conquistas,
 // contratos, itens raros). Toasts verdes top-right. 3 contratos por
@@ -31,6 +31,9 @@ const META_ACH = [
     ['neo_of_the_backlands', 'Neo of the Backlands', 'Neo da Roça', 'Stay inside mecha range 60s without being hit', 'gold'],
     ['lead_sponge', 'Lead Sponge', 'Esponja de Chumbo', 'Survive 20 bullet hits in one match', 'silver'],
     ['pacifist', 'Pacifist', 'Pacifista', 'Win without killing a single farmer', 'gold'],
+    // Thiago 01/11 ("achievment de misericordia ao resgatar uns afogados"); o
+    // 6º campo é a descrição em PT (as outras ainda não têm)
+    ['mercy', 'Mercy', 'Misericórdia', 'Rescue 3 drowning farmers', 'silver', 'Resgate 3 fazendeiros se afogando'],
     ['untouchable', 'Untouchable', 'Intocável', 'Win without taking a single bullet', 'gold'],
     ['mountaineer', 'Mountaineer', 'Alpinista', 'Fly up to the snowy peak', 'bronze'],
     ['edge_lord', 'Edge Lord', 'Na Beirada', "Enter a black hole's gravity well and escape", 'silver'],
@@ -81,7 +84,7 @@ Object.assign(Jogo.prototype, {
         this.save = Object.assign({
             coins: 0, cowsTotal: 0, bullsTotal: 0, burgersTotal: 0,
             burgersByType: { classic: 0, cheese: 0, double: 0 },
-            farmersTotal: 0, shootersTotal: 0,
+            farmersTotal: 0, shootersTotal: 0, farmersRescued: 0,
             matches: 0, victories: 0, tutorialDone: false,
             achievements: [], questsCompleted: [], rareItems: [],
         }, s);
@@ -172,7 +175,7 @@ Object.assign(Jogo.prototype, {
         if (!def) return;
         this.save.achievements.push(id);
         const lang = this.dbg?.behavior?.lang || 'en';
-        this._metaToast('🏆 ' + (lang === 'pt' ? def[2] : def[1]), def[3]);
+        this._metaToast('🏆 ' + (lang === 'pt' ? def[2] : def[1]), (lang === 'pt' && def[5]) || def[3]);
         this._metaPersist();
     },
 
@@ -250,6 +253,15 @@ Object.assign(Jogo.prototype, {
                 if (q.progress >= q.def.n) this._questComplete(q);
             }
         }
+        this._metaPersist();
+    },
+
+    // Resgate de quem se afogava (09_enemies._rescueFarmer, 1× por fazendeiro);
+    // acumula no save como os outros totais
+    _metaOnRescue() {
+        if (!this.save) return;
+        this.save.farmersRescued = (this.save.farmersRescued || 0) + 1;
+        if (this.save.farmersRescued >= 3) this._metaAch('mercy');
         this._metaPersist();
     },
 

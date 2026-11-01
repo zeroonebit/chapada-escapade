@@ -124,6 +124,7 @@ Object.assign(Jogo.prototype, {
     // timers e conta. Farmer entra no farmersTotal (HUD, passo FARMER_KILL).
     _beginDeath(entity) {
         entity._dying = true;
+        entity._drowning = false;
         if (this.abductedCows.includes(entity)) this._releaseCow(entity);
         // H4: limpa _timer/walkTimer to avoid timer orphan referenciando dead farmer
         if (entity._timer && entity._timer.remove) { entity._timer.remove(); entity._timer = null; }
@@ -219,6 +220,7 @@ Object.assign(Jogo.prototype, {
         const r2 = this.coneRadius * this.coneRadius;  // squared to avoid sqrt
         const tryAbduct = (v) => {
             if (v._dying || v._destroyed || v.stuckInBush || v._inCurral || this.abductedCows.includes(v)) return;
+            if (v._drownSinking) return;   // afundando (0,3 s finais): tarde demais pro resgate
             if (v.isEnemy && !canCarryFarmers) return;
             if (!v.isEnemy && !canCarryCows) return;
             if (distSq(this.ufo.x, this.ufo.y, v.x, v.y) > r2) return;
@@ -229,6 +231,8 @@ Object.assign(Jogo.prototype, {
                     v.clearTint();
                 }
             }
+            // Se debatendo n'água: o feixe resgata (Misericórdia, 22_meta)
+            if (v._drowning && this._rescueFarmer) this._rescueFarmer(v);
             this.abductedCows.push(v);
             if (this._sfx) {
                 this._sfx('grab');
@@ -535,7 +539,8 @@ Object.assign(Jogo.prototype, {
             if (v.scene && v.body && !v._dying) v.setFrictionAir(0.08).setDepth(5);
             if (v.timer) { v.timer.remove(); v.timer = null; }
             if (v.walkTimer) v.walkTimer.paused = false;
-            // Graviton em 0 também é soltar pelo feixe: n'água ele afoga
+            // Graviton em 0 também é soltar pelo feixe: n'água ou escorregando
+            // pra ela no embalo, ele afoga
             if (v.isEnemy) v._thrown = true;
         }
     }
