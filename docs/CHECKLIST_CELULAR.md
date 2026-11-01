@@ -69,6 +69,8 @@
 - [ ] Tutorial 06-10: levar tiro, capturar fazendeiro, pedra, torpedos, mecha —
       **dá pra fazer curva com o joystick rápido o bastante pra esquivar?** (09 é o
       passo que mais depende de destreza).
+- [ ] Fazendeiro na água (01/11): capturar um fazendeiro, levar até um lago e soltar. Ele se debate
+      ~1 s, afunda e some, e o contador de fazendeiros sobe. Andando sozinho na água ele nada de volta.
 - [ ] Botão ⏸ no canto superior esquerdo abre a barra de pausa (CONTINUAR / RECOMEÇAR /
       player de música) junto do CONFIGS; CONTINUAR volta ao jogo; o log de CONTRATOS fica
       ao lado, sem cortar.

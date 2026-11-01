@@ -172,6 +172,14 @@ que são dois tutoriais diferentes de propósito. Hoje **os dois ensinam coisas 
 | Feixe | heat-haze refrativo | círculos concêntricos |
 | Quips | pools próprios (EN/PT) | 150+150 rethemados em 08-10 |
 
+### Regras combinadas entre as frentes
+
+Linha combinada com a frente do Bevy; o mesmo texto vai pro `PARIDADE_1_1.md` de lá.
+
+| Regra (data, pedido) | Texto combinado |
+|---|---|
+| Fazendeiro na água e no abismo (01/11, Thiago: "jogar ele no abismo ou na agua pra se afogar") | Fazendeiro solto pelo feixe morre na água (lago, rio e oceano: 1,2 s se debatendo + 0,3 s afundando, drop no começo, splash grande na entrada e pequeno a cada 0,35 s) e no abismo (Bevy: cai e some em 0,9 s; web: não tem abismo, o oceano da borda e fora do grid contam como água). Andando sozinho não morre (Bevy: água e abismo bloqueiam o passo; web: entra e nada de volta, só morre com a marca de arremesso, que sai em terra depois do giro de 3 s). Canyon de rocha só no Bevy, com o resgate atual. Pontuação igual à da pedra: web 0, Bevy +100. Conta em farmersTotal/farmers_used e no FARMER_KILL. Pacifista não é avaliado em nenhuma das duas. Só visual: na web ele fica azulado e o splash é anel + gota; no Bevy é partícula. |
+
 ---
 
 ## 7. O que sobra decidir

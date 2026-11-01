@@ -401,7 +401,8 @@ Object.assign(Jogo.prototype, {
                     this._tutAdvance();
                     break;
                 }
-                // Perdeu o farmer sem matar (soltou longe/água)? repõe alvo
+                // Perdeu o farmer sem matar (soltou longe)? repõe alvo. Água
+                // agora é kill: o afogamento conta no farmersTotal
                 const alive = (this.farmers || []).filter(f => f.scene && !f._dying).length;
                 if (alive === 0 && !this.abductedCows.some(e => e.isEnemy)) {
                     this._tutSpawnFazendeiro();
