@@ -1,7 +1,7 @@
 # Checklist de ship — Chapada Escapade (web, GitHub Pages)
 
 > Como uma versão sai desta máquina e chega em
-> https://zeroonebit.github.io/chapada-escapade/. O Pages publica o que está em
+> https://zero-onebit.com/chapada-escapade/ (o `zeroonebit.github.io` redireciona). O Pages publica o que está em
 > `main` (branch raiz, sem build): **push em `main` = deploy em ~30s**.
 > Nada aqui roda sozinho — push, tag e deploy só com o ok do Thiago.
 
@@ -44,8 +44,10 @@ Nada abaixo é automatizável; é o que falta pro `v1.0.0`:
 - [ ] Jogar o tutorial (10 passos) e o loop até a quota de 30 **no desktop**.
 - [ ] **Ouvir** o jogo (9 faixas, SFX, crossfade) — nunca foi escutado.
 - [ ] Rodar o `docs/CHECKLIST_CELULAR.md` no celular de verdade.
-- [ ] Decidir o celular: manter o **teaser** (hoje) ou liberar o jogo completo com o
-      joystick do `12_mobile.js` (ver `CONTEXTO.md`).
+- [x] Decidir o celular: **mantém o teaser** (Thiago, 01/11/2026). O jogo completo vai
+      do tablet e do Z Fold aberto pra cima.
+- [ ] A `v1.0.0` é o **congelamento** da web: depois dela não sai mais versão; a web
+      vira referência e comparativo pro Unreal (`README.md`).
 
 ## 4. Versionar (semver)
 
@@ -83,7 +85,7 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-- [ ] Esperar ~30s e abrir https://zeroonebit.github.io/chapada-escapade/ (o
+- [ ] Esperar ~30s e abrir https://zero-onebit.com/chapada-escapade/ (o
       `github.io` responde 301 pro domínio `zero-onebit.com` — `curl` sem `-L` só vê
       o redirect; no browser funciona).
 - [ ] Hard refresh (Ctrl+Shift+R) e conferir no console: `V` novo nos `js/*.js?v=`,

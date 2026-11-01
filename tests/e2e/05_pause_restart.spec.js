@@ -23,8 +23,12 @@ const counts = (s) => ({
 
 // Força o game over pelo caminho real: tanque quase vazio → _updateFuel → _gameOver
 async function dieByFuel(game) {
-    await game.scene(s => { s.fuelCurrent = 0.2; });
-    expect(await game.waitFor(s => s.gameOver, { timeout: 5000 }), 'game over disparou').toBe(true);
+    // Segura o tanque em ≤0,2 a cada leitura: coleta de burger ou porco no
+    // caminho repunha o tanque e o game over não vinha em 5 s
+    expect(await game.waitFor(s => {
+        if (!s.gameOver) s.fuelCurrent = Math.min(s.fuelCurrent, 0.2);
+        return s.gameOver;
+    }, { timeout: 5000 }), 'game over disparou').toBe(true);
     // Cinematic (~3.5s) → UI com botão RESTART
     expect(await game.waitFor(s => s._gameOverUiShown, { timeout: 12_000 }), 'UI de game over apareceu').toBe(true);
 }
@@ -161,8 +165,14 @@ test.describe('pausa e reinício', () => {
         await game.waitForScene();
         await game.startPlayViaSplash({ lang: 'en', input: 'mouse' });
         await page.waitForTimeout(500);
-        expect(await abductOne(game, log, { keep: true }), 'abduziu vaca').toBe(true);
-        expect(await game.scene(s => s._cowsInBeamCount), 'vaca no feixe na hora da morte').toBeGreaterThan(0);
+        // A vaca pode cair num curral no caminho (entrega automática): tenta de
+        // novo até ter carga e zera o tanque no MESMO quadro da checagem
+        let inBeam = 0;
+        for (let i = 0; i < 3 && !inBeam; i++) {
+            expect(await abductOne(game, log, { keep: true }), 'abduziu vaca').toBe(true);
+            inBeam = await game.scene(s => { const n = s._cowsInBeamCount || 0; if (n > 0) s.fuelCurrent = 0; return n; });
+        }
+        expect(inBeam, 'vaca no feixe na hora da morte').toBeGreaterThan(0);
         await dieByFuel(game);
         await clickRestart(game);
         const st = await game.scene(s => ({
@@ -234,7 +244,8 @@ test.describe('pausa e reinício', () => {
         const u0 = await game.scene(s => ({ x: s.ufo.x, y: s.ufo.y }));
         let maxDx = 0;
         const tFly = Date.now();
-        while (Date.now() - tFly < 8000 && maxDx <= 150) {
+        // 15 s: sob carga (2 workers + Unreal aberto) 8 s chegaram a dar só 143 px
+        while (Date.now() - tFly < 15_000 && maxDx <= 150) {
             await game.aimToward(u0.x + 300, u0.y, 240, 80);
             await page.waitForTimeout(90);
             maxDx = Math.max(maxDx, (await game.scene(s => s.ufo.x)) - u0.x);

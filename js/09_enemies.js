@@ -383,6 +383,25 @@ Object.assign(Jogo.prototype, {
         else { f._beamDx = 0; f._beamDy = 0; }
     },
 
+    // Curral sob (x, y): raio de 100 px do centro (a arte tem 224 px)
+    _corralAt(x, y) {
+        for (const c of this.corrals || []) {
+            if (distSq(c.x, c.y, x, y) < 100 * 100) return c;
+        }
+        return null;
+    },
+
+    // Thiago 01/11 ("fazendeiros largados nos currais ficam presos por alguns
+    // segundos?" → "Sim, preso uns segundos"): ~3 s parado dentro do curral,
+    // depois sai andando. Não é entrega nem morte; o feixe pode pegar de novo
+    _trapFarmer(f) {
+        f._thrown = false; f._wetSlide = false;
+        f._releaseSpinUntil = 0; f.rotation = 0;
+        f.setVelocity(0, 0); f.setFrictionAir(0.08);
+        if (f.anims?.isPlaying) f.anims.stop();
+        f._trapT = 3000;
+    },
+
     // O resto do escorregão (rest px na direção do impulso) passa por água?
     _beamSlideHitsWater(f, rest) {
         if (!this._isWaterAt) return false;
@@ -458,8 +477,18 @@ Object.assign(Jogo.prototype, {
 
             const isAbducted = this.abductedCows.includes(f);
 
-            // Caminhada idle (não anda nem atira sendo arremessado)
-            if (f._wandering && !isAbducted) {
+            // Preso no curral (Thiago 01/11): ~3 s parado, sem andar nem atirar;
+            // o relógio anda pelo update, então congela na pausa
+            if (f._trapT > 0 && !isAbducted) {
+                f._trapT -= delta;
+                f.setVelocity(0, 0);
+                if (f._trapT > 0) continue;
+                f._trapT = 0;
+            }
+
+            // Caminhada idle (não anda nem atira sendo arremessado). Deslizando
+            // n'água no embalo ele não passeia: senão nunca para pra ser julgado
+            if (f._wandering && !isAbducted && !f._wetSlide) {
                 f.applyForce({ x: Math.cos(f.wanderAngle)*IDLE_F, y: Math.sin(f.wanderAngle)*IDLE_F });
             }
             // Sprite directional ja indica direcao — sem rotation EXCETO se abduzido
@@ -477,8 +506,27 @@ Object.assign(Jogo.prototype, {
             // termina em terra. A velocidade sozinha não separa embalo de
             // corrida (no fim da partida ele corre a ~10,6 px/frame).
             if (f._thrown && !isAbducted) {
-                if (this._isWaterAt && this._isWaterAt(f.x, f.y)) { this._startDrowning(f); continue; }
                 const bvx = f.body.velocity.x, bvy = f.body.velocity.y;
+                const sp = Math.hypot(bvx, bvy);
+                if (this._isWaterAt && this._isWaterAt(f.x, f.y)) {
+                    // N'água no embalo (Thiago 01/11): a água corta o giro, ele
+                    // desliza até parar e decide onde parou. Mais perto da margem
+                    // que do meio do lago (no oceano, até 2 células da praia) nada;
+                    // senão afoga (_waterDeathAt)
+                    if (!f._wetSlide) {
+                        f._wetSlide = true;
+                        f._releaseSpinUntil = 0; f.rotation = 0;
+                        f.setFrictionAir(0.08);
+                    }
+                    if (sp > 0.6) continue;
+                    f._wetSlide = false;
+                    if (this._waterDeathAt(f.x, f.y)) { f._waterVerdict = 'afoga'; this._startDrowning(f); continue; }
+                    f._waterVerdict = 'nada';
+                    f._thrown = false;   // perto da margem: nada (logo abaixo)
+                } else {
+                f._wetSlide = false;
+                // Curral (Thiago 01/11): solto em cima dele, fica preso ~3 s
+                if (this._corralAt(f.x, f.y)) { this._trapFarmer(f); continue; }
                 if (inSpin) {
                     this._setBeamImpulse(f, bvx, bvy);
                 } else {
@@ -488,9 +536,21 @@ Object.assign(Jogo.prototype, {
                     const dt = (f.body.deltaTime || 1000 / 60) / (1000 / 60);
                     if (f._beamFresh) f._beamFresh = false;
                     else f._beamV = (f._beamV || 0) * Math.max(0, 1 - fa * dt);
+                    // Quique (moita, pedra, vaca): a direção virou mais de 35° num
+                    // frame → o embalo segue a direção nova, sem crescer
+                    if (sp > 1 && f._pvx !== undefined) {
+                        const ps = Math.hypot(f._pvx, f._pvy);
+                        if (ps > 1 && (bvx * f._pvx + bvy * f._pvy) / (sp * ps) < 0.82) {
+                            const keep = Math.min(f._beamV || 0, sp);
+                            this._setBeamImpulse(f, bvx, bvy);
+                            f._beamV = keep;
+                        }
+                    }
                     // Resto do escorregão (soma geométrica v·(1−f·dt)/f)
                     const rest = fa > 0 ? f._beamV * Math.max(0, 1 - fa * dt) / fa : 0;
                     if (rest < 1 || !this._beamSlideHitsWater(f, rest)) f._thrown = false;
+                }
+                f._pvx = bvx; f._pvy = bvy;
                 }
             }
             if (inSpin) {
@@ -532,12 +592,16 @@ Object.assign(Jogo.prototype, {
             }
             if (isAbducted) continue;
 
-            // ÁGUA no-go (F3): farmer jogado n'água nada de volta pra ilha
+            // ÁGUA no-go (F3): n'água sem a marca de arremesso ele nada até a
+            // terra mais perto (01/11: "ele nada" até a margem; antes ia pro
+            // centro do mapa e atravessava o lago)
             if (this._isWaterAt && this._isWaterAt(f.x, f.y)) {
-                const angW = Math.atan2(3000 - f.y, 4000 - f.x);
+                if (!f._swimTo) f._swimTo = this._nearestLand ? this._nearestLand(f.x, f.y) : { x: 4000, y: 3000 };
+                const angW = Math.atan2(f._swimTo.y - f.y, f._swimTo.x - f.x);
                 f.applyForce({ x: Math.cos(angW) * 0.004, y: Math.sin(angW) * 0.004 });
                 continue;
             }
+            f._swimTo = null;
 
             // Disparo when ship is perto (mas with distance mínima de engajamento)
             const dx = this.ufo.x - f.x, dy = this.ufo.y - f.y;

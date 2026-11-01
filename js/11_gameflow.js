@@ -272,6 +272,17 @@ Object.assign(Jogo.prototype, {
 
     _setPaused(on) {
         on = !!on;
+        // O giro de 3 s do arremesso conta pelo relógio da cena, que anda na
+        // pausa: ao despausar, empurra o fim do giro pelo tempo pausado
+        const now = this.time?.now ?? 0;
+        if (on && !this.paused) this._pausedAt = now;
+        else if (!on && this.paused && this._pausedAt != null) {
+            const dt = now - this._pausedAt;
+            for (const f of this.farmers || []) {
+                if (f._releaseSpinUntil && f._releaseSpinUntil > this._pausedAt) f._releaseSpinUntil += dt;
+            }
+            this._pausedAt = null;
+        }
         this.paused = on;
         this.matter.world.enabled = !on;
         this._setPauseVisuals(on);

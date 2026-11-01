@@ -24,9 +24,11 @@ test.describe('loop principal', () => {
         expect(await abductOne(game, log, { keep: true }), 'abduziu vaca').toBe(true);
         const mid = await game.scene(s => ({
             inBeam: s._cowsInBeamCount, ach: s.save.achievements.includes('first_moo'),
-            hudCows: s.hud.cowsText?.text,
+            hudCows: s.hud.cowsText?.text, delivered: (s.cowsTotal || 0) + (s.bullsTotal || 0),
         }));
-        expect(mid.inBeam).toBe(1);
+        // Uma vaca no feixe; ou ela já caiu num curral no caminho (entrega
+        // automática a <110 px), ou o feixe pegou duas juntas
+        expect(mid.inBeam + mid.delivered, 'vaca no feixe (ou já entregue no caminho)').toBeGreaterThanOrEqual(1);
         expect(mid.ach, 'achievement first_moo').toBe(true);
 
         // 2. entrega no curral → slot 'loading'

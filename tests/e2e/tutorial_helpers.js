@@ -104,10 +104,11 @@ async function recoverFromGameOver(game, log) {
 }
 
 // ── Alvos (rodam no browser) ─────────────────────────────────────────
-const nearestCow = (s) => {
+const nearestCow = (s, skip) => {
     let best = null, bd = Infinity;
     for (const v of s.cows) {
         if (!isAbducibleCow(v) || v.tipo === 'pig') continue;   // porco = bacon, outra mecânica
+        if (skip && skip.some(p => distSq(v.x, v.y, p.x, p.y) < 150 * 150)) continue;
         const d = distSq(v.x, v.y, s.ufo.x, s.ufo.y);
         if (d < bd) { bd = d; best = v; }
     }
@@ -143,18 +144,23 @@ const status = (s) => ({
 // Abduz 1 vaca (persegue a mais perto com o feixe ligado). Com `keep`, o
 // feixe FICA ligado ao voltar — a vaca continua a bordo pra entrega.
 async function abductOne(game, log, { keep = true } = {}) {
+    // Vacas que a nave não alcançou ficam de fora das próximas tentativas: o
+    // 04_loop chegou a mirar 5× a mesma vaca a 642 px (o voo não chegava nela)
+    const skip = [];
     for (let attempt = 0; attempt < 6; attempt++) {
         if (await game.scene(s => !!s.gameOver && (s.burgersCollected || 0) < BURGER_QUOTA)) return 'GAMEOVER';
-        const cow = await game.scene(nearestCow);
-        if (!cow) { await game.page.waitForTimeout(300); continue; }
+        const cow = await game.scene(nearestCow, skip);
+        if (!cow) { skip.length = 0; await game.page.waitForTimeout(300); continue; }
         log(`  vaca mais perto a ${Math.round(cow.d)}px`);
-        await game.flyTo(cow.x, cow.y, { tol: 140, timeout: 20_000, keep: true });
+        const dFly = await game.flyTo(cow.x, cow.y, { tol: 140, timeout: 20_000, keep: true });
+        if (typeof dFly === 'number' && dFly > 400) { skip.push({ x: cow.x, y: cow.y }); continue; }
         // (no toque o voo já pode ter abduzido no caminho — o feixe vai junto do dedo)
         const got = await game.beamUntil(s => s.abductedCows.some(v => !v.isEnemy && !v.isBurger && v.tipo !== 'pig'), {
             timeout: 8000, keep,
-            track: await game.scene(nearestCow),
+            track: await game.scene(nearestCow, skip),
         });
         if (got) return true;
+        skip.push({ x: cow.x, y: cow.y });
     }
     return false;
 }
@@ -220,15 +226,30 @@ async function collectBurger(game, log) {
     const before = await game.scene(s => ({ score: s.score, n: s.burgersCollected || 0 }));
     const dSlot = await game.flyTo(slot.x, slot.y, { tol: 50, timeout: 15_000, keep: true });
     log(`  burger pronto; nave a ${Math.round(dSlot)}px do slot`);
-    // Mede o combustível no tick anterior à coleta (a recompensa entra junto
-    // com o burgersCollected++ no onComplete do tween): game.lastCollect
-    let fuelPrev = await game.scene(s => s.fuelCurrent);
+    // Mede a recompensa NO QUADRO da coleta (preupdate → postupdate): o fuel e
+    // o burgersCollected++ entram juntos no onComplete do tween. A leitura antiga
+    // ("antes" num evaluate separado) às vezes já vinha com a recompensa e o
+    // ganho saía ~0 (corrida conhecida do 04_loop)
+    await game.scene((s, b) => {
+        window.__collect = null;
+        let pre = s.fuelCurrent;
+        const onPre = () => { pre = s.fuelCurrent; };
+        const onPost = () => {
+            if (!window.__collect && (s.burgersCollected || 0) > b.n) {
+                window.__collect = { fuelBefore: pre, fuelAfter: s.fuelCurrent };
+                s.events.off('preupdate', onPre); s.events.off('postupdate', onPost);
+            }
+        };
+        s.events.on('preupdate', onPre); s.events.on('postupdate', onPost);
+        window.__collectOff = () => { s.events.off('preupdate', onPre); s.events.off('postupdate', onPost); };
+    }, before);
     const got = await game.beamUntil((s, b) => {
-        if ((s.burgersCollected || 0) > b.n) return { fuelAfter: s.fuelCurrent, score: s.score };
+        if ((s.burgersCollected || 0) > b.n) return { score: s.score };
         return false;
-    }, { timeout: 6000, arg: before, track: slot,
-         onTick: async () => { fuelPrev = await game.scene(s => s.fuelCurrent); } });
-    game.lastCollect = got ? { fuelBefore: fuelPrev, fuelAfter: got.fuelAfter, score: got.score } : null;
+    }, { timeout: 6000, arg: before, track: slot });
+    const inFrame = await game.scene(() => { if (window.__collectOff) window.__collectOff(); return window.__collect; });
+    const fuelPrev = inFrame ? inFrame.fuelBefore : NaN;
+    game.lastCollect = got && inFrame ? { fuelBefore: inFrame.fuelBefore, fuelAfter: inFrame.fuelAfter, score: got.score } : null;
     if (!got) {
         const d = await game.scene((s, p) => ({
             slots: s.corrals.flatMap(c => (c.slots || []).map(x => x && { st: x.state, col: !!x._sendoColetado,
@@ -242,7 +263,7 @@ async function collectBurger(game, log) {
         log('  [collectBurger] falhou: ' + JSON.stringify(d) + ' driver=' + JSON.stringify([...(game.input.points || new Map()).keys()]));
     }
     log(`  score ${before.score} → ${await game.scene(s => s.score)}` +
-        (got ? ` fuel ${Math.round(fuelPrev)} → ${Math.round(got.fuelAfter)}` : ''));
+        (game.lastCollect ? ` fuel ${Math.round(fuelPrev)} → ${Math.round(game.lastCollect.fuelAfter)}` : ''));
     if (await game.scene(s => !!s.gameOver && (s.burgersCollected || 0) < BURGER_QUOTA)) return 'GAMEOVER';
     return !!got;
 }
@@ -416,8 +437,13 @@ async function dodgeTorpedoes(game, log, need = 5) {
 // Pega um fazendeiro e arremessa no mecha (slam a <35px em 09_enemies.js)
 async function killMecha(game, log) {
     const base = await game.scene(s => s.shootersTotal || 0);
+    // O mecha pode morrer fora do arremesso (encostão, torpedo) e o tutorial
+    // fechar sozinho: sem esta checagem o helper insistia, não achava mais
+    // fazendeiro nem mecha, e o beamOn seguinte apertava o JOGAR AGORA do card
+    const closed = (s, b) => (s.shootersTotal || 0) > b || (s.tutorialMode && s._tutStepIdx == null);
     for (let attempt = 0; attempt < 5; attempt++) {
         if (await game.scene(s => !!s.gameOver && (s.burgersCollected || 0) < BURGER_QUOTA)) return 'GAMEOVER';
+        if (await game.scene(closed, base)) return true;
         const has = await game.scene(s => s.abductedCows.some(e => e.isEnemy));
         if (!has) {
             const ok = await abductFarmer(game, log);
@@ -427,6 +453,7 @@ async function killMecha(game, log) {
         const m = await game.scene(nearestMecha);
         if (!m) { await game.page.waitForTimeout(300); continue; }
         log(`  mecha a ${Math.round(m.d)}px (tentativa ${attempt + 1})`);
+        if (await game.scene(closed, base)) return true;
         await game.beamOn();
         let outcome = null;
         try {
@@ -535,7 +562,21 @@ async function playTutorial(game, page) {
         });
 
         // 04 DELIVER — leva pro curral
-        await doStep('DELIVER', 'BURGER', async () => deliverToCorral(game, log));
+        await doStep('DELIVER', 'BURGER', async () => {
+            // Sob carga o voo até o curral já levou 16 s (normal ~4 s) e o
+            // graviton (13 s cheio) zerou no caminho: a vaca caiu. Recarrega e
+            // leva outra, como o jogador faria
+            for (let k = 0; k < 3; k++) {
+                const r = await deliverToCorral(game, log);
+                if (r === true || r === 'GAMEOVER') return r;
+                if (await game.scene(s => s.tutorialMode && TUT_STEPS[s._tutStepIdx]?.key !== 'DELIVER')) return true;
+                log('  [deliver] não entregou — recarrega o graviton e abduz de novo');
+                await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 20_000 });
+                const a = await abductOne(game, log, { keep: true });
+                if (a === 'GAMEOVER') return a;
+            }
+            return false;
+        });
         // Entrar no BURGER zera o tanque pra 15% (lição). Só vale na 1ª entrada:
         // se morrer aqui, o resume repõe 50% (pedido do user em 08-10).
         if (deaths === 0) {
