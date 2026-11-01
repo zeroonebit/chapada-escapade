@@ -332,6 +332,7 @@ Object.assign(Jogo.prototype, {
             if (x < COLS - 1 && !ocean[y][x+1] && grid[y][x+1] === 0) { ocean[y][x+1] = true; q2.push([y, x+1]); }
         }
         this._oceanMask = ocean;
+        this._lakeOf = null;   // profundidade dos lagos: recalcula sob demanda (_lakeDepthAt)
         console.log('[ISLAND] seed', this._islandSeed, '— rim elíptico + praia 4 células + masks ok');
     },
 
@@ -354,6 +355,68 @@ Object.assign(Jogo.prototype, {
         if (cy < 0 || cy >= m.length || cx < 0 || cx >= m[0].length) return true;
         return m[cy][cx];
     },
+    // Terra mais perto de (px, py): distância (px) até a borda da célula de
+    // terra e o centro dessa célula (alvo do nado). Procura até R células.
+    _nearestLand(px, py, R = 10) {
+        const g = this.terrainGrid;
+        if (!g) return { d: 0, x: px, y: py };
+        const C = this.terrainCell || 80;
+        const cx0 = Math.floor(px / C), cy0 = Math.floor(py / C);
+        let best = { d: R * C, x: 4000, y: 3000 };
+        for (let cy = cy0 - R; cy <= cy0 + R; cy++) {
+            if (cy < 0 || cy >= g.length) continue;
+            for (let cx = cx0 - R; cx <= cx0 + R; cx++) {
+                if (cx < 0 || cx >= g[0].length || g[cy][cx] === 0) continue;
+                const dx = Math.max(cx * C - px, 0, px - (cx + 1) * C);
+                const dy = Math.max(cy * C - py, 0, py - (cy + 1) * C);
+                const d = Math.hypot(dx, dy);
+                if (d < best.d) best = { d, x: (cx + 0.5) * C, y: (cy + 0.5) * C };
+            }
+        }
+        return best;
+    },
+
+    // Profundidade do lago/rio de (px, py): a maior distância até a margem
+    // dentro do corpo d'água (o "centro" do Thiago). Flood fill sob demanda,
+    // cacheado por célula; amostra o centro e o canto de cada célula. O
+    // oceano fica de fora.
+    _lakeDepthAt(px, py) {
+        const g = this.terrainGrid, C = this.terrainCell || 80;
+        if (!g) return 0;
+        const { cx, cy } = this._cellIdxAt(px, py);
+        if (cy < 0 || cy >= g.length || cx < 0 || cx >= g[0].length || g[cy][cx] !== 0) return 0;
+        if (!this._lakeOf || this._lakeOf.length !== g.length) this._lakeOf = g.map(r => new Array(r.length).fill(null));
+        let body = this._lakeOf[cy][cx];
+        if (body) return body.depth;
+        body = { depth: 0 };
+        const ocean = this._oceanMask;
+        const q = [[cy, cx]];
+        this._lakeOf[cy][cx] = body;
+        for (let i = 0; i < q.length; i++) {
+            const [y, x] = q[i];
+            const dc = this._nearestLand((x + 0.5) * C, (y + 0.5) * C).d;
+            const dk = this._nearestLand(x * C, y * C).d;
+            body.depth = Math.max(body.depth, dc, dk);
+            for (const [yy, xx] of [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]]) {
+                if (yy < 0 || yy >= g.length || xx < 0 || xx >= g[0].length) continue;
+                if (g[yy][xx] !== 0 || this._lakeOf[yy][xx] || (ocean && ocean[yy][xx])) continue;
+                this._lakeOf[yy][xx] = body;
+                q.push([yy, xx]);
+            }
+        }
+        return body.depth;
+    },
+
+    // Thiago 01/11: fazendeiro solto pelo feixe que para n'água afoga se
+    // estiver mais perto do meio que da margem ("se ele estiver mais perto da
+    // borda que do centro ele nada"): no lago/rio, distância à margem ≥ metade
+    // da profundidade; no oceano, a mais de 2 células (160 px) da praia
+    _waterDeathAt(px, py) {
+        const d = this._nearestLand(px, py).d;
+        if (this._isOceanAt(px, py)) return d > 160;
+        return d >= this._lakeDepthAt(px, py) / 2;
+    },
+
     // Sorteia posição em TERRA (grama/terra; areia se allowSand) — spawns
     _randLandPos(allowSand = false) {
         const g = this.terrainGrid;
@@ -406,7 +469,7 @@ Object.assign(Jogo.prototype, {
         // ILHA fBm (parity Bevy terrain.rs, DEFAULT) ou salt-and-pepper
         // legado (proc.island = false no CONFIGS → mapa retangular antigo)
         const useIsland = mapCfg.island ?? proc.island ?? true;
-        this._distWater = null; this._oceanMask = null; this._islandSeed = null;
+        this._distWater = null; this._oceanMask = null; this._islandSeed = null; this._lakeOf = null;
         let grid = [];
         if (useIsland) {
             grid = this._seedIslandGrid(COLS, ROWS, proc, mapCfg);

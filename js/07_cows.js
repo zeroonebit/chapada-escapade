@@ -233,6 +233,7 @@ Object.assign(Jogo.prototype, {
             }
             // Se debatendo n'água: o feixe resgata (Misericórdia, 22_meta)
             if (v._drowning && this._rescueFarmer) this._rescueFarmer(v);
+            v._trapT = 0; v._wetSlide = false; v._swimTo = null;
             this.abductedCows.push(v);
             if (this._sfx) {
                 this._sfx('grab');
