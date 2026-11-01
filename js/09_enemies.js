@@ -372,6 +372,23 @@ Object.assign(Jogo.prototype, {
         }
     },
 
+    // Impulso do feixe: módulo e direção (o soltar e o graviton zerado gravam)
+    _setBeamImpulse(f, vx, vy) {
+        const v = Math.hypot(vx, vy);
+        f._beamV = v;
+        if (v > 0.01) { f._beamDx = vx / v; f._beamDy = vy / v; }
+        else { f._beamDx = 0; f._beamDy = 0; }
+    },
+
+    // O resto do escorregão (rest px na direção do impulso) passa por água?
+    _beamSlideHitsWater(f, rest) {
+        if (!this._isWaterAt) return false;
+        for (const k of [0.25, 0.5, 0.75, 1]) {
+            if (this._isWaterAt(f.x + (f._beamDx || 0) * rest * k, f.y + (f._beamDy || 0) * rest * k)) return true;
+        }
+        return false;
+    },
+
     // Pego pelo feixe nos 1,2 s de debate (_tryAbduct; afundando não pega):
     // sobrevive e não conta como morte. Misericórdia conta 1× por fazendeiro.
     _rescueFarmer(f) {
@@ -429,11 +446,6 @@ Object.assign(Jogo.prototype, {
         const IDLE_F   = 0.0008 * velMul * escF; // same ritmo do idle das cows brancas
         const SHOOT_SQ = 420 * 420;
         const VEL      = 4.5;
-        // Velocidade própria máxima: acima disso o fazendeiro solto ainda está
-        // no embalo do feixe e cair n'água afoga. Medido 01/11: novo (atrito
-        // 0,1) persegue a ~5,0 px/frame; já solto (atrito 0,08 depois do giro)
-        // persegue com o passeio a favor a ~7,1 (Ensaio). 7,5 cobre os dois.
-        const OWN_MAX  = 7.5 * velMul * escF;
 
         this._updateSplashFx(delta);
 
@@ -454,12 +466,26 @@ Object.assign(Jogo.prototype, {
             // AFOGAMENTO (Thiago 01/11, regra das 3 frentes): solto ou
             // arremessado pelo feixe e caiu n'água (lago, rio ou oceano; na web
             // o oceano da borda faz o papel do abismo) → afoga. O embalo conta
-            // ("Embalo da praia afoga"): a marca só sai em terra, com o giro de
-            // 3 s acabado e a velocidade de volta à de quem anda por conta própria.
+            // ("Embalo da praia afoga"). No giro de 3 s a IA está desligada:
+            // todo o movimento é embalo e a marca fica. Fora do giro a marca
+            // segue só o IMPULSO do feixe (_beamV, direção _beamDx/_beamDy),
+            // que decai pelo atrito do Matter: ela fica enquanto o resto do
+            // escorregão ainda leva ele até a água, e sai quando o escorregão
+            // termina em terra. A velocidade sozinha não separa embalo de
+            // corrida (no fim da partida ele corre a ~10,6 px/frame).
             if (f._thrown && !isAbducted) {
                 if (this._isWaterAt && this._isWaterAt(f.x, f.y)) { this._startDrowning(f); continue; }
-                const sp = Math.hypot(f.body.velocity.x, f.body.velocity.y);
-                if (!inSpin && sp <= OWN_MAX) f._thrown = false;
+                const bvx = f.body.velocity.x, bvy = f.body.velocity.y;
+                if (inSpin) {
+                    this._setBeamImpulse(f, bvx, bvy);
+                } else {
+                    const fa = f.body.frictionAir;
+                    const dt = Math.min(delta, 1000 / 30) / (1000 / 60);
+                    f._beamV = (f._beamV || 0) * Math.max(0, 1 - fa * dt);
+                    // Resto do escorregão (soma geométrica v·(1−f)/f)
+                    const rest = fa > 0 ? f._beamV * (1 - fa) / fa : 0;
+                    if (rest < 1 || !this._beamSlideHitsWater(f, rest)) f._thrown = false;
+                }
             }
             if (inSpin) {
                 // Spin continuo a _spinRate rad/s (delta em ms -> /1000)
