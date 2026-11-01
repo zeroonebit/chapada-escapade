@@ -200,6 +200,22 @@ async function deliverToCorral(game, log) {
     return dropped;
 }
 
+// Entrega com nova tentativa: sob carga o voo até o curral passa dos 13 s de
+// graviton cheio e a vaca cai no caminho (Ensaio 01/11, 07_touch "loop no
+// toque"). Recarrega o graviton e leva outra vaca, como o jogador faria
+async function deliverWithRetry(game, log, tries = 3) {
+    for (let k = 0; k < tries; k++) {
+        const r = await deliverToCorral(game, log);
+        if (r === true || r === 'GAMEOVER') return r;
+        log('  [deliver] não entregou — recarrega o graviton e abduz de novo');
+        await game.waitFor(s => s.energiaLed >= s.energiaMax * 0.9 || s.gameOver, { timeout: 20_000 });
+        const a = await abductOne(game, log, { keep: true });
+        if (a === 'GAMEOVER') return a;
+        if (!a) return false;
+    }
+    return false;
+}
+
 // Espera o burger ficar pronto (3s) e absorve com o feixe
 async function collectBurger(game, log) {
     // Espera o burger PARADO (ponteiro na nave): a lição do BURGER começa com 15% de tanque
@@ -646,5 +662,5 @@ async function playTutorial(game, page) {
 }
 
 module.exports = { MIN_READ_MS, pressKey, currentKey, waitStep, clickGameOverRestart, recoverFromGameOver,
-                   abductOne, deliverToCorral, collectBurger, abductFarmer, killFarmerOnRock,
+                   abductOne, deliverToCorral, deliverWithRetry, collectBurger, abductFarmer, killFarmerOnRock,
                    dodgeTorpedoes, killMecha, playTutorial };
