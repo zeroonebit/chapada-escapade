@@ -55,4 +55,62 @@ test.describe('neve', () => {
         expect(st.b, 'floco em cima da terra continua').toBeGreaterThan(0.9);
         expect(game.realErrors).toEqual([]);
     });
+    // Ressalva do Ensaio (02/11, fca6e8f): a areia do grid anda em degrau de
+    // célula (80 px) e a praia DESENHADA é um campo contínuo com warp de ±0,85
+    // célula; a neve sumia numa faixa de grama colada na praia. Juiz: a cor do
+    // texel na textura do terreno (grama = verde bem acima do vermelho)
+    test('a neve segue a praia desenhada: some na areia da tela, cai na grama mesmo onde o grid diz areia', async ({ game, page }) => {
+        await page.goto('/');
+        await game.waitForScene();
+        await game.startDirect({ tutorial: false, input: 'mouse' });
+        await game.scene(s => { const fx = s.dbg.fx;
+            fx.weather = 'snow'; fx.snow = true; fx.rain = false; fx.fog = false; s._applyFXVisibility(); });
+        const spots = await game.scene(s => {
+            const src = s.textures.get('terrain_canvas').getSourceImage();
+            const cw = src.width, ch = src.height;
+            const px = src.getContext('2d').getImageData(0, 0, cw, ch).data;
+            const g = s.terrainGrid, C = s.terrainCell || 80, RES = 8000 / cw;
+            const at = (tx, ty) => { const i = (ty * cw + tx) * 4; return [px[i], px[i + 1], px[i + 2]]; };
+            const green = (tx, ty) => { const [r, gg] = at(tx, ty); return gg > r + 20; };
+            const sandy = (tx, ty) => { const [r, gg, b] = at(tx, ty); return r > 170 && r > gg && gg > b && b < 150; };
+            const cellOf = (tx, ty) => g[Math.floor((ty + 0.5) * RES / C)]?.[Math.floor((tx + 0.5) * RES / C)];
+            const block = (tx, ty, f) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (!f(tx + dx, ty + dy)) return false; return true; };
+            for (let ty = 4; ty < ch - 4; ty += 2) for (let tx = 4; tx < cw - 4; tx += 2) {
+                // P: o grid diz areia, a tela mostra grama (bloco 5×5 texels verde)
+                if (cellOf(tx, ty) !== 1 || !block(tx, ty, green)) continue;
+                // Q: areia desenhada (e no grid) a até ~30 texels de P
+                for (let r = 3; r <= 30; r++) for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) {
+                    const qx = tx + dx, qy = ty + dy;
+                    if (qx < 4 || qy < 4 || qx >= cw - 4 || qy >= ch - 4) continue;
+                    if (cellOf(qx, qy) === 1 && block(qx, qy, sandy))
+                        return { P: { x: (tx + 0.5) * RES, y: (ty + 0.5) * RES }, Q: { x: (qx + 0.5) * RES, y: (qy + 0.5) * RES } };
+                }
+            }
+            return null;
+        });
+        expect(spots, 'achou grama desenhada em célula de areia, com areia desenhada perto').not.toBeNull();
+        await game.scene((s, p) => { s.ufo.setPosition(p.P.x, p.P.y); s.ufo.setVelocity(0, 0);
+            s.cameras.main.centerOn(p.P.x, p.P.y); }, spots);
+        await game.hover();
+        await page.waitForTimeout(1700);
+        const placed = await game.scene((s, p) => {
+            const cam = s.cameras.main, wv = cam.worldView, z = cam.zoom;
+            const toScreen = (w) => ({ x: (w.x - wv.x) * z, y: (w.y - wv.y) * z });
+            const [a, b] = s._snowFlakes;
+            s.tweens.killTweensOf(a); s.tweens.killTweensOf(b);
+            const pa = toScreen(p.P), pb = toScreen(p.Q);
+            a.setPosition(pa.x, pa.y); b.setPosition(pb.x, pb.y);
+            window.__flakes = [a, b];
+            return { pa, pb, w: s.scale.width, h: s.scale.height };
+        }, spots);
+        for (const q of [placed.pa, placed.pb]) {
+            expect(q.x).toBeGreaterThan(0); expect(q.x).toBeLessThan(placed.w);
+            expect(q.y).toBeGreaterThan(0); expect(q.y).toBeLessThan(placed.h);
+        }
+        await page.waitForTimeout(500);
+        const st = await game.scene(() => { const [a, b] = window.__flakes; return { grass: a.alpha, sand: b.alpha }; });
+        expect(st.grass, 'grama na tela (mesmo com areia no grid): neva').toBeGreaterThan(0.9);
+        expect(st.sand, 'areia na tela: não neva').toBeLessThan(0.1);
+        expect(game.realErrors).toEqual([]);
+    });
 });

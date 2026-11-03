@@ -153,6 +153,10 @@ Object.assign(Jogo.prototype, {
         const ctx = canvas.getContext('2d');
         const img = ctx.createImageData(CW, CH2);
         const px = img.data;
+        // Máscara da praia DESENHADA (1 = areia na tela), por texel: a neve
+        // some em cima dela (16_fx._updateSnowBeach). A areia do grid anda em
+        // degrau de célula e não bate com a banda contínua daqui
+        const beachMask = new Uint8Array(CW * CH2);
         const noise = (x, y, s) => this._terrNoise(x, y, s);  // 1 octave (barato)
         // ±0.85 célula = 68px: derrete o degrau de 80px sem descolar demais
         // do grid lógico (barreira da nave tolera ~1 célula de mismatch —
@@ -201,6 +205,7 @@ Object.assign(Jogo.prototype, {
                 } else if (dw < 4.2 + (dth - 0.5) * 0.7) {
                     // PRAIA — banda contínua do campo (não depende das células
                     // de areia), borda externa com dither fino
+                    beachMask[ty * CW + tx] = 1;
                     const wet = Math.max(0, 1 - dw / 2.2);     // molhada rente à água
                     r  = PAL.sand[0] + (PAL.sandWet[0] - PAL.sand[0]) * wet;
                     g2 = PAL.sand[1] + (PAL.sandWet[1] - PAL.sand[1]) * wet;
@@ -225,6 +230,7 @@ Object.assign(Jogo.prototype, {
             }
         }
         ctx.putImageData(img, 0, 0);
+        this._beachMask = { data: beachMask, w: CW, h: CH2, sx: CW / W, sy: CH2 / H };
         if (this.textures.exists('terrain_canvas')) this.textures.remove('terrain_canvas');
         this.textures.addCanvas('terrain_canvas', canvas);
         this.add.image(W / 2, H / 2, 'terrain_canvas')
@@ -470,6 +476,7 @@ Object.assign(Jogo.prototype, {
         // legado (proc.island = false no CONFIGS → mapa retangular antigo)
         const useIsland = mapCfg.island ?? proc.island ?? true;
         this._distWater = null; this._oceanMask = null; this._islandSeed = null; this._lakeOf = null;
+        this._beachMask = null;
         let grid = [];
         if (useIsland) {
             grid = this._seedIslandGrid(COLS, ROWS, proc, mapCfg);

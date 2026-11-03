@@ -72,7 +72,7 @@
 - [ ] Fazendeiro na água (01/11): soltar um fazendeiro no meio de um lago. Ele se debate ~1 s,
       afunda e some, e o contador de fazendeiros sobe. Solto perto da margem (ou a até 2 células
       da praia no oceano), ele nada até a terra. Andando sozinho na água ele também nada de volta.
-- [ ] Neve (01/11): com o clima de neve (CONFIGS → VISUALS), voar sobre a praia: em cima da areia não
+- [ ] Neve (01/11): com o clima de neve (CONFIGS → VFX), voar sobre a praia: em cima da areia não
       neva; na grama e na terra neva normal.
 - [ ] Fazendeiro no curral (01/11): solto em cima de um curral, fica preso ~3 s sem andar nem
       atirar e depois sai andando.
