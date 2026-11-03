@@ -113,7 +113,7 @@ Object.assign(Jogo.prototype, {
         this._natureIndustrialKeys = ['gas_can','barrel_rusty'].map(n => `nat_obj_${n}`);
 
         // ── SPLASH + ICON ────────────────────────────────────────────
-        this.load.image('splash', 'splashv4.png');
+        this.load.image('splash', 'splashv5.png');   // arte aprovada pelo Thiago em 03/11
         this.load.image('game_icon', 'icon.png');
 
         // ── WANG TILES — LAZY LOADING (só estilo ativo carrega no boot) ──
