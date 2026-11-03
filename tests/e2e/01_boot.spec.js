@@ -2,6 +2,22 @@
 const { test, expect } = require('./fixtures');
 
 test.describe('boot', () => {
+    // Splash nova aprovada pelo Thiago em 03/11 ("Aprovada, manda"): o jogo tem
+    // que baixar exatamente esse arquivo (hash do splash_3d_v5.png) e usar ele
+    // no tamanho nativo, 1881×836
+    test('a splash é a arte aprovada (hash e tamanho)', async ({ game, page }) => {
+        const resp = page.waitForResponse(r => /\/splash[^/]*\.png/.test(r.url()));
+        await page.goto('/');
+        const body = await (await resp).body();
+        const sha = require('crypto').createHash('sha256').update(body).digest('hex');
+        expect(sha, 'hash da arte aprovada').toBe('d1b13df0348a02552e3c009b0d6493e33f513b2a7cf69daeec072d5f96715e85');
+        await game.waitForScene();
+        const size = await game.scene(s => { const i = s.textures.get('splash').getSourceImage(); return [i.width, i.height]; });
+        expect(size).toEqual([1881, 836]);
+        expect(game.asset404s, 'avisos [ASSET 404]').toEqual([]);
+        expect(game.realErrors).toEqual([]);
+    });
+
     test('carrega sem erro de console e sem asset 404', async ({ game, page }) => {
         await page.goto('/');
         await game.waitForScene();
