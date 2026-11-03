@@ -466,6 +466,8 @@ class Jogo extends Phaser.Scene {
         // no game over, e é justo aí que a música de menu toca e a de jogo
         // precisa sumir no crossfade (F5 chamava dentro do corpo = nunca rodava).
         if (this._updateAudio) this._updateAudio(delta);
+        // Neve some em cima da praia (16_fx) — também no splash/pausa/game over
+        if (this._updateSnowBeach) this._updateSnowBeach(delta);
 
         // WANG_DEBUG: skip normal update loop, só roda camera scroll
         if (this.WANG_DEBUG) {

@@ -300,6 +300,27 @@ Object.assign(Jogo.prototype, {
         this.time.delayedCall(Phaser.Math.Between(0, 1500), fall);
     },
 
+    // Thiago 01/11 ("nao nevar na praia, nao faz muito sentido certo? aplica em
+    // todas as versoes"): o floco some em cima da areia (célula de praia, o anel
+    // de 4 células em volta da água) e volta fora dela. Os flocos vivem na tela
+    // (container com scrollFactor 0): cada um olha a célula do mundo embaixo
+    // dele. Roda no topo do update(), então vale no splash, na pausa e no game over
+    _updateSnowBeach(delta) {
+        if (!this.fxSnow || !this.fxSnow.visible || !this._snowFlakes || !this._snowFlakes.length) return;
+        const g = this.terrainGrid;
+        if (!g) return;
+        const cam = this.cameras.main, C = this.terrainCell || 80;
+        const v = this._snowWp || (this._snowWp = new Phaser.Math.Vector2());
+        const k = Math.min(1, (delta || 16) / 60);   // ~60 ms pra sumir ou voltar
+        for (const f of this._snowFlakes) {
+            if (!f || !f.scene) continue;
+            cam.getWorldPoint(f.x, f.y, v);
+            const cx = Math.floor(v.x / C), cy = Math.floor(v.y / C);
+            const beach = cy >= 0 && cy < g.length && cx >= 0 && cx < g[0].length && g[cy][cx] === 1;
+            f.alpha += ((beach ? 0 : 1) - f.alpha) * k;
+        }
+    },
+
     _scheduleRebuildRain() {
         if (this._rainRebuildTimer) clearTimeout(this._rainRebuildTimer);
         this._rainRebuildTimer = setTimeout(() => {
